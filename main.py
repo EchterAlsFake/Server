@@ -6,6 +6,7 @@ import os
 import uuid
 import json
 import markdown
+import ssl
 from datetime import datetime, timedelta
 import threading
 
@@ -102,11 +103,11 @@ def update():
 def download():
     file_location = "/home/asuna/PycharmProjects/Server/Porn_Fetch.zip" # Full version
 
-    send_file(path_or_file=file_location,
+    return send_file(path_or_file=file_location,
               as_attachment=True,
               mimetype="application/zip",
               download_name="Porn_Fetch_FULL.zip",
-              etag="")
+             conditional=True)
 
 
 @app.route("/report", methods=["POST"])
@@ -157,7 +158,12 @@ class NoIPLoggingHandler(WSGIRequestHandler):
         print(f'{method} {path} -> {code}')
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=443,  request_handler=NoIPLoggingHandler, ssl_context=(
-    "/home/asuna/.acme.sh/echteralsfake.duckdns.org_ecc/fullchain.cer",
-    "/home/asuna/.acme.sh/echteralsfake.duckdns.org_ecc/echteralsfake.duckdns.org.key"
-))
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2  # or TLSv1_3 if all clients support it
+    # Optional but recommended: prefer server ciphers
+    ctx.set_ciphers("ECDHE+AESGCM:ECDHE+CHACHA20:!aNULL:!MD5:!RC4")
+    ctx.load_cert_chain(
+        certfile="/home/asuna/.acme.sh/echteralsfake.duckdns.org_ecc/fullchain.cer",
+        keyfile="/home/asuna/.acme.sh/echteralsfake.duckdns.org_ecc/echteralsfake.duckdns.org.key",
+    )
+    app.run(host="::", port=443, request_handler=NoIPLoggingHandler, ssl_context=ctx)
