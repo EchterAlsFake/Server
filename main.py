@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # Optional but recommended: prefer server ciphers
     ctx.set_ciphers("ECDHE+AESGCM:ECDHE+CHACHA20:!aNULL:!MD5:!RC4")
     ctx.load_cert_chain(
-        certfile="/home/asuna/.acme.sh/echteralsfake.duckdns.org_ecc/fullchain.cer",
-        keyfile="/home/asuna/.acme.sh/echteralsfake.duckdns.org_ecc/echteralsfake.duckdns.org.key",
+        keyfile="/etc/ssl/echteralsfake/privkey.pem",
+        certfile="/etc/ssl/echteralsfake/fullchain.pem",
     )
     app.run(host="::", port=443, request_handler=NoIPLoggingHandler, ssl_context=ctx)
