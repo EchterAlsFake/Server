@@ -1,71 +1,58 @@
-# v3.6
+# 3.7
 
 ### New Features
-- Re-added `spankbang` support.
-- Windows ARM support (experimental)
-- Native macOS (`.dmg`) support
-- Native Android (x64, aarch64, armv7) support
-- Added optional processing delay for each video
-- Enabled direct video downloading without manual selection in the tree widget
-- Added ability to ignore specific exceptions ([#74](https://github.com/EchterAlsFake/Porn_Fetch/issues/74))
-- Added ability to double-click a thumbnail to view it separately.
-- Added option to change font size.
-- Added thumbnail preview support when navigating with arrow keys.
-- Added kill switch feature for proxy users.
-- Added option to use video IDs as filenames ([#76](https://github.com/EchterAlsFake/Porn_Fetch/issues/76)).
-- (CLI) Added automatic model download for new videos ([#78](https://github.com/EchterAlsFake/Porn_Fetch/issues/78)).
-- Finalized proxy support
+- Added Video downloading support for YouPorn.com
+- Support for XHamster shorts (moments)
+- Added Pornstar, Channel, Searching support for YouPorn.com
+- Added Playlist support for YouPorn.com
+- Added Searching support for missav.ws
+- Added Searching support for Spankbang.com
+- Added Playlist support for xvideos.com
+- Added Channel, Creator and Pornstar support for xvideos, spankbang and xhamster
+- You can now track videos in a SQL database
+- You can now change font size (actually)
+- Screen reader support (in theory)
+- You can now switch UI themes (experimental, still needs work)
+- Increased scraping speed for all non-PornHub requests A LOT (seriously)
+- You can now control how many pages and videos are fetched at the same time
+- Http2 support 
+- Brotli compression support
 
-### Bug Fixes
-- Fixed XNXX progress reporting.
-- Fixed JSON decode error for EPorner.
-- Fixed issue where XNXX would not search on the first page.
-- Fixed `missav.ws` 403 errors.
-- Fixed `spankbang.com` 403 errors.
-- Fixed `TypeError` for invalid markup types.
-- Fixed `missav.ws` "too long path" issue for mutagen metadata editing.
-- Fixed thumbnails for HQPorner.
-- Fixed error handling in CLI ([#74](https://github.com/EchterAlsFake/Porn_Fetch/issues/74)).
-- Fixed total progress calculation across the application.
-- Fixed thumbnail rendering entirely.
-- Fixed URL session export feature.
-- Fixed tools section layout.
-- Fixed update check changelog display.
-- Completely reworked and fixed the error reporting system.
-- Restored Porn Fetch functionality on Android:
-  - Implemented Android-compatible layout.
-  - Fixed threading issues.
-  - Resolved UI flickering and loading problems.
+### Bug fixes
+- Fixed CLI being stuck when file already exists
+- Fixed AV1 decoding for XHamster
+- Fixed m3u8 URL for XHamster 
+- Fixed thumbnail display
+- Fixed range selector widget
+- Fixed 429 and 403 errors (mostly)
+- Fixed PornHub pagination
+- Fixed URL export function
 
-### Graphical User Interface
-- Total progress calculation now displays actual progress instead of a loading animation.
-- Completely reworked progress bar system.
-- Progress bars are now dynamically generated instead of hardcoded.
-- Fixed tab navigation.
-- Published translation strings on Crowdin.
+### User Interface
+- Completely new design (finally good)
+- Font sizes scale correctly now, thanks to point size
+  instead of pixels
+- Redesigned the settings widget (compact now)
+- Replaced radio buttons with QComboBoxes (much better)
+- Improved QCheckbox visibility
 
-### Other Improvements
-- Updated license agreement to be GPLv3 compliant.
-- Reintroduced error/feedback reporting system using a privacy-focused server.
-- Changed update checking to use a custom server instead of GitHub.
-- Completely reworked batch processing features.
-- Added support for more parameters when starting Porn Fetch ([#77](https://github.com/EchterAlsFake/Porn_Fetch/issues/77)).
+### Internal code
+- Massive rewrite of the network backend
+- Much more consistent network requests and retrying
+- automatic 429 bypass
+- Improved proxy support
+- SSL certificate will now be taken from the OS instead of certifi
+- AND SO MUCH MORE!
 
-### Code Optimizations
-- Fixed and improved overall session handling of each API
-- Fixed latency issues when updating progress bars.
-- Migrated application from `QWidget`-based to `QMainWindow` + `stackedWidget` architecture.
-- Improved failed segment retrying.
-- Completely reworked settings handling.
-- Improved "download from file" implementation.
-- Enhanced translation handling.
-- Improved installation process.
-- Upgraded Python version from 3.11 to 3.13.
+### Deprecations
+- Android support (it's just not good enough)
+- File processing (I don't see the benefit) 
 
-### CLI
-- Fully reworked CLI.
-- Added better support for Termux on Android.
-- Fixed progress reporting in CLI.
+### Final words
+This release comes with a lot of features, new supported websites,
+a new UI design and a refactored backend.
 
-
-And even more that I forgot here...
+But there are still problems. The CLI is almost untested,
+The progressbar system is still inconsistent and the error reporting
+too. The translations are also completely out of date and need
+to be refactored. 
