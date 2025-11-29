@@ -21,6 +21,15 @@ You can access it under:
 - Running on an Acer Swift 3 (4c 8t, 8GB RAM)
 - Powered by Arch Linux 
 
+### Endpoints
+- /download -> Download Porn Fetch
+- /stats -> View real-time server stats
+- / -> Landing page
+- /feedback -> Report feedback anonymously
+- /ping -> Ping the server
+- /update -> Fetch update information for Porn Fetch
+- /report -> Report errors 
+- /ci -> personal endpoint for API tests
 
 ### Data collection?
 - No IP

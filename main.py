@@ -6,7 +6,6 @@ import os
 import uuid
 import json
 import markdown
-import ssl
 from datetime import datetime, timedelta
 import threading
 import subprocess
@@ -14,7 +13,7 @@ import subprocess
 # Configuration
 SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/"  # Logs for Porn Fetch
 ALLOWED_ENDPOINTS = ["/report", "/feedback", "/ping", "/update", "ci"]
-RATE_LIMIT = "2000 per minute"
+RATE_LIMIT = "10000 per minute"
 MAX_REQUEST_SIZE = 200 * 1024  # 200KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
 CI_TOKEN = os.environ.get("CI_TOKEN")  # Token used to update the CI stuff from n8n workflows (long story)
