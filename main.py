@@ -1,44 +1,27 @@
-from flask import Flask, request, jsonify, make_response, send_file, Response, render_template
+from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g
 from flask_limiter import Limiter
 from werkzeug.serving import WSGIRequestHandler
 from flask_limiter.util import get_remote_address
 import os
-import uuid
 import json
 import markdown
 from datetime import datetime, timedelta
 import threading
 import subprocess
+import sqlite3
 
 # Configuration
-SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/"  # Logs for Porn Fetch
+SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/"  # Now mainly used as DB folder
 ALLOWED_ENDPOINTS = ["/report", "/feedback", "/ping", "/update", "ci"]
 RATE_LIMIT = "10000 per minute"
 MAX_REQUEST_SIZE = 200 * 1024  # 200KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
-CI_TOKEN = os.environ.get("CI_TOKEN")  # Token used to update the CI stuff from n8n workflows (long story)
+CI_TOKEN = os.environ.get("CI_TOKEN")   # Token used to update the CI stuff from n8n workflows (long story)
 KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
 
-# CI tracking
-ci_status = {}
-ci_lock = threading.Lock()
-VALID_CI_STATUSES = {"pass", "fail", "running", "unknown"}
-
-# Data tracking (This does NOT track YOU, only the requests to prevent DDOS attacks)
-written_files_log = []
-lock = threading.Lock()
-
-# In-memory stats tracking (public, anonymous)
-stats_lock = threading.Lock()
-server_start_time = datetime.utcnow()
-stats = {
-    "total_requests": 0,
-    "total_bytes_in": 0,   # client -> server (upload)
-    "total_bytes_out": 0,  # server -> client (download)
-}
-
-errors_log = []    # summaries of error reports
-feedback_log = []  # summaries of feedback reports
+# Where the SQLite DB lives (override with PF_SERVER_DB if you want)
+os.makedirs(SAVE_DIR, exist_ok=True)
+DB_PATH = os.environ.get("PF_SERVER_DB", os.path.join(SAVE_DIR, "server.db"))
 
 # Flask setup
 app = Flask(__name__)
@@ -50,8 +33,79 @@ limiter = Limiter(
     default_limits=[RATE_LIMIT]
 )
 
-os.makedirs(SAVE_DIR, exist_ok=True)
+# ---------- DB setup ----------
 
+def init_db():
+    """Initialize SQLite database and tables."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS stats (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            total_requests INTEGER NOT NULL DEFAULT 0,
+            total_bytes_in INTEGER NOT NULL DEFAULT 0,
+            total_bytes_out INTEGER NOT NULL DEFAULT 0,
+            server_started_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS ci_status (
+            test_name TEXT PRIMARY KEY,
+            status TEXT NOT NULL,
+            updated_at TEXT,
+            details TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tag TEXT NOT NULL,
+            message TEXT NOT NULL,
+            raw_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS write_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bytes_written INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        """
+    )
+
+    # Ensure a single stats row exists
+    cur = conn.execute("SELECT COUNT(*) FROM stats WHERE id = 1;")
+    count = cur.fetchone()[0]
+    if count == 0:
+        conn.execute(
+            "INSERT INTO stats (id, total_requests, total_bytes_in, total_bytes_out, server_started_at) "
+            "VALUES (1, 0, 0, 0, ?);",
+            (datetime.utcnow().isoformat(),),
+        )
+
+    conn.commit()
+    conn.close()
+
+
+init_db()
+
+
+def get_db():
+    """Get a per-request sqlite connection."""
+    if "db" not in g:
+        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        g.db = conn
+    return g.db
+
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+
+# ---------- Helper functions ----------
 
 def shutdown_server():
     print(">>> KILL SWITCH TRIGGERED: More than 2GB written in the past hour. Shutting down.")
@@ -59,16 +113,30 @@ def shutdown_server():
 
 
 def log_write(file_size: int):
-    now = datetime.now()
-    with lock:
-        written_files_log.append((now, file_size))
-        # Remove entries older than 1 hour
-        one_hour_ago = now - timedelta(hours=1)
-        written_files_log[:] = [(t, s) for t, s in written_files_log if t >= one_hour_ago]
+    """Track how much data has been written in the last hour using the DB."""
+    now = datetime.utcnow()
+    cutoff = now - timedelta(hours=1)
+    now_str = now.isoformat()
+    cutoff_str = cutoff.isoformat()
 
-        total_written = sum(s for t, s in written_files_log)
-        if total_written > MAX_HOURLY_DATA:
-            shutdown_server()  # Kill Switch
+    db = get_db()
+    with db:
+        db.execute(
+            "INSERT INTO write_log (bytes_written, created_at) VALUES (?, ?);",
+            (file_size, now_str),
+        )
+        db.execute(
+            "DELETE FROM write_log WHERE created_at < ?;",
+            (cutoff_str,),
+        )
+        cur = db.execute(
+            "SELECT COALESCE(SUM(bytes_written), 0) FROM write_log WHERE created_at >= ?;",
+            (cutoff_str,),
+        )
+        total_written = cur.fetchone()[0] or 0
+
+    if total_written > MAX_HOURLY_DATA:
+        shutdown_server()  # Kill Switch
 
 
 def validate_payload(data):
@@ -80,37 +148,113 @@ def validate_payload(data):
 
 
 def save_message(data: dict, tag: str):
-    file_id = str(uuid.uuid4())
-    filename = f"{tag}_{file_id}.json"
-    full_path = os.path.join(SAVE_DIR, filename)
-    data["timestamp"] = datetime.utcnow().isoformat() + "Z"
+    """
+    Store error/feedback payload into the DB instead of a JSON file.
+    Still enforces MAX_REQUEST_SIZE and feeds bytes into the DoS kill switch logic.
+    """
+    created_at = datetime.utcnow().isoformat()
 
-    raw_content = json.dumps(data, indent=2)
+    # Add timestamp into the stored JSON for convenience
+    data_with_ts = dict(data)
+    data_with_ts["timestamp"] = created_at + "Z"
+
+    raw_content = json.dumps(data_with_ts, indent=2)
     encoded_content = raw_content.encode("utf-8")
 
     if len(encoded_content) > MAX_REQUEST_SIZE:
         raise ValueError("File content exceeds 200KB limit")
 
-    with open(full_path, 'wb') as f:
-        f.write(encoded_content)
-
+    # Track how much we've written (DoS prevention)
     log_write(len(encoded_content))
 
-    # Keep a lightweight in-memory copy for the /stats endpoint
-    entry_summary = {
-        "id": file_id,
-        "tag": tag,
-        "timestamp": data["timestamp"],
-        "message": data.get("message", "")
+    db = get_db()
+    with db:
+        db.execute(
+            "INSERT INTO reports (tag, message, raw_json, created_at) VALUES (?, ?, ?, ?);",
+            (tag, data.get("message", ""), raw_content, created_at),
+        )
+
+
+def get_reports(tag: str, limit: int = 50):
+    db = get_db()
+    cur = db.execute(
+        """
+        SELECT id, tag, message, created_at
+        FROM reports
+        WHERE tag = ?
+        ORDER BY created_at DESC
+        LIMIT ?;
+        """,
+        (tag, limit),
+    )
+    rows = cur.fetchall()
+    return [
+        {
+            "id": row["id"],
+            "tag": row["tag"],
+            "timestamp": row["created_at"],
+            "message": row["message"],
+        }
+        for row in rows
+    ]
+
+
+def increment_stats(requests_inc: int = 0, bytes_in_inc: int = 0, bytes_out_inc: int = 0):
+    """Atomically increment stats counters in the DB."""
+    if not (requests_inc or bytes_in_inc or bytes_out_inc):
+        return
+    db = get_db()
+    with db:
+        db.execute(
+            """
+            UPDATE stats
+            SET total_requests = total_requests + ?,
+                total_bytes_in = total_bytes_in + ?,
+                total_bytes_out = total_bytes_out + ?
+            WHERE id = 1;
+            """,
+            (requests_inc, bytes_in_inc, bytes_out_inc),
+        )
+
+
+def get_stats_snapshot():
+    db = get_db()
+    cur = db.execute(
+        "SELECT total_requests, total_bytes_in, total_bytes_out, server_started_at FROM stats WHERE id = 1;"
+    )
+    row = cur.fetchone()
+    if row is None:
+        # Should not happen, but recover gracefully
+        started_at = datetime.utcnow().isoformat()
+        with db:
+            db.execute(
+                "INSERT OR REPLACE INTO stats (id, total_requests, total_bytes_in, total_bytes_out, server_started_at) "
+                "VALUES (1, 0, 0, 0, ?);",
+                (started_at,),
+            )
+        return {
+            "total_requests": 0,
+            "total_bytes_in": 0,
+            "total_bytes_out": 0,
+            "server_started_at": started_at,
+        }
+
+    return {
+        "total_requests": row["total_requests"],
+        "total_bytes_in": row["total_bytes_in"],
+        "total_bytes_out": row["total_bytes_out"],
+        "server_started_at": row["server_started_at"],
     }
-    with lock:
-        if tag == "error":
-            errors_log.append(entry_summary)
-        elif tag == "feedback":
-            feedback_log.append(entry_summary)
 
 
-# ---------- CI/CD helper functions ----------
+def bytes_to_mb(num_bytes: int) -> float:
+    return round(num_bytes / (1024 * 1024), 3)
+
+
+# ---------- CI/CD helper functions (DB-backed) ----------
+
+VALID_CI_STATUSES = {"pass", "fail", "running", "unknown"}
+
 
 def check_ci_auth():
     """
@@ -126,39 +270,80 @@ def check_ci_auth():
 
 def set_ci_status(test_name, status, details=None):
     """
-    Store last known status for a test.
+    Store last known status for a test in the DB.
     status: 'pass', 'fail', 'running', 'unknown'
     """
     norm = str(status).lower()
     if norm not in VALID_CI_STATUSES:
         norm = "unknown"
 
+    updated_at = datetime.utcnow().isoformat()
     entry = {
         "name": test_name,
         "status": norm,
-        "updated_at": datetime.utcnow().isoformat() + "Z",
+        "updated_at": updated_at + "Z",
     }
-    if details:
+    if details is not None:
         entry["details"] = str(details)
 
-    with ci_lock:
-        ci_status[test_name] = entry
+    db = get_db()
+    with db:
+        db.execute(
+            """
+            INSERT INTO ci_status (test_name, status, updated_at, details)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(test_name) DO UPDATE SET
+                status = excluded.status,
+                updated_at = excluded.updated_at,
+                details = excluded.details;
+            """,
+            (test_name, norm, updated_at, details),
+        )
 
     return entry
 
 
 def get_ci_status(test_name):
-    with ci_lock:
-        if test_name in ci_status:
-            return ci_status[test_name]
+    db = get_db()
+    cur = db.execute(
+        "SELECT test_name, status, updated_at, details FROM ci_status WHERE test_name = ?;",
+        (test_name,),
+    )
+    row = cur.fetchone()
+    if row:
+        return {
+            "name": row["test_name"],
+            "status": row["status"],
+            "updated_at": (row["updated_at"] + "Z") if row["updated_at"] else None,
+            "details": row["details"],
+        }
 
     # default if nothing reported yet
     return {
         "name": test_name,
         "status": "unknown",
         "updated_at": None,
-        "details": "no result reported yet"
+        "details": "no result reported yet",
     }
+
+
+def get_all_ci_status():
+    db = get_db()
+    cur = db.execute(
+        "SELECT test_name, status, updated_at, details FROM ci_status ORDER BY test_name ASC;"
+    )
+    rows = cur.fetchall()
+    tests = []
+    for row in rows:
+        tests.append(
+            {
+                "name": row["test_name"],
+                "status": row["status"],
+                "updated_at": (row["updated_at"] + "Z") if row["updated_at"] else None,
+                "details": row["details"],
+            }
+        )
+    return tests
 
 
 def generate_ci_badge_svg(test_name, status):
@@ -209,11 +394,7 @@ def generate_ci_badge_svg(test_name, status):
     return svg
 
 
-# ---------- Stats helper functions & hooks ----------
-
-def bytes_to_mb(num_bytes: int) -> float:
-    return round(num_bytes / (1024 * 1024), 3)
-
+# ---------- Request stats hooks ----------
 
 @app.before_request
 def track_request():
@@ -221,9 +402,8 @@ def track_request():
     content_length = request.content_length
     if content_length is None:
         content_length = 0
-    with stats_lock:
-        stats["total_requests"] += 1
-        stats["total_bytes_in"] += max(int(content_length), 0)
+    content_length = max(int(content_length), 0)
+    increment_stats(requests_inc=1, bytes_in_inc=content_length)
 
 
 @app.after_request
@@ -237,9 +417,8 @@ def track_response(response):
     except Exception:
         length = 0
 
-    with stats_lock:
-        stats["total_bytes_out"] += max(int(length or 0), 0)
-
+    length = max(int(length or 0), 0)
+    increment_stats(bytes_out_inc=length)
     return response
 
 
@@ -260,6 +439,8 @@ def initiate_poweroff():
 
     threading.Thread(target=_poweroff, daemon=True).start()
 
+
+# ---------- Routes ----------
 
 @app.route("/", methods=["GET"])
 def landing_page():
@@ -382,23 +563,26 @@ def stats_endpoint():
           * Accept: application/json
           * or ?format=json
     """
-    # snapshot current stats
-    with stats_lock:
-        total_requests = stats["total_requests"]
-        bytes_in = stats["total_bytes_in"]
-        bytes_out = stats["total_bytes_out"]
+    stats_row = get_stats_snapshot()
 
-    uptime_seconds = int((datetime.utcnow() - server_start_time).total_seconds())
+    total_requests = stats_row["total_requests"]
+    bytes_in = stats_row["total_bytes_in"]
+    bytes_out = stats_row["total_bytes_out"]
+    started_at_str = stats_row["server_started_at"]
 
-    with ci_lock:
-        ci_list = list(ci_status.values())
+    try:
+        started_at_dt = datetime.fromisoformat(started_at_str)
+    except Exception:
+        started_at_dt = datetime.utcnow()
 
-    with lock:
-        errors = list(errors_log)
-        feedback = list(feedback_log)
+    uptime_seconds = int((datetime.utcnow() - started_at_dt).total_seconds())
+
+    ci_list = get_all_ci_status()
+    errors = get_reports("error", limit=100)
+    feedback = get_reports("feedback", limit=100)
 
     stats_payload = {
-        "server_started_at": server_start_time.isoformat() + "Z",
+        "server_started_at": started_at_str + "Z",
         "uptime_seconds": uptime_seconds,
         "requests": {
             "total": total_requests,
@@ -488,6 +672,8 @@ def ci_badge(test_name):
     svg = generate_ci_badge_svg(test_name, entry["status"])
     return Response(svg, mimetype="image/svg+xml")
 
+
+# ---------- Error handlers ----------
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
