@@ -9,14 +9,16 @@ import markdown
 import ssl
 from datetime import datetime, timedelta
 import threading
+import subprocess
 
 # Configuration
-SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/" # Logs for Porn Fetch
+SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/"  # Logs for Porn Fetch
 ALLOWED_ENDPOINTS = ["/report", "/feedback", "/ping", "/update", "ci"]
 RATE_LIMIT = "2000 per minute"
 MAX_REQUEST_SIZE = 200 * 1024  # 200KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
-CI_TOKEN = os.environ.get("CI_TOKEN") # Token used to update the CI stuff from n8n workflows (long story)
+CI_TOKEN = os.environ.get("CI_TOKEN")  # Token used to update the CI stuff from n8n workflows (long story)
+KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
 
 # CI tracking
 ci_status = {}
@@ -26,6 +28,18 @@ VALID_CI_STATUSES = {"pass", "fail", "running", "unknown"}
 # Data tracking (This does NOT track YOU, only the requests to prevent DDOS attacks)
 written_files_log = []
 lock = threading.Lock()
+
+# In-memory stats tracking (public, anonymous)
+stats_lock = threading.Lock()
+server_start_time = datetime.utcnow()
+stats = {
+    "total_requests": 0,
+    "total_bytes_in": 0,   # client -> server (upload)
+    "total_bytes_out": 0,  # server -> client (download)
+}
+
+errors_log = []    # summaries of error reports
+feedback_log = []  # summaries of feedback reports
 
 # Flask setup
 app = Flask(__name__)
@@ -39,9 +53,11 @@ limiter = Limiter(
 
 os.makedirs(SAVE_DIR, exist_ok=True)
 
+
 def shutdown_server():
     print(">>> KILL SWITCH TRIGGERED: More than 2GB written in the past hour. Shutting down.")
     os._exit(1)
+
 
 def log_write(file_size: int):
     now = datetime.now()
@@ -53,7 +69,8 @@ def log_write(file_size: int):
 
         total_written = sum(s for t, s in written_files_log)
         if total_written > MAX_HOURLY_DATA:
-            shutdown_server() # Kill Switch
+            shutdown_server()  # Kill Switch
+
 
 def validate_payload(data):
     if not isinstance(data, dict):
@@ -61,6 +78,7 @@ def validate_payload(data):
     if "message" not in data or not isinstance(data["message"], str):
         return False
     return True
+
 
 def save_message(data: dict, tag: str):
     file_id = str(uuid.uuid4())
@@ -78,6 +96,20 @@ def save_message(data: dict, tag: str):
         f.write(encoded_content)
 
     log_write(len(encoded_content))
+
+    # Keep a lightweight in-memory copy for the /stats endpoint
+    entry_summary = {
+        "id": file_id,
+        "tag": tag,
+        "timestamp": data["timestamp"],
+        "message": data.get("message", "")
+    }
+    with lock:
+        if tag == "error":
+            errors_log.append(entry_summary)
+        elif tag == "feedback":
+            feedback_log.append(entry_summary)
+
 
 # ---------- CI/CD helper functions ----------
 
@@ -178,16 +210,70 @@ def generate_ci_badge_svg(test_name, status):
     return svg
 
 
+# ---------- Stats helper functions & hooks ----------
+
+def bytes_to_mb(num_bytes: int) -> float:
+    return round(num_bytes / (1024 * 1024), 3)
+
+
+@app.before_request
+def track_request():
+    # Count every incoming request and its approximate payload size
+    content_length = request.content_length
+    if content_length is None:
+        content_length = 0
+    with stats_lock:
+        stats["total_requests"] += 1
+        stats["total_bytes_in"] += max(int(content_length), 0)
+
+
+@app.after_request
+def track_response(response):
+    # Count response payload size
+    try:
+        length = response.calculate_content_length()
+        if length is None:
+            data = response.get_data()
+            length = len(data) if data is not None else 0
+    except Exception:
+        length = 0
+
+    with stats_lock:
+        stats["total_bytes_out"] += max(int(length or 0), 0)
+
+    return response
+
+
+# ---------- Kill switch helper ----------
+
+def initiate_poweroff():
+    """
+    Trigger a system-wide shutdown via 'poweroff'.
+    This assumes the server process has the required privileges.
+    """
+    print(">>> /killswitch triggered: initiating system poweroff.")
+
+    def _poweroff():
+        try:
+            subprocess.run(["poweroff"])
+        except Exception as e:
+            print(f"Failed to call poweroff: {e}")
+
+    threading.Thread(target=_poweroff, daemon=True).start()
+
+
 @app.route("/", methods=["GET"])
 def landing_page():
     # templates/index.html contains your landing page HTML
     return render_template("index.html")
 
+
 @app.route("/ping", methods=["GET"])
 def ping():
     return make_response("Success", 200)
 
-@app.route("/update", methods=["GET"]) # Get Porn Fetch changelog
+
+@app.route("/update", methods=["GET"])  # Get Porn Fetch changelog
 def update():
     version = None
     changelog = None
@@ -200,24 +286,26 @@ def update():
         changelog = markdown.markdown(changelog_markdown)
 
     stuff = jsonify({
-    "version": version,
-    "url": "https://github.com/EchterAlsFake/Porn_Fetch/releases/tag/3.6",
-    "anonymous_download": "https://echteralsfake.duckdns.org/download",
-    "changelog": changelog,
-    "important_info": "Nothing here ;)"
-
-})
+        "version": version,
+        "url": "https://github.com/EchterAlsFake/Porn_Fetch/releases/tag/3.6",
+        "anonymous_download": "https://echteralsfake.duckdns.org/download",
+        "changelog": changelog,
+        "important_info": "Nothing here ;)"
+    })
     return stuff, 200
 
-@app.route("/download", methods=["GET"]) # Download Porn Fetch anonymously
-def download():
-    file_location = "/home/asuna/PycharmProjects/Server/Porn_Fetch.zip" # Full version
 
-    return send_file(path_or_file=file_location,
-              as_attachment=True,
-              mimetype="application/zip",
-              download_name="Porn_Fetch_FULL.zip",
-             conditional=True)
+@app.route("/download", methods=["GET"])  # Download Porn Fetch anonymously
+def download():
+    file_location = "/home/asuna/PycharmProjects/Server/Porn_Fetch.zip"  # Full version
+
+    return send_file(
+        path_or_file=file_location,
+        as_attachment=True,
+        mimetype="application/zip",
+        download_name="Porn_Fetch_FULL.zip",
+        conditional=True
+    )
 
 
 @app.route("/report", methods=["POST"])
@@ -236,6 +324,7 @@ def report_error():
         return jsonify({"error": str(ve)}), 400
     return jsonify({"status": "ok", "message": "Error report saved."})
 
+
 @app.route("/feedback", methods=["POST"])
 @limiter.limit(RATE_LIMIT)
 def send_feedback():
@@ -252,6 +341,93 @@ def send_feedback():
         return jsonify({"error": str(ve)}), 400
     return jsonify({"status": "ok", "message": "Feedback saved."})
 
+
+# ---------- Kill switch endpoint ----------
+
+@app.route("/killswitch", methods=["POST"])
+@limiter.exempt
+def killswitch():
+    """
+    POST /killswitch
+    Auth via:
+      - header: X-KILL-TOKEN: <token>
+      - or query: ?token=<token>
+      - or JSON body: { "token": "<token>" }
+
+    On success, initiates a system poweroff.
+    """
+    if not KILL_TOKEN:
+        return jsonify({"error": "Kill switch token not configured on server."}), 500
+
+    provided = request.headers.get("X-KILL-TOKEN") or request.args.get("token")
+
+    if not provided and request.is_json:
+        body = request.get_json(silent=True) or {}
+        provided = body.get("token")
+
+    if provided != KILL_TOKEN:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    initiate_poweroff()
+    return jsonify({"status": "ok", "message": "Shutdown initiated."}), 200
+
+
+# ---------- Stats endpoint ----------
+
+@app.route("/stats", methods=["GET"])
+def stats_endpoint():
+    """
+    GET /stats
+      - HTML dashboard by default
+      - JSON if:
+          * Accept: application/json
+          * or ?format=json
+    """
+    # snapshot current stats
+    with stats_lock:
+        total_requests = stats["total_requests"]
+        bytes_in = stats["total_bytes_in"]
+        bytes_out = stats["total_bytes_out"]
+
+    uptime_seconds = int((datetime.utcnow() - server_start_time).total_seconds())
+
+    with ci_lock:
+        ci_list = list(ci_status.values())
+
+    with lock:
+        errors = list(errors_log)
+        feedback = list(feedback_log)
+
+    stats_payload = {
+        "server_started_at": server_start_time.isoformat() + "Z",
+        "uptime_seconds": uptime_seconds,
+        "requests": {
+            "total": total_requests,
+        },
+        "traffic": {
+            "bytes_in": bytes_in,
+            "bytes_out": bytes_out,
+            "mb_in": bytes_to_mb(bytes_in),
+            "mb_out": bytes_to_mb(bytes_out),
+        },
+        "ci": {
+            "tests": ci_list,
+        },
+        "reports": {
+            "errors": errors,
+            "feedback": feedback,
+        },
+    }
+
+    want_json = (
+        "application/json" in (request.headers.get("Accept") or "")
+        or request.args.get("format") == "json"
+    )
+
+    if want_json:
+        return jsonify(stats_payload), 200
+
+    return render_template("stats.html", stats=stats_payload)
 
 
 # ---------- CI/CD endpoints ----------
@@ -313,13 +489,16 @@ def ci_badge(test_name):
     svg = generate_ci_badge_svg(test_name, entry["status"])
     return Response(svg, mimetype="image/svg+xml")
 
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
     return jsonify({"error": "Rate limit exceeded. Try again later."}), 429
 
+
 @app.errorhandler(413)
 def payload_too_large(e):
     return jsonify({"error": "Payload too large. Max 200KB allowed."}), 413
+
 
 class NoIPLoggingHandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
@@ -327,6 +506,7 @@ class NoIPLoggingHandler(WSGIRequestHandler):
         method = self.command
         path = self.path
         print(f'{method} {path} -> {code}')
+
 
 if __name__ == '__main__':
     app.run(host="::", port=8000)

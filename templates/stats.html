@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Porn Fetch – Server Stats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+   :root {
+     --bg: #050816;
+     --bg-card: #0f172a;
+     --accent: #3b82f6;
+     --accent-soft: rgba(59,130,246,.15);
+     --text: #e5e7eb;
+     --muted: #9ca3af;
+     --danger: #f97373;
+     --success: #4ade80;
+     --warning: #facc15;
+     --border: rgba(148,163,184,.3);
+     --radius-lg: 18px;
+     --shadow-soft: 0 18px 45px rgba(15,23,42,.8);
+   }
+   * { box-sizing:border-box; margin:0; padding:0; }
+   body {
+     font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+     background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+     color: var(--text);
+     min-height: 100vh;
+   }
+   .page {
+     max-width: 1120px;
+     margin: 0 auto;
+     padding: 32px 16px 40px;
+   }
+   header {
+     display:flex;
+     justify-content:space-between;
+     align-items:flex-start;
+     gap:16px;
+     margin-bottom:28px;
+   }
+   header h1 {
+     font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+     letter-spacing: .04em;
+     text-transform: uppercase;
+   }
+   header h1 span {
+     display:inline-block;
+     padding:4px 10px;
+     border-radius:999px;
+     background:linear-gradient(135deg, var(--accent), #6366f1);
+     color:#0b1120;
+     font-weight:700;
+     margin-left:8px;
+     font-size:.7rem;
+     vertical-align:middle;
+   }
+   header p {
+     color: var(--muted);
+     max-width: 420px;
+     font-size:.9rem;
+   }
+   .pill {
+     display:inline-flex;
+     align-items:center;
+     gap:8px;
+     border-radius:999px;
+     padding:6px 12px;
+     background-color: rgba(15,23,42,.65);
+     border:1px solid var(--border);
+     font-size:.78rem;
+     color:var(--muted);
+   }
+   .pill-dot {
+     width:8px; height:8px;
+     border-radius:999px;
+     background:radial-gradient(circle at 30% 30%, #bbf7d0 0, #22c55e 40%, #166534 100%);
+     box-shadow:0 0 14px rgba(34,197,94,.8);
+   }
+
+   .grid {
+     display:grid;
+     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+     gap:18px;
+     margin-bottom:26px;
+   }
+   .card {
+     background: radial-gradient(circle at top left, rgba(59,130,246,.18), rgba(15,23,42,.98));
+     border-radius: var(--radius-lg);
+     padding:18px 18px 16px;
+     border:1px solid var(--border);
+     box-shadow: var(--shadow-soft);
+     position:relative;
+     overflow:hidden;
+   }
+   .card::before {
+     content:"";
+     position:absolute;
+     inset:-20%;
+     background:
+       radial-gradient(circle at top, rgba(59,130,246,.14), transparent 60%),
+       radial-gradient(circle at 80% 120%, rgba(236,72,153,.18), transparent 55%);
+     opacity:.7;
+     pointer-events:none;
+   }
+   .card-inner { position:relative; z-index:1; }
+   .card-title {
+     font-size:.9rem;
+     text-transform:uppercase;
+     letter-spacing:.12em;
+     color:var(--muted);
+     margin-bottom:8px;
+   }
+   .metric-main {
+     font-size:1.9rem;
+     font-weight:600;
+     margin-bottom:2px;
+   }
+   .metric-sub {
+     font-size:.8rem;
+     color:var(--muted);
+   }
+   .tag-row {
+     display:flex;
+     flex-wrap:wrap;
+     gap:6px;
+     margin-top:10px;
+   }
+   .tag {
+     padding:2px 8px;
+     border-radius:999px;
+     border:1px solid rgba(148,163,184,.45);
+     font-size:.7rem;
+     color:var(--muted);
+     background-color:rgba(15,23,42,.92);
+   }
+
+   .section {
+     margin-bottom:24px;
+   }
+   .section-header {
+     display:flex;
+     justify-content:space-between;
+     align-items:center;
+     margin-bottom:10px;
+   }
+   .section-header h2 {
+     font-size:1rem;
+     text-transform:uppercase;
+     letter-spacing:.14em;
+     color:var(--muted);
+   }
+   .section-header span {
+     font-size:.78rem;
+     color:var(--muted);
+   }
+
+   .ci-table, .report-list {
+     width:100%;
+     border-collapse:collapse;
+     background-color:rgba(15,23,42,.8);
+     border-radius:var(--radius-lg);
+     overflow:hidden;
+     border:1px solid var(--border);
+   }
+   .ci-table th, .ci-table td {
+     padding:9px 11px;
+     font-size:.82rem;
+   }
+   .ci-table th {
+     text-align:left;
+     background:rgba(15,23,42,.9);
+     color:var(--muted);
+     font-weight:500;
+   }
+   .ci-table tr:nth-child(even) {
+     background-color:rgba(15,23,42,.9);
+   }
+   .ci-table tr:nth-child(odd) {
+     background-color:rgba(15,23,42,.7);
+   }
+
+   .status-pill {
+     display:inline-flex;
+     align-items:center;
+     gap:6px;
+     padding:2px 10px;
+     border-radius:999px;
+     font-size:.75rem;
+     font-weight:500;
+   }
+   .status-pass  { background-color:rgba(34,197,94,.18); color:#bbf7d0; }
+   .status-fail  { background-color:rgba(248,113,113,.16); color:#fecaca; }
+   .status-running { background-color:rgba(250,204,21,.12); color:#fef9c3; }
+   .status-unknown { background-color:rgba(148,163,184,.18); color:#e5e7eb; }
+
+   .status-dot {
+     width:7px; height:7px;
+     border-radius:999px;
+     background-color:currentColor;
+   }
+
+   .report-list {
+     list-style:none;
+   }
+   .report-item {
+     padding:10px 12px;
+     border-top:1px solid rgba(30,64,175,.6);
+   }
+   .report-item:first-child {
+     border-top:none;
+   }
+   .report-meta {
+     display:flex;
+     justify-content:space-between;
+     align-items:center;
+     margin-bottom:4px;
+     font-size:.75rem;
+     color:var(--muted);
+   }
+   .report-tag {
+     text-transform:uppercase;
+     letter-spacing:.16em;
+     font-size:.7rem;
+     padding:2px 7px;
+     border-radius:999px;
+     border:1px solid rgba(148,163,184,.5);
+   }
+   .report-tag.error {
+     border-color:rgba(248,113,113,.8);
+     color:#fecaca;
+   }
+   .report-tag.feedback {
+     border-color:rgba(52,211,153,.8);
+     color:#a7f3d0;
+   }
+   .report-message {
+     font-size:.85rem;
+     color:#e5e7eb;
+     white-space:pre-wrap;
+     word-break:break-word;
+   }
+
+   .footer {
+     margin-top:18px;
+     display:flex;
+     justify-content:space-between;
+     align-items:center;
+     gap:12px;
+     font-size:.78rem;
+     color:var(--muted);
+   }
+   .footer a {
+     color:var(--accent);
+     text-decoration:none;
+     opacity:.85;
+   }
+   .footer a:hover {
+     opacity:1;
+     text-shadow:0 0 18px rgba(59,130,246,.8);
+   }
+
+   @media (max-width:640px) {
+     header { flex-direction:column; align-items:flex-start; }
+     .page { padding-top:22px; }
+   }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Server Telemetry<span>LIVE</span></h1>
+        <p>Real-time insight into Porn Fetch&#39;s backend health, CI state, and anonymous user feedback.</p>
+      </div>
+      <div class="pill">
+        <span class="pill-dot"></span>
+        <span>Up since {{ stats.server_started_at }}</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card-inner">
+          <div class="card-title">Traffic In</div>
+          <div class="metric-main">{{ "%.3f"|format(stats.traffic.mb_in) }} MB</div>
+          <div class="metric-sub">{{ stats.traffic.bytes_in }} bytes total</div>
+          <div class="tag-row">
+            <span class="tag">↑ Upload</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-inner">
+          <div class="card-title">Traffic Out</div>
+          <div class="metric-main">{{ "%.3f"|format(stats.traffic.mb_out) }} MB</div>
+          <div class="metric-sub">{{ stats.traffic.bytes_out }} bytes total</div>
+          <div class="tag-row">
+            <span class="tag">↓ Download</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-inner">
+          <div class="card-title">Requests</div>
+          <div class="metric-main">{{ stats.requests.total }}</div>
+          <div class="metric-sub">since last restart</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-inner">
+          <div class="card-title">Reports</div>
+          <div class="metric-main">
+            {{ (stats.reports.errors|length) + (stats.reports.feedback|length) }}
+          </div>
+          <div class="metric-sub">
+            {{ stats.reports.errors|length }} errors • {{ stats.reports.feedback|length }} feedback
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>CI Status</h2>
+        <span>{{ stats.ci.tests|length }} test suites tracked</span>
+      </div>
+      <table class="ci-table">
+        <thead>
+          <tr>
+            <th>Test</th>
+            <th>Status</th>
+            <th>Last Update</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% if stats.ci.tests %}
+          {% for test in stats.ci.tests %}
+          <tr>
+            <td>{{ test.name }}</td>
+            <td>
+              <span class="status-pill status-{{ test.status }}">
+                <span class="status-dot"></span>
+                {{ test.status|upper }}
+              </span>
+            </td>
+            <td>{{ test.updated_at or "—" }}</td>
+            <td>{{ test.details or "—" }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4">No CI results reported yet.</td>
+          </tr>
+        {% endif %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>Error reports</h2>
+        <span>{{ stats.reports.errors|length }} logged</span>
+      </div>
+      <ul class="report-list">
+        {% if stats.reports.errors %}
+          {% for item in stats.reports.errors|reverse %}
+          <li class="report-item">
+            <div class="report-meta">
+              <span class="report-tag error">Error</span>
+              <span>{{ item.timestamp }}</span>
+            </div>
+            <div class="report-message">{{ item.message }}</div>
+          </li>
+          {% endfor %}
+        {% else %}
+          <li class="report-item">
+            <div class="report-message">No errors reported yet. 🎉</div>
+          </li>
+        {% endif %}
+      </ul>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>Feedback</h2>
+        <span>{{ stats.reports.feedback|length }} messages</span>
+      </div>
+      <ul class="report-list">
+        {% if stats.reports.feedback %}
+          {% for item in stats.reports.feedback|reverse %}
+          <li class="report-item">
+            <div class="report-meta">
+              <span class="report-tag feedback">Feedback</span>
+              <span>{{ item.timestamp }}</span>
+            </div>
+            <div class="report-message">{{ item.message }}</div>
+          </li>
+          {% endfor %}
+        {% else %}
+          <li class="report-item">
+            <div class="report-message">No feedback yet. Be the first!</div>
+          </li>
+        {% endif %}
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <span>Stats API: <code>/stats?format=json</code></span>
+      <a href="/">← Back to main site</a>
+    </footer>
+  </div>
+</body>
+</html>
