@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response, send_file
+from flask import Flask, request, jsonify, make_response, send_file, Response, render_template
 from flask_limiter import Limiter
 from werkzeug.serving import WSGIRequestHandler
 from flask_limiter.util import get_remote_address
@@ -12,12 +12,18 @@ import threading
 
 # Configuration
 SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/" # Logs for Porn Fetch
-ALLOWED_ENDPOINTS = ["/report", "/feedback", "/ping", "/update"]
+ALLOWED_ENDPOINTS = ["/report", "/feedback", "/ping", "/update", "ci"]
 RATE_LIMIT = "2000 per minute"
 MAX_REQUEST_SIZE = 200 * 1024  # 200KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
+CI_TOKEN = os.environ.get("CI_TOKEN") # Token used to update the CI stuff from n8n workflows (long story)
 
-# Data tracking
+# CI tracking
+ci_status = {}
+ci_lock = threading.Lock()
+VALID_CI_STATUSES = {"pass", "fail", "running", "unknown"}
+
+# Data tracking (This does NOT track YOU, only the requests to prevent DDOS attacks)
 written_files_log = []
 lock = threading.Lock()
 
@@ -72,6 +78,110 @@ def save_message(data: dict, tag: str):
         f.write(encoded_content)
 
     log_write(len(encoded_content))
+
+# ---------- CI/CD helper functions ----------
+
+def check_ci_auth():
+    """
+    Optional simple auth for CI updates.
+    If CI_TOKEN is set, require header X-CI-TOKEN or ?token=... to match.
+    If CI_TOKEN is not set, allow all (useful for local testing).
+    """
+    if CI_TOKEN is None:
+        return True
+    provided = request.headers.get("X-CI-TOKEN") or request.args.get("token")
+    return provided == CI_TOKEN
+
+
+def set_ci_status(test_name, status, details=None):
+    """
+    Store last known status for a test.
+    status: 'pass', 'fail', 'running', 'unknown'
+    """
+    norm = str(status).lower()
+    if norm not in VALID_CI_STATUSES:
+        norm = "unknown"
+
+    entry = {
+        "name": test_name,
+        "status": norm,
+        "updated_at": datetime.utcnow().isoformat() + "Z",
+    }
+    if details:
+        entry["details"] = str(details)
+
+    with ci_lock:
+        ci_status[test_name] = entry
+
+    return entry
+
+
+def get_ci_status(test_name):
+    with ci_lock:
+        if test_name in ci_status:
+            return ci_status[test_name]
+
+    # default if nothing reported yet
+    return {
+        "name": test_name,
+        "status": "unknown",
+        "updated_at": None,
+        "details": "no result reported yet"
+    }
+
+
+def generate_ci_badge_svg(test_name, status):
+    """
+    Very simple shields-style SVG badge.
+    """
+    label = test_name.replace("_", " ")
+    value = status.upper()
+
+    # rough width estimation for monospace-like font
+    def w(text):
+        return 6 * len(text) + 10
+
+    left_width = max(w(label), 40)
+    right_width = max(w(value), 40)
+    total_width = left_width + right_width
+    height = 20
+
+    if status == "pass":
+        color = "#4c1"      # green
+    elif status == "fail":
+        color = "#e05d44"   # red
+    elif status == "running":
+        color = "#dfb317"   # yellow
+    else:
+        color = "#9f9f9f"   # grey
+
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{height}" role="img" aria-label="{label}: {value}">
+  <linearGradient id="smooth" x2="0" y2="100%">
+    <stop offset="0" stop-color="#fff" stop-opacity=".7"/>
+    <stop offset=".1" stop-color="#aaa" stop-opacity=".1"/>
+    <stop offset=".9" stop-color="#000" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".5"/>
+  </linearGradient>
+  <mask id="round">
+    <rect width="{total_width}" height="{height}" rx="3" fill="#fff"/>
+  </mask>
+  <g mask="url(#round)">
+    <rect width="{left_width}" height="{height}" fill="#555"/>
+    <rect x="{left_width}" width="{right_width}" height="{height}" fill="{color}"/>
+    <rect width="{total_width}" height="{height}" fill="url(#smooth)"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+    <text x="{left_width / 2}" y="14">{label}</text>
+    <text x="{left_width + right_width / 2}" y="14">{value}</text>
+  </g>
+</svg>"""
+    return svg
+
+
+@app.route("/", methods=["GET"])
+def landing_page():
+    # templates/index.html contains your landing page HTML
+    return render_template("index.html")
 
 @app.route("/ping", methods=["GET"])
 def ping():
@@ -141,6 +251,67 @@ def send_feedback():
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 400
     return jsonify({"status": "ok", "message": "Feedback saved."})
+
+
+
+# ---------- CI/CD endpoints ----------
+
+@app.route("/ci/<test_name>", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
+def ci_update(test_name):
+    """
+    POST /ci/<test_name>
+    JSON body: { "status": "pass" | "fail" | "running", "details": "optional text" }
+    Optional auth: header X-CI-TOKEN=<CI_TOKEN> or ?token=<CI_TOKEN>
+    """
+    if not check_ci_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    if not request.is_json:
+        return jsonify({"error": "Expected JSON"}), 400
+
+    payload = request.get_json() or {}
+    status = payload.get("status")
+    if not status:
+        return jsonify({"error": "Missing 'status' field"}), 400
+
+    details = payload.get("details")
+    entry = set_ci_status(test_name, status, details)
+    return jsonify(entry), 200
+
+
+@app.route("/ci/<test_name>", methods=["GET"])
+def ci_plain(test_name):
+    """
+    GET /ci/<test_name>
+    Returns simple plain-text status like "PASS", "FAIL", "RUNNING", "UNKNOWN".
+    """
+    entry = get_ci_status(test_name)
+    text = entry["status"].upper()
+    resp = make_response(text, 200)
+    resp.mimetype = "text/plain"
+    return resp
+
+
+@app.route("/ci/<test_name>.json", methods=["GET"])
+def ci_json(test_name):
+    """
+    GET /ci/<test_name>.json
+    Returns status as JSON for tooling.
+    """
+    entry = get_ci_status(test_name)
+    return jsonify(entry), 200
+
+
+@app.route("/ci/<test_name>/badge.svg", methods=["GET"])
+def ci_badge(test_name):
+    """
+    GET /ci/<test_name>/badge.svg
+    Returns a dynamic SVG badge you can embed in your README.
+    """
+    entry = get_ci_status(test_name)
+    svg = generate_ci_badge_svg(test_name, entry["status"])
+    return Response(svg, mimetype="image/svg+xml")
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
