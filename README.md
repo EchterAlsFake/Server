@@ -4,7 +4,7 @@ You can access it under:
 
 **https://echteralsfake.duckdns.org/**
 
-[!NOTE]
+> [!NOTE]
 > You need an IPv6 address to access the server, it runs IPv6 only. 
 
 ### What does it do? 
