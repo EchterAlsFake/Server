@@ -119,8 +119,8 @@
         .right {
             border-radius: 16px;
             background: radial-gradient(circle at top left, rgba(129, 140, 248, 0.18), transparent),
-                        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent),
-                        rgba(15, 23, 42, 0.9);
+            radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent),
+            rgba(15, 23, 42, 0.9);
             padding: 20px 18px;
             border: 1px solid rgba(148, 163, 184, 0.3);
         }
@@ -270,6 +270,25 @@
         a:hover {
             text-decoration: underline;
         }
+
+        /* NEW: checkbox styling */
+        .checkbox-group {
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .checkbox-item input {
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -317,7 +336,7 @@
 
         <div class="right">
             <div class="price-row">
-                <div class="price-main">15</div>
+                <div class="price-main">5</div>
                 <div class="price-currency">EUR • one-time</div>
             </div>
             <div class="price-note">
@@ -336,6 +355,26 @@
                 <div class="hint">
                     Used for receipts and to associate the license with you. You can leave it empty if you prefer.
                 </div>
+
+                <!-- NEW: consent + age checkboxes -->
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="waiver-checkbox" name="waiver">
+                        <label for="waiver-checkbox">
+                            I explicitly agree that you begin fulfilling the contract by providing the digital
+                            license file before the end of the 14-day withdrawal period. I understand that
+                            once fulfillment starts, I lose my statutory right of withdrawal for this purchase.
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="age-checkbox" name="age_confirm">
+                        <label for="age-checkbox">
+                            I confirm that I am at least 18 years old or at least the minimum age required
+                            by law in my country to access and use pornographic content.
+                        </label>
+                    </div>
+                </div>
+                <!-- /NEW -->
 
                 <button type="submit" class="button" id="checkout-button">
                     <span class="button-icon">💳</span>
@@ -364,11 +403,23 @@
     const form = document.getElementById("checkout-form");
     const button = document.getElementById("checkout-button");
     const errorBox = document.getElementById("error-box");
+    const waiverCheckbox = document.getElementById("waiver-checkbox");
+    const ageCheckbox = document.getElementById("age-checkbox");
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         errorBox.style.display = "none";
         errorBox.textContent = "";
+
+        // NEW: enforce both checkboxes
+        if (!waiverCheckbox.checked || !ageCheckbox.checked) {
+            errorBox.textContent =
+                "Please confirm that you waive the 14-day withdrawal right for this digital license " +
+                "and that you meet the minimum age requirement.";
+            errorBox.style.display = "block";
+            return;
+        }
+        // /NEW
 
         const formData = new FormData(form);
         const email = formData.get("email") || null;
@@ -382,7 +433,11 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({
+                    email,
+                    waiver: waiverCheckbox.checked,      // NEW (optional to store server-side)
+                    age_confirm: ageCheckbox.checked     // NEW
+                })
             });
 
             const data = await res.json();

@@ -507,6 +507,13 @@ def initiate_poweroff():
 
 
 # ---------- Routes ----------
+@app.route("/impress", methods=["GET"])
+def impress():
+    # Renders a modern-looking page with a BUY button
+    return render_template(
+        "impress.html",
+    )
+
 
 @app.route("/buy_license", methods=["GET"])
 def buy_license():
