@@ -9,6 +9,10 @@ from datetime import datetime, timedelta
 import threading
 import subprocess
 import sqlite3
+import stripe
+import hmac
+import hashlib
+from io import BytesIO
 
 # Configuration
 SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/"  # Now mainly used as DB folder
@@ -18,6 +22,15 @@ MAX_REQUEST_SIZE = 200 * 1024  # 200KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
 CI_TOKEN = os.environ.get("CI_TOKEN")   # Token used to update the CI stuff from n8n workflows (long story)
 KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")      # sk_test_... or sk_live_...
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")  # pk_test_... or pk_live_...
+STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID")          # price_xxx for your Porn Fetch license
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")    # whsec_... from Stripe
+APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
+LICENSE_SECRET = os.environ.get("LICENSE_SECRET", "dev-secret-change-me")
+
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
 
 # Where the SQLite DB lives (override with PF_SERVER_DB if you want)
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -69,6 +82,14 @@ def init_db():
             bytes_written INTEGER NOT NULL,
             created_at TEXT NOT NULL
         );
+            
+        CREATE TABLE IF NOT EXISTS licenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT UNIQUE NOT NULL,
+            email TEXT,
+            license_key TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
         """
     )
 
@@ -88,6 +109,51 @@ def init_db():
 
 init_db()
 
+
+def save_license(session_id: str, email: str | None, license_key: str) -> None:
+    """Store or update a license record for a given Stripe Checkout session."""
+    created_at = datetime.utcnow().isoformat() + "Z"
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO licenses (session_id, email, license_key, created_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (session_id, email, license_key, created_at),
+        )
+        conn.commit()
+
+
+def get_license(session_id: str) -> dict | None:
+    """Fetch a license record by checkout session id."""
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.execute(
+            """
+            SELECT session_id, email, license_key, created_at
+            FROM licenses
+            WHERE session_id = ?
+            """,
+            (session_id,),
+        )
+        row = cur.fetchone()
+
+    if not row:
+        return None
+
+    return {
+        "session_id": row[0],
+        "email": row[1],
+        "license_key": row[2],
+        "created_at": row[3],
+    }
+
+
+def generate_license_key(email: str | None, session_id: str) -> str:
+    """Deterministic license key: HMAC(email:session_id, LICENSE_SECRET)."""
+    email = email or "anonymous"
+    msg = f"{email}:{session_id}".encode("utf-8")
+    key = hmac.new(LICENSE_SECRET.encode("utf-8"), msg, hashlib.sha256).hexdigest()
+    return key
 
 def get_db():
     """Get a per-request sqlite connection."""
@@ -442,11 +508,135 @@ def initiate_poweroff():
 
 # ---------- Routes ----------
 
+@app.route("/buy_license", methods=["GET"])
+def buy_license():
+    # Renders a modern-looking page with a BUY button
+    return render_template(
+        "buy_license.html",
+        stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
+    )
+
+@app.route("/create-checkout-session", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
+def create_checkout_session():
+    if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
+        return jsonify({"error": "Stripe is not configured on the server"}), 500
+
+    data = request.get_json(silent=True) or {}
+    customer_email = data.get("email")
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            mode="payment",
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price": STRIPE_PRICE_ID,
+                    "quantity": 1,
+                }
+            ],
+            success_url=f"{APP_DOMAIN}/buy_success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{APP_DOMAIN}/buy_cancel",
+            customer_email=customer_email or None,
+        )
+        return jsonify({"url": checkout_session.url})
+    except Exception as e:
+        # In dev, you might want to log(e) as well
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/buy_success", methods=["GET"])
+def buy_success():
+    session_id = request.args.get("session_id")
+    # Just render a page that says “thank you” and has a download button
+    return render_template("buy_success.html", session_id=session_id)
+
+
+@app.route("/buy_cancel", methods=["GET"])
+def buy_cancel():
+    return render_template("buy_cancel.html")
+
+@app.route("/stripe/webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature")
+
+    if not STRIPE_WEBHOOK_SECRET:
+        # Misconfigured server
+        return "Webhook secret not configured", 500
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=STRIPE_WEBHOOK_SECRET
+        )
+    except Exception as e:
+        # Signature verification failure or JSON parsing error
+        return f"Webhook error: {str(e)}", 400
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        handle_successful_checkout(session)
+
+    # Optionally handle other events here
+
+    return "", 200
+
+
+def handle_successful_checkout(session: dict) -> None:
+    """Called when Stripe tells us a Checkout session was successfully completed."""
+    session_id = session["id"]
+    email = None
+
+    # Stripe can store email in different places depending on configuration
+    if session.get("customer_details") and session["customer_details"].get("email"):
+        email = session["customer_details"]["email"]
+    elif session.get("customer_email"):
+        email = session["customer_email"]
+
+    license_key = generate_license_key(email, session_id)
+    save_license(session_id, email, license_key)
+
+
+@app.route("/download_license", methods=["GET"])
+@limiter.limit(RATE_LIMIT)
+def download_license():
+    session_id = request.args.get("session_id")
+    if not session_id:
+        return jsonify({"error": "Missing session_id"}), 400
+
+    record = {
+        "email": "test@test.com",
+        "session_id": session_id,
+        "license_key": "test",
+        "created_at": "sometime"
+    }
+    if not record:
+        # Either payment not completed yet, or no such session
+        return jsonify({"error": "License not found or payment not completed yet"}), 404
+
+    content = f"""# Porn Fetch License
+
+Email: {record['email']}
+Stripe-Session: {record['session_id']}
+License-Key: {record['license_key']}
+Created-At: {record['created_at']}
+
+Thank you for supporting Porn Fetch ❤️
+"""
+
+    file_stream = BytesIO(content.encode("utf-8"))
+    return send_file(
+        file_stream,
+        as_attachment=True,
+        download_name="porn_fetch.license",
+        mimetype="text/plain",
+    )
+
 @app.route("/", methods=["GET"])
 def landing_page():
     # templates/index.html contains your landing page HTML
     return render_template("index.html")
-
 
 @app.route("/ping", methods=["GET"])
 def ping():

@@ -30,6 +30,13 @@ You can access it under:
 - /update -> Fetch update information for Porn Fetch
 - /report -> Report errors 
 - /ci -> personal endpoint for API tests
+- /buy_license -> You can buy a license for Porn Fetch here
+
+> [!WARNING]
+> The `/buy_license` endpoint is ONLY a test environment. You won't be charged
+> and you won't receive a valid license. Please don't use this endpoint yet.
+> It's just for experimenting and testing. I'll tell you when it's ready...
+
 
 ### Data collection?
 - No IP
@@ -49,8 +56,8 @@ Ask Vodafone to get me an IPv4, then I can enable it ;)
 - [] Own Domain (Namecheap)
 - [] A real SSL certificate
 - [] More endpoints for more projects
-- [] License server for Porn Fetch
-- [] Better I/O handling and saving of reports / errors
+- [x] License server for Porn Fetch
+- [x] Better I/O handling and saving of reports / errors
 - [] IPv4 support (I try to ask Vodafone kindly)
 - [] Backup using my Tablet in case main server is down (don't know if that works though)
 

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Buy Porn Fetch License</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at top, #1f2937, #020617);
+            --card-bg: rgba(15, 23, 42, 0.95);
+            --accent: #6366f1;
+            --accent-soft: rgba(99, 102, 241, 0.2);
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-subtle: rgba(148, 163, 184, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text-main);
+            background: var(--bg-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .wrapper {
+            max-width: 960px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 28px;
+            border: 1px solid var(--border-subtle);
+            box-shadow:
+                0 18px 45px rgba(15, 23, 42, 0.65),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+            display: grid;
+            grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+            gap: 32px;
+        }
+
+        @media (max-width: 800px) {
+            .card {
+                grid-template-columns: minmax(0, 1fr);
+                padding: 20px;
+            }
+        }
+
+        .left h1 {
+            font-size: 1.9rem;
+            margin: 0 0 10px;
+            letter-spacing: 0.01em;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: #e5e7eb;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+        }
+
+        .left p {
+            margin: 0 0 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .feature {
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            font-size: 0.82rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .feature span.icon {
+            font-size: 1rem;
+        }
+
+        .feature strong {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .right {
+            border-radius: 16px;
+            background: radial-gradient(circle at top left, rgba(129, 140, 248, 0.18), transparent),
+                        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent),
+                        rgba(15, 23, 42, 0.9);
+            padding: 20px 18px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .price-main {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .price-currency {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .price-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7);
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+            box-shadow:
+                0 14px 30px rgba(79, 70, 229, 0.6),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+        }
+
+        .button:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+            box-shadow:
+                0 18px 40px rgba(79, 70, 229, 0.75),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+        }
+
+        .button:active {
+            transform: translateY(0);
+            box-shadow:
+                0 8px 22px rgba(79, 70, 229, 0.7),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+        }
+
+        .button[disabled] {
+            cursor: default;
+            opacity: 0.6;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .button-icon {
+            font-size: 1rem;
+        }
+
+        .secure-note {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .secure-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+        }
+
+        .error-box {
+            margin-top: 10px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            color: #fecaca;
+            background: rgba(248, 113, 113, 0.1);
+            border-radius: 9px;
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            display: none;
+        }
+
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        a {
+            color: #a5b4fc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="card">
+        <div class="left">
+            <div class="badge">
+                <span class="badge-dot"></span>
+                Full Version License
+            </div>
+            <h1>Porn Fetch — Full Unlock</h1>
+            <p>
+                Support development and unlock the full convenience experience:
+                automatic updates, one-click downloads, and all supported sites in one place.
+            </p>
+            <p>
+                The core project remains open source on GitHub.
+                The license is a “thank you” for supporting the time & effort behind it.
+            </p>
+
+            <div class="features">
+                <div class="feature">
+                    <span class="icon">⚡</span>
+                    <div>
+                        <strong>Instant license</strong>
+                        <span>License file is ready to download as soon as payment completes.</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <span class="icon">🧠</span>
+                    <div>
+                        <strong>Convenience features</strong>
+                        <span>Unlock quality-of-life features built on top of the open-source core.</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <span class="icon">❤️</span>
+                    <div>
+                        <strong>Support the dev</strong>
+                        <span>Help keep the project alive and updated.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right">
+            <div class="price-row">
+                <div class="price-main">15</div>
+                <div class="price-currency">EUR • one-time</div>
+            </div>
+            <div class="price-note">
+                Single user license. No subscription, no recurring charges.
+            </div>
+
+            <form id="checkout-form">
+                <div class="label">Email (optional)</div>
+                <input
+                    class="input"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                />
+                <div class="hint">
+                    Used for receipts and to associate the license with you. You can leave it empty if you prefer.
+                </div>
+
+                <button type="submit" class="button" id="checkout-button">
+                    <span class="button-icon">💳</span>
+                    <span>Continue to secure Stripe checkout</span>
+                </button>
+            </form>
+
+            <div class="secure-note">
+                <span class="secure-dot"></span>
+                <span>Payments are processed securely by Stripe. Your card data never touches this server.</span>
+            </div>
+
+            <div class="error-box" id="error-box"></div>
+
+            <div class="footer-note">
+                Want to inspect the code first?
+                <a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">
+                    View Porn Fetch on GitHub
+                </a>.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("checkout-form");
+    const button = document.getElementById("checkout-button");
+    const errorBox = document.getElementById("error-box");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorBox.style.display = "none";
+        errorBox.textContent = "";
+
+        const formData = new FormData(form);
+        const email = formData.get("email") || null;
+
+        button.disabled = true;
+        button.textContent = "Redirecting to Stripe...";
+
+        try {
+            const res = await fetch("/create-checkout-session", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.url) {
+                throw new Error(data.error || "Unexpected error occurred.");
+            }
+
+            // Redirect to Stripe-hosted checkout
+            window.location = data.url;
+        } catch (err) {
+            console.error(err);
+            errorBox.textContent = err.message || "Failed to start checkout.";
+            errorBox.style.display = "block";
+            button.disabled = false;
+            button.textContent = "Continue to secure Stripe checkout";
+        }
+    });
+</script>
+</body>
+</html>
