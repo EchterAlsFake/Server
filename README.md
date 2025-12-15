@@ -56,12 +56,12 @@ the device hosting it and I want to learn a little bit by doing it myself.
 Ask Vodafone to get me an IPv4, then I can enable it ;) 
 
 ### Future Plans? 
-- [] Own Domain (Namecheap)
-- [] A real SSL certificate
+- [x] Own Domain (Namecheap)
+- [x] A real SSL certificate
 - [] More endpoints for more projects
 - [x] License server for Porn Fetch
 - [x] Better I/O handling and saving of reports / errors
-- [] IPv4 support (I try to ask Vodafone kindly)
+- [x] IPv4 support (I try to ask Vodafone kindly)
 - [] Backup using my Tablet in case main server is down (don't know if that works though)
 
 
