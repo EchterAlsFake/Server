@@ -2,10 +2,7 @@
 Hi, you came across my 24/7 personal server for my projects.
 You can access it under:
 
-**https://echteralsfake.duckdns.org/**
-
-> [!NOTE]
-> You need an IPv6 address to access the server, it runs IPv6 only. 
+**https://echteralsfake.me**
 
 ### What does it do? 
 - Serves as a test for myself
@@ -13,6 +10,12 @@ You can access it under:
 - Error / Feedback reporting for Porn Fetch
 - Local API Tests for my Porn APIs
 - Landing page
+
+### Cloudflare
+The server is protected by cloudflare and uses the IPv4 to IPv6 proxy tunnel, because Vodafone gives customers only
+a public IPv6 adress. Cloudflare DOES collect your IP adress and uses it for fraud / abuse protection. You can find more information [HERE](https://www.cloudflare.com/de-de/privacypolicy/)
+Please note, that my server itself does absolutely ZERO logging of your data unless you explicitly agree on it. 
+My website also does not embed any third party fonts or cookies that could track you. 
 
 
 ### Where and how?
