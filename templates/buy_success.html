@@ -98,6 +98,9 @@
     <h1>Thank you for your purchase and support ❤️</h1>
     <p>
         Your payment was successful. You can download your license file now.
+        Please immediately download it and save it to a secure location.
+        Because I don't collect any of your data, you will not be able to get a refund
+        in case you lose your license.
     </p>
 
     {% if session_id %}
@@ -113,7 +116,7 @@
         </div>
     {% else %}
         <div class="error">
-            No session id provided. If you reached this page by accident, please check your email or contact support.
+            No session id provided. If you reached this page by accident, please go to /buy_license
         </div>
     {% endif %}
 </div>

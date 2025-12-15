@@ -1,405 +1,474 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Buy Porn Fetch License</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        :root {
-            --bg-gradient: radial-gradient(circle at top, #1f2937, #020617);
-            --card-bg: rgba(15, 23, 42, 0.95);
-            --accent: #6366f1;
-            --accent-soft: rgba(99, 102, 241, 0.2);
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
-            --border-subtle: rgba(148, 163, 184, 0.3);
-        }
+  <meta charset="UTF-8" />
+  <title>Buy Porn Fetch License</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top, #1f2937, #020617);
+      --card-bg: rgba(15, 23, 42, 0.95);
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.2);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.3);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * { box-sizing: border-box; }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: var(--text-main);
-            background: var(--bg-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--mono);
+      /* bigger + scales a bit on large monitors */
+      font-size: clamp(17px, 0.45vw + 14px, 20px);
+      color: var(--text-main);
+      background: var(--bg-gradient);
+      padding: 26px;
+    }
 
-        .wrapper {
-            max-width: 960px;
-            width: 100%;
-        }
+    /* Wider + not “tiny middle frame” */
+    .wrapper {
+      width: min(1680px, 100%);
+      margin: 0 auto;
+    }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 18px;
-            padding: 28px;
-            border: 1px solid var(--border-subtle);
-            box-shadow:
-                0 18px 45px rgba(15, 23, 42, 0.65),
-                0 0 0 1px rgba(15, 23, 42, 0.9);
-            display: grid;
-            grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
-            gap: 32px;
-        }
+    /* Top notice (clearly visible) */
+    .topbar {
+      position: sticky;
+      top: 14px;
+      z-index: 20;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(2, 6, 23, 0.65);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.45);
+      padding: 14px 14px;
+    }
 
-        @media (max-width: 800px) {
-            .card {
-                grid-template-columns: minmax(0, 1fr);
-                padding: 20px;
-            }
-        }
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-        .left h1 {
-            font-size: 1.9rem;
-            margin: 0 0 10px;
-            letter-spacing: 0.01em;
-        }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: var(--accent-soft);
-            color: #e5e7eb;
-            font-size: 0.75rem;
-            margin-bottom: 10px;
-        }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.7);
+      color: #e5e7eb;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
 
-        .badge-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            background: var(--accent);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
-        }
+    .pill strong { font-weight: 700; }
 
-        .left p {
-            margin: 0 0 12px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+    }
 
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
+    .topbar-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-        .feature {
-            padding: 10px 12px;
-            border-radius: 12px;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(55, 65, 81, 0.9);
-            font-size: 0.82rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
+    .linkbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.45);
+      color: #e5e7eb;
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
 
-        .feature span.icon {
-            font-size: 1rem;
-        }
+    .linkbtn:hover { filter: brightness(1.08); }
 
-        .feature strong {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
+    .topbar-note {
+      margin-top: 10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(15, 23, 42, 0.55);
+      color: var(--text-muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
 
-        .right {
-            border-radius: 16px;
-            background: radial-gradient(circle at top left, rgba(129, 140, 248, 0.18), transparent),
-            radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent),
-            rgba(15, 23, 42, 0.9);
-            padding: 20px 18px;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-        }
+    .topbar-note a { color: #a5b4fc; text-decoration: none; }
+    .topbar-note a:hover { text-decoration: underline; }
 
-        .price-row {
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
+    .card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 36px;
+      border: 1px solid var(--border-subtle);
+      box-shadow:
+        0 18px 45px rgba(15, 23, 42, 0.65),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      display: grid;
+      grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.1fr);
+      gap: 40px;
+      align-items: start;
+    }
 
-        .price-main {
-            font-size: 2rem;
-            font-weight: 700;
-        }
+    @media (max-width: 900px) {
+      body { padding: 18px; }
+      .card { grid-template-columns: 1fr; padding: 20px; }
+      .topbar { top: 10px; }
+    }
 
-        .price-currency {
-            color: #9ca3af;
-            font-size: 0.9rem;
-        }
+    .left h1 {
+      font-size: clamp(2.2rem, 1.1vw + 1.7rem, 3.2rem);
+      margin: 0 0 10px;
+      letter-spacing: 0.01em;
+      font-family: var(--mono);
+    }
 
-        .price-note {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-        }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #e5e7eb;
+      font-size: 0.82rem;
+      margin-bottom: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
 
-        .label {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.22);
+    }
 
-        .input {
-            width: 100%;
-            padding: 9px 11px;
-            border-radius: 10px;
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            background: rgba(15, 23, 42, 0.9);
-            color: var(--text-main);
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
+    .left p {
+      margin: 0 0 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 0.98rem;
+    }
 
-        .input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7);
-        }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
 
-        .hint {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-            margin-bottom: 12px;
-        }
+    .feature {
+      padding: 12px 12px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      font-size: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
 
-        .button {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 999px;
-            border: none;
-            cursor: pointer;
-            background: linear-gradient(90deg, #6366f1, #8b5cf6);
-            color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 8px;
-            transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
-            box-shadow:
-                0 14px 30px rgba(79, 70, 229, 0.6),
-                0 0 0 1px rgba(15, 23, 42, 0.9);
-        }
+    .feature span.icon { font-size: 1.05rem; margin-top: 1px; }
 
-        .button:hover {
-            filter: brightness(1.05);
-            transform: translateY(-1px);
-            box-shadow:
-                0 18px 40px rgba(79, 70, 229, 0.75),
-                0 0 0 1px rgba(15, 23, 42, 0.9);
-        }
+    .feature strong {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: #e5e7eb;
+    }
 
-        .button:active {
-            transform: translateY(0);
-            box-shadow:
-                0 8px 22px rgba(79, 70, 229, 0.7),
-                0 0 0 1px rgba(15, 23, 42, 0.9);
-        }
+    .right {
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at top left, rgba(129, 140, 248, 0.18), transparent),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent),
+        rgba(15, 23, 42, 0.9);
+      padding: 20px 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
 
-        .button[disabled] {
-            cursor: default;
-            opacity: 0.6;
-            box-shadow: none;
-            transform: none;
-        }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
 
-        .button-icon {
-            font-size: 1rem;
-        }
+    .price-main { font-size: 2.2rem; font-weight: 800; }
+    .price-currency { color: #9ca3af; font-size: 0.95rem; }
+    .price-note { font-size: 0.86rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
 
-        .secure-note {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 10px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
+    .button {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      color: white;
+      font-weight: 800;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      box-shadow:
+        0 14px 30px rgba(79, 70, 229, 0.6),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
 
-        .secure-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            background: #22c55e;
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
-        }
+    .button:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow:
+        0 18px 40px rgba(79, 70, 229, 0.75),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
 
-        .error-box {
-            margin-top: 10px;
-            padding: 8px 10px;
-            font-size: 0.78rem;
-            color: #fecaca;
-            background: rgba(248, 113, 113, 0.1);
-            border-radius: 9px;
-            border: 1px solid rgba(248, 113, 113, 0.5);
-            display: none;
-        }
+    .button:active {
+      transform: translateY(0);
+      box-shadow:
+        0 8px 22px rgba(79, 70, 229, 0.7),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
 
-        .footer-note {
-            margin-top: 20px;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            text-align: center;
-        }
+    .button[disabled] { cursor: default; opacity: 0.6; box-shadow: none; transform: none; }
 
-        a {
-            color: #a5b4fc;
-            text-decoration: none;
-        }
+    .button-icon { font-size: 1rem; }
 
-        a:hover {
-            text-decoration: underline;
-        }
+    .secure-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
 
-        /* NEW: checkbox styling */
-        .checkbox-group {
-            margin-top: 10px;
-            margin-bottom: 4px;
-        }
+    .secure-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22);
+      margin-top: 6px;
+      flex: 0 0 auto;
+    }
 
-        .checkbox-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-        }
+    .error-box {
+      margin-top: 10px;
+      padding: 9px 10px;
+      font-size: 0.9rem;
+      color: #fecaca;
+      background: rgba(248, 113, 113, 0.1);
+      border-radius: 10px;
+      border: 1px solid rgba(248, 113, 113, 0.5);
+      display: none;
+      line-height: 1.4;
+    }
 
-        .checkbox-item input {
-            margin-top: 2px;
-        }
-    </style>
+    .footer-note {
+      margin-top: 18px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    a { color: #a5b4fc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .checkbox-group { margin-top: 10px; margin-bottom: 6px; }
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .checkbox-item input { margin-top: 3px; }
+  </style>
 </head>
+
 <body>
-<div class="wrapper">
-    <div class="card">
-        <div class="left">
-            <div class="badge">
-                <span class="badge-dot"></span>
-                Full Version License
-            </div>
-            <h1>Porn Fetch — Full Unlock</h1>
-            <p>
-                Support development and unlock the full convenience experience:
-                automatic updates, one-click downloads, and all supported sites in one place.
-            </p>
-            <p>
-                The core project remains open source on GitHub.
-                The license is a “thank you” for supporting the time & effort behind it.
-            </p>
+  <div class="wrapper">
 
-            <div class="features">
-                <div class="feature">
-                    <span class="icon">⚡</span>
-                    <div>
-                        <strong>Instant license</strong>
-                        <span>License file is ready to download as soon as payment completes.</span>
-                    </div>
-                </div>
-                <div class="feature">
-                    <span class="icon">🧠</span>
-                    <div>
-                        <strong>Convenience features</strong>
-                        <span>Unlock quality-of-life features built on top of the open-source core.</span>
-                    </div>
-                </div>
-                <div class="feature">
-                    <span class="icon">❤️</span>
-                    <div>
-                        <strong>Support the dev</strong>
-                        <span>Help keep the project alive and updated.</span>
-                    </div>
-                </div>
-            </div>
+      <h1>WARNING: THIS IS A TEST ENVIRONMENT. YOUR CARD WON'T BE CHARGED! DO NOT BUY A LICENSE WITHOUT CONSENT!
+      </h1>
+
+    <!-- Clearly visible Stripe notice -->
+    <div class="topbar">
+      <div class="topbar-row">
+        <div class="topbar-left">
+          <span class="pill">
+            <span class="dot"></span>
+            <strong>Payments by Stripe</strong>
+            <span>· card data never reaches this server</span>
+          </span>
         </div>
 
-        <div class="right">
-            <div class="price-row">
-                <div class="price-main">5</div>
-                <div class="price-currency">EUR • one-time</div>
-            </div>
-            <div class="price-note">
-                Single user license. No subscription, no recurring charges.
-            </div>
-
-            <form id="checkout-form">
-                <div class="label">Email (optional)</div>
-                <input
-                    class="input"
-                    type="email"
-                    name="email"
-                    placeholder="you@example.com"
-                    autocomplete="email"
-                />
-                <div class="hint">
-                    Used for receipts and to associate the license with you. You can leave it empty if you prefer.
-                </div>
-
-                <!-- NEW: consent + age checkboxes -->
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="waiver-checkbox" name="waiver">
-                        <label for="waiver-checkbox">
-                            I explicitly agree that you begin fulfilling the contract by providing the digital
-                            license file before the end of the 14-day withdrawal period. I understand that
-                            once fulfillment starts, I lose my statutory right of withdrawal for this purchase.
-                        </label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="age-checkbox" name="age_confirm">
-                        <label for="age-checkbox">
-                            I confirm that I am at least 18 years old or at least the minimum age required
-                            by law in my country to access and use pornographic content.
-                        </label>
-                    </div>
-                </div>
-                <!-- /NEW -->
-
-                <button type="submit" class="button" id="checkout-button">
-                    <span class="button-icon">💳</span>
-                    <span>Continue to secure Stripe checkout</span>
-                </button>
-            </form>
-
-            <div class="secure-note">
-                <span class="secure-dot"></span>
-                <span>Payments are processed securely by Stripe. Your card data never touches this server.</span>
-            </div>
-
-            <div class="error-box" id="error-box"></div>
-
-            <div class="footer-note">
-                Want to inspect the code first?
-                <a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">
-                    View Porn Fetch on GitHub
-                </a>.
-            </div>
+        <div class="topbar-links">
+          <a class="linkbtn" href="/">← Home</a>
+          <a class="linkbtn" href="/impress">Impressum</a>
+          <a class="linkbtn" href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">Stripe Privacy Policy</a>
         </div>
+      </div>
+
+      <div class="topbar-note">
+        This checkout is handled by <strong>Stripe Checkout</strong>. Stripe processes payment and fraud-prevention data under their policies.
+        <br />
+        <strong>No credit card details or payment info are stored on my server.</strong>
+        <br />
+        If you enter an <strong>email address</strong> in Stripe Checkout, it is processed/stored by Stripe (e.g., receipts, risk checks) and shown in the Stripe dashboard.
+        <strong>My server does not use or require your email for the license.</strong>
+      </div>
     </div>
-</div>
 
-<script>
+    <div class="card">
+      <div class="left">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          Full Version License
+        </div>
+
+        <h1>Porn Fetch — Full Unlock</h1>
+
+        <p>
+          Support development and unlock the full convenience experience:
+          automatic updates, one-click downloads, and all supported sites in one place.
+        </p>
+        <p>
+          The core project remains open source on GitHub.
+          The license is a “thank you” for supporting the time &amp; effort behind it.
+        </p>
+
+        <div class="features">
+          <div class="feature">
+            <span class="icon">⚡</span>
+            <div>
+              <strong>Instant license</strong>
+              <span>License file is ready to download as soon as payment completes.</span>
+            </div>
+          </div>
+
+          <div class="feature">
+            <span class="icon">🧠</span>
+            <div>
+              <strong>Convenience features</strong>
+              <span>Unlock quality-of-life features built on top of the open-source core.</span>
+            </div>
+          </div>
+
+          <div class="feature">
+            <span class="icon">❤️</span>
+            <div>
+              <strong>Support the dev</strong>
+              <span>Help keep the project alive and updated.</span>
+            </div>
+          </div>
+
+          <!-- FIXED: this is no longer nested inside the ❤️ feature -->
+          <div class="feature">
+            <span class="icon">📦</span>
+            <div>
+              <strong>Offline and forever</strong>
+              <span>
+                The license stays valid permanently (including upcoming versions).<br />
+                No internet connection needed for activation.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="price-row">
+          <div class="price-main">5</div>
+          <div class="price-currency">EUR • one-time</div>
+        </div>
+        <div class="price-note">
+          Single user license. No subscription, no recurring charges.
+        </div>
+
+        <form id="checkout-form">
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="waiver-checkbox" name="waiver" />
+              <label for="waiver-checkbox">
+                I explicitly agree that you begin fulfilling the contract by providing the digital
+                license file before the end of the 14-day withdrawal period. I understand that
+                once fulfillment starts, I lose my statutory right of withdrawal for this purchase.
+              </label>
+            </div>
+
+            <div class="checkbox-item">
+              <input type="checkbox" id="age-checkbox" name="age_confirm" />
+              <label for="age-checkbox">
+                I confirm that I am at least 18 years old or at least the minimum age required
+                by law in my country to access and use pornographic content.
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="button" id="checkout-button">
+            <span class="button-icon">💳</span>
+            <span>Continue to secure Stripe checkout</span>
+          </button>
+        </form>
+
+        <div class="secure-note">
+          <span class="secure-dot"></span>
+          <span>
+            Payments are processed securely by Stripe. Your card data never touches this server.
+          </span>
+        </div>
+
+        <div class="error-box" id="error-box"></div>
+
+        <div class="footer-note">
+          Want to inspect the server code first?
+          <a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">View Server on GitHub</a>.
+          <br />
+          You can also view Porn Fetch’s code:
+          <a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">View Porn Fetch on GitHub</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
     const form = document.getElementById("checkout-form");
     const button = document.getElementById("checkout-button");
     const errorBox = document.getElementById("error-box");
@@ -407,54 +476,44 @@
     const ageCheckbox = document.getElementById("age-checkbox");
 
     form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        errorBox.style.display = "none";
-        errorBox.textContent = "";
+      event.preventDefault();
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
 
-        // NEW: enforce both checkboxes
-        if (!waiverCheckbox.checked || !ageCheckbox.checked) {
-            errorBox.textContent =
-                "Please confirm that you waive the 14-day withdrawal right for this digital license " +
-                "and that you meet the minimum age requirement.";
-            errorBox.style.display = "block";
-            return;
-        }
-        // /NEW
+      if (!waiverCheckbox.checked || !ageCheckbox.checked) {
+        errorBox.textContent =
+          "Please confirm that you waive the 14-day withdrawal right for this digital license " +
+          "and that you meet the minimum age requirement.";
+        errorBox.style.display = "block";
+        return;
+      }
 
-        const formData = new FormData(form);
-        const email = formData.get("email") || null;
+      button.disabled = true;
+      button.textContent = "Redirecting to Stripe...";
 
-        button.disabled = true;
-        button.textContent = "Redirecting to Stripe...";
+      try {
+        const res = await fetch("/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            waiver: waiverCheckbox.checked,
+            age_confirm: ageCheckbox.checked
+            // NOTE: We intentionally do NOT send an email to this server.
+            // If Stripe collects an email during Checkout, it stays on Stripe.
+          })
+        });
 
-        try {
-            const res = await fetch("/create-checkout-session", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    waiver: waiverCheckbox.checked,      // NEW (optional to store server-side)
-                    age_confirm: ageCheckbox.checked     // NEW
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok || !data.url) {
-                throw new Error(data.error || "Unexpected error occurred.");
-            }
-
-            // Redirect to Stripe-hosted checkout
-            window.location = data.url;
-        } catch (err) {
-            console.error(err);
-            errorBox.textContent = err.message || "Failed to start checkout.";
-            errorBox.style.display = "block";
-            button.disabled = false;
-            button.textContent = "Continue to secure Stripe checkout";
-        }
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || "Unexpected error occurred.");
+        window.location = data.url;
+      } catch (err) {
+        console.error(err);
+        errorBox.textContent = err.message || "Failed to start checkout.";
+        errorBox.style.display = "block";
+        button.disabled = false;
+        button.textContent = "Continue to secure Stripe checkout";
+      }
     });
-</script>
+  </script>
 </body>
 </html>

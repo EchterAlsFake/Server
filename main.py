@@ -1,24 +1,26 @@
-from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g
+import os
+import json
+import base64
+import stripe
+import secrets
+import sqlite3
+import markdown
+import threading
+import subprocess
+
+from io import BytesIO
 from flask_limiter import Limiter
 from werkzeug.serving import WSGIRequestHandler
 from flask_limiter.util import get_remote_address
-import os
-import json
-import markdown
-from datetime import datetime, timedelta
-import threading
-import subprocess
-import sqlite3
-import stripe
-import hmac
-import hashlib
-from io import BytesIO
+from datetime import datetime, timedelta, timezone
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g
 
 # Configuration
-SAVE_DIR = "/home/asuna/Dokumente/Porn_Fetch/"  # Now mainly used as DB folder
+SAVE_DIR = "./"  # Now mainly used as DB folder
 ALLOWED_ENDPOINTS = ["/report", "/feedback", "/ping", "/update", "ci"]
 RATE_LIMIT = "10000 per minute"
-MAX_REQUEST_SIZE = 200 * 1024  # 200KB
+MAX_REQUEST_SIZE = 200 * 1024  # 200 KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
 CI_TOKEN = os.environ.get("CI_TOKEN")   # Token used to update the CI stuff from n8n workflows (long story)
 KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
@@ -27,7 +29,8 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")  # pk_test_...
 STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID")          # price_xxx for your Porn Fetch license
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")    # whsec_... from Stripe
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
-LICENSE_SECRET = os.environ.get("LICENSE_SECRET", "dev-secret-change-me")
+LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
+
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -82,25 +85,32 @@ def init_db():
             bytes_written INTEGER NOT NULL,
             created_at TEXT NOT NULL
         );
-            
-        CREATE TABLE IF NOT EXISTS licenses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT UNIQUE NOT NULL,
-            email TEXT,
-            license_key TEXT NOT NULL,
-            created_at TEXT NOT NULL
-        )
         """
     )
 
-    # Ensure a single stats row exists
+    started_at = datetime.utcnow().isoformat()
+
+    # Ensure a single stats row exists, and RESET it on each server start.
     cur = conn.execute("SELECT COUNT(*) FROM stats WHERE id = 1;")
     count = cur.fetchone()[0]
+
     if count == 0:
         conn.execute(
             "INSERT INTO stats (id, total_requests, total_bytes_in, total_bytes_out, server_started_at) "
             "VALUES (1, 0, 0, 0, ?);",
-            (datetime.utcnow().isoformat(),),
+            (started_at,),
+        )
+    else:
+        conn.execute(
+            """
+            UPDATE stats
+            SET total_requests = 0,
+                total_bytes_in = 0,
+                total_bytes_out = 0,
+                server_started_at = ?
+            WHERE id = 1;
+            """,
+            (started_at,),
         )
 
     conn.commit()
@@ -109,51 +119,6 @@ def init_db():
 
 init_db()
 
-
-def save_license(session_id: str, email: str | None, license_key: str) -> None:
-    """Store or update a license record for a given Stripe Checkout session."""
-    created_at = datetime.utcnow().isoformat() + "Z"
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            INSERT OR REPLACE INTO licenses (session_id, email, license_key, created_at)
-            VALUES (?, ?, ?, ?)
-            """,
-            (session_id, email, license_key, created_at),
-        )
-        conn.commit()
-
-
-def get_license(session_id: str) -> dict | None:
-    """Fetch a license record by checkout session id."""
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.execute(
-            """
-            SELECT session_id, email, license_key, created_at
-            FROM licenses
-            WHERE session_id = ?
-            """,
-            (session_id,),
-        )
-        row = cur.fetchone()
-
-    if not row:
-        return None
-
-    return {
-        "session_id": row[0],
-        "email": row[1],
-        "license_key": row[2],
-        "created_at": row[3],
-    }
-
-
-def generate_license_key(email: str | None, session_id: str) -> str:
-    """Deterministic license key: HMAC(email:session_id, LICENSE_SECRET)."""
-    email = email or "anonymous"
-    msg = f"{email}:{session_id}".encode("utf-8")
-    key = hmac.new(LICENSE_SECRET.encode("utf-8"), msg, hashlib.sha256).hexdigest()
-    return key
 
 def get_db():
     """Get a per-request sqlite connection."""
@@ -172,6 +137,41 @@ def close_db(exception):
 
 
 # ---------- Helper functions ----------
+def canonical_json_bytes(obj: dict) -> bytes:
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def make_license_key(prefix="PF") -> str:
+    # human-friendly-ish, not a secret, just an identifier
+    raw = secrets.token_hex(16).upper()
+    # PF-XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX
+    chunks = [raw[i:i+8] for i in range(0, len(raw), 8)]
+    return f"{prefix}-" + "-".join(chunks)
+
+
+def sign_license(payload: dict) -> str:
+    if not LICENSE_PRIVATE_KEY_B64:
+        raise RuntimeError("Missing LICENSE_PRIVATE_KEY_B64")
+
+    priv = Ed25519PrivateKey.from_private_bytes(base64.b64decode(LICENSE_PRIVATE_KEY_B64))
+    msg = canonical_json_bytes(payload)
+    sig = priv.sign(msg)
+    return base64.b64encode(sig).decode("ascii")
+
+
+def verify_paid_checkout_session(session_id: str) -> stripe.checkout.Session:
+    # Retrieve from Stripe and verify it was paid + correct price/product.
+    sess = stripe.checkout.Session.retrieve(session_id, expand=["line_items"])
+    if sess.get("payment_status") != "paid":
+        raise ValueError("Payment not completed.")
+
+    # Optional: ensure the right product/price was purchased
+    if STRIPE_PRICE_ID:
+        items = sess["line_items"]["data"]
+        ok = any((li.get("price") or {}).get("id") == STRIPE_PRICE_ID for li in items)
+        if not ok:
+            raise ValueError("Wrong product purchased for this session.")
+    return sess
 
 def shutdown_server():
     print(">>> KILL SWITCH TRIGGERED: More than 2GB written in the past hour. Shutting down.")
@@ -257,9 +257,7 @@ def get_reports(tag: str, limit: int = 50):
     return [
         {
             "id": row["id"],
-            "tag": row["tag"],
             "timestamp": row["created_at"],
-            "message": row["message"],
         }
         for row in rows
     ]
@@ -509,7 +507,7 @@ def initiate_poweroff():
 # ---------- Routes ----------
 @app.route("/impress", methods=["GET"])
 def impress():
-    # Renders a modern-looking page with a BUY button
+    # Renders a modern-looking page with a (hopefully) legal impress (required by german law)
     return render_template(
         "impress.html",
     )
@@ -562,83 +560,41 @@ def buy_success():
 def buy_cancel():
     return render_template("buy_cancel.html")
 
-@app.route("/stripe/webhook", methods=["POST"])
-def stripe_webhook():
-    payload = request.data
-    sig_header = request.headers.get("Stripe-Signature")
-
-    if not STRIPE_WEBHOOK_SECRET:
-        # Misconfigured server
-        return "Webhook secret not configured", 500
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload=payload,
-            sig_header=sig_header,
-            secret=STRIPE_WEBHOOK_SECRET
-        )
-    except Exception as e:
-        # Signature verification failure or JSON parsing error
-        return f"Webhook error: {str(e)}", 400
-
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        handle_successful_checkout(session)
-
-    # Optionally handle other events here
-
-    return "", 200
-
-
-def handle_successful_checkout(session: dict) -> None:
-    """Called when Stripe tells us a Checkout session was successfully completed."""
-    session_id = session["id"]
-    email = None
-
-    # Stripe can store email in different places depending on configuration
-    if session.get("customer_details") and session["customer_details"].get("email"):
-        email = session["customer_details"]["email"]
-    elif session.get("customer_email"):
-        email = session["customer_email"]
-
-    license_key = generate_license_key(email, session_id)
-    save_license(session_id, email, license_key)
-
 
 @app.route("/download_license", methods=["GET"])
 @limiter.limit(RATE_LIMIT)
 def download_license():
-    session_id = request.args.get("session_id")
+    session_id = request.args.get("session_id", "")
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
-    record = {
-        "email": "test@test.com",
-        "session_id": session_id,
-        "license_key": "test",
-        "created_at": "sometime"
+    try:
+        verify_paid_checkout_session(session_id)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+
+    created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    license_payload = {
+        "schema": 1,
+        "product": "porn-fetch",
+        "kid": "v1",
+        "alg": "ed25519",
+        "license_key": make_license_key(),
+        "stripe_session_id": session_id,
+        "created_at": created_at,
+        "features": ["full_unlock"],
     }
-    if not record:
-        # Either payment not completed yet, or no such session
-        return jsonify({"error": "License not found or payment not completed yet"}), 404
 
-    content = f"""# Porn Fetch License
+    license_payload["sig"] = sign_license(license_payload)
 
-Email: {record['email']}
-Stripe-Session: {record['session_id']}
-License-Key: {record['license_key']}
-Created-At: {record['created_at']}
-
-Thank you for supporting Porn Fetch ❤️
-"""
-
-    file_stream = BytesIO(content.encode("utf-8"))
+    file_bytes = (json.dumps(license_payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
     return send_file(
-        file_stream,
+        BytesIO(file_bytes),
         as_attachment=True,
         download_name="porn_fetch.license",
-        mimetype="text/plain",
+        mimetype="application/json",
     )
+
 
 @app.route("/", methods=["GET"])
 def landing_page():
@@ -665,7 +621,7 @@ def update():
     stuff = jsonify({
         "version": version,
         "url": "https://github.com/EchterAlsFake/Porn_Fetch/releases/tag/3.6",
-        "anonymous_download": "https://echteralsfake.duckdns.org/download",
+        "anonymous_download": "https://echteralsfake.me/download",
         "changelog": changelog,
         "important_info": "Nothing here ;)"
     })
