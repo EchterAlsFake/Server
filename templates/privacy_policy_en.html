@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Privacy Policy</title>
+  <style>
+    :root{
+      --bg: #0b0f17;
+      --bg2:#0c1220;
+      --card:#111a2b;
+      --card2:#0f1726;
+      --text:#e9eefc;
+      --muted:#b9c4e3;
+      --muted2:#93a1c8;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 16px 40px rgba(0,0,0,.35);
+      --accent:#7aa2ff;
+      --accent2:#b07cff;
+      --link:#8fb4ff;
+      --ring: rgba(122,162,255,.35);
+      --codebg: rgba(255,255,255,.06);
+      --radius: 18px;
+      --radius2: 12px;
+      --max: 1020px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f7f8fc;
+        --bg2:#ffffff;
+        --card:#ffffff;
+        --card2:#fbfbff;
+        --text:#111827;
+        --muted:#475569;
+        --muted2:#64748b;
+        --border: rgba(15,23,42,.10);
+        --shadow: 0 18px 42px rgba(2,6,23,.10);
+        --accent:#2f6bff;
+        --accent2:#8b4dff;
+        --link:#2f6bff;
+        --ring: rgba(47,107,255,.22);
+        --codebg: rgba(15,23,42,.06);
+      }
+    }
+
+    *{ box-sizing: border-box; }
+    html{ scroll-behavior: smooth; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(122,162,255,.28), transparent 55%),
+        radial-gradient(1000px 520px at 90% 0%, rgba(176,124,255,.22), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      line-height: 1.65;
+    }
+
+    a{ color: var(--link); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+    a:focus-visible, button:focus-visible, summary:focus-visible{
+      outline: 3px solid var(--ring);
+      outline-offset: 3px;
+      border-radius: 10px;
+    }
+
+    .skip{
+      position:absolute; left:-999px; top:0;
+      padding:10px 14px; background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+    }
+    .skip:focus{ left: 16px; top: 16px; }
+
+    header{
+      padding: 44px 18px 22px;
+    }
+    .wrap{ max-width: var(--max); margin: 0 auto; }
+
+    .hero{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(700px 260px at 20% 0%, rgba(122,162,255,.22), transparent 55%),
+                  radial-gradient(700px 260px at 80% 0%, rgba(176,124,255,.18), transparent 55%);
+      pointer-events:none;
+      filter: blur(6px);
+      opacity: .9;
+    }
+    .hero > *{ position: relative; }
+
+    h1{
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.12;
+    }
+    .meta{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      white-space: nowrap;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(122,162,255,.14);
+    }
+
+    main{ padding: 14px 18px 60px; }
+
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (min-width: 960px){
+      .layout{ grid-template-columns: 280px 1fr; gap: 18px; }
+      .toc{ position: sticky; top: 16px; }
+    }
+
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .toc{
+      padding: 16px 14px;
+    }
+    .toc h2{
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted2);
+      margin: 0 0 10px;
+    }
+    .toc a{
+      display:block;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      color: var(--text);
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.05);
+      border-color: var(--border);
+      text-decoration: none;
+    }
+    .toc a small{ color: var(--muted2); display:block; margin-top: 2px; }
+
+    .content{
+      padding: 18px;
+    }
+
+    section{
+      padding: 18px 18px 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.03);
+      margin-bottom: 14px;
+    }
+    section:last-child{ margin-bottom: 0; }
+
+    h2{
+      margin: 0 0 8px;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+    h3{
+      margin: 16px 0 8px;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+    p{ margin: 10px 0; color: var(--text); }
+    .muted{ color: var(--muted); }
+
+    hr{
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 14px 0;
+    }
+
+    address{
+      font-style: normal;
+      margin: 10px 0 0;
+      color: var(--text);
+    }
+    .controller{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    @media (min-width: 720px){
+      .controller{ grid-template-columns: 1.2fr .8fr; }
+    }
+    .box{
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.03);
+      padding: 14px;
+    }
+    .box strong{ display:block; font-size: 16px; margin-bottom: 6px; }
+
+    ul, ol{ margin: 10px 0 14px 20px; }
+    li{ margin: 7px 0; }
+    code{
+      font-family: var(--mono);
+      background: var(--codebg);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: .95em;
+    }
+
+    .callout{
+      border-left: 4px solid rgba(122,162,255,.65);
+      background: rgba(122,162,255,.10);
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin: 12px 0;
+      color: var(--text);
+    }
+
+    footer{
+      padding: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    footer .wrap{
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    @media print{
+      body{ background: #fff; color: #000; }
+      .card, section, .hero{ box-shadow:none; }
+      .toc{ display:none; }
+      a{ color: #000; text-decoration: underline; }
+      code{ border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <h1>Privacy Policy</h1>
+        <p class="muted">
+          This page explains how personal data is processed when you visit this website and when you use optional features.
+        </p>
+        <div class="meta" aria-label="Document metadata">
+          <span class="pill"><span class="dot" aria-hidden="true"></span> Status: December 2025</span>
+          <span class="pill">GDPR / CCPA information</span>
+          <span class="pill">Contact: <a href="mailto:EchterAlsFake@proton.me">EchterAlsFake@proton.me</a></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="content">
+    <div class="wrap">
+      <div class="layout">
+        <nav class="card toc" aria-label="Table of contents">
+          <h2>On this page</h2>
+          <a href="#controller">Controller</a>
+          <a href="#server-logs">Provision of the Website and Server Logs</a>
+          <a href="#cloudflare">Use of Cloudflare (DNS &amp; Protection Services)</a>
+          <a href="#cookies">Cookies, Analytics Services and External Content</a>
+          <a href="#feedback">Voluntary Feedback and Bug Reports</a>
+          <a href="#stripe">Payment Processing via Stripe</a>
+          <a href="#rights">Your Rights as a Data Subject</a>
+          <a href="#ccpa">Notice for Users from California (CCPA)</a>
+          <a href="#changes">Changes to this Privacy Policy</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <article class="card content" aria-label="Privacy policy content">
+          <section id="controller">
+            <h2>Controller</h2>
+            <p>The controller responsible for the processing of personal data on this website is:</p>
+
+            <div class="controller">
+              <div class="box">
+                <strong>Johannes Habel</strong>
+                <address>
+                  Bahnstr. 21<br />
+                  06886 Lutherstadt Wittenberg<br />
+                  Germany
+                </address>
+              </div>
+              <div class="box">
+                <strong>Email</strong>
+                <p style="margin:0;">
+                  <a href="mailto:EchterAlsFake@proton.me">EchterAlsFake@proton.me</a>
+                </p>
+              </div>
+            </div>
+
+            <hr />
+          </section>
+
+          <section id="server-logs">
+            <h2>Provision of the Website and Server Logs</h2>
+            <p>
+              This website is operated on my own server (a laptop) in a private residence in Germany. The operating system
+              used is Arch Linux with a Flask web server. Access is provided via a reverse proxy (NGINX) with HTTPS
+              encryption (TLS certificate), so that your connection data is transmitted confidentially and securely.
+              No external hosting provider is involved; all data initially remains on my self-managed server.
+            </p>
+            <p>
+              When you visit the website, certain access data is processed temporarily for technical reasons (e.g., IP address
+              and browser information) in order to deliver the website’s content to you. However, I refrain from the usual
+              storage of IP addresses or other personal data in log files. No IP addresses are stored permanently. The server
+              does not log individually which user accessed which pages. Instead, it only records aggregated statistics—especially
+              the number of requests to the server and the data volume (in megabytes) of inbound and outbound traffic. This
+              information is used exclusively to monitor server operation and bandwidth usage (e.g., to detect technical problems
+              or unusually high traffic) and does not contain any personal individual details.
+            </p>
+            <p>
+              The temporary processing of IP addresses and technical data is necessary to deliver the website to your device and
+              to ensure the security and stability of my offering. The legal basis for this is my legitimate interest in a secure
+              and functional operation of the website (Article 6(1)(f) GDPR). As mentioned, only anonymized usage statistics without
+              personal reference are stored permanently. These statistics are not combined with other data.
+            </p>
+          </section>
+
+          <section id="cloudflare">
+            <h2>Use of Cloudflare (DNS &amp; Protection Services)</h2>
+            <p>
+              I use the services of Cloudflare, Inc. (101 Townsend St., San Francisco, CA 94107, USA) in the free plan to provide
+              my website faster and more securely. Cloudflare acts as the DNS provider for domain resolution and functions as a
+              reverse proxy between you and my server. Among other things, Cloudflare provides an IPv4-to-IPv6 tunnel (so that my
+              site is also reachable via IPv4) and offers DDoS protection and bot protection for my website. All requests from your
+              browser to my website initially pass through Cloudflare servers distributed worldwide. Cloudflare filters harmful
+              requests (e.g., from malicious bots) and forwards legitimate requests to my origin server. This significantly increases
+              the security of my website and can also improve loading speed, as Cloudflare may cache content and deliver it from a
+              server near you.
+            </p>
+
+            <h3>Processing by Cloudflare</h3>
+            <p>
+              By using Cloudflare, personal data such as your IP address and other connection data is technically processed and
+              temporarily stored by Cloudflare. Cloudflare uses this information in particular to defend against attacks and to
+              ensure website availability. Since Cloudflare’s server infrastructure is globally distributed, Cloudflare may also
+              process this data worldwide. Cloudflare, Inc. is a U.S. company; data of website visitors may therefore be transferred
+              to the USA. Cloudflare has, however, assured that it processes personal data in compliance with the GDPR. I have
+              concluded a data processing agreement with Cloudflare in accordance with Article 28 GDPR, under which Cloudflare may
+              process the data of my website visitors only on my instructions and for the purposes described here.
+            </p>
+
+            <h3>Cookies used by Cloudflare</h3>
+            <p>
+              This website itself does not use its own cookies (see the section “Cookies, Analytics Services and External Content”
+              below). However, as part of its protection functions, Cloudflare may set a technically necessary cookie on your device,
+              e.g., to distinguish legitimate visitors from bots. This cookie—called <code>__cf_bm</code>—is used for bot detection
+              and is strictly required for the security functions; it does not contain directly personal data about you. The
+              <code>__cf_bm</code> cookie has a short lifespan and is automatically deleted after 30 minutes of inactivity. Cloudflare
+              does not use cookies for advertising or tracking purposes and does not perform cross-site user tracking via this cookie
+              (a separate, non-linked cookie is set per website). Consent under Section 25 TTDSG is not required for this strictly
+              necessary security cookie.
+            </p>
+
+            <h3>Legal basis</h3>
+            <p>
+              I use Cloudflare on the basis of Article 6(1)(f) GDPR. My legitimate interest is to protect my website against attacks,
+              ensure high availability, and optimize loading times.
+            </p>
+
+            <div class="callout">
+              <p style="margin:0;">
+                Please note that all data you transmit to my website (e.g., by accessing a page) inevitably also passes through
+                Cloudflare as an intermediary. Cloudflare uses this data exclusively to fulfill the purposes stated above (protection
+                and performance optimization) and not for its own advertising purposes. Cloudflare does not sell users’ personal data.
+                Further information can be found in Cloudflare’s privacy policy on Cloudflare’s website.
+              </p>
+            </div>
+          </section>
+
+          <section id="cookies">
+            <h2>Cookies, Analytics Services and External Content</h2>
+            <p>
+              My website does not use any cookies of its own. Apart from the Cloudflare security cookie mentioned above, no data is
+              stored on your device in the form of cookies or similar technologies when you visit my site. I do not use any tracking
+              or analytics services (such as Google Analytics) and refrain from any form of user profiling. No tracking of your user
+              behavior takes place.
+            </p>
+            <p>
+              Furthermore, I do not embed external content from third-party providers that would transmit data to third parties when
+              the site is accessed. For example, I do not use externally hosted fonts (Google Fonts or similar), no external video or
+              social media plugins, and no advertising networks. All content and resources (images, scripts, stylesheets, etc.) are
+              delivered either directly from my own server or via the Cloudflare CDN described above. This prevents your browser from
+              sending data to other external services without your knowledge.
+            </p>
+            <p>
+              In summary: you can use my website without tracking cookies being set or your behavior being analyzed for marketing
+              purposes. Your privacy and data security are my highest priority.
+            </p>
+          </section>
+
+          <section id="feedback">
+            <h2>Voluntary Feedback and Bug Reports</h2>
+            <p>
+              My application “Porn Fetch”, which is publicly available on GitHub with its source code, offers the option to voluntarily
+              send feedback or bug reports to my server (e.g., via a corresponding function within the app). If you decide to submit
+              such feedback, the information you provide will be stored on my server in order to evaluate the feedback and, if
+              necessary, respond to issues.
+            </p>
+
+            <h3>Which data is collected?</h3>
+            <p>
+              In the case of feedback/bug reports, I store only the message text you submit, the app version (if transmitted by the
+              app), and a timestamp of receipt. I do not collect IP addresses, names, email addresses, or any other personal contact
+              details in connection with your feedback. Please also do not include sensitive personal data in your report. My intention
+              is solely to receive technical feedback (e.g., error messages, suggestions for improvement) in order to improve my app.
+            </p>
+            <p>
+              The submitted feedback data is used exclusively to analyze your report, fix issues, and improve the service. It is not
+              used for other purposes. The data is not shared with third parties. Access is limited to the website operator/developer.
+            </p>
+
+            <h3>Legal basis</h3>
+            <p>
+              Since your feedback is submitted voluntarily, the processing of your feedback data is based on your consent (Article
+              6(1)(a) GDPR). By actively sending a report, you consent to the processing of the information it contains. You may
+              withdraw this consent at any time with effect for the future by informing me informally (e.g., by email—see “Contact”
+              below). In such a case, I will delete your feedback data without undue delay, unless a statutory retention obligation
+              prevents this.
+            </p>
+
+            <h3>Retention</h3>
+            <p>
+              I store feedback and bug reports only for as long as necessary for processing and improvement. Once the content of your
+              report has been evaluated and addressed, the data will be deleted completely.
+            </p>
+          </section>
+
+          <section id="stripe">
+            <h2>Payment Processing via Stripe</h2>
+            <p>
+              If you make a payment on my website (e.g., to purchase a license or a product), this is processed via the external
+              payment service provider Stripe. I use Stripe Checkout, which redirects you to Stripe’s website for payment processing
+              (<code>stripe.com</code>). Stripe is a professional payment provider that processes your payment on my behalf. For users
+              within the EU, Stripe acts via its European entity <strong>Stripe Payments Europe Ltd., 1 Grand Canal Street Lower,
+              Dublin, Ireland</strong>. (For users outside the EU or in the background, the service provider is <strong>Stripe, Inc.,
+              USA</strong>.) As a certified payment service provider, Stripe is subject to applicable security standards and data
+              protection requirements.
+            </p>
+
+            <h3>Processing by Stripe</h3>
+            <p>
+              All personal data required for payment is entered by you directly into Stripe and processed by Stripe. Depending on the
+              payment method, this may include payment information such as credit card number, cardholder details, expiry date and CVC,
+              and possibly your name and billing address, as well as other information requested in the payment form. This data entry
+              takes place exclusively on Stripe’s payment page—my website does not have access to your full payment details (in
+              particular not your credit card number or bank account). My website transmits to Stripe only transaction-related data
+              necessary for the payment process (e.g., the specific order, amount, currency, and a session/transaction ID for
+              allocation).
+            </p>
+            <p>
+              After you complete the payment on Stripe’s page, Stripe informs me of the successful transaction. As a rule, you will be
+              redirected back to my website, where the license file you purchased is made available for download immediately. This
+              license file contains, as a technical proof, only the Stripe session ID of the relevant payment, but no personal data
+              such as name or address. I do not store any further personal payment data about you on my server. In particular, I do
+              not maintain my own customer database containing your payment or contact data. While Stripe may provide me with certain
+              transaction data in its dashboard (e.g., date, amount, possibly the email address you entered for the payment
+              confirmation), I use this data only to the extent necessary for payment processing (e.g., to trace a transaction in case
+              of a problem).
+            </p>
+
+            <h3>Purpose and legal basis</h3>
+            <p>
+              Stripe is integrated for the purpose of performing a contract (Article 6(1)(b) GDPR). If you purchase a paid service or
+              product via my website, processing of payment data is necessary to complete the purchase and provide the service you
+              acquired. In addition, I have a legitimate interest (Article 6(1)(f) GDPR) in offering you a secure and reliable payment
+              method via Stripe, as I do not want to process payment information myself. Stripe is PCI DSS certified and offers high
+              security for online payments—this also helps protect your payment data as effectively as possible.
+            </p>
+
+            <h3>Disclosure to Stripe and roles</h3>
+            <p>
+              In the context of payment processing, the above-mentioned data is transmitted to Stripe. Stripe acts partly as a
+              processor on my behalf to carry out the transaction technically and is contractually bound under Article 28 GDPR to
+              process data only in accordance with my instructions. At the same time, Stripe uses certain data as an independent
+              controller, for example to comply with statutory financial and anti-money-laundering regulations or for fraud prevention.
+              I have no influence on these internal processing activities by Stripe. Stripe does, however, state that it does not sell
+              data or use it for third-party advertising purposes.
+            </p>
+
+            <h3>Transfers to third countries</h3>
+            <p>
+              Stripe may also process data outside the EU, in particular in the USA. For EU customers, payments are processed via Stripe
+              Payments Europe in Ireland; however, as part of the service, data may be transferred to the U.S. parent company. Stripe
+              has committed contractually and organizationally to ensuring an adequate level of data protection. In particular, Stripe
+              is a participant in the EU–U.S. Data Privacy Framework (status 2023). In addition, Stripe uses the Standard Contractual
+              Clauses (SCC) approved by the European Commission as an additional safeguard to ensure that European data protection
+              standards are maintained even if data is processed in the USA or other countries. This ensures a level of data security
+              and protection equivalent to that of the GDPR.
+            </p>
+
+            <h3>Retention</h3>
+            <p>
+              I do not store personal data in connection with payments locally unless there is a statutory retention obligation (e.g.,
+              tax-law requirements for transaction records). As a rule, my storage is limited to the license information (including the
+              Stripe session ID) and basic transaction data (e.g., time, amount) that I need for accounting. Stripe itself stores your
+              payment data in accordance with legal requirements and its own privacy policies; I have no influence on the exact
+              retention period at Stripe (Stripe may, for example, retain transaction information to handle refunds, disputes, or
+              official requirements).
+            </p>
+            <p>
+              Further details on Stripe’s data processing can be found in Stripe’s privacy policy on Stripe’s website. If you have
+              questions about Stripe’s handling of your data, you can also contact Stripe directly at
+              <a href="mailto:privacy@stripe.com">privacy@stripe.com</a>.
+            </p>
+          </section>
+
+          <section id="rights">
+            <h2>Your Rights as a Data Subject</h2>
+            <p>
+              As a data subject affected by data processing, you have the following rights under the GDPR. You can exercise these
+              rights against me at any time free of charge:
+            </p>
+            <ul>
+              <li><strong>Right of access (Article 15 GDPR):</strong> You have the right to request confirmation as to whether I process personal data relating to you. If so, you have the right of access to this data and to further information, e.g., the purposes of processing, recipients, and the planned retention period.</li>
+              <li><strong>Right to rectification (Article 16 GDPR):</strong> You have the right to request the correction of inaccurate personal data or completion of incomplete personal data without undue delay.</li>
+              <li><strong>Right to erasure (Article 17 GDPR):</strong> You can request that I delete your personal data, provided the legal requirements are met. This is the case, for example, if the data is no longer necessary for the purposes for which it was collected, if you withdraw consent and there is no other legal basis, or if the data was processed unlawfully.</li>
+              <li><strong>Right to restriction of processing (Article 18 GDPR):</strong> Under certain conditions, you have the right to request restriction of the processing of your data. For example, you may request restriction while I verify an alleged inaccuracy of your data.</li>
+              <li><strong>Right to data portability (Article 20 GDPR):</strong> Where technically feasible, you have the right to receive data that I process automatically on the basis of your consent or for contract performance, in a commonly used, machine-readable format, or to have it transmitted to a third party.</li>
+              <li><strong>Right to object (Article 21 GDPR):</strong> You may object at any time, on grounds relating to your particular situation, to processing based on legitimate interests. I will then stop processing your personal data unless I can demonstrate compelling legitimate grounds that override your interests, rights and freedoms, or the processing serves the establishment, exercise or defense of legal claims. <strong>Note:</strong> Your right to object also includes the right to object to direct marketing. In my case, however, I do not carry out any direct marketing using your data.</li>
+              <li><strong>Right to withdraw consent (Article 7(3) GDPR):</strong> If you have given me consent to process personal data (e.g., when submitting feedback), you can withdraw this consent at any time with effect for the future. The withdrawal does not affect the lawfulness of processing carried out up to that point.</li>
+              <li><strong>Right to lodge a complaint with a supervisory authority (Article 77 GDPR):</strong> You also have the right to lodge a complaint with a data protection supervisory authority about my processing of your personal data. You can do so, for example, with the authority in the EU member state of your residence or at the controller’s place of establishment. In Germany, this is in particular the state data protection authority of the federal state in which I have my residence/business establishment (here: Germany, State of Saxony-Anhalt).</li>
+            </ul>
+            <p>
+              To exercise your rights, you can contact me informally at any time (e.g., by email). You will find the contact details
+              in the “Controller” section above and/or in the website’s legal notice.
+            </p>
+          </section>
+
+          <section id="ccpa">
+            <h2>Notice for Users from California (CCPA)</h2>
+            <p>
+              Although my offering primarily falls under European (German) jurisdiction and I generally do not meet the thresholds of
+              the California Consumer Privacy Act (CCPA), I would like—purely for completeness—to inform Californian visitors about
+              their privacy rights. If the CCPA applies to my data processing, as a consumer residing in California you have the
+              following rights:
+            </p>
+            <ul>
+              <li><strong>Right to Know:</strong> You have the right to know which categories of personal data I collect about you and for what purpose, as well as the right to access specific personal information I have stored about you (roughly corresponding to the right of access).</li>
+              <li><strong>Right to Delete:</strong> You can request that I delete personal data I have collected from you, unless statutory exceptions apply (similar to the right to erasure).</li>
+              <li><strong>Right to Opt-Out of Sale:</strong> The CCPA gives you the right to opt out of the sale of your personal information. <strong>Note:</strong> I do not sell any personal data to third parties—neither for payment nor in any other form. Your data is used exclusively as described in this policy.</li>
+              <li><strong>Right to Non-Discrimination:</strong> You have the right not to be discriminated against for exercising your privacy rights. This means I will not provide you with a worse service or impose disadvantages on you because you exercise your rights (e.g., an access or deletion request).</li>
+            </ul>
+            <p>
+              To exercise your CCPA rights, you can contact me via the email address stated in the legal notice or above. Since— as
+              described— I collect personal data only to a very limited extent, I expect few CCPA requests in practice. Nevertheless,
+              I will process any verified request from California within the scope of statutory requirements. Please indicate in your
+              request that it is a CCPA request and describe as precisely as possible which right you wish to exercise.
+            </p>
+          </section>
+
+          <section id="changes">
+            <h2>Changes to this Privacy Policy</h2>
+            <p>
+              I reserve the right to amend this privacy policy as needed, e.g., in the event of legal changes (such as new laws or
+              requirements) or if I introduce new services that require an explanation of data usage. The current version of this
+              privacy policy is always available at <code>https://echteralsfake.me/datenschutz</code> on my website. I will also
+              announce material changes in an appropriate manner (e.g., via the website).
+            </p>
+            <p><strong>Status of this privacy policy:</strong> December 2025.</p>
+          </section>
+
+          <section id="contact">
+            <h2>Contact</h2>
+            <p>
+              If you have questions about data protection on my website, would like to request information, or wish to exercise one of
+              your rights, you can contact me at any time. The best way is to use the email address stated above (see “Controller”).
+              I will treat your request confidentially and respond as quickly as possible. Your privacy is important to me—please do
+              not hesitate to contact me.
+            </p>
+            <p>Thank you for your trust and for visiting my website.</p>
+          </section>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="muted">
+        © <span id="y">2025</span> Johannes Habel · Privacy Policy
+      </div>
+    </div>
+    <script>
+      // Optional tiny enhancement; remove if you prefer zero JS.
+      document.getElementById("y").textContent = new Date().getFullYear();
+    </script>
+  </footer>
+</body>
+</html>

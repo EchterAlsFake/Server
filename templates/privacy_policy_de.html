@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Datenschutzerklärung</title>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --bg2:#0c1220;
+      --card:#111a2b;
+      --text:#e9eefc;
+      --muted:#b9c4e3;
+      --muted2:#93a1c8;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 16px 40px rgba(0,0,0,.35);
+      --accent:#7aa2ff;
+      --accent2:#b07cff;
+      --link:#8fb4ff;
+      --ring: rgba(122,162,255,.35);
+      --codebg: rgba(255,255,255,.06);
+      --radius: 18px;
+      --radius2: 12px;
+      --max: 1020px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f7f8fc;
+        --bg2:#ffffff;
+        --card:#ffffff;
+        --text:#111827;
+        --muted:#475569;
+        --muted2:#64748b;
+        --border: rgba(15,23,42,.10);
+        --shadow: 0 18px 42px rgba(2,6,23,.10);
+        --accent:#2f6bff;
+        --accent2:#8b4dff;
+        --link:#2f6bff;
+        --ring: rgba(47,107,255,.22);
+        --codebg: rgba(15,23,42,.06);
+      }
+    }
+
+    *{ box-sizing: border-box; }
+    html{ scroll-behavior: smooth; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(122,162,255,.28), transparent 55%),
+        radial-gradient(1000px 520px at 90% 0%, rgba(176,124,255,.22), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      line-height: 1.65;
+    }
+
+    a{ color: var(--link); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+    a:focus-visible, summary:focus-visible{
+      outline: 3px solid var(--ring);
+      outline-offset: 3px;
+      border-radius: 10px;
+    }
+
+    .skip{
+      position:absolute; left:-999px; top:0;
+      padding:10px 14px; background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+    }
+    .skip:focus{ left: 16px; top: 16px; }
+
+    header{ padding: 44px 18px 22px; }
+    .wrap{ max-width: var(--max); margin: 0 auto; }
+
+    .hero{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 260px at 20% 0%, rgba(122,162,255,.22), transparent 55%),
+        radial-gradient(700px 260px at 80% 0%, rgba(176,124,255,.18), transparent 55%);
+      pointer-events:none;
+      filter: blur(6px);
+      opacity: .9;
+    }
+    .hero > *{ position: relative; }
+
+    h1{
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.12;
+    }
+    .meta{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      white-space: nowrap;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(122,162,255,.14);
+    }
+
+    main{ padding: 14px 18px 60px; }
+
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (min-width: 960px){
+      .layout{ grid-template-columns: 280px 1fr; gap: 18px; }
+      .toc{ position: sticky; top: 16px; }
+    }
+
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .toc{ padding: 16px 14px; }
+    .toc h2{
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted2);
+      margin: 0 0 10px;
+    }
+    .toc a{
+      display:block;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      color: var(--text);
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.05);
+      border-color: var(--border);
+      text-decoration: none;
+    }
+
+    .content{ padding: 18px; }
+
+    section{
+      padding: 18px 18px 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.03);
+      margin-bottom: 14px;
+    }
+    section:last-child{ margin-bottom: 0; }
+
+    h2{
+      margin: 0 0 8px;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+    h3{
+      margin: 16px 0 8px;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    p{ margin: 10px 0; }
+    .muted{ color: var(--muted); }
+
+    hr{
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 14px 0;
+    }
+
+    address{
+      font-style: normal;
+      margin: 10px 0 0;
+    }
+
+    .controller{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    @media (min-width: 720px){
+      .controller{ grid-template-columns: 1.2fr .8fr; }
+    }
+
+    .box{
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.03);
+      padding: 14px;
+    }
+    .box strong{ display:block; font-size: 16px; margin-bottom: 6px; }
+
+    ul, ol{ margin: 10px 0 14px 20px; }
+    li{ margin: 7px 0; }
+
+    code{
+      font-family: var(--mono);
+      background: var(--codebg);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: .95em;
+    }
+
+    .callout{
+      border-left: 4px solid rgba(122,162,255,.65);
+      background: rgba(122,162,255,.10);
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin: 12px 0;
+    }
+
+    .note{
+      border-left: 4px solid rgba(176,124,255,.60);
+      background: rgba(176,124,255,.10);
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin: 12px 0;
+    }
+
+    footer{
+      padding: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    footer .wrap{
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    @media print{
+      body{ background: #fff; color: #000; }
+      .card, section, .hero{ box-shadow:none; }
+      .toc{ display:none; }
+      a{ color: #000; text-decoration: underline; }
+      code{ border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <h1>Datenschutzerklärung</h1>
+        <p class="muted">
+          Auf dieser Seite erfahren Sie, wie personenbezogene Daten beim Besuch dieser Website und bei optionalen Funktionen verarbeitet werden.
+        </p>
+        <div class="meta" aria-label="Dokument-Metadaten">
+          <span class="pill"><span class="dot" aria-hidden="true"></span> Stand: Dezember 2025</span>
+          <span class="pill">Informationen nach DSGVO / CCPA</span>
+          <span class="pill">Kontakt: <a href="mailto:EchterAlsFake@proton.me">EchterAlsFake@proton.me</a></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="inhalt">
+    <div class="wrap">
+      <div class="layout">
+        <nav class="card toc" aria-label="Inhaltsverzeichnis">
+          <h2>Inhalt</h2>
+          <a href="#verantwortliche-stelle">Verantwortliche Stelle</a>
+          <a href="#server-logs">Bereitstellung der Website und Server-Logs</a>
+          <a href="#cloudflare">Verwendung von Cloudflare (DNS &amp; Schutzdienste)</a>
+          <a href="#cookies">Cookies, Analysedienste und externe Inhalte</a>
+          <a href="#feedback">Freiwillige Feedback- und Fehlerberichte</a>
+          <a href="#stripe">Zahlungsabwicklung über Stripe</a>
+          <a href="#rechte">Ihre Rechte als betroffene Person</a>
+          <a href="#ccpa">Hinweis für Nutzer aus Kalifornien (CCPA)</a>
+          <a href="#aenderungen">Änderungen dieser Datenschutzerklärung</a>
+          <a href="#kontakt">Kontakt</a>
+        </nav>
+
+        <article class="card content" aria-label="Datenschutzerklärung">
+          <section id="verantwortliche-stelle">
+            <h2>Verantwortliche Stelle</h2>
+            <p>Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website ist:</p>
+
+            <div class="controller">
+              <div class="box">
+                <strong>Johannes Habel</strong>
+                <address>
+                  Bahnstr. 21<br />
+                  06886 Lutherstadt Wittenberg, Deutschland
+                </address>
+              </div>
+              <div class="box">
+                <strong>E-Mail</strong>
+                <p style="margin:0;">
+                  <a href="mailto:EchterAlsFake@proton.me">EchterAlsFake@proton.me</a>
+                </p>
+              </div>
+            </div>
+
+            <hr />
+          </section>
+
+          <section id="server-logs">
+            <h2>Bereitstellung der Website und Server-Logs</h2>
+            <p>
+              Diese Website wird auf einem eigenen Server (einem Laptop) in einer privaten Wohnung in Deutschland betrieben. Als
+              Betriebssystem kommt Arch Linux mit einem Flask-Webserver zum Einsatz. Der Zugriff erfolgt über einen Reverse Proxy
+              (NGINX) mit HTTPS-Verschlüsselung (TLS-Zertifikat), sodass Ihre Verbindungsdaten vertraulich und sicher übertragen
+              werden. Es ist kein externer Hosting-Dienstleister zwischengeschaltet; alle Daten verbleiben zunächst auf meinem selbst
+              verwalteten Server.
+            </p>
+            <p>
+              Beim Besuch der Website werden aus technischen Gründen temporär bestimmte Zugriffsdaten verarbeitet (z.B. die IP-Adresse
+              und Browserinformationen), um Ihnen die Inhalte der Seite auszuliefern. Ich verzichte jedoch auf das übliche Speichern
+              von IP-Adressen oder anderen personenbezogenen Daten in Logfiles. Es werden keine IP-Adressen dauerhaft gespeichert.
+              Der Server protokolliert nicht individuell, welcher Nutzer welche Seiten aufgerufen hat. Stattdessen erfasst er
+              lediglich aggregierte Statistiken: insbesondere die Anzahl der Anfragen an den Server sowie das Datenvolumen (in
+              Megabyte) der ein- und ausgehenden Daten. Diese Informationen dienen ausschließlich der Überwachung der Serverfunktion
+              und Bandbreitennutzung (z.B. um technische Probleme oder einen ungewöhnlich hohen Traffic zu erkennen) und enthalten
+              keine personenbezogenen Einzelangaben.
+            </p>
+            <p>
+              Die vorübergehende Verarbeitung von IP-Adressen und technischen Daten ist notwendig, um die Webseite an Ihr Endgerät
+              auszuliefern und die Sicherheit und Stabilität meines Angebots zu gewährleisten. Rechtsgrundlage hierfür ist mein
+              berechtigtes Interesse an einem sicheren und funktionsfähigen Betrieb der Website (Art. 6 Abs. 1 lit. f DSGVO).
+              Dauerhaft gespeichert werden wie erwähnt nur anonymisierte Nutzungsstatistiken ohne Personenbezug. Eine Zusammenführung
+              dieser Statistiken mit anderen Daten erfolgt nicht.
+            </p>
+          </section>
+
+          <section id="cloudflare">
+            <h2>Verwendung von Cloudflare (DNS &amp; Schutzdienste)</h2>
+            <p>
+              Ich nutze die Dienste von Cloudflare Inc. (101 Townsend St., San Francisco, CA 94107, USA) in der kostenlosen
+              Plan-Variante, um meine Website schneller und sicherer bereitzustellen. Cloudflare übernimmt als DNS-Provider die
+              Auflösung meiner Domain und fungiert als Reverse Proxy zwischen Ihnen und meinem Server. Dadurch stellt Cloudflare
+              unter anderem einen IPv4-zu-IPv6-Tunnel bereit (sodass meine Seite auch über IPv4 erreichbar ist) und bietet einen
+              DDoS-Schutz sowie Bot-Schutz für meine Website. Alle Anfragen von Ihrem Browser an meine Website laufen zunächst über
+              Cloudflare-Server, die weltweit verteilt sind. Cloudflare filtert dabei schädliche Anfragen (etwa von bösartigen Bots)
+              heraus und leitet legitime Anfragen an meinen Origin-Server weiter. Dies erhöht die Sicherheit meiner Website erheblich
+              und kann gleichzeitig die Ladegeschwindigkeit verbessern, da Cloudflare Inhalte ggf. zwischenspeichert und von einem
+              Server in Ihrer Nähe ausliefert.
+            </p>
+
+            <h3>Datenverarbeitung durch Cloudflare</h3>
+            <p>
+              Durch den Einsatz von Cloudflare werden technisch bedingt personenbezogene Daten wie Ihre IP-Adresse und weitere
+              Verbindungsdaten von Cloudflare verarbeitet und zwischengespeichert. Cloudflare nutzt diese Informationen insbesondere,
+              um Angriffe abzuwehren und die Erreichbarkeit der Website sicherzustellen. Cloudflare kann diese Daten auch weltweit
+              verarbeiten, da die Serverinfrastruktur global verteilt ist. Cloudflare, Inc. ist ein US-Unternehmen; Daten von
+              Website-Besuchern können daher in die USA übertragen werden. Cloudflare hat zugesichert, alle personenbezogenen Daten im
+              Einklang mit der DSGVO zu verarbeiten. Ich habe mit Cloudflare einen Vertrag zur Auftragsverarbeitung gemäß Art. 28
+              DSGVO abgeschlossen, wonach Cloudflare die Daten meiner Website-Besucher nur nach meiner Weisung und für die hier
+              beschriebenen Zwecke verarbeiten darf.
+            </p>
+
+            <h3>Einsatz von Cookies durch Cloudflare</h3>
+            <p>
+              Meine Website selbst verwendet keine eigenen Cookies (siehe Abschnitt „Cookies, Analysedienste und externe Inhalte“).
+              Cloudflare setzt allerdings im Rahmen seiner Schutzfunktionen ggf. ein technisch notwendiges Cookie auf Ihrem Gerät,
+              z.B. um zwischen legitimen Besuchern und Bots zu unterscheiden. Dieses Cookie – genannt <code>__cf_bm</code> – dient zur
+              Bot-Erkennung und ist für die Sicherheitsfunktionen zwingend erforderlich; es enthält keine direkt personenbezogenen
+              Daten zu Ihrer Person. Der <code>__cf_bm</code>-Cookie hat eine kurze Lebensdauer und wird nach 30 Minuten Inaktivität
+              automatisch gelöscht. Cloudflare nutzt keine Cookies zu Werbe- oder Trackingzwecken und führt über dieses Cookie kein
+              seitenübergreifendes Nutzertracking durch (pro Website wird ein eigener, nicht verknüpfter Cookie gesetzt). Eine
+              Einwilligung nach §25 TTDSG ist für diesen unbedingt erforderlichen Sicherheits-Cookie nicht erforderlich.
+            </p>
+
+            <h3>Rechtsgrundlage</h3>
+            <p>
+              Ich setze Cloudflare auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO ein. Mein berechtigtes Interesse besteht darin, meine
+              Website vor Angriffen zu schützen, eine hohe Verfügbarkeit sicherzustellen und Ladezeiten zu optimieren.
+            </p>
+
+            <div class="callout">
+              <p style="margin:0;">
+                Bitte beachten Sie, dass alle Daten, die Sie an meine Website übermitteln (z.B. durch Aufruf einer Seite), zwangsläufig
+                auch Cloudflare als Vermittler passieren. Cloudflare verwendet diese Daten ausschließlich zur Erfüllung der oben
+                genannten Zwecke (Schutz und Leistungsoptimierung) und nicht zu eigenen Werbezwecken. Cloudflare verkauft keine
+                personenbezogenen Daten der Nutzer. Weitere Informationen finden Sie in der Cloudflare-Datenschutzerklärung auf der
+                Cloudflare-Website.
+              </p>
+            </div>
+          </section>
+
+          <section id="cookies">
+            <h2>Cookies, Analysedienste und externe Inhalte</h2>
+            <p>
+              Meine Webseite verwendet keinerlei eigene Cookies. Abgesehen vom oben erwähnten Cloudflare-Sicherheitscookie werden auf
+              Ihrem Gerät keine Daten in Form von Cookies oder ähnlichen Technologien gespeichert, wenn Sie meine Seite besuchen. Ich
+              verwende keine Tracking- oder Analysedienste (wie z.B. Google Analytics) und verzichte auf jegliche Form von
+              Nutzerprofiling. Es findet kein Tracking Ihres Nutzerverhaltens statt.
+            </p>
+            <p>
+              Des Weiteren binde ich keine externen Inhalte von Drittanbietern ein, die beim Aufruf der Seite Daten an Dritte
+              übertragen würden. Ich nutze z.B. keine extern gehosteten Schriftarten (Google Fonts o.ä.), keine externen Video- oder
+              Social-Media-Plugins und keine Werbenetzwerke. Alle Inhalte und Ressourcen (Bilder, Skripte, Stylesheets etc.) stammen
+              entweder direkt von meinem eigenen Server oder werden über das oben beschriebene CDN von Cloudflare ausgeliefert.
+              Dadurch wird vermieden, dass Ihr Browser ungefragt Daten an andere externe Dienste sendet.
+            </p>
+            <p>
+              Zusammengefasst: Sie können meine Website nutzen, ohne dass Tracking-Cookies gesetzt werden oder Ihr Verhalten zu
+              Marketingzwecken analysiert wird. Ihre Privatsphäre und Datensicherheit genießen höchste Priorität.
+            </p>
+          </section>
+
+          <section id="feedback">
+            <h2>Freiwillige Feedback- und Fehlerberichte</h2>
+            <p>
+              Meine Anwendung „Porn Fetch“, welche öffentlich auf GitHub mit Quellcode einsehbar ist, bietet die Möglichkeit,
+              freiwillig Feedback oder Fehlermeldungen an meinen Server zu senden. Dies kann z.B. über eine entsprechende Funktion
+              innerhalb der App erfolgen. Wenn Sie sich entscheiden, eine solche Rückmeldung zu übermitteln, werden die von Ihnen
+              eingegebenen Informationen auf meinem Server gespeichert, um das Feedback auszuwerten und ggf. auf Probleme zu reagieren.
+            </p>
+
+            <h3>Welche Daten werden erhoben?</h3>
+            <p>
+              Im Falle einer Feedback-/Fehlermeldung speichere ich ausschließlich den von Ihnen übermittelten Nachrichtentext, die
+              App-Version (sofern von der App mitgesendet) und einen Zeitstempel des Eingangs. Ich erfasse keine IP-Adressen, Namen,
+              E-Mail-Adressen oder sonstige persönlichen Kontaktdaten im Zusammenhang mit Ihrem Feedback. Bitte geben Sie in Ihrer
+              Fehlermeldung selbst ebenfalls keine sensiblen personenbezogenen Daten an. Meine Absicht ist es, lediglich technische
+              Rückmeldungen (z.B. Fehlermeldungen, Verbesserungsvorschläge) zu erhalten, um meine App zu verbessern.
+            </p>
+
+            <p>
+              Die übermittelten Feedback-Daten werden ausschließlich zu dem Zweck verwendet, Ihre Meldung zu analysieren, Probleme zu
+              beheben und den Dienst zu verbessern. Eine Verwendung für andere Zwecke findet nicht statt. Die Daten werden nicht an
+              Dritte weitergegeben. Der Zugriff darauf ist auf den Website-Betreiber bzw. Entwickler beschränkt.
+            </p>
+
+            <h3>Rechtsgrundlage</h3>
+            <p>
+              Die Verarbeitung Ihrer Feedback-Daten erfolgt – da sie von Ihnen freiwillig eingesandt werden – mit Ihrer Einwilligung
+              (Art. 6 Abs. 1 lit. a DSGVO). Indem Sie aktiv eine Meldung absenden, stimmen Sie der Verarbeitung der darin enthaltenen
+              Informationen zu. Sie können diese Einwilligung selbstverständlich jederzeit für die Zukunft widerrufen, indem Sie mich
+              formlos darüber informieren (z.B. per E-Mail – siehe Kontakt unten). In einem solchen Fall werde ich Ihre Feedback-Daten
+              unverzüglich löschen, sofern keine gesetzliche Aufbewahrungspflicht dem entgegensteht.
+            </p>
+
+            <h3>Aufbewahrung</h3>
+            <p>
+              Feedback- und Fehlerberichte speichere ich nur so lange, wie es für die Bearbeitung und Verbesserung nötig ist. Habe ich
+              den Inhalt Ihrer Meldung ausgewertet und behoben, werden die Daten vollständig gelöscht.
+            </p>
+          </section>
+
+          <section id="stripe">
+            <h2>Zahlungsabwicklung über Stripe</h2>
+            <p>
+              Wenn Sie auf meiner Website eine Zahlung (z.B. zum Erwerb einer Lizenz oder eines Produkts) durchführen, erfolgt dies
+              über den externen Zahlungsdienst Stripe. Ich nutze Stripe Checkout, bei dem Sie für die Zahlungsabwicklung auf die Seite
+              von Stripe weitergeleitet werden (<code>stripe.com</code>). Stripe ist ein professioneller Zahlungsanbieter, der Ihre
+              Zahlung in meinem Auftrag abwickelt. Für Nutzer innerhalb der EU tritt Stripe über seine europäische Gesellschaft
+              <strong>Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin, Irland</strong> auf. (Für Nutzer außerhalb der
+              EU oder im Hintergrund ist <strong>Stripe, Inc., USA</strong> der Dienstleister.) Stripe unterliegt als zertifizierter
+              Zahlungsdienstleister den geltenden Sicherheitsstandards und Datenschutzbestimmungen.
+            </p>
+
+            <h3>Datenverarbeitung durch Stripe</h3>
+            <p>
+              Alle für die Zahlung erforderlichen personenbezogenen Daten werden direkt von Ihnen an Stripe eingegeben und von Stripe
+              verarbeitet. Dazu gehören je nach Zahlungsmethode z.B. Zahlungsinformationen wie Kreditkartennummer, Karteninhaberdaten,
+              Gültigkeit und CVC, ggf. Ihr Name und Ihre Rechnungsadresse, sowie weitere vom Zahlungsformular abgefragte Informationen.
+              Diese Dateneingabe erfolgt ausschließlich auf der Stripe-Zahlungsseite – meine Website erhält keinen Zugriff auf Ihre
+              vollständigen Zahlungsdetails (insbesondere nicht auf Ihre Kreditkartennummer oder Bankkonto). Meine Website übermittelt
+              an Stripe nur die transaktionsbezogenen Daten, die für den Bezahlvorgang nötig sind (z.B. die konkrete Bestellung,
+              Betrag, Währung und eine Sitzungs-/Transaktions-ID zur Zuordnung).
+            </p>
+
+            <p>
+              Nachdem Sie die Zahlung auf der Stripe-Seite abgeschlossen haben, informiert Stripe mich über den Erfolg der Transaktion.
+              In der Regel werden Sie zurück auf meine Website geleitet, wo Ihnen unmittelbar Ihre erworbene Lizenzdatei zum Download
+              angeboten wird. Diese Lizenzdatei enthält als technischen Nachweis lediglich die Stripe Session ID der betreffenden
+              Zahlung, aber keine personenbezogenen Daten wie Name oder Anschrift. Ich speichere auf meinem Server keine weiteren
+              persönlichen Zahlungsdaten von Ihnen. Insbesondere führe ich keine eigene Kundendatenbank mit Ihren Zahlungs- oder
+              Kontaktdaten. Stripe kann mir zwar in seinem Dashboard gewisse Transaktionsdaten zur Verfügung stellen (z.B. Datum,
+              Betrag, evtl. von Ihnen angegebene E-Mail für die Zahlungsbestätigung), doch nutze ich diese Daten nur soweit erforderlich
+              zur Zahlungsabwicklung (etwa um bei einem Problem den Vorgang nachzuvollziehen).
+            </p>
+
+            <h3>Zweck und Rechtsgrundlage</h3>
+            <p>
+              Die Einbindung von Stripe erfolgt zum Zweck der Vertragsdurchführung (Art. 6 Abs. 1 lit. b DSGVO). Wenn Sie einen
+              kostenpflichtigen Dienst oder ein Produkt über meine Website beziehen, ist die Verarbeitung der Zahlungsdaten notwendig,
+              um den Kauf abzuwickeln und Ihnen die erworbene Leistung bereitstellen zu können. Zudem habe ich ein berechtigtes
+              Interesse (Art. 6 Abs. 1 lit. f DSGVO) daran, Ihnen mit Stripe eine sichere und zuverlässige Zahlungsmethode anzubieten,
+              da ich selbst keine Zahlungsinformationen verarbeiten möchte. Stripe ist PCI-DSS-zertifiziert und bietet hohe Sicherheit
+              für Online-Zahlungen – dadurch schütze ich auch Ihre Zahlungsdaten bestmöglich.
+            </p>
+
+            <h3>Weitergabe an Stripe und Verantwortlichkeit</h3>
+            <p>
+              Im Rahmen der Zahlung werden die genannten Daten an Stripe übermittelt. Stripe agiert teilweise als Auftragsverarbeiter
+              in meinem Auftrag, um die Transaktion technisch durchzuführen, und ist vertraglich nach Art. 28 DSGVO verpflichtet, die
+              Daten nur gemäß meinen Anweisungen zu verarbeiten. Gleichzeitig nutzt Stripe bestimmte Daten als eigenständig
+              Verantwortlicher, etwa um gesetzliche Finanz- und Geldwäschevorschriften zu erfüllen oder zur Betrugsprävention. Auf
+              diese Stripe-internen Verarbeitungen habe ich keinen Einfluss. Stripe versichert jedoch, die Daten nicht zu verkaufen
+              oder für fremde Werbezwecke zu nutzen.
+            </p>
+
+            <h3>Datenübermittlung in Drittländer</h3>
+            <p>
+              Stripe kann Daten auch außerhalb der EU verarbeiten, insbesondere in den USA. Für EU-Kunden werden Zahlungen zwar über
+              Stripe Payments Europe in Irland abgewickelt, jedoch können im Rahmen der Dienstleistung Daten an die US-Muttergesellschaft
+              weitergegeben werden. Stripe hat sich vertraglich und organisatorisch verpflichtet, ein angemessenes Datenschutzniveau
+              sicherzustellen. Insbesondere ist Stripe aktiver Teilnehmer des EU–U.S. Data Privacy Frameworks (Stand 2023). Darüber
+              hinaus verwendet Stripe die von der EU-Kommission genehmigten Standardvertragsklauseln (Standard Contractual Clauses – SCC)
+              als zusätzliche Garantie dafür, dass europäische Datenschutzstandards gewahrt bleiben, selbst wenn Daten in den USA oder
+              anderen Ländern verarbeitet werden. Damit wird ein Niveau an Datensicherheit und -schutz gewährleistet, das dem der DSGVO
+              entspricht.
+            </p>
+
+            <h3>Speicherdauer</h3>
+            <p>
+              Personenbezogene Daten, die im Zusammenhang mit Zahlungen stehen, werden von mir nicht lokal gespeichert, außer es
+              besteht eine gesetzliche Aufbewahrungspflicht (etwa aus steuerrechtlichen Gründen für Transaktionsbelege). In der Regel
+              beschränkt sich meine Speicherung auf die Lizenzinformationen (inkl. Stripe-Session-ID) und grundlegende Transaktionsdaten
+              (z.B. Zeitpunkt, Betrag), die ich für meine Buchhaltung benötige. Stripe selbst speichert Ihre Zahlungsdaten gemäß den
+              gesetzlichen Vorgaben und den eigenen Datenschutzrichtlinien; auf die genaue Dauer der Speicherung bei Stripe habe ich
+              keinen Einfluss (Stripe bewahrt z.B. Transaktionsinformationen auf, um Rückerstattungen, Streitfälle oder behördliche
+              Anforderungen erfüllen zu können).
+            </p>
+
+            <p>
+              Weitere Details zur Datenverarbeitung durch Stripe finden Sie in der Datenschutzerklärung von Stripe (abrufbar auf der
+              Stripe-Website). Wenn Sie Fragen zum Umgang mit Ihren Daten bei Stripe haben, können Sie sich auch direkt an Stripe wenden:
+              <a href="mailto:privacy@stripe.com">privacy@stripe.com</a>.
+            </p>
+          </section>
+
+          <section id="rechte">
+            <h2>Ihre Rechte als betroffene Person</h2>
+            <p>
+              Als von einer Datenverarbeitung betroffene Person stehen Ihnen nach der DSGVO die folgenden Rechte zu. Sie können diese
+              Rechte jederzeit unentgeltlich mir gegenüber geltend machen:
+            </p>
+            <ul>
+              <li><strong>Recht auf Auskunft (Art. 15 DSGVO):</strong> Sie haben das Recht, eine Bestätigung darüber zu verlangen, ob ich personenbezogene Daten von Ihnen verarbeite. Falls ja, haben Sie ein Recht auf Auskunft über diese Daten sowie auf weitere Informationen, z.B. die Verarbeitungszwecke, die Empfänger und die geplante Speicherdauer.</li>
+              <li><strong>Recht auf Berichtigung (Art. 16 DSGVO):</strong> Sie haben das Recht, unverzüglich die Berichtigung unrichtiger oder Vervollständigung unvollständiger personenbezogener Daten zu verlangen.</li>
+              <li><strong>Recht auf Löschung (Art. 17 DSGVO):</strong> Sie können verlangen, dass ich Ihre personenbezogenen Daten lösche, sofern die gesetzlichen Voraussetzungen erfüllt sind. Dies ist z.B. der Fall, wenn die Daten für die Zwecke, für die sie erhoben wurden, nicht mehr notwendig sind, Sie eine erteilte Einwilligung widerrufen und es an einer anderweitigen Rechtsgrundlage fehlt, oder wenn ich die Daten unrechtmäßig verarbeitet habe.</li>
+              <li><strong>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO):</strong> Sie haben das Recht, unter bestimmten Voraussetzungen die Einschränkung der Verarbeitung Ihrer Daten zu verlangen. Beispielsweise können Sie die Verarbeitung einschränken lassen, solange ich eine von Ihnen behauptete Datenunrichtigkeit prüfe.</li>
+              <li><strong>Recht auf Datenübertragbarkeit (Art. 20 DSGVO):</strong> Sie haben – soweit technisch machbar – das Recht, Daten, die ich auf Grundlage Ihrer Einwilligung oder zur Vertragserfüllung automatisiert verarbeite, in einem gängigen, maschinenlesbaren Format zu erhalten oder sie an einen Dritten übertragen zu lassen.</li>
+              <li><strong>Widerspruchsrecht (Art. 21 DSGVO):</strong> Datenverarbeitungen, die ich auf ein berechtigtes Interesse stütze, können Sie jederzeit aus Gründen, die sich aus Ihrer besonderen Situation ergeben, widersprechen. Ich verarbeite die personenbezogenen Daten dann nicht mehr, es sei denn, ich kann zwingende schutzwürdige Gründe nachweisen, die Ihre Interessen, Rechte und Freiheiten überwiegen, oder die Verarbeitung dient der Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen. <strong>Hinweis:</strong> Ihr Widerspruchsrecht umfasst auch das Widerspruchsrecht gegen Direktwerbung. In meinem Falle betreibe ich jedoch keinerlei Direktwerbung mit Ihren Daten.</li>
+              <li><strong>Recht auf Widerruf von Einwilligungen (Art. 7 Abs. 3 DSGVO):</strong> Wenn Sie mir eine Einwilligung in die Verarbeitung personenbezogener Daten erteilt haben (z.B. beim Absenden eines Feedbacks), können Sie diese Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen. Durch den Widerruf wird die Rechtmäßigkeit der bis dahin vorgenommenen Verarbeitung nicht berührt.</li>
+              <li><strong>Recht auf Beschwerde bei einer Aufsichtsbehörde (Art. 77 DSGVO):</strong> Sie haben schließlich das Recht, sich bei einer Datenschutz-Aufsichtsbehörde über die Verarbeitung Ihrer personenbezogenen Daten durch mich zu beschweren. Sie können dies z.B. bei der Aufsichtsbehörde des EU-Mitgliedstaats Ihres Aufenthaltsortes oder am Sitz des Verantwortlichen tun. In Deutschland ist für mich insbesondere der Landesdatenschutzbeauftragte des Bundeslandes zuständig, in dem ich meinen Wohnsitz/Unternehmenssitz habe (hier: Deutschland, Bundesland Sachsen-Anhalt).</li>
+            </ul>
+            <p>
+              Um Ihre Rechte auszuüben, können Sie sich jederzeit formlos (z.B. per E-Mail) an mich wenden. Die Kontaktdaten finden
+              Sie im Abschnitt „Verantwortliche Stelle“ oben bzw. im Impressum der Website.
+            </p>
+          </section>
+
+          <section id="ccpa">
+            <h2>Hinweis für Nutzer aus Kalifornien (CCPA)</h2>
+            <p>
+              Obwohl mein Angebot primär dem europäischen (deutschen) Raum unterliegt und ich die Schwellenwerte des California Consumer
+              Privacy Act (CCPA) in der Regel nicht erreiche, möchte ich der Vollständigkeit halber auch kalifornische Besucher über
+              deren Datenschutzrechte informieren. Sollte der CCPA für meine Datenverarbeitung anwendbar sein, stehen Ihnen als in
+              Kalifornien ansässiger Verbraucher folgende Rechte zu:
+            </p>
+            <ul>
+              <li><strong>Right to Know:</strong> Sie haben das Recht zu erfahren, welche Kategorien personenbezogener Daten ich über Sie sammele und zu welchem Zweck, sowie Auskunft zu konkreten personenbezogenen Informationen, die ich über Sie gespeichert habe (entspricht etwa dem Auskunftsrecht).</li>
+              <li><strong>Right to Delete:</strong> Sie können verlangen, dass ich personenbezogene Daten lösche, die ich von Ihnen erhoben habe, soweit keine gesetzlichen Ausnahmen greifen (ähnlich dem Recht auf Löschung).</li>
+              <li><strong>Right to Opt-Out of Sale:</strong> Der CCPA gibt Ihnen das Recht, dem Verkauf Ihrer personenbezogenen Daten zu widersprechen bzw. sich davon abzumelden. <strong>Hinweis:</strong> Ich verkaufe keinerlei personenbezogene Daten an Dritte, weder gegen Bezahlung noch in anderer Form. Ihre Daten werden ausschließlich wie in dieser Erklärung beschrieben genutzt.</li>
+              <li><strong>Right to Non-Discrimination:</strong> Sie haben das Recht, bei Ausübung Ihrer Datenschutzrechte nicht benachteiligt zu werden. Das heißt, ich werde Ihnen aufgrund der Wahrnehmung Ihrer Rechte (z.B. einer Auskunfts- oder Löschanfrage) keine schlechtere Dienstleistung bieten oder Ihnen Nachteile auferlegen.</li>
+            </ul>
+            <p>
+              Zur Ausübung Ihrer CCPA-Rechte können Sie mich über die im Impressum oder oben genannte E-Mail-Adresse kontaktieren.
+              Da ich – wie beschrieben – nur sehr eingeschränkt personenbezogene Daten erhebe, erwarte ich in der Praxis kaum Anfragen
+              unter dem CCPA. Nichtsdestotrotz werde ich jede verifizierte Anfrage aus Kalifornien im Rahmen der gesetzlichen Vorgaben
+              bearbeiten. Bitte weisen Sie in Ihrer Kontaktaufnahme darauf hin, dass es sich um eine CCPA-Anfrage handelt, und
+              beschreiben Sie möglichst genau, welches Recht Sie ausüben möchten.
+            </p>
+          </section>
+
+          <section id="aenderungen">
+            <h2>Änderungen dieser Datenschutzerklärung</h2>
+            <p>
+              Ich behalte mir vor, diese Datenschutzerklärung bei Bedarf anzupassen, z.B. bei rechtlichen Änderungen (etwa neuen
+              Gesetzen oder Vorgaben) oder wenn ich neue Dienste einführe, die eine Erklärung der Datennutzung erfordern. Die jeweils
+              aktuelle Version der Datenschutzerklärung ist stets unter der URL <code>https://echteralsfake.me/datenschutz</code> auf
+              meiner Website abrufbar. Wesentliche Änderungen werde ich zudem auf geeignete Weise (z.B. über die Website) ankündigen.
+            </p>
+            <p><strong>Stand dieser Datenschutzerklärung:</strong> Dezember 2025.</p>
+          </section>
+
+          <section id="kontakt">
+            <h2>Kontakt</h2>
+            <p>
+              Wenn Sie Fragen zum Datenschutz auf meiner Website haben, Auskünfte einholen möchten oder eines Ihrer Rechte geltend
+              machen wollen, können Sie sich jederzeit an mich wenden. Nutzen Sie hierfür am besten die oben genannte E-Mail-Adresse
+              (siehe „Verantwortliche Stelle“). Ich behandle Ihr Anliegen vertraulich und melde mich schnellstmöglich zurück.
+              Ihre Privatsphäre ist mir wichtig – zögern Sie nicht, mich zu kontaktieren.
+            </p>
+            <p>Vielen Dank für Ihr Vertrauen und für Ihren Besuch auf meiner Website.</p>
+          </section>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="muted">
+        © <span id="y">2025</span> Johannes Habel · Datenschutzerklärung
+      </div>
+    </div>
+    <script>
+      // Optional: kleines Enhancement; entfernen, falls du 0 JS willst.
+      document.getElementById("y").textContent = new Date().getFullYear();
+    </script>
+  </footer>
+</body>
+</html>

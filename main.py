@@ -605,6 +605,13 @@ def landing_page():
 def ping():
     return make_response("Success", 200)
 
+@app.route("/datenschutz", methods=["GET"])
+def datenschutz():
+    return render_template("privacy_policy_de.html")
+
+@app.route("/privacy_policy", methods=["GET"])
+def privacy_policy():
+    return render_template("privacy_policy_en.html")
 
 @app.route("/update", methods=["GET"])  # Get Porn Fetch changelog
 def update():
