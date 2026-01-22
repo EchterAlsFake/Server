@@ -1,8 +1,8 @@
 import os
 import json
-import base64
-
+import time
 import httpx
+import base64
 import stripe
 import secrets
 import sqlite3
@@ -12,6 +12,7 @@ import subprocess
 
 from io import BytesIO
 from flask_limiter import Limiter
+from email.utils import format_datetime
 from werkzeug.serving import WSGIRequestHandler
 from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta, timezone
@@ -33,6 +34,11 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")    # whsec_... f
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
 LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "") # Used for update checking for my repos (long story)
+
+update_cache = {
+    "last_checked": 0,
+    "data": None
+}
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -460,6 +466,46 @@ def generate_ci_badge_svg(test_name, status):
     return svg
 
 
+def get_update_information():
+    now = time.monotonic()
+
+    if update_cache.get("last_checked") == 0 or (now - update_cache.get("last_checked")) > 5 * 60:
+        # Updating data every 5 minutes for minimal API requests
+        update_cache["last_checked"] = now
+
+        get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest",
+                            headers={
+                                "Accept": "application/vnd.github+json",
+                                "Authorization": f"Bearer {GITHUB_TOKEN}",
+                                "X-GitHub-Api-Version": "2022-11-28"
+                            }).json()
+
+        update_cache["data"] = get_information
+        data = get_information
+
+    else:
+        # Using data from cache
+        data = update_cache.get("data")
+
+    version = data.get("tag_name", "unavailable")
+    assets = data.get("assets", [])
+    linux_x64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_x64.bin"))
+    windows_x64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_x64.exe"))
+    windows_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_arm64.exe"))
+    macos_x64 = next((a for a in assets if a.get("name") == "PornFetch_macOS_GUI_x64_86.dmg"), None)
+
+    stuff = {
+        "version": version,
+        "linux_x64": linux_x64,
+        "windows_x64": windows_x64,
+        "windows_arm64": windows_arm64,
+        "macos_x64": macos_x64,
+        "url": data.get("html_url")
+    }
+
+    return stuff
+
+
 # ---------- Request stats hooks ----------
 
 @app.before_request
@@ -617,40 +663,80 @@ def privacy_policy():
 
 @app.route("/update", methods=["GET"])  # Get Porn Fetch changelog
 def update():
-    version = None
-    changelog = None
-    """
-    curl -L \
-  -H "Accept: application/vnd.github+json" \
-  -H "Authorization: Bearer <YOUR-TOKEN>" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/OWNER/REPO/releases/latest
-    """
-
-    get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest", headers={
-        "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }).json()
-
-    print(get_information)
-
-
-    with open("porn_fetch_version.txt", "r") as version_file:
-        version = version_file.read().strip()
-
     with open("porn_fetch_changelog.md", "r") as changelog_file:
         changelog_markdown = changelog_file.read().strip()
         changelog = markdown.markdown(changelog_markdown)
 
+    fortnite = get_update_information()
+
     stuff = jsonify({
-        "version": version,
-        "url": "https://github.com/EchterAlsFake/Porn_Fetch/releases/tag/3.6",
+        "version": f"latest - {fortnite.get('version')}",
+        "url": fortnite.get("url"),
         "anonymous_download": "https://echteralsfake.me/download",
+        "download_linux_x64": fortnite.get("linux_x64")["browser_download_url"],
+        "download_windows_x64": fortnite.get("windows_x64")["browser_download_url"],
+        "download_windows_arm64": fortnite.get("windows_arm64")["browser_download_url"],
+        "download_macos_x64": fortnite.get("macos_x64")["browser_download_url"],
         "changelog": changelog,
         "important_info": "Nothing here ;)"
     })
+
     return stuff, 200
+
+def load_signature_for_version(tag: str) -> str:
+    # Needed for Sparkle (macOS auto updating)
+
+    with open(f"signatures/{tag}.txt", "r", encoding="utf-8") as f:
+        return f.read().strip()
+
+@app.route("/appcast.xml", methods=["GET"])
+def appcast():
+    data = get_update_information()
+    tag = data.get("version")
+    mac_asset = data.get("macos_x64")
+
+    dmg_url = mac_asset["browser_download_url"]
+    dmg_size = mac_asset.get("size", 0)
+
+    published_at = data.get("published_at")
+    if published_at:
+        pub_dt = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+    else:
+        pub_dt = datetime.now(timezone.utc)
+
+    pub_date_rfc2822 = format_datetime(pub_dt)
+
+    # Your changelog -> HTML
+    with open("porn_fetch_changelog.md", "r", encoding="utf-8") as f:
+        changelog_html = markdown.markdown(f.read().strip())
+
+    ed_sig = load_signature_for_version(tag)
+
+    xml = f"""<?xml version="1.0" encoding="utf-8"?>
+    <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+      <channel>
+        <title>PornFetch Updates</title>
+
+        <item>
+          <title>Version {tag}</title>
+          <pubDate>{pub_date_rfc2822}</pubDate>
+          <description><![CDATA[{changelog_html}]]></description>
+
+          <enclosure
+            url="{dmg_url}"
+            length="{dmg_size}"
+            type="application/x-apple-diskimage"
+            sparkle:shortVersionString="{tag}"
+            sparkle:version="{tag}"
+            sparkle:edSignature="{ed_sig}"
+          />
+        </item>
+
+      </channel>
+    </rss>
+    """
+    return Response(xml, mimetype="application/rss+xml")
+
 
 @app.route("/download", methods=["GET"])  # Download Porn Fetch anonymously
 def download():

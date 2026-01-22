@@ -11,5 +11,6 @@ dependencies = [
     "werkzeug",
     "cryptography",
     "flask",
-    "markdown"
+    "markdown",
+    "gunicorn"
 ]
