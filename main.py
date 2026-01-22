@@ -1,6 +1,8 @@
 import os
 import json
 import base64
+
+import httpx
 import stripe
 import secrets
 import sqlite3
@@ -30,7 +32,7 @@ STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID")          # price_xxx for you
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")    # whsec_... from Stripe
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
 LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
-
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "") # Used for update checking for my repos (long story)
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -617,6 +619,22 @@ def privacy_policy():
 def update():
     version = None
     changelog = None
+    """
+    curl -L \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer <YOUR-TOKEN>" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/OWNER/REPO/releases/latest
+    """
+
+    get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest", headers={
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }).json()
+
+    print(get_information)
+
 
     with open("porn_fetch_version.txt", "r") as version_file:
         version = version_file.read().strip()
@@ -633,7 +651,6 @@ def update():
         "important_info": "Nothing here ;)"
     })
     return stuff, 200
-
 
 @app.route("/download", methods=["GET"])  # Download Porn Fetch anonymously
 def download():
