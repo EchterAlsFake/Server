@@ -11,6 +11,7 @@ import threading
 import subprocess
 
 from io import BytesIO
+from backend.downloads import *
 from flask_limiter import Limiter
 from email.utils import format_datetime
 from werkzeug.serving import WSGIRequestHandler
@@ -18,6 +19,7 @@ from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g
+
 
 # Configuration
 SAVE_DIR = "./"  # Now mainly used as DB folder
@@ -736,19 +738,135 @@ def appcast():
     </rss>
     """
     return Response(xml, mimetype="application/rss+xml")
+# --- Security headers ---
 
-
-@app.route("/download", methods=["GET"])  # Download Porn Fetch anonymously
-def download():
-    file_location = "/home/asuna/PycharmProjects/Server/Porn_Fetch.zip"  # Full version
-
-    return send_file(
-        path_or_file=file_location,
-        as_attachment=True,
-        mimetype="application/zip",
-        download_name="Porn_Fetch_FULL.zip",
-        conditional=True
+@app.after_request
+def add_security_headers(resp):
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "img-src 'self' data:; "
+        "style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "
+        "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "
+        "connect-src 'self'; "
+        "base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
     )
+    return resp
+
+
+# --- Pages ---
+
+@app.get("/downloads")
+def downloads_page():
+    return render_template("downloads.html")
+
+
+# --- APIs ---
+
+@app.get("/api/releases")
+def api_releases():
+    latest, latest_url = get_latest_release_version()
+    local_versions = list_local_versions()
+
+    # If GH is unavailable, fall back to the newest local version
+    if not latest and local_versions:
+        latest = local_versions[0]
+        latest_url = None
+
+    return jsonify({
+        "latest_version": latest,
+        "latest_url": latest_url,
+        "versions": local_versions,
+    })
+
+
+@app.get("/api/downloads")
+def api_downloads():
+    v = normalize_version_param(request.args.get("version", "latest"))
+
+    latest, _ = get_latest_release_version()
+    local_versions = list_local_versions()
+
+    if v == "latest":
+        if latest:
+            selected_version = latest
+        elif local_versions:
+            selected_version = local_versions[0]
+        else:
+            selected_version = None
+    else:
+        selected_version = v
+
+    if not selected_version:
+        return jsonify({"version": None, "items": []})
+
+    items: List[dict] = []
+    for a in ARTIFACTS.values():
+        p = artifact_path(selected_version, a)
+        size = p.stat().st_size if p.exists() else None
+
+        d = asdict(a)
+        d["size_bytes"] = size
+        d["version"] = selected_version
+        d["url"] = f"/download/{selected_version}/{a.slug}"
+        d["url_latest"] = f"/download/latest/{a.slug}"
+        items.append(d)
+
+    return jsonify({
+        "version": selected_version,
+        "items": items,
+    })
+
+
+# --- Download endpoints ---
+
+@app.get("/download/latest/<slug>")
+def download_latest(slug: str):
+    latest, _ = get_latest_release_version()
+    local_versions = list_local_versions()
+
+    if latest:
+        version = latest
+    elif local_versions:
+        version = local_versions[0]
+    else:
+        abort(404)
+
+    return _download_versioned(version, slug)
+
+
+@app.get("/download/<version>/<slug>")
+def download_versioned(version: str, slug: str):
+    version = normalize_version_param(version)
+    if version == "latest":
+        abort(400)
+    return _download_versioned(version, slug)
+
+
+def _download_versioned(version: str, slug: str):
+    a = ARTIFACTS.get(slug)
+    if not a:
+        abort(404)
+
+    p = artifact_path(version, a)
+    if not p.exists() or not p.is_file():
+        abort(404)
+
+    guessed_type, _ = mimetypes.guess_type(str(p))
+    mimetype = guessed_type or "application/octet-stream"
+
+    resp = make_response(send_file(
+        p,
+        as_attachment=True,
+        download_name=a.filename,
+        mimetype=mimetype,
+        conditional=True
+    ))
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    return resp
+
 
 
 @app.route("/report", methods=["POST"])
