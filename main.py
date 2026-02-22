@@ -495,7 +495,7 @@ def get_update_information():
     linux_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_arm64.bin"))
     windows_x64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_x64.exe"))
     windows_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_arm64.exe"))
-    macos_universal = next((a for a in assets if a.get("name") == "PornFetch_macOS_Universal.dmg"))
+    macos_universal = next((a for a in assets if a.get("name") == "PornFetch_macOS_GUI_Universal.dmg"))
     stuff = {
         "version": version,
         "linux_x64": linux_x64,
