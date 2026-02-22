@@ -470,7 +470,6 @@ def generate_ci_badge_svg(test_name, status):
 
 def get_update_information():
     now = time.monotonic()
-
     if update_cache.get("last_checked", 0) == 0 or (now - update_cache.get("last_checked", 0)) > 5 * 60:
         # Updating data every 5 minutes for minimal API requests
         update_cache["last_checked"] = now
