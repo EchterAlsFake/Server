@@ -492,16 +492,17 @@ def get_update_information():
     version = data.get("tag_name", "unavailable")
     assets = data.get("assets", [])
     linux_x64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_x64.bin"))
+    linux_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_arm64.bin"))
     windows_x64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_x64.exe"))
     windows_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_arm64.exe"))
-    macos_x64 = next((a for a in assets if a.get("name") == "PornFetch_macOS_GUI_x64_86.dmg"), None)
-
+    macos_universal = next((a for a in assets if a.get("name") == "PornFetch_macOS_Universal.dmg"))
     stuff = {
         "version": version,
         "linux_x64": linux_x64,
+        "linux_arm64": linux_arm64,
         "windows_x64": windows_x64,
         "windows_arm64": windows_arm64,
-        "macos_x64": macos_x64,
+        "macos_universal": macos_universal,
         "url": data.get("html_url")
     }
 
@@ -672,17 +673,18 @@ def update():
     fortnite = get_update_information()
 
     stuff = jsonify({
-        "version": f"latest - {fortnite.get('version')}",
+        "version": f"{fortnite.get('version')}",
         "url": fortnite.get("url"),
         "anonymous_download": "https://echteralsfake.me/download",
         "download_linux_x64": fortnite.get("linux_x64")["browser_download_url"],
+        "download_linux_arm64": fortnite.get("linux_arm64")["browser_download_url"],
         "download_windows_x64": fortnite.get("windows_x64")["browser_download_url"],
         "download_windows_arm64": fortnite.get("windows_arm64")["browser_download_url"],
-        "download_macos_x64": fortnite.get("macos_x64")["browser_download_url"],
+        "download_macos_universal": fortnite.get("macos_universal")["browser_download_url"],
         "changelog": changelog,
         "important_info": "Nothing here ;)"
     })
-
+    # "download_linux_arm64": fortnite.get("linux_arm64")["browser_download_url"],
     return stuff, 200
 
 def load_signature_for_version(tag: str) -> str:
@@ -695,7 +697,7 @@ def load_signature_for_version(tag: str) -> str:
 def appcast():
     data = get_update_information()
     tag = data.get("version")
-    mac_asset = data.get("macos_x64")
+    mac_asset = data.get("macos_universal")
 
     dmg_url = mac_asset["browser_download_url"]
     dmg_size = mac_asset.get("size", 0)

@@ -1,58 +1,55 @@
-# 3.7
-
+# 3.8
 ### New Features
-- Added Video downloading support for YouPorn.com
-- Support for XHamster shorts (moments)
-- Added Pornstar, Channel, Searching support for YouPorn.com
-- Added Playlist support for YouPorn.com
-- Added Searching support for missav.ws
-- Added Searching support for Spankbang.com
-- Added Playlist support for xvideos.com
-- Added Channel, Creator and Pornstar support for xvideos, spankbang and xhamster
-- You can now track videos in a SQL database
-- You can now change font size (actually)
-- Screen reader support (in theory)
-- You can now switch UI themes (experimental, still needs work)
-- Increased scraping speed for all non-PornHub requests A LOT (seriously)
-- You can now control how many pages and videos are fetched at the same time
-- Http2 support 
-- Brotli compression support
+- [GUI] Support for Linux arm64
+- [CLI] Support for macOS x64, macOS arm64, Linux riscv64, Linux s390x, Linux ppc64le
+- [GUI] Support for Android (native Kotlin App)
+- Added support for xhamster's alternative "xhopen" domain
+- Added Video support for beeg.com
+- Added Video support for porntrex.com
+- Added Video support for xfreehd.com
+- Added Model / Channel support for porntrex.com
+- Added Searching support for porntrex.com
+- Your configuration values are now saved after an update
+- Added automatic updating for macOS (natively, yes really 🔥)
+- You can now resume downloads
+- You can now actually stop downloads lol
+- You can now choose quality for each download separately
+- You can now choose between system's CA for SSL or Certifi's CA 
+- Added a splashscreen for Windows devices
+- Added loading screen
 
-### Bug fixes
-- Fixed CLI being stuck when file already exists
-- Fixed AV1 decoding for XHamster
-- Fixed m3u8 URL for XHamster 
-- Fixed thumbnail display
-- Fixed range selector widget
-- Fixed 429 and 403 errors (mostly)
-- Fixed PornHub pagination
-- Fixed URL export function
+### Bug Fixes
+- Fixed 403 missav error
+- Fixed PornHub download issue
+- Fixed PornHub thumbnail issue
+- Fixed non utf-8 video titles to cause a crash on Windows CLI
 
 ### User Interface
-- Completely new design (finally good)
-- Font sizes scale correctly now, thanks to point size
-  instead of pixels
-- Redesigned the settings widget (compact now)
-- Replaced radio buttons with QComboBoxes (much better)
-- Improved QCheckbox visibility
+- Added Italian translations (Thanks: @FatalPuppet)
+- Added clear tooltips for most settings option to help understand
+- You can also set a custom app name when installing Porn Fetch from the settings
+- Infinite loading animation works better now
+- Added 480p to quality selection (#98)
+- Added an information dialog for the first run basically telling about all useful aspects of Porn Fetch
+- QCombobox items have a correct size and the text isn't hidden anymore
+- Changed UI to be smoother and more modern friendly
+- Thumbnails are now fetched in a separate thread
 
-### Internal code
-- Massive rewrite of the network backend
-- Much more consistent network requests and retrying
-- automatic 429 bypass
-- Improved proxy support
-- SSL certificate will now be taken from the OS instead of certifi
-- AND SO MUCH MORE!
+### Code Optimizations
+- Refactored `check_video` function to be faster and less redundant
+- Switched (mostly) from configparser to QSettings for faster and native settings handling
+- When installing Porn Fetch on Linux, the logo will not be downloaded and is embedded in the app
+- Improved installation by using standardized paths, instead of hardcoded ones
+
+### Other
+- Fixed build scripts
+- Improved building speed thanks to uv
+- You can now select which tag / commit to build
+- Unified macOS / Linux build into one file
+- Updated build to Python 3.13.11 (All systems)
+- Updated Qt to 6.10.2
+- Updated Nuitka to 2.8.9
 
 ### Deprecations
-- Android support (it's just not good enough)
-- File processing (I don't see the benefit) 
-
-### Final words
-This release comes with a lot of features, new supported websites,
-a new UI design and a refactored backend.
-
-But there are still problems. The CLI is almost untested,
-The progressbar system is still inconsistent and the error reporting
-too. The translations are also completely out of date and need
-to be refactored. 
+- Removed automated selection of videos
+- Removed Internet checks entirely
