@@ -33,6 +33,7 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")      # sk_test_... or sk
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")  # pk_test_... or pk_live_...
 STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID")          # price_xxx for your Porn Fetch license
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")    # whsec_... from Stripe
+SEGPAY_CHECKOUT_URL = os.environ.get("SEGPAY_CHECKOUT_URL", "")    # Segpay paylink URL
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
 LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "") # Used for update checking for my repos (long story)
@@ -93,6 +94,15 @@ def init_db():
         CREATE TABLE IF NOT EXISTS write_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             bytes_written INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS segpay_transactions (
+            session_id TEXT PRIMARY KEY,
+            purchase_id TEXT,
+            trans_id TEXT,
+            email TEXT,
+            approved TEXT,
             created_at TEXT NOT NULL
         );
         """
@@ -169,19 +179,35 @@ def sign_license(payload: dict) -> str:
     return base64.b64encode(sig).decode("ascii")
 
 
-def verify_paid_checkout_session(session_id: str) -> stripe.checkout.Session:
-    # Retrieve from Stripe and verify it was paid + correct price/product.
-    sess = stripe.checkout.Session.retrieve(session_id, expand=["line_items"])
-    if sess.get("payment_status") != "paid":
-        raise ValueError("Payment not completed.")
+def verify_paid_checkout_session(session_id: str):
+    # 1. Check Segpay transactions in local SQLite DB first
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.execute(
+            "SELECT approved FROM segpay_transactions WHERE session_id = ?;",
+            (session_id,)
+        )
+        row = cur.fetchone()
+        conn.close()
+        if row and row["approved"] == "yes":
+            return True
+    except Exception as e:
+        print(f"Segpay DB check failed: {e}")
 
-    # Optional: ensure the right product/price was purchased
-    if STRIPE_PRICE_ID:
-        items = sess["line_items"]["data"]
-        ok = any((li.get("price") or {}).get("id") == STRIPE_PRICE_ID for li in items)
-        if not ok:
-            raise ValueError("Wrong product purchased for this session.")
-    return sess
+    # 2. Fallback to Stripe
+    if STRIPE_SECRET_KEY:
+        sess = stripe.checkout.Session.retrieve(session_id, expand=["line_items"])
+        if sess.get("payment_status") != "paid":
+            raise ValueError("Payment not completed.")
+        if STRIPE_PRICE_ID:
+            items = sess["line_items"]["data"]
+            ok = any((li.get("price") or {}).get("id") == STRIPE_PRICE_ID for li in items)
+            if not ok:
+                raise ValueError("Wrong product purchased for this session.")
+        return sess
+
+    raise ValueError("No matching paid checkout session found.")
 
 def shutdown_server():
     print(">>> KILL SWITCH TRIGGERED: More than 2GB written in the past hour. Shutting down.")
@@ -574,8 +600,32 @@ def buy_license():
 @app.route("/create-checkout-session", methods=["POST"])
 @limiter.limit(RATE_LIMIT)
 def create_checkout_session():
+    # 1. If Segpay is configured, use Segpay
+    if SEGPAY_CHECKOUT_URL:
+        session_id = secrets.token_urlsafe(16)
+        created_at = datetime.utcnow().isoformat()
+        db = get_db()
+        try:
+            with db:
+                db.execute(
+                    """
+                    INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
+                    VALUES (?, NULL, NULL, NULL, 'pending', ?);
+                    """,
+                    (session_id, created_at)
+                )
+        except Exception as e:
+            app.logger.error(f"Failed to record pending Segpay transaction: {e}")
+            return jsonify({"error": "Database error while preparing checkout"}), 500
+
+        connector = "&" if "?" in SEGPAY_CHECKOUT_URL else "?"
+        # Segpay supports passing 'extra' parameter which will be sent back in postbacks and success redirects
+        checkout_url = f"{SEGPAY_CHECKOUT_URL}{connector}extra={session_id}"
+        return jsonify({"url": checkout_url})
+
+    # 2. Otherwise fallback to Stripe
     if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
-        return jsonify({"error": "Stripe is not configured on the server"}), 500
+        return jsonify({"error": "No payment provider configured on the server (neither Segpay nor Stripe)"}), 500
 
     data = request.get_json(silent=True) or {}
     customer_email = data.get("email")
@@ -596,8 +646,57 @@ def create_checkout_session():
         )
         return jsonify({"url": checkout_session.url})
     except Exception as e:
-        # In dev, you might want to log(e) as well
         return jsonify({"error": str(e)}), 400
+
+
+@app.route("/segpay_postback", methods=["GET", "POST"])
+def segpay_postback():
+    params = request.values
+    action = params.get("action", "").lower()
+    approved = params.get("approved", "").lower()
+    purchase_id = params.get("purchaseid", "")
+    trans_id = params.get("transid", "")
+    extra = params.get("extra", "")  # session_id passed as extra
+    email = params.get("email", "")
+
+    if approved == "yes":
+        created_at = datetime.utcnow().isoformat()
+        db = get_db()
+        try:
+            with db:
+                db.execute(
+                    """
+                    INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(session_id) DO UPDATE SET
+                        purchase_id=excluded.purchase_id,
+                        trans_id=excluded.trans_id,
+                        email=excluded.email,
+                        approved=excluded.approved;
+                    """,
+                    (extra, purchase_id, trans_id, email, approved, created_at)
+                )
+        except Exception as e:
+            app.logger.error(f"Failed to record Segpay transaction: {e}")
+            return "ERROR", 500
+
+    return "OK"
+
+
+@app.route("/refund_policy", methods=["GET"])
+def refund_policy():
+    return render_template("refund_policy.html")
+
+
+@app.route("/terms", methods=["GET"])
+def terms():
+    return render_template("terms.html")
+
+
+@app.route("/content_removal", methods=["GET"])
+def content_removal():
+    return render_template("content_removal.html")
+
 
 @app.route("/buy_success", methods=["GET"])
 def buy_success():

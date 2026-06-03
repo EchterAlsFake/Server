@@ -304,7 +304,7 @@
           <a href="#cloudflare">Verwendung von Cloudflare (DNS &amp; Schutzdienste)</a>
           <a href="#cookies">Cookies, Analysedienste und externe Inhalte</a>
           <a href="#feedback">Freiwillige Feedback- und Fehlerberichte</a>
-          <a href="#stripe">Zahlungsabwicklung über Stripe</a>
+          <a href="#segpay">Zahlungsabwicklung über Segpay</a>
           <a href="#rechte">Ihre Rechte als betroffene Person</a>
           <a href="#ccpa">Hinweis für Nutzer aus Kalifornien (CCPA)</a>
           <a href="#aenderungen">Änderungen dieser Datenschutzerklärung</a>
@@ -479,87 +479,33 @@
             </p>
           </section>
 
-          <section id="stripe">
-            <h2>Zahlungsabwicklung über Stripe</h2>
+          <section id="segpay">
+            <h2>Zahlungsabwicklung über Segpay</h2>
             <p>
-              Wenn Sie auf meiner Website eine Zahlung (z.B. zum Erwerb einer Lizenz oder eines Produkts) durchführen, erfolgt dies
-              über den externen Zahlungsdienst Stripe. Ich nutze Stripe Checkout, bei dem Sie für die Zahlungsabwicklung auf die Seite
-              von Stripe weitergeleitet werden (<code>stripe.com</code>). Stripe ist ein professioneller Zahlungsanbieter, der Ihre
-              Zahlung in meinem Auftrag abwickelt. Für Nutzer innerhalb der EU tritt Stripe über seine europäische Gesellschaft
-              <strong>Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin, Irland</strong> auf. (Für Nutzer außerhalb der
-              EU oder im Hintergrund ist <strong>Stripe, Inc., USA</strong> der Dienstleister.) Stripe unterliegt als zertifizierter
-              Zahlungsdienstleister den geltenden Sicherheitsstandards und Datenschutzbestimmungen.
+              Wenn Sie auf meiner Website eine Zahlung durchführen, um eine Lizenz zu erwerben, wird diese über den externen Zahlungsdienstleister und autorisierten Wiederverkäufer (Reseller) <strong>Segpay</strong> abgewickelt. Segpay fungiert als Merchant of Record (Zahlungsempfänger) für die Transaktionen auf dieser Website. Je nach Ihrem Standort wird die Transaktion von <strong>Segpay Europe, Ltd. (London, UK)</strong>, <strong>Segpay Ireland, Ltd. (Dublin, Irland)</strong> oder <strong>Segpay, LLC (Florida, USA)</strong> verarbeitet. Als zertifizierter PCI-DSS-konformer Zahlungsanbieter unterliegt Segpay strengen Sicherheitsstandards der Finanzbranche und Datenschutzgesetzen.
             </p>
 
-            <h3>Datenverarbeitung durch Stripe</h3>
+            <h3>Datenverarbeitung durch Segpay</h3>
             <p>
-              Alle für die Zahlung erforderlichen personenbezogenen Daten werden direkt von Ihnen an Stripe eingegeben und von Stripe
-              verarbeitet. Dazu gehören je nach Zahlungsmethode z.B. Zahlungsinformationen wie Kreditkartennummer, Karteninhaberdaten,
-              Gültigkeit und CVC, ggf. Ihr Name und Ihre Rechnungsadresse, sowie weitere vom Zahlungsformular abgefragte Informationen.
-              Diese Dateneingabe erfolgt ausschließlich auf der Stripe-Zahlungsseite – meine Website erhält keinen Zugriff auf Ihre
-              vollständigen Zahlungsdetails (insbesondere nicht auf Ihre Kreditkartennummer oder Bankkonto). Meine Website übermittelt
-              an Stripe nur die transaktionsbezogenen Daten, die für den Bezahlvorgang nötig sind (z.B. die konkrete Bestellung,
-              Betrag, Währung und eine Sitzungs-/Transaktions-ID zur Zuordnung).
+              Alle für die Transaktion erforderlichen personenbezogenen Daten und Zahlungsdaten werden von Ihnen direkt auf der sicheren Zahlungsseite von Segpay eingegeben. Dazu gehören der Name des Karteninhabers, die Rechnungsadresse, Kreditkartennummern, Gültigkeitsdaten und Sicherheitscodes (CVC/CVV). Mein Server erfasst, erhält oder speichert Ihre Kreditkartendaten oder Zahlungsdaten zu keinem Zeitpunkt. Wir übermitteln lediglich transaktionsbezogene Identifikatoren (wie eine generierte Sitzungs-ID) an Segpay, um die Zahlung Ihrer digitalen Lizenz zuzuordnen.
             </p>
-
             <p>
-              Nachdem Sie die Zahlung auf der Stripe-Seite abgeschlossen haben, informiert Stripe mich über den Erfolg der Transaktion.
-              In der Regel werden Sie zurück auf meine Website geleitet, wo Ihnen unmittelbar Ihre erworbene Lizenzdatei zum Download
-              angeboten wird. Diese Lizenzdatei enthält als technischen Nachweis lediglich die Stripe Session ID der betreffenden
-              Zahlung, aber keine personenbezogenen Daten wie Name oder Anschrift. Ich speichere auf meinem Server keine weiteren
-              persönlichen Zahlungsdaten von Ihnen. Insbesondere führe ich keine eigene Kundendatenbank mit Ihren Zahlungs- oder
-              Kontaktdaten. Stripe kann mir zwar in seinem Dashboard gewisse Transaktionsdaten zur Verfügung stellen (z.B. Datum,
-              Betrag, evtl. von Ihnen angegebene E-Mail für die Zahlungsbestätigung), doch nutze ich diese Daten nur soweit erforderlich
-              zur Zahlungsabwicklung (etwa um bei einem Problem den Vorgang nachzuvollziehen).
+              Nach erfolgreicher Zahlung sendet Segpay eine sofortige Zahlungsbenachrichtigung (Postback/Webhook) an unseren Server, die die Transaktions-ID, den Kaufstatus und die von Ihnen angegebene E-Mail-Adresse enthält. Diese E-Mail-Adresse und die Transaktions-ID werden in unserer lokalen Datenbank gespeichert, ausschließlich um den Kauf zu verifizieren und Ihnen den Download der Lizenzdatei zu ermöglichen. Wir nutzen diese E-Mail-Adresse nicht für Werbezwecke oder Newsletter.
             </p>
 
             <h3>Zweck und Rechtsgrundlage</h3>
             <p>
-              Die Einbindung von Stripe erfolgt zum Zweck der Vertragsdurchführung (Art. 6 Abs. 1 lit. b DSGVO). Wenn Sie einen
-              kostenpflichtigen Dienst oder ein Produkt über meine Website beziehen, ist die Verarbeitung der Zahlungsdaten notwendig,
-              um den Kauf abzuwickeln und Ihnen die erworbene Leistung bereitstellen zu können. Zudem habe ich ein berechtigtes
-              Interesse (Art. 6 Abs. 1 lit. f DSGVO) daran, Ihnen mit Stripe eine sichere und zuverlässige Zahlungsmethode anzubieten,
-              da ich selbst keine Zahlungsinformationen verarbeiten möchte. Stripe ist PCI-DSS-zertifiziert und bietet hohe Sicherheit
-              für Online-Zahlungen – dadurch schütze ich auch Ihre Zahlungsdaten bestmöglich.
+              Die Einbindung von Segpay erfolgt auf Grundlage der Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO), um Ihnen die erworbene digitale Lizenz bereitzustellen, sowie unseres berechtigten Interesses (Art. 6. Abs. 1 lit. f DSGVO), einen hochsicheren, PCI-konformen Zahlungsabwickler einzusetzen, ohne sensible Kreditkartendaten auf unserer eigenen Infrastruktur zu verarbeiten.
             </p>
 
-            <h3>Weitergabe an Stripe und Verantwortlichkeit</h3>
+            <h3>Weitergabe und Drittlandstransfers</h3>
             <p>
-              Im Rahmen der Zahlung werden die genannten Daten an Stripe übermittelt. Stripe agiert teilweise als Auftragsverarbeiter
-              in meinem Auftrag, um die Transaktion technisch durchzuführen, und ist vertraglich nach Art. 28 DSGVO verpflichtet, die
-              Daten nur gemäß meinen Anweisungen zu verarbeiten. Gleichzeitig nutzt Stripe bestimmte Daten als eigenständig
-              Verantwortlicher, etwa um gesetzliche Finanz- und Geldwäschevorschriften zu erfüllen oder zur Betrugsprävention. Auf
-              diese Stripe-internen Verarbeitungen habe ich keinen Einfluss. Stripe versichert jedoch, die Daten nicht zu verkaufen
-              oder für fremde Werbezwecke zu nutzen.
+              Ihre Zahlungsinformationen werden an Segpay weitergegeben, um die Transaktion durchzuführen. Segpay kann Daten in Drittländern, einschließlich der USA, unter strengen Garantien wie Standardvertragsklauseln (SCC) und dem EU-U.S. Data Privacy Framework verarbeiten, um sicherzustellen, dass ein dem DSGVO-Standard entsprechendes Datenschutzniveau gewahrt bleibt.
             </p>
 
-            <h3>Datenübermittlung in Drittländer</h3>
+            <h3>Speicherung und Rechte</h3>
             <p>
-              Stripe kann Daten auch außerhalb der EU verarbeiten, insbesondere in den USA. Für EU-Kunden werden Zahlungen zwar über
-              Stripe Payments Europe in Irland abgewickelt, jedoch können im Rahmen der Dienstleistung Daten an die US-Muttergesellschaft
-              weitergegeben werden. Stripe hat sich vertraglich und organisatorisch verpflichtet, ein angemessenes Datenschutzniveau
-              sicherzustellen. Insbesondere ist Stripe aktiver Teilnehmer des EU–U.S. Data Privacy Frameworks (Stand 2023). Darüber
-              hinaus verwendet Stripe die von der EU-Kommission genehmigten Standardvertragsklauseln (Standard Contractual Clauses – SCC)
-              als zusätzliche Garantie dafür, dass europäische Datenschutzstandards gewahrt bleiben, selbst wenn Daten in den USA oder
-              anderen Ländern verarbeitet werden. Damit wird ein Niveau an Datensicherheit und -schutz gewährleistet, das dem der DSGVO
-              entspricht.
-            </p>
-
-            <h3>Speicherdauer</h3>
-            <p>
-              Personenbezogene Daten, die im Zusammenhang mit Zahlungen stehen, werden von mir nicht lokal gespeichert, außer es
-              besteht eine gesetzliche Aufbewahrungspflicht (etwa aus steuerrechtlichen Gründen für Transaktionsbelege). In der Regel
-              beschränkt sich meine Speicherung auf die Lizenzinformationen (inkl. Stripe-Session-ID) und grundlegende Transaktionsdaten
-              (z.B. Zeitpunkt, Betrag), die ich für meine Buchhaltung benötige. Stripe selbst speichert Ihre Zahlungsdaten gemäß den
-              gesetzlichen Vorgaben und den eigenen Datenschutzrichtlinien; auf die genaue Dauer der Speicherung bei Stripe habe ich
-              keinen Einfluss (Stripe bewahrt z.B. Transaktionsinformationen auf, um Rückerstattungen, Streitfälle oder behördliche
-              Anforderungen erfüllen zu können).
-            </p>
-
-            <p>
-              Weitere Details zur Datenverarbeitung durch Stripe finden Sie in der Datenschutzerklärung von Stripe (abrufbar auf der
-              Stripe-Website). Wenn Sie Fragen zum Umgang mit Ihren Daten bei Stripe haben, können Sie sich auch direkt an Stripe wenden:
-              <a href="mailto:privacy@stripe.com">privacy@stripe.com</a>.
+              Wir speichern die Transaktionsdaten (Sitzungs-ID, Kauf-ID und Kunden-E-Mail-Adresse) lokal für Buchhaltungszwecke und um Ihnen bei Bedarf den erneuten Download Ihrer Lizenz zu ermöglichen. Sie haben nach der DSGVO das Recht auf Auskunft, Berichtigung oder Löschung Ihrer E-Mail-Adresse aus unserer Datenbank. Bitte kontaktieren Sie uns dazu unter <a href="mailto:EchterAlsFake@proton.me">EchterAlsFake@proton.me</a>. Bei Fragen zu Rechnungen oder Abonnements können Sie sich auch direkt an den Kundensupport von Segpay unter <a href="https://cs.segpay.com/" target="_blank" rel="noopener noreferrer">cs.segpay.com</a> wenden.
             </p>
           </section>
 
