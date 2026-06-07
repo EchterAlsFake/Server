@@ -1,9 +1,12 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import time
 import httpx
+import hmac
+import hashlib
 import base64
-import stripe
 import secrets
 import sqlite3
 import markdown
@@ -29,22 +32,18 @@ MAX_REQUEST_SIZE = 200 * 1024  # 200 KB
 MAX_HOURLY_DATA = 5 * 1024 * 1024 * 1024  # 5GB to prevent DoS attacks
 CI_TOKEN = os.environ.get("CI_TOKEN")   # Token used to update the CI stuff from n8n workflows (long story)
 KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")      # sk_test_... or sk_live_...
-STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")  # pk_test_... or pk_live_...
-STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID")          # price_xxx for your Porn Fetch license
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")    # whsec_... from Stripe
-SEGPAY_CHECKOUT_URL = os.environ.get("SEGPAY_CHECKOUT_URL", "")    # Segpay paylink URL
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
 LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "") # Used for update checking for my repos (long story)
+NOWPAYMENTS_API_KEY = os.environ.get("NOWPAYMENTS_API_KEY")
+NOWPAYMENTS_IPN_SECRET = os.environ.get("NOWPAYMENTS_IPN_SECRET")
+NOWPAYMENTS_SANDBOX = os.environ.get("NOWPAYMENTS_SANDBOX", "true").lower() in ("true", "1", "yes")
+NOWPAYMENTS_API_URL = "https://api-sandbox.nowpayments.io/v1" if NOWPAYMENTS_SANDBOX else "https://api.nowpayments.io/v1"
 
 update_cache = {
     "last_checked": 0,
     "data": None
 }
-
-if STRIPE_SECRET_KEY:
-    stripe.api_key = STRIPE_SECRET_KEY
 
 # Where the SQLite DB lives (override with PF_SERVER_DB if you want)
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -164,7 +163,7 @@ def canonical_json_bytes(obj: dict) -> bytes:
 def make_license_key(prefix="PF") -> str:
     # human-friendly-ish, not a secret, just an identifier
     raw = secrets.token_hex(16).upper()
-    # PF-XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX
+    # PF-MediaMediaXX-MediaMediaXX-MediaMediaXX-MediaMediaXX
     chunks = [raw[i:i+8] for i in range(0, len(raw), 8)]
     return f"{prefix}-" + "-".join(chunks)
 
@@ -178,36 +177,6 @@ def sign_license(payload: dict) -> str:
     sig = priv.sign(msg)
     return base64.b64encode(sig).decode("ascii")
 
-
-def verify_paid_checkout_session(session_id: str):
-    # 1. Check Segpay transactions in local SQLite DB first
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        cur = conn.execute(
-            "SELECT approved FROM segpay_transactions WHERE session_id = ?;",
-            (session_id,)
-        )
-        row = cur.fetchone()
-        conn.close()
-        if row and row["approved"] == "yes":
-            return True
-    except Exception as e:
-        print(f"Segpay DB check failed: {e}")
-
-    # 2. Fallback to Stripe
-    if STRIPE_SECRET_KEY:
-        sess = stripe.checkout.Session.retrieve(session_id, expand=["line_items"])
-        if sess.get("payment_status") != "paid":
-            raise ValueError("Payment not completed.")
-        if STRIPE_PRICE_ID:
-            items = sess["line_items"]["data"]
-            ok = any((li.get("price") or {}).get("id") == STRIPE_PRICE_ID for li in items)
-            if not ok:
-                raise ValueError("Wrong product purchased for this session.")
-        return sess
-
-    raise ValueError("No matching paid checkout session found.")
 
 def shutdown_server():
     print(">>> KILL SWITCH TRIGGERED: More than 2GB written in the past hour. Shutting down.")
@@ -239,64 +208,6 @@ def log_write(file_size: int):
 
     if total_written > MAX_HOURLY_DATA:
         shutdown_server()  # Kill Switch
-
-
-def validate_payload(data):
-    if not isinstance(data, dict):
-        return False
-    if "message" not in data or not isinstance(data["message"], str):
-        return False
-    return True
-
-
-def save_message(data: dict, tag: str):
-    """
-    Store error/feedback payload into the DB instead of a JSON file.
-    Still enforces MAX_REQUEST_SIZE and feeds bytes into the DoS kill switch logic.
-    """
-    created_at = datetime.utcnow().isoformat()
-
-    # Add timestamp into the stored JSON for convenience
-    data_with_ts = dict(data)
-    data_with_ts["timestamp"] = created_at + "Z"
-
-    raw_content = json.dumps(data_with_ts, indent=2)
-    encoded_content = raw_content.encode("utf-8")
-
-    if len(encoded_content) > MAX_REQUEST_SIZE:
-        raise ValueError("File content exceeds 200KB limit")
-
-    # Track how much we've written (DoS prevention)
-    log_write(len(encoded_content))
-
-    db = get_db()
-    with db:
-        db.execute(
-            "INSERT INTO reports (tag, message, raw_json, created_at) VALUES (?, ?, ?, ?);",
-            (tag, data.get("message", ""), raw_content, created_at),
-        )
-
-
-def get_reports(tag: str, limit: int = 50):
-    db = get_db()
-    cur = db.execute(
-        """
-        SELECT id, tag, message, created_at
-        FROM reports
-        WHERE tag = ?
-        ORDER BY created_at DESC
-        LIMIT ?;
-        """,
-        (tag, limit),
-    )
-    rows = cur.fetchall()
-    return [
-        {
-            "id": row["id"],
-            "timestamp": row["created_at"],
-        }
-        for row in rows
-    ]
 
 
 def increment_stats(requests_inc: int = 0, bytes_in_inc: int = 0, bytes_out_inc: int = 0):
@@ -500,7 +411,7 @@ def get_update_information():
         # Updating data every 5 minutes for minimal API requests
         update_cache["last_checked"] = now
 
-        get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest",
+        get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Media_Archiver/releases/latest",
                             headers={
                                 "Accept": "application/vnd.github+json",
                                 "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -516,11 +427,11 @@ def get_update_information():
 
     version = data.get("tag_name", "unavailable")
     assets = data.get("assets", [])
-    linux_x64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_x64.bin"))
-    linux_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_arm64.bin"))
-    windows_x64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_x64.exe"))
-    windows_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_arm64.exe"))
-    macos_universal = next((a for a in assets if a.get("name") == "PornFetch_macOS_GUI_Universal.dmg"))
+    linux_x64 = next((a for a in assets if a.get("name") == "MediaArchiver_Linux_GUI_x64.bin"))
+    linux_arm64 = next((a for a in assets if a.get("name") == "MediaArchiver_Linux_GUI_arm64.bin"))
+    windows_x64 = next((a for a in assets if a.get("name") == "MediaArchiver_Windows_GUI_x64.exe"))
+    windows_arm64 = next((a for a in assets if a.get("name") == "MediaArchiver_Windows_GUI_arm64.exe"))
+    macos_universal = next((a for a in assets if a.get("name") == "MediaArchiver_macOS_GUI_Universal.dmg"))
     stuff = {
         "version": version,
         "linux_x64": linux_x64,
@@ -593,95 +504,8 @@ def impress():
 def buy_license():
     # Renders a modern-looking page with a BUY button
     return render_template(
-        "buy_license.html",
-        stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
+        "buy_license.html"
     )
-
-@app.route("/create-checkout-session", methods=["POST"])
-@limiter.limit(RATE_LIMIT)
-def create_checkout_session():
-    # 1. If Segpay is configured, use Segpay
-    if SEGPAY_CHECKOUT_URL:
-        session_id = secrets.token_urlsafe(16)
-        created_at = datetime.utcnow().isoformat()
-        db = get_db()
-        try:
-            with db:
-                db.execute(
-                    """
-                    INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
-                    VALUES (?, NULL, NULL, NULL, 'pending', ?);
-                    """,
-                    (session_id, created_at)
-                )
-        except Exception as e:
-            app.logger.error(f"Failed to record pending Segpay transaction: {e}")
-            return jsonify({"error": "Database error while preparing checkout"}), 500
-
-        connector = "&" if "?" in SEGPAY_CHECKOUT_URL else "?"
-        # Segpay supports passing 'extra' parameter which will be sent back in postbacks and success redirects
-        checkout_url = f"{SEGPAY_CHECKOUT_URL}{connector}extra={session_id}"
-        return jsonify({"url": checkout_url})
-
-    # 2. Otherwise fallback to Stripe
-    if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
-        return jsonify({"error": "No payment provider configured on the server (neither Segpay nor Stripe)"}), 500
-
-    data = request.get_json(silent=True) or {}
-    customer_email = data.get("email")
-
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            mode="payment",
-            payment_method_types=["card"],
-            line_items=[
-                {
-                    "price": STRIPE_PRICE_ID,
-                    "quantity": 1,
-                }
-            ],
-            success_url=f"{APP_DOMAIN}/buy_success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{APP_DOMAIN}/buy_cancel",
-            customer_email=customer_email or None,
-        )
-        return jsonify({"url": checkout_session.url})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-
-@app.route("/segpay_postback", methods=["GET", "POST"])
-def segpay_postback():
-    params = request.values
-    action = params.get("action", "").lower()
-    approved = params.get("approved", "").lower()
-    purchase_id = params.get("purchaseid", "")
-    trans_id = params.get("transid", "")
-    extra = params.get("extra", "")  # session_id passed as extra
-    email = params.get("email", "")
-
-    if approved == "yes":
-        created_at = datetime.utcnow().isoformat()
-        db = get_db()
-        try:
-            with db:
-                db.execute(
-                    """
-                    INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(session_id) DO UPDATE SET
-                        purchase_id=excluded.purchase_id,
-                        trans_id=excluded.trans_id,
-                        email=excluded.email,
-                        approved=excluded.approved;
-                    """,
-                    (extra, purchase_id, trans_id, email, approved, created_at)
-                )
-        except Exception as e:
-            app.logger.error(f"Failed to record Segpay transaction: {e}")
-            return "ERROR", 500
-
-    return "OK"
-
 
 @app.route("/refund_policy", methods=["GET"])
 def refund_policy():
@@ -717,11 +541,14 @@ def download_license():
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
-    try:
-        verify_paid_checkout_session(session_id)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 403
+    # Verify that the session_id exists and is approved in the database
+    db = get_db()
+    cur = db.execute("SELECT approved, purchase_id FROM segpay_transactions WHERE session_id = ?;", (session_id,))
+    row = cur.fetchone()
+    if not row or row["approved"] != "yes":
+        return jsonify({"error": "Payment not approved or session not found"}), 402
 
+    nowpayments_id = row["purchase_id"] or session_id
     created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     license_payload = {
         "schema": 1,
@@ -729,7 +556,7 @@ def download_license():
         "kid": "v1",
         "alg": "ed25519",
         "license_key": make_license_key(),
-        "stripe_session_id": session_id,
+        "nowpayments_invoice_id": nowpayments_id,
         "created_at": created_at,
         "features": ["full_unlock"],
     }
@@ -745,10 +572,172 @@ def download_license():
     )
 
 
+@app.route("/check-payment-status", methods=["GET"])
+@limiter.limit(RATE_LIMIT)
+def check_payment_status():
+    session_id = request.args.get("session_id", "")
+    if not session_id:
+        return jsonify({"error": "Missing session_id"}), 400
+
+    db = get_db()
+    cur = db.execute("SELECT approved FROM segpay_transactions WHERE session_id = ?;", (session_id,))
+    row = cur.fetchone()
+    if not row:
+        return jsonify({"status": "unknown"}), 404
+
+    status = "finished" if row["approved"] == "yes" else "pending"
+    return jsonify({"status": status}), 200
+
+
+@app.route("/simulate-payment-success", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
+def simulate_payment_success():
+    data = request.get_json(silent=True) or {}
+    session_id = data.get("session_id")
+    if not session_id:
+        return jsonify({"error": "Missing session_id"}), 400
+
+    db = get_db()
+    with db:
+        cur = db.execute("SELECT session_id FROM segpay_transactions WHERE session_id = ?;", (session_id,))
+        if not cur.fetchone():
+            return jsonify({"error": "Session not found"}), 404
+        db.execute(
+            "UPDATE segpay_transactions SET approved = 'yes' WHERE session_id = ?;",
+            (session_id,)
+        )
+    return jsonify({"status": "ok", "message": "Payment simulation successful."}), 200
+
+
 @app.route("/", methods=["GET"])
 def landing_page():
     # templates/index.html contains your landing page HTML
     return render_template("index.html")
+
+@app.route("/porn_fetch", methods=["GET"])
+def porn_fetch():
+    return render_template("porn_fetch.html")
+
+
+@app.route("/create-crypto-payment", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
+def create_crypto_payment():
+    if not NOWPAYMENTS_API_KEY:
+        return jsonify({"error": "NOWPayments API key not configured on server."}), 500
+
+    # Generate a unique order & session ID
+    session_id = "NP-" + secrets.token_urlsafe(16)
+    created_at = datetime.utcnow().isoformat()
+
+    # Call NOWPayments API to create the invoice
+    headers = {
+        "x-api-key": NOWPAYMENTS_API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "price_amount": 9.99,
+        "price_currency": "eur",
+        "ipn_callback_url": f"{APP_DOMAIN}/nowpayments_ipn",
+        "order_id": session_id,
+        "order_description": "Porn Fetch Premium License Key",
+        "success_url": f"{APP_DOMAIN}/buy_success?session_id={session_id}",
+        "cancel_url": f"{APP_DOMAIN}/buy_cancel"
+    }
+
+    try:
+        # Create invoice on NOWPayments
+        api_url = f"{NOWPAYMENTS_API_URL}/invoice"
+        r = httpx.post(api_url, json=payload, headers=headers, timeout=10.0)
+        r.raise_for_status()
+        invoice_data = r.json()
+
+        # Save order to local database with status "pending"
+        db = get_db()
+        with db:
+            db.execute(
+                """
+                INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
+                VALUES (?, ?, ?, 'crypto-buyer@example.com', 'pending', ?);
+                """,
+                (session_id, str(invoice_data.get("id")), str(invoice_data.get("id")), created_at)
+            )
+
+        # Return the redirect invoice URL and the session_id
+        return jsonify({
+            "session_id": session_id,
+            "invoice_url": invoice_data.get("invoice_url")
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"NOWPayments Invoice API call failed: {e}")
+        if NOWPAYMENTS_SANDBOX:
+            app.logger.info("Falling back to local simulation due to API key error or network error.")
+            invoice_id = "mock-" + secrets.token_hex(8)
+            db = get_db()
+            with db:
+                db.execute(
+                    """
+                    INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
+                    VALUES (?, ?, ?, 'crypto-buyer@example.com', 'pending', ?);
+                    """,
+                    (session_id, invoice_id, invoice_id, created_at)
+                )
+            return jsonify({
+                "session_id": session_id,
+                "invoice_url": f"local-sim:{session_id}"
+            }), 200
+        else:
+            return jsonify({"error": f"Failed to generate crypto payment: {str(e)}"}), 500
+
+
+
+@app.route("/nowpayments_ipn", methods=["POST"])
+def nowpayments_ipn():
+    """
+    Webhook handler for NOWPayments IPN callbacks.
+    """
+    # 1. Verify NOWPayments callback signature
+    received_sig = request.headers.get("x-nowpayments-sig")
+    if not received_sig or not NOWPAYMENTS_IPN_SECRET:
+        return "Missing signature or secret key configuration", 401
+
+    request_data = request.get_data()
+
+    # Sort JSON keys to construct signature check payload matching NOWPayments standard
+    # Sort the dictionary and dump it as separators without whitespace
+    data_dict = json.loads(request_data)
+    sorted_data = json.dumps(data_dict, sort_keys=True, separators=(',', ':'))
+
+    calculated_sig = hmac.new(
+        NOWPAYMENTS_IPN_SECRET.encode("utf-8"),
+        sorted_data.encode("utf-8"),
+        hashlib.sha512
+    ).hexdigest()
+
+    if not hmac.compare_digest(received_sig, calculated_sig):
+        return "Invalid signature verification", 403
+
+    # 2. Extract payment status
+    # NOWPayments uses 'payment_status' for payments and 'status' for invoices.
+    payment_status = data_dict.get("payment_status") or data_dict.get("status")
+    order_id = data_dict.get("order_id")  # This is our internal session_id
+
+    # If the transaction is fully finished on-chain, mark it approved
+    if payment_status in ("finished", "paid"):
+        db = get_db()
+        try:
+            with db:
+                db.execute(
+                    "UPDATE segpay_transactions SET approved = 'yes' WHERE session_id = ?;",
+                    (order_id,)
+                )
+            app.logger.info(f"NOWPayments order {order_id} marked as approved.")
+        except Exception as e:
+            app.logger.error(f"Failed to update database for order {order_id}: {e}")
+            return "Database Error", 500
+
+    return "OK", 200
+
 
 @app.route("/ping", methods=["GET"])
 def ping():
@@ -762,9 +751,9 @@ def datenschutz():
 def privacy_policy():
     return render_template("privacy_policy_en.html")
 
-@app.route("/update", methods=["GET"])  # Get Porn Fetch changelog
+@app.route("/update", methods=["GET"])  # Get Media Archiver changelog
 def update():
-    with open("porn_fetch_changelog.md", "r") as changelog_file:
+    with open("media_archiver_changelog.md", "r") as changelog_file:
         changelog_markdown = changelog_file.read().strip()
         changelog = markdown.markdown(changelog_markdown)
 
@@ -791,6 +780,7 @@ def load_signature_for_version(tag: str) -> str:
     with open(f"signatures/{tag}.txt", "r", encoding="utf-8") as f:
         return f.read().strip()
 
+
 @app.route("/appcast.xml", methods=["GET"])
 def appcast():
     data = get_update_information()
@@ -809,7 +799,7 @@ def appcast():
     pub_date_rfc2822 = format_datetime(pub_dt)
 
     # Your changelog -> HTML
-    with open("porn_fetch_changelog.md", "r", encoding="utf-8") as f:
+    with open("media_archiver_changelog.md", "r", encoding="utf-8") as f:
         changelog_html = markdown.markdown(f.read().strip())
 
     ed_sig = load_signature_for_version(tag)
@@ -817,7 +807,7 @@ def appcast():
     xml = f"""<?xml version="1.0" encoding="utf-8"?>
     <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
       <channel>
-        <title>PornFetch Updates</title>
+        <title>MediaArchiver Updates</title>
 
         <item>
           <title>Version {tag}</title>
@@ -854,153 +844,6 @@ def add_security_headers(resp):
         "base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
     )
     return resp
-
-
-# --- Pages ---
-
-@app.get("/downloads")
-def downloads_page():
-    return render_template("downloads.html")
-
-
-# --- APIs ---
-
-@app.get("/api/releases")
-def api_releases():
-    latest, latest_url = get_latest_release_version()
-    local_versions = list_local_versions()
-
-    # If GH is unavailable, fall back to the newest local version
-    if not latest and local_versions:
-        latest = local_versions[0]
-        latest_url = None
-
-    return jsonify({
-        "latest_version": latest,
-        "latest_url": latest_url,
-        "versions": local_versions,
-    })
-
-
-@app.get("/api/downloads")
-def api_downloads():
-    v = normalize_version_param(request.args.get("version", "latest"))
-
-    latest, _ = get_latest_release_version()
-    local_versions = list_local_versions()
-
-    if v == "latest":
-        if latest:
-            selected_version = latest
-        elif local_versions:
-            selected_version = local_versions[0]
-        else:
-            selected_version = None
-    else:
-        selected_version = v
-
-    if not selected_version:
-        return jsonify({"version": None, "items": []})
-
-    items: List[dict] = []
-    for a in ARTIFACTS.values():
-        p = artifact_path(selected_version, a)
-        size = p.stat().st_size if p.exists() else None
-
-        d = asdict(a)
-        d["size_bytes"] = size
-        d["version"] = selected_version
-        d["url"] = f"/download/{selected_version}/{a.slug}"
-        d["url_latest"] = f"/download/latest/{a.slug}"
-        items.append(d)
-
-    return jsonify({
-        "version": selected_version,
-        "items": items,
-    })
-
-
-# --- Download endpoints ---
-
-@app.get("/download/latest/<slug>")
-def download_latest(slug: str):
-    latest, _ = get_latest_release_version()
-    local_versions = list_local_versions()
-
-    if latest:
-        version = latest
-    elif local_versions:
-        version = local_versions[0]
-    else:
-        abort(404)
-
-    return _download_versioned(version, slug)
-
-
-@app.get("/download/<version>/<slug>")
-def download_versioned(version: str, slug: str):
-    version = normalize_version_param(version)
-    if version == "latest":
-        abort(400)
-    return _download_versioned(version, slug)
-
-
-def _download_versioned(version: str, slug: str):
-    a = ARTIFACTS.get(slug)
-    if not a:
-        abort(404)
-
-    p = artifact_path(version, a)
-    if not p.exists() or not p.is_file():
-        abort(404)
-
-    guessed_type, _ = mimetypes.guess_type(str(p))
-    mimetype = guessed_type or "application/octet-stream"
-
-    resp = make_response(send_file(
-        p,
-        as_attachment=True,
-        download_name=a.filename,
-        mimetype=mimetype,
-        conditional=True
-    ))
-    resp.headers["Cache-Control"] = "public, max-age=3600"
-    return resp
-
-
-
-@app.route("/report", methods=["POST"])
-@limiter.limit(RATE_LIMIT)
-def report_error():
-    if not request.is_json:
-        return jsonify({"error": "Expected JSON"}), 400
-    data = request.get_json()
-
-    if not validate_payload(data):
-        return jsonify({"error": "Invalid payload. Expecting { 'message': 'text' }"}), 400
-
-    try:
-        save_message(data, tag="error")
-    except ValueError as ve:
-        return jsonify({"error": str(ve)}), 400
-    return jsonify({"status": "ok", "message": "Error report saved."})
-
-
-@app.route("/feedback", methods=["POST"])
-@limiter.limit(RATE_LIMIT)
-def send_feedback():
-    if not request.is_json:
-        return jsonify({"error": "Expected JSON"}), 400
-    data = request.get_json()
-
-    if not validate_payload(data):
-        return jsonify({"error": "Invalid payload. Expecting { 'message': 'text' }"}), 400
-
-    try:
-        save_message(data, tag="feedback")
-    except ValueError as ve:
-        return jsonify({"error": str(ve)}), 400
-    return jsonify({"status": "ok", "message": "Feedback saved."})
 
 
 # ---------- Kill switch endpoint ----------
@@ -1059,8 +902,6 @@ def stats_endpoint():
     uptime_seconds = int((datetime.utcnow() - started_at_dt).total_seconds())
 
     ci_list = get_all_ci_status()
-    errors = get_reports("error", limit=100)
-    feedback = get_reports("feedback", limit=100)
 
     stats_payload = {
         "server_started_at": started_at_str + "Z",
@@ -1076,11 +917,7 @@ def stats_endpoint():
         },
         "ci": {
             "tests": ci_list,
-        },
-        "reports": {
-            "errors": errors,
-            "feedback": feedback,
-        },
+        }
     }
 
     want_json = (

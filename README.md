@@ -6,9 +6,9 @@ You can access it under:
 
 ### What does it do? 
 - Serves as a test for myself
-- Update checking for Porn Fetch
-- Error / Feedback reporting for Porn Fetch
-- Local API Tests for my Porn APIs
+- Update checking for Media Archiver
+- Error / Feedback reporting for Media Archiver
+- Local API Tests for my Media APIs
 - Landing page
 
 ### Cloudflare
@@ -25,15 +25,15 @@ My website also does not embed any third party fonts or cookies that could track
 - Powered by Arch Linux 
 
 ### Endpoints
-- /download -> Download Porn Fetch
+- /download -> Download Media Archiver
 - /stats -> View real-time server stats
 - / -> Landing page
 - /feedback -> Report feedback anonymously
 - /ping -> Ping the server
-- /update -> Fetch update information for Porn Fetch
+- /update -> Fetch update information for Media Archiver
 - /report -> Report errors 
 - /ci -> personal endpoint for API tests
-- /buy_license -> You can buy a license for Porn Fetch here
+- /buy_license -> You can buy a license for Media Archiver here
 
 > [!WARNING]
 > The `/buy_license` endpoint is ONLY a test environment. You won't be charged
@@ -59,7 +59,7 @@ Ask Vodafone to get me an IPv4, then I can enable it ;)
 - [x] Own Domain (Namecheap)
 - [x] A real SSL certificate
 - [] More endpoints for more projects
-- [x] License server for Porn Fetch
+- [x] License server for Media Archiver
 - [x] Better I/O handling and saving of reports / errors
 - [x] IPv4 support (I try to ask Vodafone kindly)
 - [] Backup using my Tablet in case main server is down (don't know if that works though)

@@ -15,10 +15,10 @@ app = Flask(__name__)
 
 # Root directory holding all artifacts in:
 #   <RELEASE_ROOT>/<os>/<arch>/<version>/<filename>
-RELEASE_ROOT = Path("/srv/porn_fetch/releases").resolve()
+RELEASE_ROOT = Path("/srv/media_archiver/releases").resolve()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-GITHUB_REPO = "EchterAlsFake/Porn_Fetch"
+GITHUB_REPO = "EchterAlsFake/Media_Archiver"
 GITHUB_LATEST_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
 VERSION_RE = re.compile(r"^\d+(?:\.\d+)*$")  # 1.0 / 1.9 / 2.0 / 10.12.3 etc.
@@ -43,23 +43,23 @@ class Artifact:
 
 
 ARTIFACTS: Dict[str, Artifact] = {
-    "linux-x64-gui": Artifact("linux-x64-gui", "Linux x64 (GUI)", "linux", "x64", "gui", "Porn_Fetch_Linux_x64_GUI.AppImage"),
-    "windows-x64-gui": Artifact("windows-x64-gui", "Windows x64 (GUI)", "windows", "x64", "gui", "Porn_Fetch_Windows_x64_GUI.exe"),
-    "windows-arm-gui": Artifact("windows-arm-gui", "Windows ARM (GUI)", "windows", "arm64", "gui", "Porn_Fetch_Windows_ARM64_GUI.exe"),
-    "macos-x86_64-gui": Artifact("macos-x86_64-gui", "macOS x86_64 (GUI)", "macos", "x86_64", "gui", "Porn_Fetch_macOS_x86_64_GUI.dmg"),
+    "linux-x64-gui": Artifact("linux-x64-gui", "Linux x64 (GUI)", "linux", "x64", "gui", "Media_Archiver_Linux_x64_GUI.AppImage"),
+    "windows-x64-gui": Artifact("windows-x64-gui", "Windows x64 (GUI)", "windows", "x64", "gui", "Media_Archiver_Windows_x64_GUI.exe"),
+    "windows-arm-gui": Artifact("windows-arm-gui", "Windows ARM (GUI)", "windows", "arm64", "gui", "Media_Archiver_Windows_ARM64_GUI.exe"),
+    "macos-x86_64-gui": Artifact("macos-x86_64-gui", "macOS x86_64 (GUI)", "macos", "x86_64", "gui", "Media_Archiver_macOS_x86_64_GUI.dmg"),
 
-    "windows-x86-cli": Artifact("windows-x86-cli", "Windows x32 (CLI)", "windows", "x86", "cli", "Porn_Fetch_Windows_x86_CLI.zip"),
-    "windows-x64-cli": Artifact("windows-x64-cli", "Windows x64 (CLI)", "windows", "x64", "cli", "Porn_Fetch_Windows_x64_CLI.zip"),
-    "linux-x64-cli": Artifact("linux-x64-cli", "Linux x64 (CLI)", "linux", "x64", "cli", "Porn_Fetch_Linux_x64_CLI.tar.gz"),
-    "linux-x86-cli": Artifact("linux-x86-cli", "Linux x32 (CLI)", "linux", "x86", "cli", "Porn_Fetch_Linux_x86_CLI.tar.gz"),
-    "macos-x86_64-cli": Artifact("macos-x86_64-cli", "macOS x86_64 (CLI)", "macos", "x86_64", "cli", "Porn_Fetch_macOS_x86_64_CLI.tar.gz"),
+    "windows-x86-cli": Artifact("windows-x86-cli", "Windows x32 (CLI)", "windows", "x86", "cli", "Media_Archiver_Windows_x86_CLI.zip"),
+    "windows-x64-cli": Artifact("windows-x64-cli", "Windows x64 (CLI)", "windows", "x64", "cli", "Media_Archiver_Windows_x64_CLI.zip"),
+    "linux-x64-cli": Artifact("linux-x64-cli", "Linux x64 (CLI)", "linux", "x64", "cli", "Media_Archiver_Linux_x64_CLI.tar.gz"),
+    "linux-x86-cli": Artifact("linux-x86-cli", "Linux x32 (CLI)", "linux", "x86", "cli", "Media_Archiver_Linux_x86_CLI.tar.gz"),
+    "macos-x86_64-cli": Artifact("macos-x86_64-cli", "macOS x86_64 (CLI)", "macos", "x86_64", "cli", "Media_Archiver_macOS_x86_64_CLI.tar.gz"),
 
-    "android-aarch64": Artifact("android-aarch64", "Android (aarch64)", "android", "aarch64", "gui", "Porn_Fetch_Android_aarch64.apk"),
-    "android-x86_64": Artifact("android-x86_64", "Android (x86_64)", "android", "x86_64", "gui", "Porn_Fetch_Android_x86_64.apk"),
+    "android-aarch64": Artifact("android-aarch64", "Android (aarch64)", "android", "aarch64", "gui", "Media_Archiver_Android_aarch64.apk"),
+    "android-x86_64": Artifact("android-x86_64", "Android (x86_64)", "android", "x86_64", "gui", "Media_Archiver_Android_x86_64.apk"),
 
     # Store these under: other/any/<version>/
-    "torrent": Artifact("torrent", "Torrent File", "other", "any", "torrent", "Porn_Fetch.torrent"),
-    "full-zip": Artifact("full-zip", "Full Zip", "other", "any", "zip", "Porn_Fetch_FULL.zip"),
+    "torrent": Artifact("torrent", "Torrent File", "other", "any", "torrent", "Media_Archiver.torrent"),
+    "full-zip": Artifact("full-zip", "Full Zip", "other", "any", "zip", "Media_Archiver_FULL.zip"),
 }
 
 

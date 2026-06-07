@@ -36,13 +36,13 @@ REPOS = [
     "https://github.com/EchterAlsFake/xvideos_api",
     "https://github.com/EchterAlsFake/PHUB",
     "https://github.com/EchterAlsFake/xnxx_api",
-    "https://github.com/EchterAlsFake/hqporner_api",
-    "https://github.com/EchterAlsFake/EPorner_API",
+    "https://github.com/EchterAlsFake/hqmedia_api",
+    "https://github.com/EchterAlsFake/EMedia_API",
     "https://github.com/EchterAlsFake/xhamster_api",
     "https://github.com/EchterAlsFake/spankbang_api",
     "https://github.com/EchterAlsFake/missAV_api",
-    "https://github.com/EchterAlsFake/porntrex_api",
-    "https://github.com/EchterAlsFake/youporn_api",
+    "https://github.com/EchterAlsFake/mediatrex_api",
+    "https://github.com/EchterAlsFake/youmedia_api",
     "https://github.com/EchterAlsFake/beeg_api",
 ]
 
