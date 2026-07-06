@@ -7,8 +7,6 @@ and report status to a CI server.
 """
 
 from __future__ import annotations
-
-import json
 import os
 import shutil
 import subprocess
@@ -18,32 +16,28 @@ from pathlib import Path
 from typing import Dict
 
 # --------- OPTIONAL HTTP CLIENTS (for robustness) ---------
-try:
-    import httpx  # type: ignore[import]
-except Exception:  # httpx may not be installed
-    httpx = None  # type: ignore[assignment]
-
-try:
-    import requests  # type: ignore[import]
-except Exception:  # requests may not be installed
-    requests = None  # type: ignore[assignment]
-
+from curl_cffi import requests as cffi_requests  # type: ignore[import]
 from urllib import request as urllib_request, error as urllib_error
 
 # ---------------- CONFIG ----------------
 
 REPOS = [
-    "https://github.com/EchterAlsFake/xvideos_api",
-    "https://github.com/EchterAlsFake/PHUB",
-    "https://github.com/EchterAlsFake/xnxx_api",
-    "https://github.com/EchterAlsFake/hqmedia_api",
-    "https://github.com/EchterAlsFake/EMedia_API",
-    "https://github.com/EchterAlsFake/xhamster_api",
-    "https://github.com/EchterAlsFake/spankbang_api",
-    "https://github.com/EchterAlsFake/missAV_api",
-    "https://github.com/EchterAlsFake/mediatrex_api",
-    "https://github.com/EchterAlsFake/youmedia_api",
-    "https://github.com/EchterAlsFake/beeg_api",
+    "https://github.com/EchterAlsFake/unofficial-api-for-xvideos",
+    "https://github.com/EchterAlsFake/unofficial-api-for-pornhub",
+    "https://github.com/EchterAlsFake/unofficial-api-for-xnxx",
+    "https://github.com/EchterAlsFake/unofficial-api-for-hqporner",
+    "https://github.com/EchterAlsFake/unofficial-api-for-eporner",
+    "https://github.com/EchterAlsFake/unofficial-api-for-xhamster",
+    "https://github.com/EchterAlsFake/unofficial-api-for-spankbang",
+    "https://github.com/EchterAlsFake/unofficial-api-for-missav",
+    "https://github.com/EchterAlsFake/unofficial-api-for-porntrex",
+    "https://github.com/EchterAlsFake/unofficial-api-for-youporn",
+    "https://github.com/EchterAlsFake/unofficial-api-for-beeg",
+    "https://github.com/EchterAlsFake/unofficial-api-for-thumbzilla",
+    "https://github.com/EchterAlsFake/unofficial-api-for-redtube",
+    "https://github.com/EchterAlsFake/unofficial-api-for-tube8",
+    "https://github.com/EchterAlsFake/unofficial-api-for-porngo",
+    "https://github.com/EchterAlsFake/unofficial-api-for-xfreehd",
 ]
 
 # Use env vars if set to mimic the Bash script behavior
@@ -83,41 +77,17 @@ def ci_post(test_name: str, status: str) -> None:
     if CI_TOKEN:
         headers["X-CI-TOKEN"] = CI_TOKEN
 
-    # Prefer httpx, then requests, then stdlib urllib, so script works even
-    # without extra dependencies.
     last_error = None
 
-    if httpx is not None:
+    if cffi_requests is not None:
         try:
-            resp = httpx.post(url, json=payload, headers=headers, timeout=10.0)  # type: ignore[arg-type]
+            resp = cffi_requests.post(url, json=payload, headers=headers, timeout=10.0)  # type: ignore[arg-type]
             if 200 <= resp.status_code < 300:
-                print(f"[repo_tests][ci] Updated CI status for '{test_name}' -> {status} (httpx).")
+                print(f"[repo_tests][ci] Updated CI status for '{test_name}' -> {status} (curl_cffi).")
                 return
-            last_error = f"httpx HTTP {resp.status_code}"
+            last_error = f"curl_cffi HTTP {resp.status_code}"
         except Exception as exc:  # pragma: no cover
-            last_error = f"httpx error: {exc!r}"
-
-    if requests is not None:
-        try:
-            resp = requests.post(url, json=payload, headers=headers, timeout=10.0)  # type: ignore[arg-type]
-            if 200 <= resp.status_code < 300:
-                print(f"[repo_tests][ci] Updated CI status for '{test_name}' -> {status} (requests).")
-                return
-            last_error = f"requests HTTP {resp.status_code}"
-        except Exception as exc:  # pragma: no cover
-            last_error = f"requests error: {exc!r}"
-
-    # Fallback to urllib
-    try:
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib_request.Request(url, data=data, headers=headers, method="POST")
-        with urllib_request.urlopen(req, timeout=10.0) as resp:
-            if 200 <= resp.status < 300:
-                print(f"[repo_tests][ci] Updated CI status for '{test_name}' -> {status} (urllib).")
-                return
-            last_error = f"urllib HTTP {resp.status}"
-    except urllib_error.URLError as exc:  # pragma: no cover
-        last_error = f"urllib error: {exc!r}"
+            last_error = f"curl_cffi error: {exc!r}"
 
     print(
         f"[repo_tests][ci] WARNING: Failed to update CI status for '{test_name}' ({status}). "
@@ -205,63 +175,47 @@ def process_repo(url: str, tmp_root: str) -> str:
         print(f"[repo_tests][{repo_name}] ERROR: git clone failed with exit code {rc}.")
         return "CLONE_FAILED"
 
-    # 2. Create virtual env (.venv)
-    print(f"[repo_tests][{repo_name}] Creating virtual environment (.venv)...")
-    venv_dir = os.path.join(repo_dir, ".venv")
-    rc = run_subprocess(
-        [PYTHON_BIN, "-m", "venv", venv_dir],
-        cwd=repo_dir,
-        description=f"[{repo_name}] venv",
-    )
-    if rc != 0:
-        print(f"[repo_tests][{repo_name}] ERROR: Failed to create virtualenv (exit code {rc}).")
-        return "VENV_FAILED"
-
-    # Detect venv python path (POSIX & Windows)
-    venv_python_candidates = [
-        os.path.join(venv_dir, "bin", "python"),          # POSIX
-        os.path.join(venv_dir, "Scripts", "python.exe"),  # Windows
-        os.path.join(venv_dir, "Scripts", "python"),      # Windows alt
-    ]
-    venv_python = next((p for p in venv_python_candidates if os.path.exists(p)), None)
-
-    if not venv_python:
-        print(f"[repo_tests][{repo_name}] ERROR: Could not locate python inside venv.")
-        return "VENV_FAILED"
-
-    def pip_cmd(*args: str) -> list[str]:
-        return [venv_python, "-m", "pip", *args]
-
-    # 3. Upgrade pip
-    print(f"[repo_tests][{repo_name}] Upgrading pip...")
-    rc = run_subprocess(
-        pip_cmd("install", "--upgrade", "pip"),
-        cwd=repo_dir,
-        description=f"[{repo_name}] pip upgrade",
-        allow_failure=True,
-    )
-    if rc != 0:
-        print(f"[repo_tests][{repo_name}] WARNING: Failed to upgrade pip (exit code {rc}), continuing.")
-
-    # 4. requirements.txt
-    req_path = os.path.join(repo_dir, "requirements.txt")
-    if os.path.isfile(req_path):
-        print(f"[repo_tests][{repo_name}] Installing requirements.txt...")
+    # 2. Setup project with uv
+    if os.path.isfile(os.path.join(repo_dir, "pyproject.toml")) or os.path.isfile(os.path.join(repo_dir, "uv.lock")):
+        print(f"[repo_tests][{repo_name}] Syncing project with uv...")
         rc = run_subprocess(
-            pip_cmd("install", "-r", "requirements.txt"),
+            ["uv", "sync"],
             cwd=repo_dir,
-            description=f"[{repo_name}] pip install -r requirements.txt",
+            description=f"[{repo_name}] uv sync",
         )
         if rc != 0:
-            print(f"[repo_tests][{repo_name}] ERROR: Failed to install requirements.txt (exit code {rc}).")
+            print(f"[repo_tests][{repo_name}] ERROR: Failed to sync project (exit code {rc}).")
             return "REQUIREMENTS_FAILED"
     else:
-        print(f"[repo_tests][{repo_name}] WARNING: requirements.txt not found, skipping.")
+        print(f"[repo_tests][{repo_name}] Creating virtual environment (.venv)...")
+        rc = run_subprocess(
+            ["uv", "venv"],
+            cwd=repo_dir,
+            description=f"[{repo_name}] uv venv",
+        )
+        if rc != 0:
+            print(f"[repo_tests][{repo_name}] ERROR: Failed to create virtualenv (exit code {rc}).")
+            return "VENV_FAILED"
 
-    # 5. Extra packages: h2 socks5 pytest
-    print(f"[repo_tests][{repo_name}] Installing extra packages: h2 socks5 pytest...")
+        # 3. requirements.txt
+        req_path = os.path.join(repo_dir, "requirements.txt")
+        if os.path.isfile(req_path):
+            print(f"[repo_tests][{repo_name}] Installing requirements.txt...")
+            rc = run_subprocess(
+                ["uv", "pip", "install", "-r", "requirements.txt"],
+                cwd=repo_dir,
+                description=f"[{repo_name}] uv pip install -r requirements.txt",
+            )
+            if rc != 0:
+                print(f"[repo_tests][{repo_name}] ERROR: Failed to install requirements.txt (exit code {rc}).")
+                return "REQUIREMENTS_FAILED"
+        else:
+            print(f"[repo_tests][{repo_name}] WARNING: requirements.txt not found, skipping.")
+
+    # 4. Extra packages: h2 socks5 pytest pytest-asyncio curl_cffi
+    print(f"[repo_tests][{repo_name}] Installing extra packages: h2 socks5 pytest pytest-asyncio curl_cffi...")
     rc = run_subprocess(
-        pip_cmd("install", "h2", "socks5", "pytest"),
+        ["uv", "pip", "install", "h2", "socks5", "pytest", "pytest-asyncio", "curl_cffi"],
         cwd=repo_dir,
         description=f"[{repo_name}] install extra deps",
     )
@@ -269,10 +223,10 @@ def process_repo(url: str, tmp_root: str) -> str:
         print(f"[repo_tests][{repo_name}] ERROR: Failed to install extra packages (exit code {rc}).")
         return "EXTRA_DEPS_FAILED"
 
-    # 6. Run tests with pytest
+    # 5. Run tests with pytest
     print(f"[repo_tests][{repo_name}] Running tests: pytest ...")
     rc = run_subprocess(
-        [venv_python, "-m", "pytest"],
+        ["uv", "run", "pytest"],
         cwd=repo_dir,
         description=f"[{repo_name}] pytest",
         allow_failure=True,
@@ -295,8 +249,8 @@ def main() -> int:
         print("[repo_tests] ERROR: git not found in PATH.")
         return 1
 
-    if which(PYTHON_BIN) is None:
-        print(f"[repo_tests] ERROR: {PYTHON_BIN} not found in PATH.")
+    if which("uv") is None:
+        print("[repo_tests] ERROR: uv not found in PATH.")
         return 1
 
     # TEST_ROOT & TMP_ROOT setup

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Server Statistics - Porn Fetch{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-top: 40px;">
+    <h1>Server Status &amp; Telemetry Dashboard</h1>
+    <p style="color: var(--color-text-muted);">Real-time server data for monitoring usage and bandwidth.</p>
+    
+    <div class="grid-3" style="margin-top: 30px;">
+        <div class="feature-card" style="text-align: center;">
+            <h3>Uptime</h3>
+            <p style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary); margin: 10px 0;">
+                {{ (stats.uptime_seconds / 3600)|int }}h {{ ((stats.uptime_seconds % 3600) / 60)|int }}m
+            </p>
+            <span style="font-size: 0.8rem; color: var(--color-text-muted);">Started: {{ stats.server_started_at }}</span>
+        </div>
+        
+        <div class="feature-card" style="text-align: center;">
+            <h3>Requests</h3>
+            <p style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary); margin: 10px 0;">
+                {{ stats.requests.total }}
+            </p>
+            <span style="font-size: 0.8rem; color: var(--color-text-muted);">Total hits tracked since start</span>
+        </div>
+        
+        <div class="feature-card" style="text-align: center;">
+            <h3>Bandwidth Out</h3>
+            <p style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary); margin: 10px 0;">
+                {{ stats.traffic.mb_out }} MB
+            </p>
+            <span style="font-size: 0.8rem; color: var(--color-text-muted);">Total outbound network payload</span>
+        </div>
+    </div>
+
+    <!-- CI/CD Build Statuses -->
+    <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 30px;">
+        <h2>Continuous Integration Status</h2>
+        <p style="color: var(--color-text-muted); margin-bottom: 25px;">Real-time build and test results for integrated repositories.</p>
+        
+        {% if stats.ci.tests %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                {% for test in stats.ci.tests %}
+                <div style="
+                    background: var(--color-surface, #ffffff);
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 20px;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                    overflow: hidden;
+                " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'; this.style.borderColor='#e2e8f0';">
+                    
+                    <!-- Decorative top bar based on status -->
+                    <div style="
+                        position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                        {% if test.status == 'pass' %} background: linear-gradient(90deg, #10b981, #34d399);
+                        {% elif test.status == 'fail' %} background: linear-gradient(90deg, #ef4444, #f87171);
+                        {% elif test.status == 'running' %} background: linear-gradient(90deg, #3b82f6, #60a5fa);
+                        {% else %} background: linear-gradient(90deg, #94a3b8, #cbd5e1); {% endif %}
+                    "></div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; margin-top: 5px;">
+                        <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--color-text, #1e293b); word-break: break-word; padding-right: 12px; line-height: 1.3;">{{ test.name }}</h4>
+                        
+                        <span style="
+                            padding: 5px 12px; 
+                            border-radius: 20px; 
+                            font-size: 0.75rem; 
+                            font-weight: 700; 
+                            letter-spacing: 0.05em;
+                            text-transform: uppercase;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            {% if test.status == 'pass' %} 
+                                background: linear-gradient(135deg, #10b981, #059669); color: white;
+                            {% elif test.status == 'fail' %} 
+                                background: linear-gradient(135deg, #ef4444, #dc2626); color: white;
+                            {% elif test.status == 'running' %}
+                                background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+                            {% else %} 
+                                background: linear-gradient(135deg, #94a3b8, #64748b); color: white; 
+                            {% endif %}">
+                            {{ test.status }}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; color: var(--color-text-muted, #64748b); font-size: 0.85rem; background: #f8fafc; padding: 8px 12px; border-radius: 6px;">
+                        <svg style="width: 16px; height: 16px; margin-right: 8px; flex-shrink: 0; opacity: 0.7;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ test.updated_at }}">
+                            {{ test.updated_at }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 50px 20px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
+                <svg style="width: 48px; height: 48px; margin: 0 auto 15px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <p style="color: var(--color-text-muted, #64748b); margin: 0; font-size: 1.1rem; font-weight: 500;">No CI/CD status records found.</p>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 8px;">Run a build to see telemetry appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Porn Fetch - Crypto Checkout{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding-bottom: 20px;">
+    <h1>Crypto Checkout</h1>
+    <p>Complete your payment using your preferred cryptocurrency. Safe, fast, and anonymous.</p>
+</div>
+
+<!-- NOWPayments Hosted Checkout Card -->
+<div class="nowpayments-card">
+    <div class="nowpayments-header">
+        <div class="nowpayments-logo">
+            NOW<span>Payments</span>
+        </div>
+        <div style="font-size: 0.8rem; color: #94a3b8; text-align: right;">
+            Order #PF-{{ range(1000, 9999)|random }}<br>
+            <span style="color: #10b981;">Hosted Checkout</span>
+        </div>
+    </div>
+    
+    <div class="nowpayments-body" id="checkout-form-container">
+        <div style="margin-bottom: 20px;">
+            <span class="nowpayments-label">Product</span>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #f8fafc;">Porn Fetch Premium License Key</div>
+        </div>
+        
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+            <span class="nowpayments-label">Amount to Pay</span>
+            <div class="nowpayments-amount">19,99 EUR</div>
+        </div>
+        
+        <!-- Legal Checkboxes -->
+        <div style="margin-top: 10px; margin-bottom: 25px;">
+            <span class="nowpayments-label">Required Legal Agreements</span>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="chk-age">
+                <span class="checkbox-text">I confirm that I am at least 18 years of age.</span>
+            </label>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="chk-country">
+                <span class="checkbox-text">I confirm that I do not reside in or access this service from Iran, North Korea, Myanmar, Syria, Cuba, Russia, or Belarus.</span>
+            </label>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="chk-withdrawal">
+                <span class="checkbox-text">I expressly consent to the immediate performance of the contract and acknowledge that, by giving this consent, I lose my 14-day right of withdrawal.</span>
+            </label>
+        </div>
+        
+        <button id="pay-btn" class="nowpayments-btn" disabled>Proceed to Payment</button>
+    </div>
+    
+    <!-- Simulated Local Transaction Screen (Hidden by Default, used for sandbox fallback) -->
+    <div class="nowpayments-body tx-screen" id="tx-screen-container" style="display: none;">
+        <div class="status-indicator" style="margin-bottom: 15px;">
+            <span class="status-dot" style="background-color: #dfb317;"></span>
+            <span style="color: #dfb317; font-weight: bold;">Local Simulation Mode</span>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px;">
+            The server could not create an actual transaction on the NOWPayments API (e.g., API key is invalid or offline). 
+            A local simulated transaction has been initialized.
+        </p>
+
+        <div style="background: var(--color-bg); padding: 15px; border-radius: var(--radius-md); border: 1px solid #1e293b; margin-bottom: 20px;">
+            <span class="nowpayments-label">Simulated Session ID</span>
+            <div style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #f8fafc; word-break: break-all;" id="sim-session-id">NP-xxxxxx</div>
+        </div>
+        
+        <button id="simulate-success-btn" class="nowpayments-btn">Simulate Successful Payment</button>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 20px;">
+    <a href="/porn_fetch" style="color: var(--color-text-muted); text-decoration: none; font-size: 0.95rem;">&larr; Go Back to Features</a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function initCheckout() {
+        const payBtn = document.getElementById("pay-btn");
+        const chkAge = document.getElementById("chk-age");
+        const chkCountry = document.getElementById("chk-country");
+        const chkWithdrawal = document.getElementById("chk-withdrawal");
+
+        const checkoutForm = document.getElementById("checkout-form-container");
+        const txScreen = document.getElementById("tx-screen-container");
+        const simSessionId = document.getElementById("sim-session-id");
+        const simulateBtn = document.getElementById("simulate-success-btn");
+
+        let currentSessionId = null;
+
+        // Enable or disable the pay button based on checkboxes
+        function updateButtonState() {
+            payBtn.disabled = !(chkAge.checked && chkCountry.checked && chkWithdrawal.checked);
+        }
+
+        chkAge.addEventListener("change", updateButtonState);
+        chkCountry.addEventListener("change", updateButtonState);
+        chkWithdrawal.addEventListener("change", updateButtonState);
+
+        // Handle checkout progression
+        payBtn.addEventListener("click", async () => {
+            payBtn.disabled = true;
+            payBtn.innerText = "Creating Transaction...";
+
+            try {
+                const response = await fetch("/create-crypto-payment", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentSessionId = data.session_id;
+
+                    // Check if it is a local simulation fallback
+                    if (data.invoice_url.startsWith("local-sim:")) {
+                        simSessionId.innerText = data.session_id;
+                        checkoutForm.style.display = "none";
+                        txScreen.style.display = "block";
+                    } else {
+                        // Redirect directly to NOWPayments hosted invoice
+                        window.location.href = data.invoice_url;
+                    }
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    alert(errData.error || "Error creating payment. Please try again.");
+                    payBtn.disabled = false;
+                    payBtn.innerText = "Proceed to Payment";
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error. Could not create payment transaction.");
+                payBtn.disabled = false;
+                payBtn.innerText = "Proceed to Payment";
+            }
+        });
+
+        simulateBtn.addEventListener("click", async () => {
+            if (!currentSessionId) {
+                alert("No transaction session found to simulate.");
+                return;
+            }
+            try {
+                const response = await fetch("/simulate-payment-success", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ session_id: currentSessionId })
+                });
+                if (response.ok) {
+                    window.location.href = `/buy_success?session_id=${currentSessionId}`;
+                } else {
+                    alert("Failed to simulate payment approval on server.");
+                }
+            } catch (err) {
+                console.error("Simulation error:", err);
+                alert("Error communicating with simulation endpoint.");
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initCheckout);
+    } else {
+        initCheckout();
+    }
+
+</script>
+{% endblock %}

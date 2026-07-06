@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Porn Fetch - The Ultimate Adult Media Downloader{% endblock %}</title>
+    <link rel="stylesheet" href="/static/index.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="legal-banner">
+        <div class="legal-banner-container">
+            <div class="legal-banner-buttons">
+                <a href="/" class="nav-btn">Home / Startseite</a>
+                <a href="/impress" class="nav-btn">Impress / Impressum</a>
+                <a href="/terms" class="nav-btn">AGB / ToS</a>
+                <a href="/privacy_policy" class="nav-btn">Privacy Policy</a>
+                <a href="/datenschutz" class="nav-btn">Datenschutzerklärung</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2023–2026 Johannes Habel. All rights reserved.</p>
+        <p>Porn Fetch is completely open-source. Made with ❤️ in Germany.</p>
+    </footer>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

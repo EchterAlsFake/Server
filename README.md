@@ -1,6 +1,5 @@
 # What's this?
-Hi, you came across my 24/7 personal server for my projects.
-You can access it under:
+This is the official server for Porn Fetch, handling payment flows :) 
 
 **https://echteralsfake.me**
 

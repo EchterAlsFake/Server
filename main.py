@@ -14,7 +14,6 @@ import threading
 import subprocess
 
 from io import BytesIO
-from backend.downloads import *
 from flask_limiter import Limiter
 from email.utils import format_datetime
 from werkzeug.serving import WSGIRequestHandler
@@ -22,6 +21,7 @@ from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g
+from fpdf import FPDF
 
 
 # Configuration
@@ -96,12 +96,12 @@ def init_db():
             created_at TEXT NOT NULL
         );
 
-        CREATE TABLE IF NOT EXISTS segpay_transactions (
+        CREATE TABLE IF NOT EXISTS transactions (
             session_id TEXT PRIMARY KEY,
             purchase_id TEXT,
             trans_id TEXT,
             email TEXT,
-            approved TEXT,
+            status TEXT,
             created_at TEXT NOT NULL
         );
         """
@@ -543,9 +543,9 @@ def download_license():
 
     # Verify that the session_id exists and is approved in the database
     db = get_db()
-    cur = db.execute("SELECT approved, purchase_id FROM segpay_transactions WHERE session_id = ?;", (session_id,))
+    cur = db.execute("SELECT status, purchase_id FROM transactions WHERE session_id = ?;", (session_id,))
     row = cur.fetchone()
-    if not row or row["approved"] != "yes":
+    if not row or row["status"] not in ("finished", "paid"):
         return jsonify({"error": "Payment not approved or session not found"}), 402
 
     nowpayments_id = row["purchase_id"] or session_id
@@ -580,13 +580,101 @@ def check_payment_status():
         return jsonify({"error": "Missing session_id"}), 400
 
     db = get_db()
-    cur = db.execute("SELECT approved FROM segpay_transactions WHERE session_id = ?;", (session_id,))
+    cur = db.execute("SELECT status FROM transactions WHERE session_id = ?;", (session_id,))
     row = cur.fetchone()
     if not row:
         return jsonify({"status": "unknown"}), 404
 
-    status = "finished" if row["approved"] == "yes" else "pending"
-    return jsonify({"status": status}), 200
+    if row["status"] in ("finished", "paid"):
+        invoice_num = "N/A"
+        invoice_path = os.path.join(SAVE_DIR, "invoices", f"{session_id}.json")
+        if os.path.exists(invoice_path):
+            with open(invoice_path, "r") as f:
+                inv = json.load(f)
+                invoice_num = inv.get("Invoice Number", "N/A")
+        return jsonify({"status": "finished", "invoice_num": invoice_num}), 200
+    else:
+        return jsonify({"status": "pending"}), 200
+
+@app.route("/download_invoice", methods=["GET"])
+@limiter.limit(RATE_LIMIT)
+def download_invoice():
+    session_id = request.args.get("session_id", "")
+    if not session_id:
+        return jsonify({"error": "Missing session_id"}), 400
+
+    db = get_db()
+    cur = db.execute("SELECT status FROM transactions WHERE session_id = ?;", (session_id,))
+    row = cur.fetchone()
+    if not row or row["status"] not in ("finished", "paid"):
+        return jsonify({"error": "Payment not approved or session not found"}), 402
+
+    invoices_dir = os.path.join(SAVE_DIR, "invoices")
+    invoice_path = os.path.join(invoices_dir, f"{session_id}.json")
+    if not os.path.exists(invoice_path):
+        return jsonify({"error": "Invoice not found for this session"}), 404
+        
+    with open(invoice_path, "r") as f:
+        invoice_data = json.load(f)
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=12)
+    
+    # Title
+    pdf.set_font("Helvetica", style="B", size=16)
+    pdf.cell(0, 10, f"INVOICE {invoice_data.get('Invoice Number', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", size=12)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(5)
+    
+    # Sender info
+    pdf.set_font("Helvetica", style="B", size=12)
+    pdf.cell(0, 8, "From:", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(0, 8, invoice_data.get("Full Name", ""), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, invoice_data.get("Address", ""), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Tax Number: {invoice_data.get('Tax Number', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(10)
+    
+    # Dates
+    pdf.cell(0, 8, f"Invoice Date: {invoice_data.get('Invoice Date', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Delivery Date: {invoice_data.get('Delivery Date', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(5)
+    
+    # Item info
+    pdf.set_font("Helvetica", style="B", size=12)
+    pdf.cell(0, 8, "Items:", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(0, 8, f"Description: {invoice_data.get('Description', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Quantity: {invoice_data.get('Quantity', 1)}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(5)
+    
+    pdf.set_font("Helvetica", style="I", size=11)
+    pdf.cell(0, 8, invoice_data.get("Tax Info", ""), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", size=12)
+    pdf.ln(10)
+    
+    # Payment info
+    pdf.set_font("Helvetica", style="B", size=12)
+    pdf.cell(0, 8, "Payment Details:", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(0, 8, f"Base Price: {invoice_data.get('Base Price in EUR', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Crypto Paid: {invoice_data.get('Crypto Paid', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Exchange Rate: {invoice_data.get('Exchange Rate', '')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Transaction Hash / TxID: {invoice_data.get('Transaction Hash / TxID', '')}", new_x="LMARGIN", new_y="NEXT")
+    
+    pdf.ln(15)
+    pdf.set_font("Helvetica", style="I", size=12)
+    pdf.cell(0, 10, "Thank you for your purchase!", align="C", new_x="LMARGIN", new_y="NEXT")
+    
+    pdf_bytes = pdf.output()
+    return send_file(
+        BytesIO(pdf_bytes),
+        as_attachment=True,
+        download_name=f"invoice_{invoice_data.get('Invoice Number')}.pdf",
+        mimetype="application/pdf",
+    )
 
 
 @app.route("/simulate-payment-success", methods=["POST"])
@@ -599,13 +687,36 @@ def simulate_payment_success():
 
     db = get_db()
     with db:
-        cur = db.execute("SELECT session_id FROM segpay_transactions WHERE session_id = ?;", (session_id,))
+        cur = db.execute("SELECT session_id FROM transactions WHERE session_id = ?;", (session_id,))
         if not cur.fetchone():
             return jsonify({"error": "Session not found"}), 404
         db.execute(
-            "UPDATE segpay_transactions SET approved = 'yes' WHERE session_id = ?;",
+            "UPDATE transactions SET status = 'finished' WHERE session_id = ?;",
             (session_id,)
         )
+        
+    invoice_num = "INV-" + secrets.token_hex(4).upper()
+    invoice_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    invoice_data = {
+        "Full Name": "Johannes Habel",
+        "Address": "Bahnstr. 21 06886 Lutherstadt Wittenberg",
+        "Tax Number": "46208375790",
+        "Invoice Date": invoice_date,
+        "Delivery Date": invoice_date,
+        "Invoice Number": invoice_num,
+        "Description": "Porn Fetch License",
+        "Quantity": 1,
+        "Tax Info": "Hinweis: Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+        "Base Price in EUR": "19.99 EUR",
+        "Crypto Paid": "0.00016 BTC",
+        "Exchange Rate": "1 BTC = 62437.50 EUR",
+        "Transaction Hash / TxID": "mock-tx-hash-12345"
+    }
+    invoices_dir = os.path.join(SAVE_DIR, "invoices")
+    os.makedirs(invoices_dir, exist_ok=True)
+    with open(os.path.join(invoices_dir, f"{session_id}.json"), "w") as f:
+        json.dump(invoice_data, f, indent=4)
+
     return jsonify({"status": "ok", "message": "Payment simulation successful."}), 200
 
 
@@ -617,6 +728,10 @@ def landing_page():
 @app.route("/porn_fetch", methods=["GET"])
 def porn_fetch():
     return render_template("porn_fetch.html")
+
+@app.route("/donation", methods=["GET"])
+def donation():
+    return render_template("donation.html")
 
 
 @app.route("/create-crypto-payment", methods=["POST"])
@@ -635,11 +750,11 @@ def create_crypto_payment():
         "Content-Type": "application/json"
     }
     payload = {
-        "price_amount": 9.99,
+        "price_amount": 19.99,
         "price_currency": "eur",
         "ipn_callback_url": f"{APP_DOMAIN}/nowpayments_ipn",
         "order_id": session_id,
-        "order_description": "Porn Fetch Premium License Key",
+        "order_description": "Porn Fetch License Key",
         "success_url": f"{APP_DOMAIN}/buy_success?session_id={session_id}",
         "cancel_url": f"{APP_DOMAIN}/buy_cancel"
     }
@@ -656,7 +771,7 @@ def create_crypto_payment():
         with db:
             db.execute(
                 """
-                INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
+                INSERT INTO transactions (session_id, purchase_id, trans_id, email, status, created_at)
                 VALUES (?, ?, ?, 'crypto-buyer@example.com', 'pending', ?);
                 """,
                 (session_id, str(invoice_data.get("id")), str(invoice_data.get("id")), created_at)
@@ -677,7 +792,7 @@ def create_crypto_payment():
             with db:
                 db.execute(
                     """
-                    INSERT INTO segpay_transactions (session_id, purchase_id, trans_id, email, approved, created_at)
+                    INSERT INTO transactions (session_id, purchase_id, trans_id, email, status, created_at)
                     VALUES (?, ?, ?, 'crypto-buyer@example.com', 'pending', ?);
                     """,
                     (session_id, invoice_id, invoice_id, created_at)
@@ -703,9 +818,12 @@ def nowpayments_ipn():
 
     request_data = request.get_data()
 
+    try:
+        data_dict = json.loads(request_data)
+    except:
+        return "Invalid JSON", 400
+
     # Sort JSON keys to construct signature check payload matching NOWPayments standard
-    # Sort the dictionary and dump it as separators without whitespace
-    data_dict = json.loads(request_data)
     sorted_data = json.dumps(data_dict, sort_keys=True, separators=(',', ':'))
 
     calculated_sig = hmac.new(
@@ -718,22 +836,70 @@ def nowpayments_ipn():
         return "Invalid signature verification", 403
 
     # 2. Extract payment status
-    # NOWPayments uses 'payment_status' for payments and 'status' for invoices.
-    payment_status = data_dict.get("payment_status") or data_dict.get("status")
-    order_id = data_dict.get("order_id")  # This is our internal session_id
+    payment_status = data_dict.get("payment_status") or data_dict.get("status") or ""
+    order_id = data_dict.get("order_id")
+
+    # Important: Prevent automatic approval on Repeated Deposits and Wrong-Asset Deposits
+    # as recommended in the NOWPayments documentation to avoid underpayment risks.
+    if data_dict.get("parent_payment_id"):
+        app.logger.warning(f"Ignored IPN for repeated/wrong-asset deposit for order {order_id}")
+        return "Ignored repeated deposit", 200
 
     # If the transaction is fully finished on-chain, mark it approved
-    if payment_status in ("finished", "paid"):
+    if payment_status.lower() in ("finished", "paid"):
         db = get_db()
         try:
             with db:
-                db.execute(
-                    "UPDATE segpay_transactions SET approved = 'yes' WHERE session_id = ?;",
-                    (order_id,)
-                )
-            app.logger.info(f"NOWPayments order {order_id} marked as approved.")
+                cur = db.execute("SELECT status FROM transactions WHERE session_id = ?;", (order_id,))
+                row = cur.fetchone()
+                # Only process if it is pending to prevent duplicate invoice generation
+                if row and row["status"] not in ("finished", "paid"):
+                    db.execute(
+                        "UPDATE transactions SET status = 'finished' WHERE session_id = ?;",
+                        (order_id,)
+                    )
+                    
+                    invoice_num = "INV-" + secrets.token_hex(4).upper()
+                    invoice_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+                    
+                    pay_currency = str(data_dict.get("pay_currency", "")).upper()
+                    actually_paid = float(data_dict.get("actually_paid") or data_dict.get("pay_amount", 0))
+                    fiat_amount = float(data_dict.get("price_amount", 19.99))
+                    
+                    if actually_paid > 0:
+                        rate = fiat_amount / actually_paid
+                    else:
+                        rate = 0
+                        
+                    crypto_paid = f"{actually_paid} {pay_currency}"
+                    exchange_rate = f"1 {pay_currency} = {rate:.2f} EUR"
+                    tx_hash = str(data_dict.get("payin_hash") or data_dict.get("hash") or "N/A")
+                    
+                    invoice_data = {
+                        "Full Name": "Johannes Habel",
+                        "Address": "Bahnstr. 21 06886 Lutherstadt Wittenberg",
+                        "Tax Number": "46208375790",
+                        "Invoice Date": invoice_date,
+                        "Delivery Date": invoice_date,
+                        "Invoice Number": invoice_num,
+                        "Description": "Porn Fetch License",
+                        "Quantity": 1,
+                        "Tax Info": "Hinweis: Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+                        "Base Price in EUR": f"{fiat_amount:.2f} EUR",
+                        "Crypto Paid": crypto_paid,
+                        "Exchange Rate": exchange_rate,
+                        "Transaction Hash / TxID": tx_hash
+                    }
+                    
+                    invoices_dir = os.path.join(SAVE_DIR, "invoices")
+                    os.makedirs(invoices_dir, exist_ok=True)
+                    invoice_path = os.path.join(invoices_dir, f"{order_id}.json")
+                    with open(invoice_path, "w") as f:
+                        json.dump(invoice_data, f, indent=4)
+                        
+                    app.logger.info(f"NOWPayments order {order_id} marked as approved. Invoice {invoice_num} generated.")
         except Exception as e:
-            app.logger.error(f"Failed to update database for order {order_id}: {e}")
+            app.logger.error(f"Failed to update database or generate invoice for order {order_id}: {e}")
             return "Database Error", 500
 
     return "OK", 200
@@ -750,6 +916,11 @@ def datenschutz():
 @app.route("/privacy_policy", methods=["GET"])
 def privacy_policy():
     return render_template("privacy_policy_en.html")
+
+@app.route("/legal-statement", methods=["GET"])
+def legal_compliance():
+    return render_template("legal-statement.html")
+
 
 @app.route("/update", methods=["GET"])  # Get Media Archiver changelog
 def update():
@@ -841,6 +1012,7 @@ def add_security_headers(resp):
         "style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "
         "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "
         "connect-src 'self'; "
+        "frame-src 'self' https://nowpayments.io; "
         "base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
     )
     return resp

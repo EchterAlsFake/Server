@@ -13,4 +13,5 @@ dependencies = [
     "markdown",
     "gunicorn",
     "python-dotenv>=1.2.2",
+    "fpdf2>=2.8.7",
 ]

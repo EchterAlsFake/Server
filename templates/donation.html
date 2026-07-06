@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Donate - Support Open Source{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding-bottom: 20px;">
+    <h1 style="font-size: clamp(2.5rem, 6vw, 3.5rem); background: linear-gradient(to right, var(--color-primary), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Support My Work</h1>
+    <p style="font-size: 1.2rem; max-width: 700px; margin: 0 auto; color: var(--color-text-muted);">
+        As a student, balancing open-source development and my studies is a huge challenge. Your generous donations help me in keeping my projects alive, ad-free, and constantly improving!
+    </p>
+</div>
+
+<div class="card" style="border-left: 4px solid var(--color-primary); text-align: center; max-width: 1100px; margin: 0 auto 50px;">
+    <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">Choose Your Way to Donate</h2>
+    
+    <div style="text-align: left; max-width: 600px; margin: 0 auto 30px; background: var(--color-bg); padding: 20px; border-radius: var(--radius-md); border: 1px solid #1e293b;">
+        <h4 style="margin-top: 0; margin-bottom: 15px; color: #f8fafc;">Required Legal Agreements</h4>
+        <label class="checkbox-container">
+            <input type="checkbox" id="chk-age-donation">
+            <span class="checkbox-text">I confirm that I am at least 18 years of age.</span>
+        </label>
+        <label class="checkbox-container">
+            <input type="checkbox" id="chk-country-donation">
+            <span class="checkbox-text">I confirm that I do not reside in or access this service from Iran, North Korea, Myanmar, Syria, Cuba, Russia, or Belarus.</span>
+        </label>
+    </div>
+
+    <div class="grid-3" style="align-items: stretch;" id="donation-options" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s ease;">
+        
+        <!-- PayPal -->
+        <div class="feature-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: all 0.3s ease; position: relative; overflow: hidden;">
+            <div style="background: #00457C; padding: 25px; border-radius: var(--radius-md) var(--radius-md) 0 0; width: calc(100% + 56px); margin: -28px -28px 20px -28px;">
+                <h3 style="margin: 0; color: white; font-size: 1.6rem; letter-spacing: 1px;">PayPal</h3>
+            </div>
+            <div style="font-size: 3rem; margin-bottom: 15px;">💸</div>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Quick and easy donation via PayPal. Support my student journey directly and securely with just a few clicks!</p>
+            <a href="https://paypal.me/EchterAlsFake" target="_blank" class="btn donation-btn" style="background: #0070BA; color: white; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 112, 186, 0.4); text-decoration: none;">Donate via PayPal</a>
+        </div>
+        
+        <!-- Ko-Fi -->
+        <div class="feature-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: all 0.3s ease; position: relative; overflow: hidden;">
+            <div style="background: #FF5E5B; padding: 25px; border-radius: var(--radius-md) var(--radius-md) 0 0; width: calc(100% + 56px); margin: -28px -28px 20px -28px;">
+                <h3 style="margin: 0; color: white; font-size: 1.6rem; letter-spacing: 1px;">Ko-Fi</h3>
+            </div>
+            <div style="font-size: 3rem; margin-bottom: 15px;">☕</div>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Buy me a coffee on Ko-Fi! No account required, completely hassle-free way to show your appreciation.</p>
+            <a href="https://ko-fi.com/EchterAlsFake" target="_blank" class="btn donation-btn" style="background: #FF5E5B; color: white; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 94, 91, 0.4); text-decoration: none;">Buy me a Coffee</a>
+        </div>
+
+        <!-- Crypto Info -->
+        <div class="feature-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: all 0.3s ease; position: relative; overflow: hidden;">
+            <div style="background: var(--color-crypto); padding: 25px; border-radius: var(--radius-md) var(--radius-md) 0 0; width: calc(100% + 56px); margin: -28px -28px 20px -28px;">
+                <h3 style="margin: 0; color: #090d16; font-size: 1.6rem; letter-spacing: 1px;">Crypto</h3>
+            </div>
+            <div style="font-size: 3rem; margin-bottom: 15px;">🪙</div>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Prefer to stay anonymous and decentralized? Use the secure widget below to donate with 250+ cryptocurrencies.</p>
+            <a href="#crypto-widget" class="btn donation-btn" style="background: var(--color-crypto); color: #090d16; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-decoration: none;">Scroll to Crypto Widget</a>
+        </div>
+    </div>
+</div>
+
+<div id="crypto-widget" class="card" style="border-left: 4px solid var(--color-crypto); text-align: center; max-width: 600px; margin: 0 auto 50px;">
+    <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">Pay with Crypto</h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 30px;">Powered securely by NowPayments</p>
+    
+    <div style="background: #090d16; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); display: inline-block; position: relative;" id="iframe-wrapper">
+        <div id="iframe-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+            <p style="color: white; font-weight: bold; padding: 20px;">Please accept the legal agreements above first.</p>
+        </div>
+        <iframe src="https://nowpayments.io/embeds/donation-widget?api_key=65b1acaf-735d-4d4b-b3d6-c2237c0b57e3" width="346" height="623" frameborder="0" scrolling="no" style="overflow-y: hidden; border-radius: 12px; background: transparent;">
+           Can't load widget
+        </iframe>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const chkAge = document.getElementById("chk-age-donation");
+        const chkCountry = document.getElementById("chk-country-donation");
+        const chkWithdrawal = document.getElementById("chk-withdrawal-donation");
+        const optionsDiv = document.getElementById("donation-options");
+        const overlay = document.getElementById("iframe-overlay");
+        const donationBtns = document.querySelectorAll(".donation-btn");
+
+        function updateState() {
+            const allChecked = chkAge.checked && chkCountry.checked && chkWithdrawal.checked;
+            if (allChecked) {
+                optionsDiv.style.opacity = "1";
+                optionsDiv.style.pointerEvents = "auto";
+                overlay.style.display = "none";
+            } else {
+                optionsDiv.style.opacity = "0.5";
+                optionsDiv.style.pointerEvents = "none";
+                overlay.style.display = "flex";
+            }
+        }
+
+        chkAge.addEventListener("change", updateState);
+        chkCountry.addEventListener("change", updateState);
+        chkWithdrawal.addEventListener("change", updateState);
+
+        donationBtns.forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                if (!(chkAge.checked && chkCountry.checked && chkWithdrawal.checked)) {
+                    e.preventDefault();
+                    alert("Please accept all required legal agreements before proceeding.");
+                }
+            });
+        });
+        
+        // Initial state
+        updateState();
+    });
+</script>
+{% endblock %}

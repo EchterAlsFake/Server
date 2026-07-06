@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Processing - Porn Fetch{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-top: 40px; text-align: center; border-top: 4px solid #10b981;" id="loading-container">
+    <h1 style="color: #10b981; font-size: 2.2rem; margin-bottom: 20px;">Processing Payment...</h1>
+    <p style="font-size: 1.15rem; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 30px;">
+        Please wait while we confirm your payment and generate your license and invoice.
+    </p>
+    <div style="margin: 40px auto;">
+        <!-- Loading spinner -->
+        <div style="border: 4px solid #1e293b; border-top: 4px solid #10b981; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 40px; text-align: center; border-top: 4px solid #10b981; display: none;" id="success-container">
+    <h1 style="color: #10b981; font-size: 2.2rem; margin-bottom: 20px;">Thank You for Your Support!</h1>
+    <p style="font-size: 1.15rem; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 30px;">
+        Your payment has been successfully confirmed.
+    </p>
+
+    <div style="background: var(--color-bg); padding: 30px; border-radius: var(--radius-md); border: 1px solid #e2e8f0; max-width: 500px; margin: 0 auto 30px;">
+        <span style="font-size: 0.85rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Your Session ID</span>
+        <div style="font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--color-text); word-break: break-all; margin-bottom: 15px;">{{ session_id }}</div>
+        
+        <span style="font-size: 0.85rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Invoice Number</span>
+        <div id="invoice-display" style="font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--color-text); word-break: break-all; margin-bottom: 25px;"></div>
+        
+        <a href="/download_license?session_id={{ session_id }}" class="btn btn-primary" style="background: #10b981; border-color: #10b981; width: 100%; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); margin-bottom: 10px;">Download License Key File</a>
+        <a href="/download_invoice?session_id={{ session_id }}" class="btn" style="width: 100%; background: #334155; color: white; border: none;">Download Invoice</a>
+    </div>
+
+    <h3>How to activate the app:</h3>
+    <div style="text-align: left; max-width: 500px; margin: 0 auto; line-height: 1.8;">
+        <ol>
+            <li>Download the <code>porn_fetch.license</code> file using the button above.</li>
+            <li>Open the Porn Fetch app settings.</li>
+            <li>Click on <strong>Activate License</strong> and select the downloaded file.</li>
+            <li>Your app is now fully unlocked for 1080p+ and parallel downloads!</li>
+        </ol>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const sessionId = "{{ session_id }}";
+    
+    async function checkStatus() {
+        try {
+            const res = await fetch(`/check-payment-status?session_id=${sessionId}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === "finished") {
+                    document.getElementById("loading-container").style.display = "none";
+                    document.getElementById("success-container").style.display = "block";
+                    document.getElementById("invoice-display").innerText = data.invoice_num || "N/A";
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        // Poll again after 3 seconds
+        setTimeout(checkStatus, 3000);
+    }
+    
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", checkStatus);
+    } else {
+        checkStatus();
+    }
+</script>
+{% endblock %}
