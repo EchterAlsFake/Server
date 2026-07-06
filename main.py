@@ -418,7 +418,7 @@ def get_update_information():
         # Updating data every 5 minutes for minimal API requests
         update_cache["last_checked"] = now
 
-        get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Media_Archiver/releases/latest",
+        get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest",
                             headers={
                                 "Accept": "application/vnd.github+json",
                                 "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -434,11 +434,11 @@ def get_update_information():
 
     version = data.get("tag_name", "unavailable")
     assets = data.get("assets", [])
-    linux_x64 = next((a for a in assets if a.get("name") == "MediaArchiver_Linux_GUI_x64.bin"))
-    linux_arm64 = next((a for a in assets if a.get("name") == "MediaArchiver_Linux_GUI_arm64.bin"))
-    windows_x64 = next((a for a in assets if a.get("name") == "MediaArchiver_Windows_GUI_x64.exe"))
-    windows_arm64 = next((a for a in assets if a.get("name") == "MediaArchiver_Windows_GUI_arm64.exe"))
-    macos_universal = next((a for a in assets if a.get("name") == "MediaArchiver_macOS_GUI_Universal.dmg"))
+    linux_x64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_x64.bin"))
+    linux_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_arm64.bin"))
+    windows_x64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_x64.exe"))
+    windows_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_arm64.exe"))
+    macos_universal = next((a for a in assets if a.get("name") == "PornFetch_macOS_GUI_Universal.dmg"))
     stuff = {
         "version": version,
         "linux_x64": linux_x64,
@@ -936,7 +936,6 @@ def update():
         changelog = markdown.markdown(changelog_markdown)
 
     fortnite = get_update_information()
-
     stuff = jsonify({
         "version": f"{fortnite.get('version')}",
         "url": fortnite.get("url"),
@@ -985,7 +984,7 @@ def appcast():
     xml = f"""<?xml version="1.0" encoding="utf-8"?>
     <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
       <channel>
-        <title>MediaArchiver Updates</title>
+        <title>Porn Fetch Updates</title>
 
         <item>
           <title>Version {tag}</title>
