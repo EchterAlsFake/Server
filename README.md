@@ -40,6 +40,8 @@ My website also does not embed any third party fonts or cookies that could track
 > It's just for experimenting and testing. I'll tell you when it's ready...
 
 
+![Progress](http://[::1]:8000/checklist/progress.svg)
+
 ### Data collection?
 - No IP
 - Strict Zero Log policy

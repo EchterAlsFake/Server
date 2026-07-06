@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Checklist Login{% endblock %}
+{% block extra_head %}
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 4rem auto;
+        background: #1e1e24;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        color: white;
+    }
+    .login-container input {
+        width: 100%;
+        padding: 0.75rem;
+        margin: 1rem 0;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background: #2a2a32;
+        color: white;
+        box-sizing: border-box;
+    }
+    .login-container button {
+        width: 100%;
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .login-container button:hover {
+        background: #0056b3;
+    }
+    .error-msg {
+        color: #e05d44;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="login-container">
+    <h2>Authentication Required</h2>
+    {% if error %}
+    <p class="error-msg">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <input type="password" name="password" placeholder="Enter password" required>
+        <button type="submit">Login</button>
+    </form>
+</div>
+{% endblock %}

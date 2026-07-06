@@ -20,7 +20,7 @@ from werkzeug.serving import WSGIRequestHandler
 from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g
+from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g, redirect
 from fpdf import FPDF
 
 
@@ -102,6 +102,13 @@ def init_db():
             trans_id TEXT,
             email TEXT,
             status TEXT,
+            created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS checklist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task TEXT NOT NULL,
+            is_done INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL
         );
         """
@@ -1173,6 +1180,154 @@ def ratelimit_handler(e):
 @app.errorhandler(413)
 def payload_too_large(e):
     return jsonify({"error": "Payload too large. Max 200KB allowed."}), 413
+
+
+# ---------- Checklist routes ----------
+
+def check_checklist_auth():
+    auth_env = os.environ.get("CHECKLIST_AUTH")
+    if not auth_env:
+        return False
+    return request.cookies.get("checklist_auth") == auth_env
+
+@app.route('/checklist', methods=['GET', 'POST'])
+def checklist():
+    auth_env = os.environ.get("CHECKLIST_AUTH")
+    if not auth_env:
+        return "CHECKLIST_AUTH env variable not set", 500
+
+    if request.method == 'POST':
+        password = request.form.get("password", "")
+        if password == auth_env:
+            resp = make_response(redirect("/checklist"))
+            resp.set_cookie("checklist_auth", password)
+            return resp
+        else:
+            return render_template("checklist_login.html", error="Invalid password"), 401
+
+    if not check_checklist_auth():
+        return render_template("checklist_login.html")
+    
+    return render_template("checklist.html")
+
+@app.route('/checklist/api/tasks', methods=['GET'])
+def get_tasks():
+    if not check_checklist_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    db = get_db()
+    cur = db.execute("SELECT id, task, is_done, created_at FROM checklist ORDER BY created_at ASC;")
+    tasks = []
+    for row in cur.fetchall():
+        tasks.append({
+            "id": row["id"],
+            "task": row["task"],
+            "is_done": bool(row["is_done"]),
+            "created_at": row["created_at"]
+        })
+    return jsonify(tasks)
+
+@app.route('/checklist/api/add', methods=['POST'])
+def add_task():
+    if not check_checklist_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    task = data.get("task")
+    if not task:
+        return jsonify({"error": "Task required"}), 400
+        
+    db = get_db()
+    with db:
+        db.execute("INSERT INTO checklist (task, is_done, created_at) VALUES (?, ?, ?);",
+                   (task, 0, datetime.utcnow().isoformat()))
+    return jsonify({"success": True})
+
+@app.route('/checklist/api/toggle/<int:task_id>', methods=['POST'])
+def toggle_task(task_id):
+    if not check_checklist_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json
+    is_done = 1 if data.get("is_done") else 0
+    db = get_db()
+    with db:
+        db.execute("UPDATE checklist SET is_done = ? WHERE id = ?;", (is_done, task_id))
+    return jsonify({"success": True})
+
+@app.route('/checklist/api/remove/<int:task_id>', methods=['POST'])
+def remove_task(task_id):
+    if not check_checklist_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    db = get_db()
+    with db:
+        db.execute("DELETE FROM checklist WHERE id = ?;", (task_id,))
+    return jsonify({"success": True})
+
+@app.route('/checklist/progress.svg', methods=['GET'])
+def checklist_progress_svg():
+    # Progress SVG doesn't strictly need auth if meant for a public GitHub README
+    db = get_db()
+    cur = db.execute("SELECT COUNT(*) as total, SUM(is_done) as done FROM checklist;")
+    row = cur.fetchone()
+    total = row["total"] or 0
+    done = row["done"] or 0
+    
+    percentage = 0
+    if total > 0:
+        percentage = round((done / total) * 100)
+        
+
+    label = "Version 3.9 Development Progress"
+    value = f"{percentage}%"
+    
+    total_width = 400
+    height = 36
+    radius = 18
+    fill_width = int((percentage / 100.0) * total_width)
+
+    if percentage >= 100:
+        grad_start, grad_end = "#00b09b", "#96c93d"  # Green
+    elif percentage >= 50:
+        grad_start, grad_end = "#f7971e", "#ffd200"  # Yellow/Orange
+    elif percentage > 0:
+        grad_start, grad_end = "#f85032", "#e73827"  # Red
+    else:
+        grad_start, grad_end = "#444444", "#666666"  # Grey
+
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{height}" role="img" aria-label="{label}: {value}">
+  <defs>
+    <linearGradient id="bar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{grad_start}" />
+      <stop offset="100%" stop-color="{grad_end}" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <rect width="{total_width}" height="{height}" rx="{radius}" fill="#1e1e24" filter="url(#shadow)"/>
+  
+  <mask id="fill-mask">
+    <rect width="{total_width}" height="{height}" rx="{radius}" fill="#fff"/>
+  </mask>
+  
+  <g mask="url(#fill-mask)">
+    <rect width="{fill_width}" height="{height}" fill="url(#bar-grad)"/>
+    <rect width="{total_width}" height="{height}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" rx="{radius}"/>
+  </g>
+  
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">
+    <text x="20" y="23" fill="#ffffff">{label}</text>
+    <text x="{total_width - 20}" y="23" text-anchor="end" fill="#ffffff">{value}</text>
+  </g>
+</svg>'''
+
+    resp = make_response(svg)
+    resp.content_type = 'image/svg+xml'
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return resp
 
 
 class NoIPLoggingHandler(WSGIRequestHandler):

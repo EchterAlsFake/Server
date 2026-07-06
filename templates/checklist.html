@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Checklist{% endblock %}
+{% block extra_head %}
+<style>
+    .checklist-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: #1e1e24;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    .checklist-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .progress-bar-container {
+        background: #333;
+        border-radius: 8px;
+        height: 20px;
+        width: 100%;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    .progress-bar {
+        background: #4c1;
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    .task-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .task-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #333;
+    }
+    .task-item:last-child {
+        border-bottom: none;
+    }
+    .task-item input[type="checkbox"] {
+        margin-right: 1rem;
+        transform: scale(1.2);
+    }
+    .task-text {
+        flex: 1;
+        font-size: 1.1rem;
+    }
+    .task-text.done {
+        text-decoration: line-through;
+        color: #888;
+    }
+    .remove-btn {
+        background: #e05d44;
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .remove-btn:hover {
+        background: #c0402b;
+    }
+    .add-task-form {
+        display: flex;
+        margin-top: 1.5rem;
+    }
+    .add-task-form input[type="text"] {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid #444;
+        border-radius: 4px 0 0 4px;
+        background: #2a2a32;
+        color: white;
+    }
+    .add-task-form button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+    }
+    .add-task-form button:hover {
+        background: #0056b3;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="checklist-container">
+    <div class="checklist-header">
+        <h2>Project Checklist</h2>
+        <div>
+            <span id="progress-text">0%</span>
+        </div>
+    </div>
+    
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <ul class="task-list" id="task-list">
+        <!-- Tasks will be injected here via JS -->
+    </ul>
+
+    <form class="add-task-form" id="add-task-form">
+        <input type="text" id="new-task-input" placeholder="New task..." required>
+        <button type="submit">Add Task</button>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const taskList = document.getElementById('task-list');
+    const addTaskForm = document.getElementById('add-task-form');
+    const newTaskInput = document.getElementById('new-task-input');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+
+    async function fetchTasks() {
+        const response = await fetch('/checklist/api/tasks');
+        const tasks = await response.json();
+        renderTasks(tasks);
+    }
+
+    function renderTasks(tasks) {
+        taskList.innerHTML = '';
+        let doneCount = 0;
+        
+        tasks.forEach(task => {
+            if (task.is_done) doneCount++;
+            
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = task.is_done;
+            checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
+            
+            const span = document.createElement('span');
+            span.className = `task-text ${task.is_done ? 'done' : ''}`;
+            span.textContent = task.task;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => removeTask(task.id));
+            
+            li.appendChild(checkbox);
+            li.appendChild(span);
+            li.appendChild(removeBtn);
+            taskList.appendChild(li);
+        });
+        
+        const percentage = tasks.length === 0 ? 0 : Math.round((doneCount / tasks.length) * 100);
+        progressBar.style.width = `${percentage}%`;
+        progressText.textContent = `${percentage}%`;
+    }
+
+    async function addTask(e) {
+        e.preventDefault();
+        const text = newTaskInput.value.trim();
+        if (!text) return;
+        
+        await fetch('/checklist/api/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task: text })
+        });
+        
+        newTaskInput.value = '';
+        fetchTasks();
+    }
+
+    async function toggleTask(id, is_done) {
+        await fetch(`/checklist/api/toggle/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_done })
+        });
+        fetchTasks();
+    }
+
+    async function removeTask(id) {
+        await fetch(`/checklist/api/remove/${id}`, { method: 'POST' });
+        fetchTasks();
+    }
+
+    addTaskForm.addEventListener('submit', addTask);
+    fetchTasks();
+</script>
+{% endblock %}
