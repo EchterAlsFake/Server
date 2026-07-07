@@ -1326,6 +1326,10 @@ def checklist_progress_svg():
     resp = make_response(svg)
     resp.content_type = 'image/svg+xml'
     resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = "no-cache"
+    resp.headers['Expires'] = "0"
+    resp.headers.pop('ETag', None)
+    resp.headers.pop('Last-Modified', None)
     return resp
 
 
