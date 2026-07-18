@@ -1,0 +1,340 @@
+<!-- ============================================================
+     Beeg API Documentation — Content File
+     ============================================================ -->
+
+<!-- META -->
+<!-- SLOT:TITLE = Beeg API -->
+<!-- SLOT:HERO_TITLE = Beeg API -->
+<!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metadata by parsing external API endpoints, and download streams via HLS. Powered by the eaf_base_api networking engine. -->
+<!-- SLOT:VERSION = 1.5 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-beeg -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-beeg -->
+
+<!-- SIDEBAR_NAV -->
+<!-- BEGIN:SIDEBAR_NAV -->
+<div class="nav-section-title">Getting Started</div>
+<a href="#installation" class="nav-link">Installation</a>
+<a href="#quickstart" class="nav-link">Quick Start</a>
+<a href="#configuration" class="nav-link">Configuration</a>
+
+<div class="nav-section-title">Core Objects</div>
+<div class="nav-collapsible">
+    <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#video-download" class="nav-link nav-link-sub">download()</a>
+    </div>
+</div>
+
+<div class="nav-section-title">Features</div>
+<a href="#downloading" class="nav-link">Downloading Options</a>
+<a href="#error-handling" class="nav-link">Error Handling</a>
+
+<div class="nav-section-title">Extras</div>
+<a href="#platforms" class="nav-link">Platforms</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- MAIN_CONTENT -->
+<!-- BEGIN:MAIN_CONTENT -->
+
+<!-- ================================================================
+     DISCLAIMER & FEATURES
+     ================================================================ -->
+<div class="section" id="intro-section">
+    <div class="info-box warning" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+        <div class="info-box-title" style="color: #ef4444; font-size: 14px;">⚠️ Legal Disclaimer</div>
+        This tool is an unofficial, independent project and is not affiliated with, endorsed by, or sponsored by the target website. This software is provided "as is" for educational and personal purposes only. The developer assumes no responsibility for any consequences arising from the use of this tool, including but not limited to account suspension, IP blocking, or any violation of the target website's Terms of Service. Users are solely responsible for ensuring their use complies with all applicable laws and policies. Use at your own risk.
+    </div>
+
+    <div class="info-box success" style="margin-top: 24px;">
+        <div class="info-box-title" style="font-size: 14px;">💚 Support &amp; Commercial Licensing</div>
+        If you find this project helpful, please consider donating to support its continued development! <br><br>
+        
+        <div style="margin: 16px 0;">
+            <a href="https://nowpayments.io/donation/EchterAlsFake" class="btn-donate" target="_blank" rel="noreferrer noopener" style="border-bottom: none;">
+                <span style="font-size: 20px;">💎</span> Donate Crypto
+            </a>
+        </div>
+        
+        <strong>Other Options:</strong><br>
+        • <a href="https://paypal.me/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">PayPal</a><br>
+        • <a href="https://ko-fi.com/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">Ko-Fi</a><br><br>
+        
+        For extended features, enterprise integrations, or custom commercial licensing, please contact 
+        <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
+    </div>
+
+    <h3 style="margin-top: 32px; font-size: 22px;">✨ Features Overview</h3>
+    <ul class="param-list" style="margin-top: 16px;">
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚡</span> <strong style="color: var(--text-primary); margin-right: 6px;">Fully Asynchronous</strong> — High-performance metadata parsing and downloading via <code>asyncio</code>.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🛡️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Bot Protection Bypass</strong> — Mimics real browser fingerprints to query API endpoints securely.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📥</span> <strong style="color: var(--text-primary); margin-right: 6px;">HLS Downloader</strong> — Built-in segment downloader to download videos in high quality with optional TS→MP4 remuxing.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📦</span> <strong style="color: var(--text-primary); margin-right: 6px;">Clean Architecture</strong> — A lightweight, minimalist design built directly on top of <code>eaf_base_api</code>.</li>
+    </ul>
+</div>
+
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <p>Install from PyPI using pip:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-beeg</code></pre>
+    </div>
+
+    <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-beeg[av]</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        Requires <strong>Python ≥ 3.12</strong>. The underlying networking library <code>eaf_base_api</code> is installed automatically as a dependency.
+    </div>
+</div>
+
+<div class="section" id="quickstart-section">
+    <span class="section-anchor" id="quickstart"></span>
+    <h2><span class="section-icon">🚀</span> Quick Start</h2>
+
+    <p>Every method in this API is <strong>asynchronous</strong>. You need to run your code inside an <code>async</code> function:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> beeg_api <span class="token-keyword">import</span> Client
+
+<span class="token-keyword">async def</span> <span class="token-function">main</span>():
+    client = <span class="token-class">Client</span>()
+
+    <span class="token-comment"># Fetch a video</span>
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://beeg.com/1234567"</span>)
+
+    <span class="token-comment"># Access metadata</span>
+    <span class="token-builtin">print</span>(video.title)
+    <span class="token-builtin">print</span>(video.duration)
+
+    <span class="token-comment"># Download the video</span>
+    <span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS
+    config = <span class="token-class">DownloadConfigHLS</span>(quality=<span class="token-string">"best"</span>, path=<span class="token-string">"./downloads"</span>)
+    <span class="token-keyword">await</span> video.download(configuration=config)
+
+asyncio.run(main())</code></pre>
+    </div>
+</div>
+
+<div class="section" id="configuration-section">
+    <span class="section-anchor" id="configuration"></span>
+    <h2><span class="section-icon">⚙️</span> Configuration</h2>
+
+    <p>The entire API relies on <code>eaf_base_api</code> for its networking. You can configure global settings (proxies, timeouts, etc.) via a custom <code>BaseCore</code> passed into the Client.</p>
+    <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> beeg_api <span class="token-keyword">import</span> Client
+
+my_config = <span class="token-class">RuntimeConfig</span>()
+my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+core = <span class="token-class">BaseCore</span>(configuration=my_config)
+client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     CLIENT
+     ================================================================ -->
+<div class="section" id="client-section">
+    <span class="section-anchor" id="client"></span>
+    <h2><span class="section-icon">🔌</span> Client</h2>
+    <p>The <code>Client</code> class is the entry point for all API requests. It initializes and manages the networking core to request video information pages.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> beeg_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+
+client = <span class="token-class">Client</span>()
+
+<span class="token-comment"># Or initialize with custom core config</span>
+client_custom = <span class="token-class">Client</span>(core=<span class="token-class">BaseCore</span>())</code></pre>
+    </div>
+
+    <h3>Constructor Parameters</h3>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Networking core instance (default: <code>BaseCore()</code>)</span></li>
+    </ul>
+
+    <h3>Methods</h3>
+
+    <!-- get_video -->
+    <span class="section-anchor" id="client-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a video profile and returns a populated <code>Video</code> object. Queries Beeg's external store endpoints to obtain video parameters.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
+    url: <span class="token-builtin">str</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Video</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Beeg video URL</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and parses the JSON metadata API response</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     VIDEO
+     ================================================================ -->
+<div class="section" id="video-section">
+    <span class="section-anchor" id="video"></span>
+    <h2><span class="section-icon">🎬</span> Video</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with details extracted from Beeg's store facts API.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
+                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video file ID</td></tr>
+                <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Video duration in seconds</td></tr>
+                <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Master HLS stream playlist URL</td></tr>
+                <tr><td><code>key</code></td><td><code>str | None</code></td><td>Video key extracted from the URL path</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- download -->
+    <span class="section-anchor" id="video-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Video <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the video via HLS streaming. Appends the video title to the output path unless <code>no_title=True</code> on the config.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.download(
+    configuration: DownloadConfigHLS
+) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigHLS</span> <span class="param-desc">— HLS download options. See <a href="#downloading">Downloading Options</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool | DownloadReport</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     DOWNLOADING OPTIONS
+     ================================================================ -->
+<div class="section" id="downloading-section">
+    <span class="section-anchor" id="downloading"></span>
+    <h2><span class="section-icon">⬇️</span> Downloading Options</h2>
+
+    <p>Beeg video downloads are HLS-only. Configure stream downloads via <code>DownloadConfigHLS</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS
+
+config = <span class="token-class">DownloadConfigHLS</span>(
+    quality=<span class="token-string">"best"</span>,            <span class="token-comment"># "best", "half", "worst", or height int</span>
+    path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Destination path</span>
+    no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># If False, automatically appends title + ".mp4"</span>
+    max_workers=<span class="token-number">5</span>              <span class="token-comment"># Concurrent download segment threads</span>
+)
+
+success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
+    </div>
+
+    <p>For full details on download options and setup configurations, see the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a>.</p>
+</div>
+
+<!-- ================================================================
+     ERROR HANDLING
+     ================================================================ -->
+<div class="section" id="error-handling-section">
+    <span class="section-anchor" id="error-handling"></span>
+    <h2><span class="section-icon">⚠️</span> Error Handling</h2>
+
+    <p>Custom exceptions are defined in <code>beeg_api.modules.errors</code>. Network-level errors bubble up from <code>eaf_base_api</code> exceptions.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>Trigger Cause</th></tr></thead>
+            <tbody>
+                <tr><td><code>NotFound</code></td><td>Server returned HTTP 404 (e.g. video deleted)</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to network parameters</td></tr>
+                <tr><td><code>BotDetection</code></td><td>Cloudflare challenge block detected</td></tr>
+                <tr><td><code>ProxyError</code></td><td>Proxy connection failed</td></tr>
+                <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>HLS segment download operation failed</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> beeg_api.modules.errors <span class="token-keyword">import</span> NotFound
+
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(url)
+<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"This video was not found on Beeg!"</span>)</code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     PLATFORMS
+     ================================================================ -->
+<div class="section" id="platforms-section">
+    <span class="section-anchor" id="platforms"></span>
+    <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Platform</th><th>Architecture</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr><td>Windows 11</td><td>x64</td><td>✅ Tested</td></tr>
+                <tr><td>macOS Sequoia</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Linux (Arch)</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Android 16</td><td>aarch64</td><td>✅ Tested</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- END:MAIN_CONTENT -->

@@ -1,0 +1,516 @@
+<!-- ============================================================
+     XFreeHD API Documentation — Content File
+     ============================================================ -->
+
+<!-- META -->
+<!-- SLOT:TITLE = XFreeHD API -->
+<!-- SLOT:HERO_TITLE = XFreeHD API -->
+<!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine. -->
+<!-- SLOT:VERSION = 1.5 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xfreehd -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xfreehd -->
+
+<!-- SIDEBAR_NAV -->
+<!-- BEGIN:SIDEBAR_NAV -->
+<div class="nav-section-title">Getting Started</div>
+<a href="#installation" class="nav-link">Installation</a>
+<a href="#quickstart" class="nav-link">Quick Start</a>
+<a href="#configuration" class="nav-link">Configuration</a>
+
+<div class="nav-section-title">Core Objects</div>
+<div class="nav-collapsible">
+    <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
+        <a href="#client-get_album" class="nav-link nav-link-sub">get_album()</a>
+        <a href="#client-search" class="nav-link nav-link-sub">search()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#video-download" class="nav-link nav-link-sub">download()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#album" class="nav-link nav-link-parent">Album <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#album-get_images_by_page" class="nav-link nav-link-sub">get_images_by_page()</a>
+        <a href="#album-get_all_images" class="nav-link nav-link-sub">get_all_images()</a>
+    </div>
+</div>
+
+<div class="nav-section-title">Features</div>
+<a href="#downloading" class="nav-link">Downloading Options</a>
+<a href="#scraping-results" class="nav-link">Scraping Results</a>
+<a href="#error-handling" class="nav-link">Error Handling</a>
+
+<div class="nav-section-title">Extras</div>
+<a href="#platforms" class="nav-link">Platforms</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- MAIN_CONTENT -->
+<!-- BEGIN:MAIN_CONTENT -->
+
+<!-- ================================================================
+     DISCLAIMER & FEATURES
+     ================================================================ -->
+<div class="section" id="intro-section">
+    <div class="info-box warning" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+        <div class="info-box-title" style="color: #ef4444; font-size: 14px;">⚠️ Legal Disclaimer</div>
+        This tool is an unofficial, independent project and is not affiliated with, endorsed by, or sponsored by the target website. This software is provided "as is" for educational and personal purposes only. The developer assumes no responsibility for any consequences arising from the use of this tool, including but not limited to account suspension, IP blocking, or any violation of the target website's Terms of Service. Users are solely responsible for ensuring their use complies with all applicable laws and policies. Use at your own risk.
+    </div>
+
+    <div class="info-box success" style="margin-top: 24px;">
+        <div class="info-box-title" style="font-size: 14px;">💚 Support &amp; Commercial Licensing</div>
+        If you find this project helpful, please consider donating to support its continued development! <br><br>
+        
+        <div style="margin: 16px 0;">
+            <a href="https://nowpayments.io/donation/EchterAlsFake" class="btn-donate" target="_blank" rel="noreferrer noopener" style="border-bottom: none;">
+                <span style="font-size: 20px;">💎</span> Donate Crypto
+            </a>
+        </div>
+        
+        <strong>Other Options:</strong><br>
+         • <a href="https://paypal.me/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">PayPal</a><br>
+         • <a href="https://ko-fi.com/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">Ko-Fi</a><br><br>
+        
+        For extended features, enterprise integrations, or custom commercial licensing, please contact 
+        <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
+    </div>
+
+    <h3 style="margin-top: 32px; font-size: 22px;">✨ Features Overview</h3>
+    <ul class="param-list" style="margin-top: 16px;">
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚡</span> <strong style="color: var(--text-primary); margin-right: 6px;">Fully Asynchronous</strong> — High-performance metadata scraping and downloads via <code>asyncio</code>.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🖼️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Album Scraping</strong> — Fetch photo gallery structures and automatically extract images by page or all at once.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📥</span> <strong style="color: var(--text-primary); margin-right: 6px;">MP4 Downloader</strong> — Built-in support for direct MP4 downloads utilizing multi-threaded segmented range requests via <code>eaf_base_api</code>.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚙️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Clean Architecture</strong> — A lightweight wrapper designed to run cleanly over <code>eaf_base_api</code>.</li>
+    </ul>
+</div>
+
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <p>Install from PyPI using pip:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-xfreehd</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        Requires <strong>Python ≥ 3.12</strong>. The networking core package <code>eaf_base_api</code> is automatically fetched and configured.
+    </div>
+</div>
+
+<div class="section" id="quickstart-section">
+    <span class="section-anchor" id="quickstart"></span>
+    <h2><span class="section-icon">🚀</span> Quick Start</h2>
+
+    <p>All operations are asynchronous and should run within an <code>async</code> context:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> xfreehd_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigRAW
+
+<span class="token-keyword">async def</span> <span class="token-function">main</span>():
+    client = <span class="token-class">Client</span>()
+
+    <span class="token-comment"># Fetch a video</span>
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://xfreehd.com/video/12345/example-video"</span>)
+
+    <span class="token-comment"># Access metadata</span>
+    <span class="token-builtin">print</span>(video.title)
+    <span class="token-builtin">print</span>(video.views)
+
+    <span class="token-comment"># Download video using RAW downloader (direct MP4)</span>
+    config = <span class="token-class">DownloadConfigRAW</span>(quality=<span class="token-string">"hd"</span>, path=<span class="token-string">"./downloads"</span>)
+    <span class="token-keyword">await</span> video.download(configuration=config)
+
+    <span class="token-comment"># Fetch an album and get image links</span>
+    album = <span class="token-keyword">await</span> client.get_album(<span class="token-string">"https://xfreehd.com/album/12345/example-album"</span>)
+    images = <span class="token-keyword">await</span> album.get_all_images()
+    <span class="token-builtin">print</span>(f<span class="token-string">"Found {len(images)} images in album."</span>)
+
+asyncio.run(main())</code></pre>
+    </div>
+</div>
+
+<div class="section" id="configuration-section">
+    <span class="section-anchor" id="configuration"></span>
+    <h2><span class="section-icon">⚙️</span> Configuration</h2>
+
+    <p>XFreeHD API uses <code>eaf_base_api</code> for networking. You can configure proxies, timeouts, limits, and HTTP parameters via a custom <code>BaseCore</code>.</p>
+    <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and <code>BaseCore</code>.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> xfreehd_api <span class="token-keyword">import</span> Client
+
+my_config = <span class="token-class">RuntimeConfig</span>()
+my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+core = <span class="token-class">BaseCore</span>(configuration=my_config)
+client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     CLIENT
+     ================================================================ -->
+<div class="section" id="client-section">
+    <span class="section-anchor" id="client"></span>
+    <h2><span class="section-icon">🔌</span> Client</h2>
+    <p>The main class to interact with the XFreeHD scraper ecosystem.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> xfreehd_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+
+client = <span class="token-class">Client</span>()
+client_custom = <span class="token-class">Client</span>(core=<span class="token-class">BaseCore</span>())</code></pre>
+    </div>
+
+    <h3>Constructor Parameters</h3>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Networking core instance (default: <code>BaseCore()</code>)</span></li>
+    </ul>
+
+    <h3>Methods</h3>
+
+    <!-- get_video -->
+    <span class="section-anchor" id="client-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches metadata for a video URL and returns a populated <code>Video</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Video</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The XFreeHD video page URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and extracts metadata immediately</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
+    </div>
+
+    <!-- get_album -->
+    <span class="section-anchor" id="client-get_album"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Album <code>get_album()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches photo album information and returns a populated <code>Album</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_album(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Album</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The XFreeHD photo album page URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and extracts metadata immediately</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Album</span>
+    </div>
+
+    <!-- search -->
+    <span class="section-anchor" id="client-search"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search Videos <code>search()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Queries XFreeHD search and streams video results via an asynchronous generator.</div>
+        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.search(
+    query: <span class="token-builtin">str</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    max_videos_concurrency: <span class="token-builtin">int</span> = <span class="token-number">20</span>,
+    max_pages_concurrency: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    on_video_error: on_error_hint = on_error,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search keywords</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of search pages to parse (default: <code>5</code>)</span></li>
+            <li class="param-item"><span class="param-name">max_videos_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Concurrency limit for video parsing (default: <code>20</code>)</span></li>
+            <li class="param-item"><span class="param-name">max_pages_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Concurrency limit for page parsing (default: <code>2</code>)</span></li>
+            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Maintain chronological ordering</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, pre-fetches full metadata for every video yielded</span></li>
+            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Error callback coroutine for single videos</span></li>
+            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Error callback coroutine for index pages</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     VIDEO
+     ================================================================ -->
+<div class="section" id="video-section">
+    <span class="section-anchor" id="video"></span>
+    <h2><span class="section-icon">🎬</span> Video</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with details extracted from player page HTML elements.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
+                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>Number of likes</td></tr>
+                <tr><td><code>dislikes</code></td><td><code>str | None</code></td><td>Number of dislikes</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Publication / upload date string</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>Number of views</td></tr>
+                <tr><td><code>author</code></td><td><code>str | None</code></td><td>Username of the video uploader</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Cover image thumbnail URL</td></tr>
+                <tr><td><code>length</code></td><td><code>str | None</code></td><td>Duration string (e.g. <code>12:34</code>)</td></tr>
+                <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>List of category labels</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>List of video tags</td></tr>
+                <tr><td><code>cdn_urls</code></td><td><code>list[str] | None</code></td><td>Direct MP4 CDN paths (up to two qualities: SD, HD)</td></tr>
+                <tr><td><code>rating</code></td><td><code>str | None</code></td><td>Optional ratings metadata</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- download -->
+    <span class="section-anchor" id="video-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Video <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>. Supports <code>hd</code> and <code>sd</code> quality configuration.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.download(
+    configuration: DownloadConfigRAW
+) -&gt; <span class="token-builtin">bool</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigRAW</span> <span class="param-desc">— RAW download options. Set <code>quality="hd"</code> or <code>quality="sd"</code>. See <a href="#downloading">Downloading Options</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     ALBUM
+     ================================================================ -->
+<div class="section" id="album-section">
+    <span class="section-anchor" id="album"></span>
+    <h2><span class="section-icon">🖼️</span> Album</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a picture gallery album with support for paginated photo fetching.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Album page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Album title</td></tr>
+                <tr><td><code>total_pages_count</code></td><td><code>int | None</code></td><td>Calculated total pages in the album</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- album-get_images_by_page -->
+    <span class="section-anchor" id="album-get_images_by_page"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Images by Page <code>get_images_by_page()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches direct photo image URLs for a specific album index page.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> album.get_images_by_page(
+    page: <span class="token-builtin">int</span> = <span class="token-number">1</span>
+) -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">page</span> <span class="param-type">int</span> <span class="param-desc">— Page index (1-based, default: <code>1</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ list[str]</span>
+    </div>
+
+    <!-- album-get_all_images -->
+    <span class="section-anchor" id="album-get_all_images"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get All Images <code>get_all_images()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates and collects direct image URLs for all pages in this album concurrently.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> album.get_all_images() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ list[str]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     DOWNLOADING OPTIONS
+     ================================================================ -->
+<div class="section" id="downloading-section">
+    <span class="section-anchor" id="downloading"></span>
+    <h2><span class="section-icon">⬇️</span> Downloading Options</h2>
+
+    <p>XFreeHD video files are direct MP4 assets on CDNs. Configure downloads using <code>DownloadConfigRAW</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigRAW
+
+config = <span class="token-class">DownloadConfigRAW</span>(
+    quality=<span class="token-string">"hd"</span>,             <span class="token-comment"># Set to "hd" for high quality, or "sd" for standard quality</span>
+    path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Destination path</span>
+    no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># If False, automatically appends title + ".mp4"</span>
+    allow_multipart=<span class="token-keyword">True</span>,      <span class="token-comment"># Enable parallel segmented downloads using range requests</span>
+    max_workers=<span class="token-number">5</span>              <span class="token-comment"># Concurrent download segment threads</span>
+)
+
+success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
+    </div>
+
+    <p>For full details on RAW download parameters, see the reference in <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a>.</p>
+</div>
+
+<!-- ================================================================
+     SCRAPING RESULTS
+     ================================================================ -->
+<div class="section" id="scraping-results-section">
+    <span class="section-anchor" id="scraping-results"></span>
+    <h2><span class="section-icon">📊</span> Scraping Results</h2>
+    <p>Iterating methods like <code>client.search()</code> return async generators yielding <code>ScrapeResult</code> instances:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"beach"</span>, pages=<span class="token-number">2</span>):
+    <span class="token-keyword">if</span> result.is_success:
+        video = result.video        <span class="token-comment"># The Video object</span>
+        <span class="token-builtin">print</span>(video.title)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"Error for {result.url}: {result.error}"</span>)</code></pre>
+    </div>
+
+    <h3>ScrapeResult Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The parsed video target URL</td></tr>
+                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The parsed Video object (if successful)</td></tr>
+                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The exception raised (if failed)</td></tr>
+                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     ERROR HANDLING
+     ================================================================ -->
+<div class="section" id="error-handling-section">
+    <span class="section-anchor" id="error-handling"></span>
+    <h2><span class="section-icon">⚠️</span> Error Handling</h2>
+
+    <p>Custom exceptions are defined in <code>xfreehd_api.modules.errors</code>. Network-level errors bubble up from the underlying <code>eaf_base_api</code> package.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>Trigger Cause</th></tr></thead>
+            <tbody>
+                <tr><td><code>NotFound</code></td><td>Server returned HTTP 404 (e.g. video/album deleted)</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to HTTP connection problems</td></tr>
+                <tr><td><code>BotDetection</code></td><td>Cloudflare challenge block detected</td></tr>
+                <tr><td><code>ProxyError</code></td><td>Proxy configuration failed or proxy is down</td></tr>
+                <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Raw segmented download failed</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> xfreehd_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(url)
+<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)</code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     PLATFORMS
+     ================================================================ -->
+<div class="section" id="platforms-section">
+    <span class="section-anchor" id="platforms"></span>
+    <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Platform</th><th>Architecture</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr><td>Windows 11</td><td>x64</td><td>✅ Tested</td></tr>
+                <tr><td>macOS Sequoia</td><td>x86_64 / arm64</td><td>✅ Tested</td></tr>
+                <tr><td>Linux (Arch)</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Android 16</td><td>aarch64</td><td>✅ Tested</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- END:MAIN_CONTENT -->

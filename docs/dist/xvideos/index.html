@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XVideos API — Documentation</title>
+    <meta name="description" content="Documentation for XVideos API — An asynchronous Python API wrapper by EchterAlsFake">
+    <style>
+        /* ============================================================
+           EAF DOCUMENTATION — DESIGN SYSTEM
+           Premium dark theme with glass morphism and accent gradients
+           ============================================================ */
+
+        @font-face {
+            font-family: 'Roboto';
+            src: url('../assets/roboto-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Roboto';
+            src: url('../assets/roboto-bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            /* Core palette */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-tertiary: #1a1a24;
+            --bg-card: rgba(22, 22, 34, 0.7);
+            --bg-card-hover: rgba(30, 30, 46, 0.8);
+
+            /* Text */
+            --text-primary: #e8e8ef;
+            --text-secondary: #9d9db5;
+            --text-muted: #6b6b82;
+            --text-accent: #38bdf8;
+
+            /* Accent gradient */
+            --accent-start: #8b5cf6;
+            --accent-mid: #a78bfa;
+            --accent-end: #c4b5fd;
+            --accent-glow: rgba(139, 92, 246, 0.15);
+            --accent-glow-strong: rgba(139, 92, 246, 0.3);
+
+            /* Secondary accent (warm) */
+            --warm-start: #f59e0b;
+            --warm-end: #fbbf24;
+
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(139, 92, 246, 0.25);
+
+            /* Code */
+            --code-bg: #0d0d14;
+            --code-border: rgba(139, 92, 246, 0.12);
+            --inline-code-bg: rgba(139, 92, 246, 0.1);
+            --inline-code-color: #c4b5fd;
+
+            /* Sidebar */
+            --sidebar-width: 280px;
+            --sidebar-bg: rgba(14, 14, 22, 0.95);
+
+            /* Transitions */
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+
+        /* ---- Reset & Base ---- */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 21px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ---- Scrollbar ---- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-start); }
+
+        /* ---- Selection ---- */
+        ::selection { background: var(--accent-glow-strong); color: #fff; }
+
+        /* ============================================================
+           LAYOUT
+           ============================================================ */
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ---- Sidebar ---- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-version {
+            font-size: 15px;
+            color: var(--text-muted);
+            padding: 3px 8px;
+            background: var(--inline-code-bg);
+            border-radius: 4px;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .sidebar-nav::-webkit-scrollbar { width: 3px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: var(--bg-tertiary); }
+
+        .nav-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 16px 20px 6px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 7px 20px 7px 28px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 450;
+            transition: all var(--transition-fast);
+            border-left: 2px solid transparent;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.05);
+            border-left-color: var(--accent-mid);
+        }
+
+        .nav-link.active {
+            color: var(--accent-mid);
+            background: var(--accent-glow);
+            border-left-color: var(--accent-start);
+            font-weight: 550;
+        }
+
+        .nav-link-sub {
+            padding-left: 40px;
+            font-size: 15px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: color var(--transition-fast);
+        }
+        .sidebar-footer a:hover { color: var(--accent-mid); }
+
+        /* ---- Main Content ---- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ---- Hero ---- */
+        .hero {
+            position: relative;
+            padding: 80px 60px 60px;
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.06) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            background: var(--inline-code-bg);
+            border: 1px solid var(--border-accent);
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--accent-mid);
+            margin-bottom: 20px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-start);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-end) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition-smooth);
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-mid));
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+        }
+        .btn-secondary:hover {
+            border-color: var(--border-accent);
+            color: var(--text-primary);
+        }
+
+        .btn-donate {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            color: #fff;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-donate::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transform: skewX(-25deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        .btn-donate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: #fff;
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+
+        .install-cmd {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 19px;
+            color: var(--accent-end);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .install-cmd:hover {
+            border-color: var(--accent-mid);
+            box-shadow: var(--shadow-glow);
+        }
+        .install-cmd .prefix { color: var(--text-muted); }
+        .install-cmd .copy-icon {
+            color: var(--text-muted);
+            transition: color var(--transition-fast);
+            margin-left: auto;
+        }
+        .install-cmd:hover .copy-icon { color: var(--accent-mid); }
+
+        /* ---- Content Area ---- */
+        .content-area {
+            max-width: 860px;
+            padding: 48px 60px 100px;
+        }
+
+        /* ---- Section ---- */
+        .section {
+            margin-bottom: 56px;
+        }
+
+        .section-anchor {
+            display: block;
+            position: relative;
+            top: -80px;
+            visibility: hidden;
+        }
+
+        .section h2 {
+            font-size: 52px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section h2 .section-icon {
+            display: inline-flex;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .section h3 {
+            font-size: 38px;
+            font-weight: 650;
+            letter-spacing: -0.01em;
+            margin: 32px 0 12px;
+            color: var(--text-primary);
+        }
+
+        .section h4 {
+            font-size: 30px;
+            font-weight: 600;
+            margin: 24px 0 8px;
+            color: var(--text-accent);
+        }
+
+        .section p {
+            margin-bottom: 14px;
+            color: var(--text-secondary);
+        }
+
+        .section a {
+            color: var(--text-accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            transition: border-color var(--transition-fast);
+        }
+        .section a:hover { border-bottom-color: var(--text-accent); }
+
+        /* ---- Info boxes ---- */
+        .info-box {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 16px;
+            line-height: 1.6;
+            border-left: 3px solid;
+        }
+
+        .info-box.note {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+
+        .info-box.warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: #f59e0b;
+            color: #fcd34d;
+        }
+
+        .info-box.important {
+            background: rgba(139, 92, 246, 0.08);
+            border-color: var(--accent-start);
+            color: var(--accent-end);
+        }
+
+        .info-box.tip {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: #10b981;
+            color: #6ee7b7;
+        }
+
+        .info-box.success {
+            background: rgba(34, 197, 94, 0.08);
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-size: 15px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ---- Code blocks ---- */
+        .code-window {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 10px;
+            margin: 16px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: rgba(139, 92, 246, 0.04);
+            border-bottom: 1px solid var(--code-border);
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all var(--transition-fast);
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+        }
+        .code-copy-btn:hover {
+            color: var(--accent-mid);
+            background: var(--accent-glow);
+        }
+
+        .code-window pre {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .code-window code {
+            display: block;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.65;
+            overflow-x: auto;
+            color: var(--text-primary);
+            tab-size: 4;
+        }
+
+        code:not(pre code) {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88em;
+            padding: 2px 7px;
+            background: var(--inline-code-bg);
+            color: var(--inline-code-color);
+            border-radius: 4px;
+        }
+
+        /* ---- Syntax highlighting (manual, no external dep) ---- */
+        .token-keyword { color: #c792ea; }
+        .token-string { color: #c3e88d; }
+        .token-comment { color: #546e7a; font-style: italic; }
+        .token-function { color: #82aaff; }
+        .token-class { color: #ffcb6b; }
+        .token-number { color: #f78c6c; }
+        .token-decorator { color: #ff9cac; }
+        .token-builtin { color: #89ddff; }
+        .token-param { color: #f78c6c; }
+        .token-operator { color: #89ddff; }
+
+        /* ---- Tables ---- */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 17px;
+        }
+
+        thead {
+            background: var(--bg-tertiary);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        td {
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tr:hover td {
+            background: rgba(139, 92, 246, 0.03);
+        }
+
+        td code {
+            font-size: 15px;
+        }
+
+        /* ---- Collapsible Navigation ---- */
+        .nav-collapsible {
+            margin-bottom: 4px;
+        }
+        .nav-collapsible .nav-sub-links {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-smooth);
+            padding-left: 12px;
+            border-left: 1px solid var(--border-subtle);
+            margin-left: 20px;
+        }
+        .nav-collapsible:not(.collapsed) .nav-sub-links {
+            max-height: 1000px;
+        }
+        .nav-link-parent {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .nav-link-parent .toggle-icon {
+            font-size: 9px;
+            color: var(--text-muted);
+            transition: transform var(--transition-fast);
+            margin-left: auto;
+        }
+        .nav-collapsible.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* ---- Method cards ---- */
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 24px;
+            margin: 20px 0;
+            backdrop-filter: blur(8px);
+            transition: border-color var(--transition-smooth);
+        }
+        .method-card:hover { border-color: var(--border-accent); }
+
+        .method-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .method-title {
+            font-size: 34px !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            color: var(--text-primary);
+        }
+
+        .method-title code {
+            font-size: 0.85em;
+            color: var(--accent-mid);
+            margin-left: 6px;
+        }
+
+        .method-signature {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: var(--accent-end);
+            background: var(--code-bg);
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin: 16px 0;
+            overflow-x: auto;
+            border: 1px solid var(--code-border);
+            white-space: pre-wrap;
+        }
+
+        .method-desc {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .method-section-title {
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted) !important;
+            margin: 16px 0 8px !important;
+        }
+
+        .param-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .param-item {
+            padding: 6px 0;
+            font-size: 16px;
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+        }
+
+        .param-name {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-end);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .param-type {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .param-desc {
+            color: var(--text-secondary);
+        }
+
+        .returns-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+            border-radius: 4px;
+            font-size: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 8px;
+        }
+
+        /* ---- Tags / badges ---- */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .tag-async { background: rgba(139, 92, 246, 0.15); color: var(--accent-mid); }
+        .tag-property { background: rgba(245, 158, 11, 0.15); color: var(--warm-end); }
+        .tag-class { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+        .tag-dataclass { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+        .tag-enum { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; }
+
+        /* ---- Divider ---- */
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 40px 0;
+        }
+
+        /* ---- Attribute list (compact) ---- */
+        .attr-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .attr-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .attr-item code {
+            font-size: 12px;
+        }
+
+        .attr-item .attr-type {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        /* ---- Mobile ---- */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+
+        @media (max-width: 900px) {
+            .mobile-toggle { display: flex; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-overlay.open { display: block; }
+            .main-content { margin-left: 0; }
+            .hero { padding: 70px 24px 40px; }
+            .hero h1 { font-size: 28px; }
+            .content-area { padding: 32px 24px 80px; }
+            .attr-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ---- Animations ---- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            animation: fadeInUp 0.5s ease-out both;
+        }
+
+        .section:nth-child(2) { animation-delay: 0.05s; }
+        .section:nth-child(3) { animation-delay: 0.1s; }
+        .section:nth-child(4) { animation-delay: 0.15s; }
+        .section:nth-child(5) { animation-delay: 0.2s; }
+
+        /* ---- Back to top ---- */
+        .back-to-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all var(--transition-smooth);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .back-to-top:hover {
+            background: var(--accent-glow);
+            border-color: var(--border-accent);
+            color: var(--accent-mid);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Footer ---- */
+        .page-footer {
+            padding: 32px 60px;
+            border-top: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 12.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-footer a { color: var(--accent-mid); text-decoration: none; }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 900px) {
+            .page-footer { padding: 24px; flex-direction: column; gap: 8px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile menu toggle -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">☰</button>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="layout">
+        <!-- ====== SIDEBAR ====== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">E</div>
+                    <span class="sidebar-logo-text">XVideos API</span>
+                </a>
+                <span class="sidebar-version">v2.3</span>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <div class="nav-section-title">Getting Started</div>
+<a href="#installation" class="nav-link">Installation</a>
+<a href="#quickstart" class="nav-link">Quick Start</a>
+<a href="#configuration" class="nav-link">Configuration</a>
+
+<div class="nav-section-title">Core Objects</div>
+<div class="nav-collapsible">
+    <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
+        <a href="#client-search" class="nav-link nav-link-sub">search()</a>
+        <a href="#client-get_playlist" class="nav-link nav-link-sub">get_playlist()</a>
+        <a href="#client-get_pornstar" class="nav-link nav-link-sub">get_pornstar()</a>
+        <a href="#client-get_channel" class="nav-link nav-link-sub">get_channel()</a>
+        <a href="#client-get_account" class="nav-link nav-link-sub">get_account()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#video-download" class="nav-link nav-link-sub">download()</a>
+        <a href="#video-get_author" class="nav-link nav-link-sub">get_author</a>
+        <a href="#video-get_pornstars" class="nav-link nav-link-sub">get_pornstars</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#channel" class="nav-link nav-link-parent">Channel <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#channel-videos" class="nav-link nav-link-sub">videos()</a>
+        <a href="#channel-worked_for_with" class="nav-link nav-link-sub">worked_for_with()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#pornstar" class="nav-link nav-link-parent">Pornstar <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#pornstar-videos" class="nav-link nav-link-sub">videos()</a>
+        <a href="#pornstar-worked_for_with" class="nav-link nav-link-sub">worked_for_with()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#account" class="nav-link nav-link-parent">Account <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#account-get_liked_videos" class="nav-link nav-link-sub">get_liked_videos()</a>
+        <a href="#account-get_recommended_videos" class="nav-link nav-link-sub">get_recommended_videos()</a>
+        <a href="#account-get_watch_later_videos" class="nav-link nav-link-sub">get_watch_later_videos()</a>
+    </div>
+</div>
+
+<div class="nav-section-title">Features</div>
+<a href="#searching" class="nav-link">Search & Filtering</a>
+<a href="#downloading" class="nav-link">Downloading</a>
+<a href="#pagination" class="nav-link">Pagination & Iterators</a>
+<a href="#error-handling" class="nav-link">Error Handling</a>
+
+<div class="nav-section-title">Extras</div>
+<a href="#cli" class="nav-link">CLI Usage</a>
+<a href="#platforms" class="nav-link">Platforms</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="https://github.com/EchterAlsFake/unofficial-api-for-xvideos" target="_blank" rel="noopener">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    View on GitHub
+                </a>
+            </div>
+        </aside>
+
+        <!-- ====== MAIN ====== -->
+        <main class="main-content">
+            <!-- Hero -->
+            <div class="hero">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    Python · Async · v2.3
+                </div>
+                <h1>XVideos API</h1>
+                <p>A fully asynchronous Python API wrapper and scraper for XVideos. Fetch videos, metadata, pornstar profiles, channels, playlists, and download content — all powered by the eaf_base_api networking engine.</p>
+                <div class="hero-actions">
+                    <div class="install-cmd" onclick="copyInstall(this)" title="Click to copy">
+                        <span class="prefix">$</span> pip install xvideos_api
+                        <span class="copy-icon">📋</span>
+                    </div>
+                    <a href="https://github.com/EchterAlsFake/unofficial-api-for-xvideos" class="btn btn-secondary" target="_blank">GitHub →</a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content-area">
+                
+<!-- ================================================================
+     DISCLAIMER & FEATURES
+     ================================================================ -->
+<div class="section" id="intro-section">
+    <div class="info-box warning" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+        <div class="info-box-title" style="color: #ef4444; font-size: 14px;">⚠️ Legal Disclaimer</div>
+        This tool is an unofficial, independent project and is not affiliated with, endorsed by, or sponsored by the target website. This software is provided "as is" for educational and personal purposes only. The developer assumes no responsibility for any consequences arising from the use of this tool, including but not limited to account suspension, IP blocking, or any violation of the target website's Terms of Service. Users are solely responsible for ensuring their use complies with all applicable laws and policies. Use at your own risk.
+    </div>
+
+    <div class="info-box success" style="margin-top: 24px;">
+        <div class="info-box-title" style="font-size: 14px;">💚 Support & Commercial Licensing</div>
+        If you find this project helpful, please consider donating to support its continued development! <br><br>
+        
+        <div style="margin: 16px 0;">
+            <a href="https://nowpayments.io/donation/EchterAlsFake" class="btn-donate" target="_blank" rel="noreferrer noopener" style="border-bottom: none;">
+                <span style="font-size: 20px;">💎</span> Donate Crypto
+            </a>
+        </div>
+        
+        <strong>Other Options:</strong><br>
+        • <a href="https://paypal.me/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">PayPal</a><br>
+        • <a href="https://ko-fi.com/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">Ko-Fi</a><br><br>
+        
+        For extended features, enterprise integrations, or custom commercial licensing, please contact 
+        <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
+    </div>
+
+    <h3 style="margin-top: 32px; font-size: 22px;">✨ Features Overview</h3>
+    <ul class="param-list" style="margin-top: 16px;">
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚡</span> <strong style="color: var(--text-primary); margin-right: 6px;">Fully Asynchronous</strong> — High-performance scraping and downloading via <code>asyncio</code> and <code>curl_cffi</code>.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🛡️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Bot Protection Bypass</strong> — Mimics real browser TLS fingerprints and automatically solves JS math challenges.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📹</span> <strong style="color: var(--text-primary); margin-right: 6px;">HLS Downloader</strong> — Built-in multi-threaded downloader with TS to MP4 remuxing and resume capabilities.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🔍</span> <strong style="color: var(--text-primary); margin-right: 6px;">Advanced Filtering</strong> — Search by duration, date, quality, and relevance just like on the main site.</li>
+    </ul>
+</div>
+
+
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <p>Install from PyPI using pip:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install xvideos_api</code></pre>
+    </div>
+
+    <p>For <strong>TS → MP4 remuxing</strong> support (recommended), install with the optional <code>av</code> dependency:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install xvideos_api[av]</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        Requires <strong>Python ≥ 3.12</strong>. The underlying networking library <code>eaf_base_api</code> is installed automatically as a dependency.
+    </div>
+</div>
+
+<div class="section" id="quickstart-section">
+    <span class="section-anchor" id="quickstart"></span>
+    <h2><span class="section-icon">🚀</span> Quick Start</h2>
+
+    <p>Every method in this API is <strong>asynchronous</strong>. You need to run your code inside an <code>async</code> function:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> Client
+
+<span class="token-keyword">async def</span> <span class="token-function">main</span>():
+    client = <span class="token-class">Client</span>()
+
+    <span class="token-comment"># Fetch a video</span>
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://www.xvideos.com/video..."</span>)
+
+    <span class="token-comment"># Access metadata</span>
+    <span class="token-builtin">print</span>(video.title)
+    <span class="token-builtin">print</span>(video.views)
+    <span class="token-builtin">print</span>(video.likes)
+
+    <span class="token-comment"># Download the video</span>
+    <span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> DownloadConfigHLS
+    config = <span class="token-class">DownloadConfigHLS</span>(quality=<span class="token-string">"best"</span>, path=<span class="token-string">"./downloads"</span>)
+    <span class="token-keyword">await</span> video.download(configuration=config)
+
+asyncio.run(main())</code></pre>
+    </div>
+</div>
+
+<div class="section" id="configuration-section">
+    <span class="section-anchor" id="configuration"></span>
+    <h2><span class="section-icon">⚙️</span> Configuration</h2>
+
+    <p>The entire API relies on <code>eaf_base_api</code> for its networking. You can configure global settings (proxies, timeouts, etc.) via the singleton <code>config</code>, or pass a custom <code>BaseCore</code> into the Client.</p>
+    <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> Client
+
+my_config = <span class="token-class">RuntimeConfig</span>()
+my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+core = <span class="token-class">BaseCore</span>(configuration=my_config)
+client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<div class="section" id="client-section">
+    <span class="section-anchor" id="client"></span>
+    <h2><span class="section-icon">🔌</span> Client</h2>
+    <p>The <code>Client</code> class is your <strong>entry point</strong> for all interactions. It manages the session and provides methods to fetch videos, search, and access channels/pornstars.</p>
+
+    <h3>Methods</h3>
+
+    <!-- get_video -->
+    <span class="section-anchor" id="client-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a video page and returns a populated <code>Video</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -> Video</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full XVideos video URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and parses the HTML page for full metadata</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
+    </div>
+
+    <!-- search -->
+    <span class="section-anchor" id="client-search"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search Videos <code>search()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Searches for videos and yields results as an async generator. See <a href="#searching">Search &amp; Filtering</a> for details.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+    query: <span class="token-builtin">str</span>,
+    sorting_sort: Sort = Sort.Sort_relevance,
+    sorting_date: SortDate = SortDate.Sort_all,
+    sorting_time: SortVideoTime = SortVideoTime.Sort_all,
+    sort_quality: SortQuality = SortQuality.Sort_all,
+    pages: <span class="token-builtin">int</span> | <span class="token-string">"all"</span> = <span class="token-string">"all"</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search terms</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | "all"</span> <span class="param-desc">— Number of result pages or <code>"all"</code> for automatic iteration</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Whether to fetch full HTML for each result video (default: <code>False</code>)</span></li>
+            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, yields videos in page order instead of arrival order</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_playlist -->
+    <span class="section-anchor" id="client-get_playlist"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Playlist <code>get_playlist()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches videos from a playlist page by page.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_playlist(
+    url: <span class="token-builtin">str</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The playlist URL</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of pages to scrape</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_pornstar -->
+    <span class="section-anchor" id="client-get_pornstar"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Pornstar Profile <code>get_pornstar()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a pornstar profile.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_pornstar(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -> Pornstar</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar</span>
+    </div>
+
+    <!-- get_channel -->
+    <span class="section-anchor" id="client-get_channel"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Channel Profile <code>get_channel()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a channel profile.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_channel(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -> Channel</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Channel</span>
+    </div>
+
+    <!-- get_account -->
+    <span class="section-anchor" id="client-get_account"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Account <code>get_account()</code></h3>
+            <div class="method-tags">
+                <span class="tag">standard</span>
+            </div>
+        </div>
+        <div class="method-desc">Creates an <code>Account</code> instance for authenticated actions using cookies. See <a href="#account">Account</a>.</div>
+        <div class="method-signature">client.get_account(
+    cookies: <span class="token-builtin">dict</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -> Account</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Account</span>
+    </div>
+</div>
+
+<div class="section" id="video-section">
+    <span class="section-anchor" id="video"></span>
+    <h2><span class="section-icon">🎬</span> Video</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with all its metadata.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Video description</td></tr>
+                <tr><td><code>thumbnail_url</code></td><td><code>str | None</code></td><td>Thumbnail image URL</td></tr>
+                <tr><td><code>preview_video_url</code></td><td><code>str | None</code></td><td>Short preview clip URL</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Upload date</td></tr>
+                <tr><td><code>content_url</code></td><td><code>str | None</code></td><td>Direct content URL</td></tr>
+                <tr><td><code>tags</code></td><td><code>list | None</code></td><td>List of tag strings</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>View count</td></tr>
+                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>Like count</td></tr>
+                <tr><td><code>dislikes</code></td><td><code>str | None</code></td><td>Dislike count</td></tr>
+                <tr><td><code>rating_votes</code></td><td><code>str | None</code></td><td>Total rating votes</td></tr>
+                <tr><td><code>comment_count</code></td><td><code>str | None</code></td><td>Comment count</td></tr>
+                <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>Uploader profile URL</td></tr>
+                <tr><td><code>length</code></td><td><code>str | None</code></td><td>Video duration</td></tr>
+                <tr><td><code>pornstars_urls</code></td><td><code>list | None</code></td><td>URLs of pornstars featured</td></tr>
+                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embeddable iframe URL</td></tr>
+                <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>HLS master playlist URL</td></tr>
+                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Internal video ID</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- download -->
+    <span class="section-anchor" id="video-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Video <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the video using the HLS threaded downloader. The video title is automatically appended to the output path unless <code>no_title=True</code>.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.download(
+    configuration: DownloadConfigHLS
+) -> <span class="token-builtin">bool</span> | DownloadReport</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigHLS</span> <span class="param-desc">— Download settings (quality, path, etc.). See <a href="#downloading">Downloading</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool | DownloadReport</span>
+    </div>
+
+    <!-- get_author -->
+    <span class="section-anchor" id="video-get_author"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Author Channel <code>get_author</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-property">property</span>
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Lazily loads and returns the uploader's <code>Channel</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.get_author -> Channel | <span class="token-keyword">None</span></div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Channel | None</span>
+    </div>
+
+    <!-- get_pornstars -->
+    <span class="section-anchor" id="video-get_pornstars"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Performers <code>get_pornstars</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-property">property</span>
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Yields <code>Pornstar</code> objects for each featured performer.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> star <span class="token-keyword">in</span> video.get_pornstars -> Pornstar</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[Pornstar]</span>
+    </div>
+
+    <div class="info-box tip">
+        <div class="info-box-title">Tip — Lazy Loading</div>
+        All objects inherit from <code>BaseMedia</code>. Accessing an attribute that hasn't been loaded yet will raise a <code>DataNotLoadedError</code> with a helpful message showing you which <code>load()</code> flags you need. By default, <code>client.get_video()</code> calls <code>load(html=True)</code> which populates all HTML-scraped attributes.
+    </div>
+</div>
+
+<div class="section" id="channel-section">
+    <span class="section-anchor" id="channel"></span>
+    <h2><span class="section-icon">📺</span> Channel</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseChannelPornstar</code> → <code>BaseMedia</code>. Represents a channel profile.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Channel profile URL</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Channel name</td></tr>
+                <tr><td><code>thumbnail_url</code></td><td><code>str | None</code></td><td>Profile picture URL</td></tr>
+                <tr><td><code>total_videos</code></td><td><code>int | None</code></td><td>Number of uploaded videos</td></tr>
+                <tr><td><code>total_pages</code></td><td><code>int | None</code></td><td>Calculated number of video pages</td></tr>
+                <tr><td><code>profile_hits</code></td><td><code>str | None</code></td><td>Total profile views</td></tr>
+                <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Subscriber count</td></tr>
+                <tr><td><code>total_videos_views</code></td><td><code>str | None</code></td><td>Total views across all videos</td></tr>
+                <tr><td><code>signed_up</code></td><td><code>str | None</code></td><td>Registration date</td></tr>
+                <tr><td><code>last_activity</code></td><td><code>str | None</code></td><td>Last activity date</td></tr>
+                <tr><td><code>worked_for_with_links</code></td><td><code>list | None</code></td><td>Links to associated studios/channels</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- videos -->
+    <span class="section-anchor" id="channel-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Channel Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over the channel's uploaded videos. Set <code>pages=0</code> (default) to fetch <em>all</em> pages.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- worked_for_with -->
+    <span class="section-anchor" id="channel-worked_for_with"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Related Channels <code>worked_for_with()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns a list of channels/studios this entity has worked for/with.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> channel.worked_for_with(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -> <span class="token-builtin">list</span>[Channel]</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ list[Channel]</span>
+    </div>
+</div>
+
+<div class="section" id="pornstar-section">
+    <span class="section-anchor" id="pornstar"></span>
+    <h2><span class="section-icon">⭐</span> Pornstar</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseChannelPornstar</code>. Represents a performer profile. Has all Channel attributes <strong>plus</strong>:</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Extra Attribute</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>gender</code></td><td><code>str | None</code></td><td>Gender</td></tr>
+                <tr><td><code>age</code></td><td><code>str | None</code></td><td>Age</td></tr>
+                <tr><td><code>video_tags</code></td><td><code>str | None</code></td><td>Most common tags</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- videos -->
+    <span class="section-anchor" id="pornstar-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Performer Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over the pornstar's uploaded videos. Set <code>pages=0</code> (default) to fetch <em>all</em> pages.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- worked_for_with -->
+    <span class="section-anchor" id="pornstar-worked_for_with"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Related Co-workers/Studios <code>worked_for_with()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns a list of channels/studios this performer has worked for/with.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> pornstar.worked_for_with(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -> <span class="token-builtin">list</span>[Channel]</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ list[Channel]</span>
+    </div>
+</div>
+
+<div class="section" id="account-section">
+    <span class="section-anchor" id="account"></span>
+    <h2><span class="section-icon">🔑</span> Account</h2>
+    <p>Provides access to <strong>authenticated</strong> endpoints. Requires login cookies.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Provide cookies from your browser session</span>
+my_cookies = {
+    <span class="token-string">"session_token"</span>: <span class="token-string">"&lt;your_token&gt;"</span>,
+    <span class="token-string">"session_token_auth"</span>: <span class="token-string">"&lt;your_auth_token&gt;"</span>,
+}
+
+account = client.get_account(cookies=my_cookies)
+
+<span class="token-comment"># Get your liked videos</span>
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_liked_videos(pages=<span class="token-number">3</span>):
+    <span class="token-keyword">if</span> result.is_success:
+        <span class="token-builtin">print</span>(result.video.title)</code></pre>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- get_liked_videos -->
+    <span class="section-anchor" id="account-get_liked_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Liked Videos <code>get_liked_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches your liked videos page by page.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_liked_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_recommended_videos -->
+    <span class="section-anchor" id="account-get_recommended_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Recommended Videos <code>get_recommended_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches your recommended feed videos page by page.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_recommended_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_watch_later_videos -->
+    <span class="section-anchor" id="account-get_watch_later_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Watch Later Videos <code>get_watch_later_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches your watch later videos page by page.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_watch_later_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = <span class="token-keyword">None</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -> ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+</div>
+
+<hr>
+
+<div class="section" id="searching-section">
+    <span class="section-anchor" id="searching"></span>
+    <h2><span class="section-icon">🔍</span> Search & Filtering</h2>
+
+    <p>Use the <code>client.search()</code> method with the sorting enums for powerful filtering:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> xvideos_api.modules.sorting <span class="token-keyword">import</span> Sort, SortDate, SortVideoTime, SortQuality
+
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+    query=<span class="token-string">"example search"</span>,
+    sorting_sort=Sort.Sort_rating,
+    sorting_date=SortDate.Sort_month,
+    sorting_time=SortVideoTime.Sort_long,
+    sort_quality=SortQuality.Sort_1080_plus,
+    pages=<span class="token-number">5</span>,
+    keep_original_order=<span class="token-keyword">True</span>,
+):
+    <span class="token-keyword">if</span> result.is_success:
+        video = result.video
+        <span class="token-builtin">print</span>(f<span class="token-string">"{video.title}"</span>)</code></pre>
+    </div>
+
+    <h3>Sorting Enums</h3>
+
+    <h4>Sort (Relevance)</h4>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>Sort.Sort_relevance</code></td><td>Most relevant (default)</td></tr>
+                <tr><td><code>Sort.Sort_upload_date</code></td><td>Newest first</td></tr>
+                <tr><td><code>Sort.Sort_rating</code></td><td>Highest rated</td></tr>
+                <tr><td><code>Sort.Sort_length</code></td><td>Longest first</td></tr>
+                <tr><td><code>Sort.Sort_views</code></td><td>Most viewed</td></tr>
+                <tr><td><code>Sort.Sort_random</code></td><td>Random order</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h4>SortDate (Time Period)</h4>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>SortDate.Sort_all</code></td><td>All time (default)</td></tr>
+                <tr><td><code>SortDate.Sort_last_3_days</code></td><td>Last 3 days</td></tr>
+                <tr><td><code>SortDate.Sort_week</code></td><td>This week</td></tr>
+                <tr><td><code>SortDate.Sort_month</code></td><td>This month</td></tr>
+                <tr><td><code>SortDate.Sort_last_3_months</code></td><td>Last 3 months</td></tr>
+                <tr><td><code>SortDate.Sort_last_6_months</code></td><td>Last 6 months</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h4>SortVideoTime (Duration)</h4>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>SortVideoTime.Sort_all</code></td><td>Any duration (default)</td></tr>
+                <tr><td><code>SortVideoTime.Sort_short</code></td><td>1–3 minutes</td></tr>
+                <tr><td><code>SortVideoTime.Sort_middle</code></td><td>3–10 minutes</td></tr>
+                <tr><td><code>SortVideoTime.Sort_long</code></td><td>10+ minutes</td></tr>
+                <tr><td><code>SortVideoTime.Sort_long_10_20min</code></td><td>10–20 minutes</td></tr>
+                <tr><td><code>SortVideoTime.Sort_really_long</code></td><td>20+ minutes</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h4>SortQuality (Resolution)</h4>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>SortQuality.Sort_all</code></td><td>Any quality (default)</td></tr>
+                <tr><td><code>SortQuality.Sort_720p</code></td><td>720p and above</td></tr>
+                <tr><td><code>SortQuality.Sort_1080_plus</code></td><td>1080p and above</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section" id="downloading-section">
+    <span class="section-anchor" id="downloading"></span>
+    <h2><span class="section-icon">⬇️</span> Downloading</h2>
+
+    <p>All downloads are configured using the <code>DownloadConfigHLS</code> dataclass:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> DownloadConfigHLS
+
+config = <span class="token-class">DownloadConfigHLS</span>(
+    quality=<span class="token-string">"best"</span>,           <span class="token-comment"># "best", "half", "worst", or int like 720</span>
+    path=<span class="token-string">"./downloads"</span>,       <span class="token-comment"># Output directory (title auto-appended)</span>
+    no_title=<span class="token-keyword">False</span>,           <span class="token-comment"># If True, use path as exact filename</span>
+    remux=<span class="token-keyword">True</span>,               <span class="token-comment"># Convert TS segments to MP4 (needs av)</span>
+    return_report=<span class="token-keyword">True</span>,       <span class="token-comment"># Return DownloadReport instead of bool</span>
+)
+
+report = <span class="token-keyword">await</span> video.download(configuration=config)
+<span class="token-builtin">print</span>(report.status)       <span class="token-comment"># "completed", "failed", or "cancelled"</span>
+<span class="token-builtin">print</span>(report.downloaded)    <span class="token-comment"># Segments downloaded</span>
+<span class="token-builtin">print</span>(report.total)         <span class="token-comment"># Total segments</span></code></pre>
+    </div>
+
+    <h3>DownloadConfigHLS — Full Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>quality</code></td><td><code>str | int</code></td><td>—</td><td><strong>Required.</strong> "best", "half", "worst", or pixel height (720, 1080, etc.)</td></tr>
+                <tr><td><code>path</code></td><td><code>str</code></td><td><code>"./"</code></td><td>Output directory or exact file path</td></tr>
+                <tr><td><code>no_title</code></td><td><code>bool</code></td><td><code>False</code></td><td>Skip auto-appending video title to filename</td></tr>
+                <tr><td><code>callback</code></td><td><code>(int, int) → None</code></td><td><code>None</code></td><td>Progress callback <code>(downloaded, total)</code>. Falls back to text progress bar.</td></tr>
+                <tr><td><code>stop_event</code></td><td><code>asyncio.Event</code></td><td><code>None</code></td><td>Set this event to cancel the download</td></tr>
+                <tr><td><code>remux</code></td><td><code>bool</code></td><td><code>False</code></td><td>Remux TS → MP4 using PyAV</td></tr>
+                <tr><td><code>start_segment</code></td><td><code>int</code></td><td><code>0</code></td><td>Skip first N segments</td></tr>
+                <tr><td><code>segment_state_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Path for resume state JSON file</td></tr>
+                <tr><td><code>segment_dir</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Directory for individual segment files</td></tr>
+                <tr><td><code>return_report</code></td><td><code>bool</code></td><td><code>False</code></td><td>Return <code>DownloadReport</code> instead of <code>bool</code></td></tr>
+                <tr><td><code>cleanup_on_stop</code></td><td><code>bool</code></td><td><code>True</code></td><td>Delete temp files when cancelled</td></tr>
+                <tr><td><code>keep_segment_dir</code></td><td><code>bool</code></td><td><code>False</code></td><td>Keep segment files after completion</td></tr>
+                <tr><td><code>ios_support</code></td><td><code>bool</code></td><td><code>False</code></td><td>Restrict audio codec to AAC-only for iOS</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section" id="pagination-section">
+    <span class="section-anchor" id="pagination"></span>
+    <h2><span class="section-icon">📄</span> Pagination & Iterators</h2>
+
+    <p>Methods like <code>search()</code>, <code>get_playlist()</code>, and <code>channel.videos()</code> return <strong>async generators</strong> that yield <code>ScrapeResult</code> objects:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"query"</span>, pages=<span class="token-number">3</span>):
+    <span class="token-keyword">if</span> result.is_success:
+        video = result.video        <span class="token-comment"># The Video object</span>
+        <span class="token-builtin">print</span>(video.title)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"Error for {result.url}: {result.error}"</span>)</code></pre>
+    </div>
+
+    <h3>ScrapeResult</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video URL</td></tr>
+                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The populated Video object (if successful)</td></tr>
+                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The error that occurred (if any)</td></tr>
+                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scrape succeeded</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Concurrency Parameters</h3>
+    <p>All iterator methods accept concurrency tuning:</p>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Max videos loaded concurrently. Defaults to <code>config.videos_concurrency</code> (5).</span></li>
+        <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Max pages fetched concurrently. Defaults to <code>config.pages_concurrency</code> (2).</span></li>
+        <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">(url, error, attempt) → bool</span> <span class="param-desc">— Custom error callback. Return <code>True</code> to retry.</span></li>
+        <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">(url, error, attempt) → bool</span> <span class="param-desc">— Same but for page fetch failures.</span></li>
+        <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Yield results in page order (slower but deterministic).</span></li>
+    </ul>
+</div>
+
+<div class="section" id="error-handling-section">
+    <span class="section-anchor" id="error-handling"></span>
+    <h2><span class="section-icon">⚠️</span> Error Handling</h2>
+
+    <p>The API defines the following custom exceptions in <code>xvideos_api.modules.errors</code>. Note that base networking errors are raised from <code>eaf_base_api</code>.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
+            <tbody>
+                <tr><td><code>NotFound</code></td><td>Server returned HTTP 404</td></tr>
+                <tr><td><code>NetworkError</code></td><td>General network failure (wraps <code>NetworkRequestError</code>)</td></tr>
+                <tr><td><code>BotDetection</code></td><td>Cloudflare or similar bot protection triggered</td></tr>
+                <tr><td><code>ProxyError</code></td><td>Invalid or failing proxy</td></tr>
+                <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download operation failed</td></tr>
+                <tr><td><code>NoLoginCookies</code></td><td>Account accessed without cookies set</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> xvideos_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(url)
+<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"Video does not exist"</span>)
+<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"Bot protection triggered — try a proxy"</span>)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<div class="section" id="cli-section">
+    <span class="section-anchor" id="cli"></span>
+    <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>XVideos API includes a command-line interface:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Download a single video</span>
+xvideos_api --download "https://www.xvideos.com/video..." --quality best --output ./video.mp4 --no-title True
+
+<span class="token-comment"># Download from a file of URLs</span>
+xvideos_api --file urls.txt --quality 720 --output ./downloads/ --no-title False</code></pre>
+    </div>
+
+    <h3>CLI Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>--download URL</code></td><td>Video URL to download</td></tr>
+                <tr><td><code>--file PATH</code></td><td>Text file with URLs (one per line)</td></tr>
+                <tr><td><code>--quality</code></td><td>Video quality: <code>best</code>, <code>half</code>, <code>worst</code></td></tr>
+                <tr><td><code>--output</code></td><td>Output path (directory or file)</td></tr>
+                <tr><td><code>--no-title</code></td><td><code>True</code>/<code>False</code> — Skip auto-appending title</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section" id="platforms-section">
+    <span class="section-anchor" id="platforms"></span>
+    <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Platform</th><th>Architecture</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr><td>Windows 11</td><td>x64</td><td>✅ Tested</td></tr>
+                <tr><td>macOS Sequoia</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Linux (Arch)</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Android 16</td><td>aarch64</td><td>✅ Tested</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        PyAV (for TS→MP4 remuxing) is <strong>not available</strong> on Termux/Android. Use <code>remux=False</code> on those platforms.
+    </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="page-footer">
+                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · Licensed under LGPLv3</span>
+                <span>Powered by <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Back to top -->
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+        // Mobile sidebar toggle
+        const toggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileOverlay');
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+
+        // Active nav highlight on scroll
+        const sections = document.querySelectorAll('.section-anchor');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navLinks.forEach(link => {
+                        const isMatch = link.getAttribute('href') === '#' + id;
+                        link.classList.toggle('active', isMatch);
+                        if (isMatch) {
+                            // Automatically expand the parent collapsible nav section
+                            const collapsible = link.closest('.nav-collapsible');
+                            if (collapsible) {
+                                collapsible.classList.remove('collapsed');
+                            }
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+        sections.forEach(s => observer.observe(s));
+
+        // Collapsible sidebar navigation groups
+        document.querySelectorAll('.nav-link-parent').forEach(parent => {
+            parent.addEventListener('click', (e) => {
+                const collapsible = parent.closest('.nav-collapsible');
+                if (collapsible) {
+                    collapsible.classList.toggle('collapsed');
+                }
+            });
+        });
+
+        // Initialize collapsed states
+        document.querySelectorAll('.nav-collapsible').forEach(collapsible => {
+            const hasActive = collapsible.querySelector('.nav-link.active');
+            if (hasActive) {
+                collapsible.classList.remove('collapsed');
+            } else {
+                collapsible.classList.add('collapsed');
+            }
+        });
+
+        // Back to top visibility
+        const backBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backBtn.classList.toggle('visible', window.scrollY > 400);
+        });
+
+        // Copy install command
+        function copyInstall(el) {
+            const text = el.textContent.replace('$', '').replace('📋', '').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                el.querySelector('.copy-icon').textContent = '✓';
+                setTimeout(() => { el.querySelector('.copy-icon').textContent = '📋'; }, 1500);
+            });
+        }
+
+        // Copy code block
+        function copyCode(btn) {
+            const code = btn.closest('.code-window').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
+        // Close sidebar on nav click (mobile)
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 900) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

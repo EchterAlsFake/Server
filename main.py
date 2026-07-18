@@ -727,6 +727,58 @@ def simulate_payment_success():
     return jsonify({"status": "ok", "message": "Payment simulation successful."}), 200
 
 
+# ---------- Documentation Routes ----------
+
+def serve_docs_file(path):
+    docs_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "docs", "dist"))
+    
+    # Resolve the path relative to docs/dist
+    if not path or path == "":
+        target_file = os.path.join(docs_dist, "index.html")
+    elif path.startswith("assets/"):
+        target_file = os.path.join(docs_dist, path)
+    else:
+        parts = path.split("/")
+        api_name = parts[0]
+        api_dir = os.path.join(docs_dist, api_name)
+        if os.path.isdir(api_dir):
+            if len(parts) == 1:
+                return None, "redirect"
+            elif len(parts) == 2 and (parts[1] == "" or parts[1] == "index.html"):
+                target_file = os.path.join(api_dir, "index.html")
+            else:
+                target_file = os.path.join(docs_dist, path)
+        else:
+            return None, "404"
+            
+    if os.path.isfile(target_file):
+        return target_file, "file"
+    else:
+        return None, "404"
+
+@app.before_request
+def handle_docs_subdomain():
+    host = request.headers.get("Host", "")
+    if host.startswith("docs."):
+        path = request.path.lstrip("/")
+        target_file, status = serve_docs_file(path)
+        if status == "redirect":
+            return redirect(f"{request.scheme}://{host}/{path}/", code=301)
+        elif status == "404":
+            return "Documentation File Not Found", 404
+        return send_file(target_file)
+
+@app.route("/docs/", defaults={"path": ""}, methods=["GET"])
+@app.route("/docs/<path:path>", methods=["GET"])
+def serve_docs_subpath(path):
+    target_file, status = serve_docs_file(path)
+    if status == "redirect":
+        return redirect(f"/docs/{path}/", code=301)
+    elif status == "404":
+        return "Documentation File Not Found", 404
+    return send_file(target_file)
+
+
 @app.route("/", methods=["GET"])
 def landing_page():
     # templates/index.html contains your landing page HTML

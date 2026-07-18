@@ -1,0 +1,705 @@
+<!-- ============================================================
+     Eporner API Documentation — Content File
+     ============================================================ -->
+
+<!-- META -->
+<!-- SLOT:TITLE = Eporner API -->
+<!-- SLOT:HERO_TITLE = Eporner API -->
+<!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine. -->
+<!-- SLOT:VERSION = 2.3 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-eporner -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-eporner -->
+
+<!-- SIDEBAR_NAV -->
+<!-- BEGIN:SIDEBAR_NAV -->
+<div class="nav-section-title">Getting Started</div>
+<a href="#installation" class="nav-link">Installation</a>
+<a href="#quickstart" class="nav-link">Quick Start</a>
+<a href="#configuration" class="nav-link">Configuration</a>
+
+<div class="nav-section-title">Core Objects</div>
+<div class="nav-collapsible">
+    <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
+        <a href="#client-search_videos" class="nav-link nav-link-sub">search_videos()</a>
+        <a href="#client-get_videos_by_category" class="nav-link nav-link-sub">get_videos_by_category()</a>
+        <a href="#client-get_pornstar" class="nav-link nav-link-sub">get_pornstar()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#video-get_available_qualities" class="nav-link nav-link-sub">get_available_qualities()</a>
+        <a href="#video-get_url_by_quality" class="nav-link nav-link-sub">get_url_by_quality()</a>
+        <a href="#video-download" class="nav-link nav-link-sub">download()</a>
+        <a href="#video-get_authors" class="nav-link nav-link-sub">get_authors()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#pornstar" class="nav-link nav-link-parent">Pornstar <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#pornstar-videos" class="nav-link nav-link-sub">videos()</a>
+    </div>
+</div>
+
+<div class="nav-section-title">Features</div>
+<a href="#downloading" class="nav-link">Downloading Options</a>
+<a href="#scraping-results" class="nav-link">Scraping Results</a>
+<a href="#error-handling" class="nav-link">Error Handling</a>
+
+<div class="nav-section-title">Extras</div>
+<a href="#platforms" class="nav-link">Platforms</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- MAIN_CONTENT -->
+<!-- BEGIN:MAIN_CONTENT -->
+
+<!-- ================================================================
+     DISCLAIMER & FEATURES
+     ================================================================ -->
+<div class="section" id="intro-section">
+    <div class="info-box warning" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+        <div class="info-box-title" style="color: #ef4444; font-size: 14px;">⚠️ Legal Disclaimer</div>
+        This tool is an unofficial, independent project and is not affiliated with, endorsed by, or sponsored by the target website. This software is provided "as is" for educational and personal purposes only. The developer assumes no responsibility for any consequences arising from the use of this tool, including but not limited to account suspension, IP blocking, or any violation of the target website's Terms of Service. Users are solely responsible for ensuring their use complies with all applicable laws and policies. Use at your own risk.
+    </div>
+
+    <div class="info-box success" style="margin-top: 24px;">
+        <div class="info-box-title" style="font-size: 14px;">💚 Support &amp; Commercial Licensing</div>
+        If you find this project helpful, please consider donating to support its continued development! <br><br>
+        
+        <div style="margin: 16px 0;">
+            <a href="https://nowpayments.io/donation/EchterAlsFake" class="btn-donate" target="_blank" rel="noreferrer noopener" style="border-bottom: none;">
+                <span style="font-size: 20px;">💎</span> Donate Crypto
+            </a>
+        </div>
+        
+        <strong>Other Options:</strong><br>
+         • <a href="https://paypal.me/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">PayPal</a><br>
+         • <a href="https://ko-fi.com/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">Ko-Fi</a><br><br>
+        
+        For extended features, enterprise integrations, or custom commercial licensing, please contact 
+        <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
+    </div>
+
+    <h3 style="margin-top: 32px; font-size: 22px;">✨ Features Overview</h3>
+    <ul class="param-list" style="margin-top: 16px;">
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚡</span> <strong style="color: var(--text-primary); margin-right: 6px;">Fully Asynchronous</strong> — Constructed on top of <code>asyncio</code> and <code>curl_cffi</code>.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🛠️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Dual Data Fetching</strong> — Retrieve meta properties combining Eporner's json endpoints with structured HTML selectors.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📥</span> <strong style="color: var(--text-primary); margin-right: 6px;">Direct MP4 Downloader</strong> — Download files in various resolutions (including AV1 and H.264 formats) via parallel range requests.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">👤</span> <strong style="color: var(--text-primary); margin-right: 6px;">Pornstar Information Scraper</strong> — Extract detailed model profiles (bio, measurements, aliases, rankings) alongside their associated video portfolios.</li>
+    </ul>
+</div>
+
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <p>Install from PyPI using pip:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-eporner</code></pre>
+    </div>
+
+    <p>For custom CLI printing support, install with the optional <code>cli</code> components:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-eporner[cli]</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        Requires <strong>Python ≥ 3.12</strong>. The networking dependency package <code>eaf_base_api</code> is automatically installed.
+    </div>
+</div>
+
+<div class="section" id="quickstart-section">
+    <span class="section-anchor" id="quickstart"></span>
+    <h2><span class="section-icon">🚀</span> Quick Start</h2>
+
+    <p>Run your scraping scripts inside an active event loop using <code>async</code> context:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> eporner_api <span class="token-keyword">import</span> Client, DownloadConfigRAW
+<span class="token-keyword">from</span> eporner_api.modules.locals <span class="token-keyword">import</span> Encoding
+
+<span class="token-keyword">async def</span> <span class="token-function">main</span>():
+    client = <span class="token-class">Client</span>()
+
+    <span class="token-comment"># Retrieve video info</span>
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://www.eporner.com/video-12345/example-video"</span>)
+    <span class="token-builtin">print</span>(video.title)
+    <span class="token-builtin">print</span>(video.views)
+
+    <span class="token-comment"># Download video in best quality using H264 encoding</span>
+    config = <span class="token-class">DownloadConfigRAW</span>(quality=<span class="token-string">"best"</span>, path=<span class="token-string">"./downloads"</span>)
+    <span class="token-keyword">await</span> video.download(configuration=config, mode=Encoding.mp4_h264)
+
+asyncio.run(main())</code></pre>
+    </div>
+</div>
+
+<div class="section" id="configuration-section">
+    <span class="section-anchor" id="configuration"></span>
+    <h2><span class="section-icon">⚙️</span> Configuration</h2>
+
+    <p>Adjust scraper properties (headers, cookies, timeouts, proxies) using the shared <code>RuntimeConfig</code> passed into <code>BaseCore</code>.</p>
+    <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> eporner_api <span class="token-keyword">import</span> Client
+
+my_config = <span class="token-class">RuntimeConfig</span>()
+my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+core = <span class="token-class">BaseCore</span>(configuration=my_config)
+client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     CLIENT
+     ================================================================ -->
+<div class="section" id="client-section">
+    <span class="section-anchor" id="client"></span>
+    <h2><span class="section-icon">🔌</span> Client</h2>
+    <p>Scraper instance to orchestrate requests and retrieve media objects.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> eporner_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+
+client = <span class="token-class">Client</span>()
+client_custom = <span class="token-class">Client</span>(core=<span class="token-class">BaseCore</span>())</code></pre>
+    </div>
+
+    <h3>Constructor Parameters</h3>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Networking core instance (default: <code>BaseCore(RuntimeConfig())</code>)</span></li>
+    </ul>
+
+    <h3>Methods</h3>
+
+    <!-- client-get_video -->
+    <span class="section-anchor" id="client-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a video profile page and returns a populated <code>Video</code> object. By default, parses the JSON API endpoint first.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Video</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The Eporner video URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Parse full HTML elements for detailed fields (default: <code>False</code>)</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from Eporner JSON endpoint (default: <code>True</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
+    </div>
+
+    <!-- client-search_videos -->
+    <span class="section-anchor" id="client-search_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search Videos <code>search_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Queries search endpoints and streams video results.</div>
+        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.search_videos(
+    query: <span class="token-builtin">str</span>,
+    sorting_gay: str | Gay,
+    sorting_order: str | Order,
+    sorting_low_quality: str | LowQuality,
+    per_page: <span class="token-builtin">int</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    max_video_concurrency: <span class="token-builtin">int</span> = <span class="token-number">20</span>,
+    max_page_concurrency: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = on_error,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search query words</span></li>
+            <li class="param-item"><span class="param-name">sorting_gay</span> <span class="param-type">Gay | str</span> <span class="param-desc">— Exclude/include gay content filters (see <a href="#sorting-enums">Sorting Enums</a>)</span></li>
+            <li class="param-item"><span class="param-name">sorting_order</span> <span class="param-type">Order | str</span> <span class="param-desc">— Sort order (see <a href="#sorting-enums">Sorting Enums</a>)</span></li>
+            <li class="param-item"><span class="param-name">sorting_low_quality</span> <span class="param-type">LowQuality | str</span> <span class="param-desc">— Low quality exclusions (see <a href="#sorting-enums">Sorting Enums</a>)</span></li>
+            <li class="param-item"><span class="param-name">per_page</span> <span class="param-type">int</span> <span class="param-desc">— Number of video results per index page</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, pre-fetches full HTML video properties</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of search pages to parse</span></li>
+            <li class="param-item"><span class="param-name">max_video_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Video worker limit</span></li>
+            <li class="param-item"><span class="param-name">max_page_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Page index scraper worker limit</span></li>
+            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Page error callback handler</span></li>
+            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video error callback handler</span></li>
+            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from json endpoints</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+    </div>
+
+    <!-- client-get_videos_by_category -->
+    <span class="section-anchor" id="client-get_videos_by_category"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Category Videos <code>get_videos_by_category()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Retrieves video lists categorized under specific tags.</div>
+        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.get_videos_by_category(
+    category: str | Category,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = on_error,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">category</span> <span class="param-type">Category | str</span> <span class="param-desc">— Eporner Category enum (e.g. <code>Category._4K</code>)</span></li>
+            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
+            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Page index scraper worker limit</span></li>
+            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video error callback handler</span></li>
+            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Page error callback handler</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full HTML video properties</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from JSON API</span></li>
+            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Maintain listing order</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+    </div>
+
+    <!-- client-get_pornstar -->
+    <span class="section-anchor" id="client-get_pornstar"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Pornstar <code>get_pornstar()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Loads a pornstar profile page containing bio details.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_pornstar(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Pornstar</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The Eporner pornstar profile URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load parsed properties (default: <code>True</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     VIDEO
+     ================================================================ -->
+<div class="section" id="video-section">
+    <span class="section-anchor" id="video"></span>
+    <h2><span class="section-icon">🎬</span> Video</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with details extracted from API endpoints and HTML elements.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
+                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video key ID</td></tr>
+                <tr><td><code>keywords</code></td><td><code>list | None</code></td><td>List of tags</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
+                <tr><td><code>views</code></td><td><code>int | None</code></td><td>Number of views</td></tr>
+                <tr><td><code>rate</code></td><td><code>str | None</code></td><td>Rating representation</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Publication / upload date string</td></tr>
+                <tr><td><code>length_seconds</code></td><td><code>str | None</code></td><td>Duration in seconds</td></tr>
+                <tr><td><code>length_minutes</code></td><td><code>str | None</code></td><td>Duration in minutes (e.g. <code>12:34</code>)</td></tr>
+                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embed player path</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Default cover image thumbnail URL</td></tr>
+                <tr><td><code>rating_value</code></td><td><code>str | None</code></td><td>Rating score value</td></tr>
+                <tr><td><code>rating_count</code></td><td><code>str | None</code></td><td>Total rating votes</td></tr>
+                <tr><td><code>parsed_urls</code></td><td><code>dict | None</code></td><td>Resolvable CDN paths mapped by resolution (e.g. <code>{"720p": {"h264": "...", "av1": "..."}}</code>)</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Video summary description</td></tr>
+                <tr><td><code>encoding_format</code></td><td><code>str | None</code></td><td>Encoding format metadata</td></tr>
+                <tr><td><code>is_family_friendly</code></td><td><code>str | None</code></td><td>Family friendly flag</td></tr>
+                <tr><td><code>thumbnails</code></td><td><code>list[str] | None</code></td><td>List of alternative thumbs</td></tr>
+                <tr><td><code>content_url</code></td><td><code>str | None</code></td><td>Meta content URL</td></tr>
+                <tr><td><code>best_rating</code></td><td><code>str | None</code></td><td>Upper rating limits</td></tr>
+                <tr><td><code>worst_rating</code></td><td><code>str | None</code></td><td>Lower rating limits</td></tr>
+                <tr><td><code>authors_urls</code></td><td><code>list[str] | None</code></td><td>List of actor URLs starring in this video</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- video-get_available_qualities -->
+    <span class="section-anchor" id="video-get_available_qualities"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Available Qualities <code>get_available_qualities()</code></h3>
+        </div>
+        <div class="method-desc">Returns a list of resolutions available for download.</div>
+        <div class="method-signature">video.get_available_qualities() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ list[str]</span>
+    </div>
+
+    <!-- video-get_url_by_quality -->
+    <span class="section-anchor" id="video-get_url_by_quality"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get URL by Quality <code>get_url_by_quality()</code></h3>
+        </div>
+        <div class="method-desc">Finds the specific CDN file URL matching the quality height and encoding format.</div>
+        <div class="method-signature">video.get_url_by_quality(
+    quality: <span class="token-builtin">str</span> | <span class="token-builtin">int</span>,
+    mode: Encoding | <span class="token-builtin">str</span>
+) -&gt; <span class="token-builtin">str</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">quality</span> <span class="param-type">str | int</span> <span class="param-desc">— Target resolution (e.g. <code>1080</code> or <code>"1080p"</code>)</span></li>
+            <li class="param-item"><span class="param-name">mode</span> <span class="param-type">Encoding | str</span> <span class="param-desc">— Video codec format (e.g. <code>Encoding.mp4_h264</code> or <code>"h264"</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ str</span>
+    </div>
+
+    <!-- video-download -->
+    <span class="section-anchor" id="video-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Video <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.download(
+    configuration: DownloadConfigRAW,
+    mode: Encoding | <span class="token-builtin">str</span>,
+    use_workaround: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; <span class="token-builtin">bool</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigRAW</span> <span class="param-desc">— RAW download options (quality, path, etc.). See <a href="#downloading">Downloading Options</a>.</span></li>
+            <li class="param-item"><span class="param-name">mode</span> <span class="param-type">Encoding | str</span> <span class="param-desc">— Video codec format (e.g. <code>Encoding.mp4_h264</code> or <code>Encoding.av1</code>)</span></li>
+            <li class="param-item"><span class="param-name">use_workaround</span> <span class="param-type">bool</span> <span class="param-desc">— Enable download pipeline workarounds (default: <code>True</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool</span>
+    </div>
+
+    <!-- video-get_authors -->
+    <span class="section-anchor" id="video-get_authors"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Video Authors <code>get_authors()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Yields pornstar profiles starring in this video.</div>
+        <div class="method-signature"><span class="token-keyword">await for</span> star <span class="token-keyword">in</span> video.get_authors(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; AsyncGenerator[Pornstar, None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, pre-fetches full metadata properties for the yielded pornstar</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[Pornstar, None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     PORNSTAR
+     ================================================================ -->
+<div class="section" id="pornstar-section">
+    <span class="section-anchor" id="pornstar"></span>
+    <h2><span class="section-icon">👤</span> Pornstar</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents an Eporner model profile with parsed statistics and biography properties.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Profile URL</td></tr>
+                <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Number of subscribers</td></tr>
+                <tr><td><code>picture</code></td><td><code>str | None</code></td><td>Cover avatar picture URL</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Name of the pornstar</td></tr>
+                <tr><td><code>photos_amount</code></td><td><code>str | None</code></td><td>Number of photos</td></tr>
+                <tr><td><code>video_amount</code></td><td><code>str | None</code></td><td>Number of uploaded/starring videos</td></tr>
+                <tr><td><code>pornstar_rank</code></td><td><code>str | None</code></td><td>Eporner site rank</td></tr>
+                <tr><td><code>profile_views</code></td><td><code>str | None</code></td><td>Total views of this profile</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Accumulated views on videos</td></tr>
+                <tr><td><code>photo_views</code></td><td><code>str | None</code></td><td>Accumulated views on photos</td></tr>
+                <tr><td><code>country</code></td><td><code>str | None</code></td><td>Country of origin</td></tr>
+                <tr><td><code>age</code></td><td><code>str | None</code></td><td>Pornstar age</td></tr>
+                <tr><td><code>ethnicity</code></td><td><code>str | None</code></td><td>Ethnicity metadata</td></tr>
+                <tr><td><code>eye_color</code></td><td><code>str | None</code></td><td>Eye color</td></tr>
+                <tr><td><code>hair_color</code></td><td><code>str | None</code></td><td>Hair color</td></tr>
+                <tr><td><code>height</code></td><td><code>str | None</code></td><td>Height details</td></tr>
+                <tr><td><code>weight</code></td><td><code>str | None</code></td><td>Weight details</td></tr>
+                <tr><td><code>cup</code></td><td><code>str | None</code></td><td>Bra cup size</td></tr>
+                <tr><td><code>measurements</code></td><td><code>str | None</code></td><td>Body measurements string (e.g. <code>34-24-34</code>)</td></tr>
+                <tr><td><code>biography</code></td><td><code>str | None</code></td><td>Biography paragraph description</td></tr>
+                <tr><td><code>aliases</code></td><td><code>list | None</code></td><td>List of alternate names</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- pornstar-videos -->
+    <span class="section-anchor" id="pornstar-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Pornstar Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Yields video scrape results associated with this pornstar.</div>
+        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> pornstar.videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    on_video_error: on_error_hint = on_error,
+    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
+    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, automatically calculates pages based on total <code>video_amount</code>)</span></li>
+            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
+            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Index page scraper worker limit</span></li>
+            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error handler</span></li>
+            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error handler</span></li>
+            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full HTML video properties</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from JSON API</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     DOWNLOADING OPTIONS
+     ================================================================ -->
+<div class="section" id="downloading-section">
+    <span class="section-anchor" id="downloading"></span>
+    <h2><span class="section-icon">⬇️</span> Downloading Options</h2>
+
+    <p>Eporner serves direct MP4 media files. Download options are configured via the <code>DownloadConfigRAW</code> class, specifying the encoding type (AV1 or H.264):</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigRAW
+<span class="token-keyword">from</span> eporner_api.modules.locals <span class="token-keyword">import</span> Encoding
+
+config = <span class="token-class">DownloadConfigRAW</span>(
+    quality=<span class="token-string">"best"</span>,            <span class="token-comment"># "best", "half", "worst", or height (e.g. 1080)</span>
+    path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Output directory</span>
+    no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># Auto-appends title + ".mp4" if False</span>
+    allow_multipart=<span class="token-keyword">True</span>,      <span class="token-comment"># Enable multi-threaded segmented range downloads</span>
+    max_workers=<span class="token-number">5</span>              <span class="token-comment"># Concurrent segment downloaders</span>
+)
+
+<span class="token-comment"># Download using H.264 codec</span>
+await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
+    </div>
+
+    <p>For more configurations regarding RAW downloaders, please read the reference inside <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a>.</p>
+</div>
+
+<!-- ================================================================
+     SCRAPING RESULTS
+     ================================================================ -->
+<div class="section" id="scraping-results-section">
+    <span class="section-anchor" id="scraping-results"></span>
+    <h2><span class="section-icon">📊</span> Scraping Results</h2>
+    <p>Concurrently iterated methods yield a standard <code>ScrapeResult</code> wrapper:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(<span class="token-string">"couple"</span>, sorting_gay=<span class="token-string">"0"</span>, sorting_order=<span class="token-string">"latest"</span>, sorting_low_quality=<span class="token-string">"1"</span>, per_page=<span class="token-number">10</span>):
+    <span class="token-keyword">if</span> result.is_success:
+        video = result.video        <span class="token-comment"># The Video object</span>
+        <span class="token-builtin">print</span>(video.title)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"Error for {result.url}: {result.error}"</span>)</code></pre>
+    </div>
+
+    <h3>ScrapeResult Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The parsed video target URL</td></tr>
+                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The parsed Video object (if successful)</td></tr>
+                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The exception raised (if failed)</td></tr>
+                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     SORTING ENUMS
+     ================================================================ -->
+<div class="section" id="sorting-enums-section">
+    <span class="section-anchor" id="sorting-enums"></span>
+    <h2><span class="section-icon">📋</span> Sorting Enums</h2>
+    <p>Search endpoints accept sorting parameters defined inside <code>eporner_api.modules.sorting</code>:</p>
+
+    <h3>Gay</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Member</th><th>API String Value</th><th>Filter Result</th></tr></thead>
+            <tbody>
+                <tr><td><code>Gay.exclude_gay_content</code></td><td><code>"0"</code></td><td>Exclude gay search listings</td></tr>
+                <tr><td><code>Gay.include_gay_content</code></td><td><code>"1"</code></td><td>Include gay search listings</td></tr>
+                <tr><td><code>Gay.only_gay_content</code></td><td><code>"2"</code></td><td>Only show gay search listings</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Order</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Member</th><th>API String Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>Order.latest</code></td><td><code>"latest"</code></td><td>Order by upload date</td></tr>
+                <tr><td><code>Order.longest</code></td><td><code>"longest"</code></td><td>Order by duration (descending)</td></tr>
+                <tr><td><code>Order.shortest</code></td><td><code>"shortest"</code></td><td>Order by duration (ascending)</td></tr>
+                <tr><td><code>Order.top_rated</code></td><td><code>"top-rated"</code></td><td>Order by rating score</td></tr>
+                <tr><td><code>Order.most_popular</code></td><td><code>"most-popular"</code></td><td>Order by views count</td></tr>
+                <tr><td><code>Order.top_weekly</code></td><td><code>"top-weekly"</code></td><td>Order by popular weekly trends</td></tr>
+                <tr><td><code>Order.top_monthly</code></td><td><code>"top-monthly"</code></td><td>Order by popular monthly trends</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>LowQuality</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Member</th><th>API String Value</th><th>Filter Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>LowQuality.exclude_low_quality_content</code></td><td><code>"0"</code></td><td>Only include high quality video files (HD)</td></tr>
+                <tr><td><code>LowQuality.include_low_quality_content</code></td><td><code>"1"</code></td><td>Include both low quality (SD) and high quality (HD) video files</td></tr>
+                <tr><td><code>LowQuality.only_low_quality_content</code></td><td><code>"2"</code></td><td>Only include low quality video files (SD)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     ERROR HANDLING
+     ================================================================ -->
+<div class="section" id="error-handling-section">
+    <span class="section-anchor" id="error-handling"></span>
+    <h2><span class="section-icon">⚠️</span> Error Handling</h2>
+
+    <p>Exceptions are defined in <code>eporner_api.modules.errors</code>. Network-level errors bubble up from the underlying <code>eaf_base_api</code> package.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>Trigger Cause</th></tr></thead>
+            <tbody>
+                <tr><td><code>NotFound</code></td><td>Server returned HTTP 404 (e.g. video deleted)</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to HTTP connection problems</td></tr>
+                <tr><td><code>BotDetection</code></td><td>Cloudflare challenge block detected</td></tr>
+                <tr><td><code>ProxyError</code></td><td>Proxy configuration failed or proxy is down</td></tr>
+                <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Direct file download operation failed</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> eporner_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(url)
+<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"Blocked by anti-bot measures."</span>)</code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     PLATFORMS
+     ================================================================ -->
+<div class="section" id="platforms-section">
+    <span class="section-anchor" id="platforms"></span>
+    <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Platform</th><th>Architecture</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr><td>Windows 11</td><td>x64</td><td>✅ Tested</td></tr>
+                <tr><td>macOS Sequoia</td><td>x86_64 / arm64</td><td>✅ Tested</td></tr>
+                <tr><td>Linux (Arch)</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Android 16</td><td>aarch64</td><td>✅ Tested</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- END:MAIN_CONTENT -->

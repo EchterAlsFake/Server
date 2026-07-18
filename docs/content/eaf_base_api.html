@@ -1,0 +1,264 @@
+<!-- ============================================================
+     eaf_base_api Documentation — Content File
+     ============================================================ -->
+
+<!-- META -->
+<!-- SLOT:TITLE = Base API -->
+<!-- SLOT:HERO_TITLE = eaf_base_api -->
+<!-- SLOT:HERO_SUBTITLE = The core asynchronous networking engine for all EchterAlsFake scrapers and API wrappers. Handles HTTP sessions, bot bypasses, retries, HLS downloading, and caching. -->
+<!-- SLOT:VERSION = 3.3.3 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/eaf_base_api -->
+<!-- SLOT:PYPI_PACKAGE = eaf_base_api -->
+
+<!-- SIDEBAR_NAV -->
+<!-- BEGIN:SIDEBAR_NAV -->
+<div class="nav-section-title">Getting Started</div>
+<a href="#overview" class="nav-link">Overview</a>
+<a href="#runtime-config" class="nav-link">RuntimeConfig</a>
+<a href="#client-integration" class="nav-link">Client Integration</a>
+
+<div class="nav-section-title">Networking Engine</div>
+<a href="#networking" class="nav-link">Networking & Retries</a>
+<a href="#proxies" class="nav-link">Proxies</a>
+<a href="#caching" class="nav-link">Caching</a>
+
+<div class="nav-section-title">Advanced</div>
+<a href="#download-resume" class="nav-link">Download Resume</a>
+<a href="#logging" class="nav-link">Logging</a>
+<a href="#base-errors" class="nav-link">Error Reference</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- MAIN_CONTENT -->
+<!-- BEGIN:MAIN_CONTENT -->
+
+<div class="section" id="overview-section">
+    <span class="section-anchor" id="overview"></span>
+    <h2><span class="section-icon">🏗️</span> Overview</h2>
+
+    <p><code>eaf_base_api</code> provides the core engine behind all EchterAlsFake API wrappers:</p>
+
+    <ul class="param-list" style="margin: 16px 0;">
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>BaseCore</strong> — HTTP session management, request retrying, caching, HLS/M3U8 downloading, TS→MP4 remuxing</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>BaseMedia</strong> — Lazy-loading dataclass base with automatic <code>DataNotLoadedError</code> on missing attributes</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Helper</strong> — Concurrent page/video scraping orchestrator using async producer/consumer queues</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Cache</strong> — Thread-safe in-memory caching with FIFO eviction</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>RuntimeConfig</strong> — Global configuration singleton</li>
+    </ul>
+</div>
+
+<div class="section" id="runtime-config-section">
+    <span class="section-anchor" id="runtime-config"></span>
+    <h2><span class="section-icon">🎛️</span> RuntimeConfig</h2>
+
+    <p>The <code>RuntimeConfig</code> class controls the entire networking stack. Import it from <code>base_api</code>:</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>max_cache_items</code></td><td><code>int</code></td><td><code>200</code></td><td>Maximum number of cached responses (FIFO eviction)</td></tr>
+                <tr><td><code>max_retries</code></td><td><code>int</code></td><td><code>4</code></td><td>Max retry attempts per request (exponential backoff)</td></tr>
+                <tr><td><code>request_delay</code></td><td><code>int</code></td><td><code>0</code></td><td>Seconds to wait between requests (rate limiting)</td></tr>
+                <tr><td><code>timeout</code></td><td><code>int</code></td><td><code>20</code></td><td>Request timeout in seconds</td></tr>
+                <tr><td><code>max_bandwidth_mb</code></td><td><code>float | None</code></td><td><code>None</code></td><td>Speed limit in MB/s. Distributed across workers.</td></tr>
+                <tr><td><code>proxies</code></td><td><code>dict | None</code></td><td><code>None</code></td><td>Proxy mapping, e.g. <code>{"https": "socks5://..."}</code></td></tr>
+                <tr><td><code>http_version</code></td><td><code>str</code></td><td><code>"v3"</code></td><td>HTTP version: <code>"v1"</code>, <code>"v2"</code>, or <code>"v3"</code></td></tr>
+                <tr><td><code>dns_over_https</code></td><td><code>str | None</code></td><td><code>None</code></td><td>DoH server URL, e.g. <code>"https://1.1.1.1/dns-query"</code></td></tr>
+                <tr><td><code>impersonation</code></td><td><code>str</code></td><td><code>"chrome"</code></td><td>Browser TLS fingerprint to impersonate</td></tr>
+                <tr><td><code>custom_ja3</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Custom JA3 fingerprint string (advanced only)</td></tr>
+                <tr><td><code>proxy_auth</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Proxy authentication <code>"user:password"</code></td></tr>
+                <tr><td><code>verify_ssl</code></td><td><code>bool</code></td><td><code>True</code></td><td>Verify SSL certificates</td></tr>
+                <tr><td><code>trust_env</code></td><td><code>bool</code></td><td><code>False</code></td><td>Trust environment proxy settings</td></tr>
+                <tr><td><code>cookies</code></td><td><code>dict | None</code></td><td><code>None</code></td><td>Default cookies for all requests</td></tr>
+                <tr><td><code>locale</code></td><td><code>str</code></td><td><code>"en-US,en;q=0.9"</code></td><td>Accept-Language header value</td></tr>
+                <tr><td><code>max_workers_download</code></td><td><code>int</code></td><td><code>20</code></td><td>Concurrent segment download workers</td></tr>
+                <tr><td><code>videos_concurrency</code></td><td><code>int</code></td><td><code>5</code></td><td>Max videos to scrape concurrently</td></tr>
+                <tr><td><code>pages_concurrency</code></td><td><code>int</code></td><td><code>2</code></td><td>Max pages to fetch concurrently</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section" id="client-integration-section">
+    <span class="section-anchor" id="client-integration"></span>
+    <h2><span class="section-icon">🔗</span> Client Integration</h2>
+
+    <p>All APIs built on top of <code>eaf_base_api</code> follow the exact same pattern. You instantiate a <code>BaseCore</code> with your <code>RuntimeConfig</code>, and then pass that <code>BaseCore</code> into the API's <code>Client</code>. Here is an example using the <strong>XVideos API</strong>, but the logic applies universally to Pornhub, RedTube, SpankBang, etc.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> Client  <span class="token-comment"># Works identical with pornhub_api, xnxx_api, etc.</span>
+
+<span class="token-comment"># 1. Create and tweak your config</span>
+my_config = <span class="token-class">RuntimeConfig</span>()
+my_config.timeout = <span class="token-number">60</span>
+my_config.max_retries = <span class="token-number">10</span>
+my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+<span class="token-comment"># 2. Initialize the core engine with your custom config</span>
+core = <span class="token-class">BaseCore</span>(configuration=my_config)
+
+<span class="token-comment"># 3. Pass the configured core into ANY API client</span>
+client = <span class="token-class">Client</span>(core=core)
+
+<span class="token-comment"># Now this client will route all its requests through your specific config/proxies!</span>
+</code></pre>
+    </div>
+</div>
+
+<div class="section" id="networking-section">
+    <span class="section-anchor" id="networking"></span>
+    <h2><span class="section-icon">🌐</span> Networking & Retries</h2>
+
+    <p>Under the hood, <code>BaseCore</code> uses <a href="https://github.com/yifeikong/curl_cffi">curl_cffi</a> for HTTP requests, which provides:</p>
+
+    <ul class="param-list" style="margin: 16px 0;">
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Browser impersonation</strong> — TLS fingerprint mimicking (Chrome, Firefox, etc.) to bypass WAF/bot detection</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>HTTP/1.1, HTTP/2, HTTP/3</strong> — Configurable via <code>config.http_version</code></li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Custom JA3</strong> — Override TLS fingerprints for advanced users</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>DNS over HTTPS</strong> — Route DNS through HTTPS for privacy</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Bandwidth limiting</strong> — Set per-connection speed limits with <code>CurlOpt.MAX_RECV_SPEED_LARGE</code></li>
+    </ul>
+
+    <h3>Retry Strategy</h3>
+    <p>Requests are retried using <a href="https://github.com/jd/tenacity">Tenacity</a> with exponential backoff + jitter:</p>
+    <ul class="param-list" style="margin: 12px 0;">
+        <li class="param-item" style="display: block; padding: 4px 0;">Initial wait: 0.5s → Max: 30s → Jitter: ±0.5s</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">Retries on: <code>RequestsError</code>, <code>NetworkRequestError</code></li>
+        <li class="param-item" style="display: block; padding: 4px 0;">HTTP 429 (Rate Limited): Respects <code>Retry-After</code> header, or random 2–6s backoff</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">HTTP 5xx: Automatically retried</li>
+    </ul>
+</div>
+
+<div class="section" id="proxies-section">
+    <span class="section-anchor" id="proxies"></span>
+    <h2><span class="section-icon">🔒</span> Proxies</h2>
+
+    <p>Full proxy support including SOCKS5, HTTPS, and authenticated proxies:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> config
+
+<span class="token-comment"># SOCKS5 proxy</span>
+config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+<span class="token-comment"># HTTPS proxy with auth</span>
+config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"https://proxy.example.com:8080"</span>}
+config.proxy_auth = <span class="token-string">"username:password"</span>
+
+<span class="token-comment"># Disable SSL verification (for MITM proxies)</span>
+config.verify_ssl = <span class="token-keyword">False</span></code></pre>
+    </div>
+
+    <div class="info-box warning">
+        <div class="info-box-title">Warning</div>
+        If your proxy uses a self-signed certificate, you'll get a <code>ProxySSLError</code>. Set <code>config.verify_ssl = False</code> to disable certificate verification.
+    </div>
+</div>
+
+<div class="section" id="caching-section">
+    <span class="section-anchor" id="caching"></span>
+    <h2><span class="section-icon">💾</span> Caching</h2>
+
+    <p>The <code>Cache</code> class provides thread-safe in-memory caching with FIFO eviction. Text responses are cached automatically (not binary/byte responses).</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Adjust max cache size</span>
+config.max_cache_items = <span class="token-number">500</span>  <span class="token-comment"># Default: 200</span>
+
+<span class="token-comment"># The cache can be accessed on the BaseCore instance:</span>
+core = client.core
+core.cache.cache_dictionary  <span class="token-comment"># The raw dict</span></code></pre>
+    </div>
+</div>
+
+<div class="section" id="download-resume-section">
+    <span class="section-anchor" id="download-resume"></span>
+    <h2><span class="section-icon">🔄</span> Download Resume & Cancel</h2>
+
+    <p>The base HLS downloader supports <strong>resume</strong> and <strong>cancellation</strong> via state files and stop events. This works universally across all APIs when calling <code>video.download()</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">import</span> threading
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS
+
+stop = threading.Event()
+
+config = <span class="token-class">DownloadConfigHLS</span>(
+    quality=<span class="token-string">"720"</span>,
+    path=<span class="token-string">"video.mp4"</span>,
+    segment_state_path=<span class="token-string">"video.state.json"</span>,  <span class="token-comment"># Enables resume</span>
+    keep_segment_dir=<span class="token-keyword">True</span>,                   <span class="token-comment"># Keep downloaded parts</span>
+    stop_event=stop,                          <span class="token-comment"># Cancel trigger</span>
+)
+
+<span class="token-comment"># Cancel from another thread: stop.set()</span>
+<span class="token-comment"># Resume: just run video.download(configuration=config) again</span></code></pre>
+    </div>
+
+    <div class="info-box tip">
+        <div class="info-box-title">How Resume Works</div>
+        When cancelled, a JSON state file is written with segment URLs and progress. On the next run, the downloader loads this state, scans the segment directory for existing files, and only fetches what's missing. On success, the state file is automatically deleted.
+    </div>
+</div>
+
+<div class="section" id="logging-section">
+    <span class="section-anchor" id="logging"></span>
+    <h2><span class="section-icon">📝</span> Logging</h2>
+
+    <p>Both the base API and child APIs use Python's <code>logging</code> module. Enable verbose logging:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> logging
+
+<span class="token-comment"># Enable BaseCore logging</span>
+core.enable_logging(level=logging.DEBUG)
+
+<span class="token-comment"># Log to a file</span>
+core.enable_logging(log_file=<span class="token-string">"api.log"</span>, level=logging.INFO)
+
+<span class="token-comment"># Remote HTTP logging (sends logs to a server)</span>
+core.enable_logging(
+    log_ip=<span class="token-string">"192.168.1.100"</span>,
+    log_port=<span class="token-number">8080</span>,
+    level=logging.DEBUG
+)</code></pre>
+    </div>
+</div>
+
+<div class="section" id="base-errors-section">
+    <span class="section-anchor" id="base-errors"></span>
+    <h2><span class="section-icon">🚨</span> Error Reference</h2>
+
+    <p>The <code>eaf_base_api</code> defines a comprehensive error hierarchy under <code>base_api.modules.errors</code>. You may catch these when calling methods from any of the APIs:</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
+            <tbody>
+                <tr><td><code>UnknownError</code></td><td>Unexpected errors not covered by specific exceptions</td></tr>
+                <tr><td><code>ResourceGone</code></td><td>HTTP 410 — resource permanently removed</td></tr>
+                <tr><td><code>NetworkRequestError</code></td><td>General network request failures</td></tr>
+                <tr><td><code>HTTPStatusError</code></td><td>Non-200 HTTP responses (has <code>.status_code</code>, <code>.url</code>)</td></tr>
+                <tr><td><code>RateLimitError</code></td><td>HTTP 429 — too many requests (has <code>.retry_after</code>)</td></tr>
+                <tr><td><code>AccessDeniedError</code></td><td>HTTP 403 — blocked by server</td></tr>
+                <tr><td><code>InvalidProxy</code></td><td>Proxy configuration is invalid or unreachable</td></tr>
+                <tr><td><code>ProxySSLError</code></td><td>Proxy SSL certificate verification failed</td></tr>
+                <tr><td><code>BotProtectionDetected</code></td><td>Cloudflare or similar WAF detected</td></tr>
+                <tr><td><code>DownloadCancelled</code></td><td>Download was stopped via <code>stop_event</code></td></tr>
+                <tr><td><code>PlaylistExtractionError</code></td><td>Failed to parse M3U8 master playlist</td></tr>
+                <tr><td><code>DataNotLoadedError</code></td><td>Attribute accessed before <code>load()</code> was called</td></tr>
+                <tr><td><code>SecurityAbort</code></td><td>Illegal characters detected in bot challenge code</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- END:MAIN_CONTENT -->

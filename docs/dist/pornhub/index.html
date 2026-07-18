@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PornHub API — Documentation</title>
+    <meta name="description" content="Documentation for PornHub API — An asynchronous Python API wrapper by EchterAlsFake">
+    <style>
+        /* ============================================================
+           EAF DOCUMENTATION — DESIGN SYSTEM
+           Premium dark theme with glass morphism and accent gradients
+           ============================================================ */
+
+        @font-face {
+            font-family: 'Roboto';
+            src: url('../assets/roboto-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Roboto';
+            src: url('../assets/roboto-bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            /* Core palette */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-tertiary: #1a1a24;
+            --bg-card: rgba(22, 22, 34, 0.7);
+            --bg-card-hover: rgba(30, 30, 46, 0.8);
+
+            /* Text */
+            --text-primary: #e8e8ef;
+            --text-secondary: #9d9db5;
+            --text-muted: #6b6b82;
+            --text-accent: #38bdf8;
+
+            /* Accent gradient */
+            --accent-start: #8b5cf6;
+            --accent-mid: #a78bfa;
+            --accent-end: #c4b5fd;
+            --accent-glow: rgba(139, 92, 246, 0.15);
+            --accent-glow-strong: rgba(139, 92, 246, 0.3);
+
+            /* Secondary accent (warm) */
+            --warm-start: #f59e0b;
+            --warm-end: #fbbf24;
+
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(139, 92, 246, 0.25);
+
+            /* Code */
+            --code-bg: #0d0d14;
+            --code-border: rgba(139, 92, 246, 0.12);
+            --inline-code-bg: rgba(139, 92, 246, 0.1);
+            --inline-code-color: #c4b5fd;
+
+            /* Sidebar */
+            --sidebar-width: 280px;
+            --sidebar-bg: rgba(14, 14, 22, 0.95);
+
+            /* Transitions */
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+
+        /* ---- Reset & Base ---- */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 21px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ---- Scrollbar ---- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-start); }
+
+        /* ---- Selection ---- */
+        ::selection { background: var(--accent-glow-strong); color: #fff; }
+
+        /* ============================================================
+           LAYOUT
+           ============================================================ */
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ---- Sidebar ---- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-version {
+            font-size: 15px;
+            color: var(--text-muted);
+            padding: 3px 8px;
+            background: var(--inline-code-bg);
+            border-radius: 4px;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .sidebar-nav::-webkit-scrollbar { width: 3px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: var(--bg-tertiary); }
+
+        .nav-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 16px 20px 6px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 7px 20px 7px 28px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 450;
+            transition: all var(--transition-fast);
+            border-left: 2px solid transparent;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.05);
+            border-left-color: var(--accent-mid);
+        }
+
+        .nav-link.active {
+            color: var(--accent-mid);
+            background: var(--accent-glow);
+            border-left-color: var(--accent-start);
+            font-weight: 550;
+        }
+
+        .nav-link-sub {
+            padding-left: 40px;
+            font-size: 15px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: color var(--transition-fast);
+        }
+        .sidebar-footer a:hover { color: var(--accent-mid); }
+
+        /* ---- Main Content ---- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ---- Hero ---- */
+        .hero {
+            position: relative;
+            padding: 80px 60px 60px;
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.06) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            background: var(--inline-code-bg);
+            border: 1px solid var(--border-accent);
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--accent-mid);
+            margin-bottom: 20px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-start);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-end) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition-smooth);
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-mid));
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+        }
+        .btn-secondary:hover {
+            border-color: var(--border-accent);
+            color: var(--text-primary);
+        }
+
+        .btn-donate {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            color: #fff;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-donate::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transform: skewX(-25deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        .btn-donate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: #fff;
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+
+        .install-cmd {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 19px;
+            color: var(--accent-end);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .install-cmd:hover {
+            border-color: var(--accent-mid);
+            box-shadow: var(--shadow-glow);
+        }
+        .install-cmd .prefix { color: var(--text-muted); }
+        .install-cmd .copy-icon {
+            color: var(--text-muted);
+            transition: color var(--transition-fast);
+            margin-left: auto;
+        }
+        .install-cmd:hover .copy-icon { color: var(--accent-mid); }
+
+        /* ---- Content Area ---- */
+        .content-area {
+            max-width: 860px;
+            padding: 48px 60px 100px;
+        }
+
+        /* ---- Section ---- */
+        .section {
+            margin-bottom: 56px;
+        }
+
+        .section-anchor {
+            display: block;
+            position: relative;
+            top: -80px;
+            visibility: hidden;
+        }
+
+        .section h2 {
+            font-size: 52px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section h2 .section-icon {
+            display: inline-flex;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .section h3 {
+            font-size: 38px;
+            font-weight: 650;
+            letter-spacing: -0.01em;
+            margin: 32px 0 12px;
+            color: var(--text-primary);
+        }
+
+        .section h4 {
+            font-size: 30px;
+            font-weight: 600;
+            margin: 24px 0 8px;
+            color: var(--text-accent);
+        }
+
+        .section p {
+            margin-bottom: 14px;
+            color: var(--text-secondary);
+        }
+
+        .section a {
+            color: var(--text-accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            transition: border-color var(--transition-fast);
+        }
+        .section a:hover { border-bottom-color: var(--text-accent); }
+
+        /* ---- Info boxes ---- */
+        .info-box {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 16px;
+            line-height: 1.6;
+            border-left: 3px solid;
+        }
+
+        .info-box.note {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+
+        .info-box.warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: #f59e0b;
+            color: #fcd34d;
+        }
+
+        .info-box.important {
+            background: rgba(139, 92, 246, 0.08);
+            border-color: var(--accent-start);
+            color: var(--accent-end);
+        }
+
+        .info-box.tip {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: #10b981;
+            color: #6ee7b7;
+        }
+
+        .info-box.success {
+            background: rgba(34, 197, 94, 0.08);
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-size: 15px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ---- Code blocks ---- */
+        .code-window {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 10px;
+            margin: 16px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: rgba(139, 92, 246, 0.04);
+            border-bottom: 1px solid var(--code-border);
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all var(--transition-fast);
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+        }
+        .code-copy-btn:hover {
+            color: var(--accent-mid);
+            background: var(--accent-glow);
+        }
+
+        .code-window pre {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .code-window code {
+            display: block;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.65;
+            overflow-x: auto;
+            color: var(--text-primary);
+            tab-size: 4;
+        }
+
+        code:not(pre code) {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88em;
+            padding: 2px 7px;
+            background: var(--inline-code-bg);
+            color: var(--inline-code-color);
+            border-radius: 4px;
+        }
+
+        /* ---- Syntax highlighting (manual, no external dep) ---- */
+        .token-keyword { color: #c792ea; }
+        .token-string { color: #c3e88d; }
+        .token-comment { color: #546e7a; font-style: italic; }
+        .token-function { color: #82aaff; }
+        .token-class { color: #ffcb6b; }
+        .token-number { color: #f78c6c; }
+        .token-decorator { color: #ff9cac; }
+        .token-builtin { color: #89ddff; }
+        .token-param { color: #f78c6c; }
+        .token-operator { color: #89ddff; }
+
+        /* ---- Tables ---- */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 17px;
+        }
+
+        thead {
+            background: var(--bg-tertiary);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        td {
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tr:hover td {
+            background: rgba(139, 92, 246, 0.03);
+        }
+
+        td code {
+            font-size: 15px;
+        }
+
+        /* ---- Collapsible Navigation ---- */
+        .nav-collapsible {
+            margin-bottom: 4px;
+        }
+        .nav-collapsible .nav-sub-links {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-smooth);
+            padding-left: 12px;
+            border-left: 1px solid var(--border-subtle);
+            margin-left: 20px;
+        }
+        .nav-collapsible:not(.collapsed) .nav-sub-links {
+            max-height: 1000px;
+        }
+        .nav-link-parent {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .nav-link-parent .toggle-icon {
+            font-size: 9px;
+            color: var(--text-muted);
+            transition: transform var(--transition-fast);
+            margin-left: auto;
+        }
+        .nav-collapsible.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* ---- Method cards ---- */
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 24px;
+            margin: 20px 0;
+            backdrop-filter: blur(8px);
+            transition: border-color var(--transition-smooth);
+        }
+        .method-card:hover { border-color: var(--border-accent); }
+
+        .method-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .method-title {
+            font-size: 34px !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            color: var(--text-primary);
+        }
+
+        .method-title code {
+            font-size: 0.85em;
+            color: var(--accent-mid);
+            margin-left: 6px;
+        }
+
+        .method-signature {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: var(--accent-end);
+            background: var(--code-bg);
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin: 16px 0;
+            overflow-x: auto;
+            border: 1px solid var(--code-border);
+            white-space: pre-wrap;
+        }
+
+        .method-desc {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .method-section-title {
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted) !important;
+            margin: 16px 0 8px !important;
+        }
+
+        .param-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .param-item {
+            padding: 6px 0;
+            font-size: 16px;
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+        }
+
+        .param-name {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-end);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .param-type {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .param-desc {
+            color: var(--text-secondary);
+        }
+
+        .returns-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+            border-radius: 4px;
+            font-size: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 8px;
+        }
+
+        /* ---- Tags / badges ---- */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .tag-async { background: rgba(139, 92, 246, 0.15); color: var(--accent-mid); }
+        .tag-property { background: rgba(245, 158, 11, 0.15); color: var(--warm-end); }
+        .tag-class { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+        .tag-dataclass { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+        .tag-enum { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; }
+
+        /* ---- Divider ---- */
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 40px 0;
+        }
+
+        /* ---- Attribute list (compact) ---- */
+        .attr-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .attr-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .attr-item code {
+            font-size: 12px;
+        }
+
+        .attr-item .attr-type {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        /* ---- Mobile ---- */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+
+        @media (max-width: 900px) {
+            .mobile-toggle { display: flex; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-overlay.open { display: block; }
+            .main-content { margin-left: 0; }
+            .hero { padding: 70px 24px 40px; }
+            .hero h1 { font-size: 28px; }
+            .content-area { padding: 32px 24px 80px; }
+            .attr-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ---- Animations ---- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            animation: fadeInUp 0.5s ease-out both;
+        }
+
+        .section:nth-child(2) { animation-delay: 0.05s; }
+        .section:nth-child(3) { animation-delay: 0.1s; }
+        .section:nth-child(4) { animation-delay: 0.15s; }
+        .section:nth-child(5) { animation-delay: 0.2s; }
+
+        /* ---- Back to top ---- */
+        .back-to-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all var(--transition-smooth);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .back-to-top:hover {
+            background: var(--accent-glow);
+            border-color: var(--border-accent);
+            color: var(--accent-mid);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Footer ---- */
+        .page-footer {
+            padding: 32px 60px;
+            border-top: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 12.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-footer a { color: var(--accent-mid); text-decoration: none; }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 900px) {
+            .page-footer { padding: 24px; flex-direction: column; gap: 8px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile menu toggle -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">☰</button>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="layout">
+        <!-- ====== SIDEBAR ====== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">E</div>
+                    <span class="sidebar-logo-text">PornHub API</span>
+                </a>
+                <span class="sidebar-version">v5.2</span>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <div class="nav-section-title">Getting Started</div>
+<a href="#installation" class="nav-link">Installation</a>
+<a href="#quickstart" class="nav-link">Quick Start</a>
+<a href="#configuration" class="nav-link">Configuration</a>
+
+<div class="nav-section-title">Core Objects</div>
+<div class="nav-collapsible">
+    <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
+        <a href="#client-get_pornstar" class="nav-link nav-link-sub">get_pornstar()</a>
+        <a href="#client-get_model" class="nav-link nav-link-sub">get_model()</a>
+        <a href="#client-get_user" class="nav-link nav-link-sub">get_user()</a>
+        <a href="#client-get_channel" class="nav-link nav-link-sub">get_channel()</a>
+        <a href="#client-get_playlist" class="nav-link nav-link-sub">get_playlist()</a>
+        <a href="#client-get_album" class="nav-link nav-link-sub">get_album()</a>
+        <a href="#client-get_gif" class="nav-link nav-link-sub">get_gif()</a>
+        <a href="#client-get_short" class="nav-link nav-link-sub">get_short()</a>
+        <a href="#client-search_videos" class="nav-link nav-link-sub">search_videos()</a>
+        <a href="#client-search_gifs" class="nav-link nav-link-sub">search_gifs()</a>
+        <a href="#client-search_hubtraffic" class="nav-link nav-link-sub">search_hubtraffic()</a>
+        <a href="#client-login" class="nav-link nav-link-sub">login()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#video-download" class="nav-link nav-link-sub">download()</a>
+        <a href="#video-author" class="nav-link nav-link-sub">author</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#pornstar" class="nav-link nav-link-parent">Pornstar <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#pornstar-get_videos" class="nav-link nav-link-sub">get_videos()</a>
+        <a href="#pornstar-get_uploads" class="nav-link nav-link-sub">get_uploads()</a>
+        <a href="#pornstar-get_gifs" class="nav-link nav-link-sub">get_gifs()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#model" class="nav-link nav-link-parent">Model <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#model-get_videos" class="nav-link nav-link-sub">get_videos()</a>
+        <a href="#model-get_gifs" class="nav-link nav-link-sub">get_gifs()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#user" class="nav-link nav-link-parent">User <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#user-get_videos" class="nav-link nav-link-sub">get_videos()</a>
+        <a href="#user-get_gifs" class="nav-link nav-link-sub">get_gifs()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#channel" class="nav-link nav-link-parent">Channel <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#channel-get_videos" class="nav-link nav-link-sub">get_videos()</a>
+        <a href="#channel-get_user" class="nav-link nav-link-sub">get_user()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#playlist" class="nav-link nav-link-parent">Playlist <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#playlist-get_videos" class="nav-link nav-link-sub">get_videos()</a>
+        <a href="#playlist-get_author" class="nav-link nav-link-sub">get_author()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#album" class="nav-link nav-link-parent">Album <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#album-get_photos" class="nav-link nav-link-sub">get_photos()</a>
+        <a href="#album-download_photo" class="nav-link nav-link-sub">download_photo()</a>
+        <a href="#album-author" class="nav-link nav-link-sub">author</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#gif" class="nav-link nav-link-parent">GIF <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#gif-download" class="nav-link nav-link-sub">download()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#short" class="nav-link nav-link-parent">Short <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#short-download" class="nav-link nav-link-sub">download()</a>
+        <a href="#short-get_author" class="nav-link nav-link-sub">get_author()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#account" class="nav-link nav-link-parent">Account <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#account-get_recommended" class="nav-link nav-link-sub">get_recommended()</a>
+        <a href="#account-get_history" class="nav-link nav-link-sub">get_history()</a>
+        <a href="#account-get_favorites" class="nav-link nav-link-sub">get_favorites()</a>
+        <a href="#account-get_feed" class="nav-link nav-link-sub">get_feed()</a>
+        <a href="#account-get_subscriptions" class="nav-link nav-link-sub">get_subscriptions()</a>
+    </div>
+</div>
+
+<div class="nav-section-title">Features</div>
+<a href="#searching" class="nav-link">Search &amp; Filtering</a>
+<a href="#downloading" class="nav-link">Downloading</a>
+<a href="#pagination" class="nav-link">Pagination &amp; Iterators</a>
+<a href="#error-handling" class="nav-link">Error Handling</a>
+
+<div class="nav-section-title">Extras</div>
+<a href="#cli" class="nav-link">CLI Usage</a>
+<a href="#platforms" class="nav-link">Platforms</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="https://github.com/EchterAlsFake/unofficial-api-for-pornhub" target="_blank" rel="noopener">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    View on GitHub
+                </a>
+            </div>
+        </aside>
+
+        <!-- ====== MAIN ====== -->
+        <main class="main-content">
+            <!-- Hero -->
+            <div class="hero">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    Python · Async · v5.2
+                </div>
+                <h1>PornHub API</h1>
+                <p>A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine.</p>
+                <div class="hero-actions">
+                    <div class="install-cmd" onclick="copyInstall(this)" title="Click to copy">
+                        <span class="prefix">$</span> pip install unofficial-api-for-pornhub
+                        <span class="copy-icon">📋</span>
+                    </div>
+                    <a href="https://github.com/EchterAlsFake/unofficial-api-for-pornhub" class="btn btn-secondary" target="_blank">GitHub →</a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content-area">
+                
+<!-- ================================================================
+     DISCLAIMER & FEATURES
+     ================================================================ -->
+<div class="section" id="intro-section">
+    <div class="info-box warning" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+        <div class="info-box-title" style="color: #ef4444; font-size: 14px;">⚠️ Legal Disclaimer</div>
+        This tool is an unofficial, independent project and is not affiliated with, endorsed by, or sponsored by the target website. This software is provided "as is" for educational and personal purposes only. The developer assumes no responsibility for any consequences arising from the use of this tool, including but not limited to account suspension, IP blocking, or any violation of the target website's Terms of Service. Users are solely responsible for ensuring their use complies with all applicable laws and policies. Use at your own risk.
+    </div>
+
+    <div class="info-box success" style="margin-top: 24px;">
+        <div class="info-box-title" style="font-size: 14px;">💚 Support &amp; Commercial Licensing</div>
+        If you find this project helpful, please consider donating to support its continued development! <br><br>
+        
+        <div style="margin: 16px 0;">
+            <a href="https://nowpayments.io/donation/EchterAlsFake" class="btn-donate" target="_blank" rel="noreferrer noopener" style="border-bottom: none;">
+                <span style="font-size: 20px;">💎</span> Donate Crypto
+            </a>
+        </div>
+        
+        <strong>Other Options:</strong><br>
+        • <a href="https://paypal.me/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">PayPal</a><br>
+        • <a href="https://ko-fi.com/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">Ko-Fi</a><br><br>
+        
+        For extended features, enterprise integrations, or custom commercial licensing, please contact 
+        <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
+    </div>
+
+    <h3 style="margin-top: 32px; font-size: 22px;">✨ Features Overview</h3>
+    <ul class="param-list" style="margin-top: 16px;">
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚡</span> <strong style="color: var(--text-primary); margin-right: 6px;">Fully Asynchronous</strong> — High-performance scraping and downloading via <code>asyncio</code> and <code>curl_cffi</code>.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🛡️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Bot Protection Bypass</strong> — Mimics real browser TLS fingerprints to bypass bot protection.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📥</span> <strong style="color: var(--text-primary); margin-right: 6px;">HLS &amp; RAW Downloader</strong> — Built-in HLS threaded downloader with resume/cancel for videos &amp; shorts, plus RAW multipart support for GIFs and photo albums.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🔐</span> <strong style="color: var(--text-primary); margin-right: 6px;">Account Login</strong> — Full email/password authentication for accessing recommendations, favorites, watch history, and feed.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🔍</span> <strong style="color: var(--text-primary); margin-right: 6px;">Flexible Queries</strong> — Search videos and GIFs with production type, sort, and duration filters. Also supports the HubTraffic (Webmaster) API.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🎬</span> <strong style="color: var(--text-primary); margin-right: 6px;">Rich Object Model</strong> — 10 data objects: Video, Short, GIF, Album, Playlist, Pornstar, Model, User, Channel, and Account.</li>
+        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">💻</span> <strong style="color: var(--text-primary); margin-right: 6px;">CLI Included</strong> — Built-in command-line interface for downloading directly from terminal with full feature support.</li>
+    </ul>
+</div>
+
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <p>Install from PyPI using pip:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-pornhub</code></pre>
+    </div>
+
+    <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-pornhub[av]</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        Requires <strong>Python ≥ 3.12</strong>. The underlying networking library <code>eaf_base_api</code> is installed automatically as a dependency.
+    </div>
+</div>
+
+<div class="section" id="quickstart-section">
+    <span class="section-anchor" id="quickstart"></span>
+    <h2><span class="section-icon">🚀</span> Quick Start</h2>
+
+    <p>Every method in this API is <strong>asynchronous</strong>. You need to run your code inside an <code>async</code> function:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> pornhub_api <span class="token-keyword">import</span> Client
+
+<span class="token-keyword">async def</span> <span class="token-function">main</span>():
+    client = <span class="token-class">Client</span>()
+
+    <span class="token-comment"># Fetch a video</span>
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://www.pornhub.com/view_video.php?viewkey=..."</span>)
+
+    <span class="token-comment"># Access metadata</span>
+    <span class="token-builtin">print</span>(video.title)
+    <span class="token-builtin">print</span>(video.views)
+    <span class="token-builtin">print</span>(video.tags)
+
+    <span class="token-comment"># Download the video</span>
+    <span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS
+    config = <span class="token-class">DownloadConfigHLS</span>(quality=<span class="token-string">"best"</span>, path=<span class="token-string">"./downloads"</span>)
+    <span class="token-keyword">await</span> video.download(configuration=config)
+
+asyncio.run(main())</code></pre>
+    </div>
+</div>
+
+<div class="section" id="configuration-section">
+    <span class="section-anchor" id="configuration"></span>
+    <h2><span class="section-icon">⚙️</span> Configuration</h2>
+
+    <p>The entire API relies on <code>eaf_base_api</code> for its networking. You can configure global settings (proxies, timeouts, etc.) via a custom <code>BaseCore</code> passed into the Client.</p>
+    <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> pornhub_api <span class="token-keyword">import</span> Client
+
+my_config = <span class="token-class">RuntimeConfig</span>()
+my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+
+core = <span class="token-class">BaseCore</span>(configuration=my_config)
+client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     CLIENT
+     ================================================================ -->
+<div class="section" id="client-section">
+    <span class="section-anchor" id="client"></span>
+    <h2><span class="section-icon">🔌</span> Client</h2>
+    <p>The <code>Client</code> class is your <strong>entry point</strong> for all interactions. It manages the session, headers, cookies, and authentication — providing methods to fetch individual resources, search, and access account features.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> pornhub_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+
+<span class="token-comment"># Basic initialization</span>
+client = <span class="token-class">Client</span>()
+
+<span class="token-comment"># With custom core and login credentials</span>
+client = <span class="token-class">Client</span>(
+    core=<span class="token-class">BaseCore</span>(),
+    email=<span class="token-string">"user@example.com"</span>,
+    password=<span class="token-string">"password"</span>,
+    login=<span class="token-keyword">True</span>
+)</code></pre>
+    </div>
+
+    <h3>Constructor Parameters</h3>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Networking core instance (default: new <code>BaseCore()</code>)</span></li>
+        <li class="param-item"><span class="param-name">email</span> <span class="param-type">str | None</span> <span class="param-desc">— Account email for login</span></li>
+        <li class="param-item"><span class="param-name">password</span> <span class="param-type">str | None</span> <span class="param-desc">— Account password for login</span></li>
+        <li class="param-item"><span class="param-name">login</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, automatically attempts login on initialization</span></li>
+    </ul>
+
+    <h3>Methods</h3>
+
+    <!-- get_video -->
+    <span class="section-anchor" id="client-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a video page and returns a populated <code>Video</code> object. By default, loads metadata via the Webmaster API; set <code>load_html=True</code> for full HTML-scraped data including categories, tags, and author information.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Video</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub video URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, fetches and parses the full HTML page for extended metadata (categories, tags, author info, m3u8 URLs)</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches metadata via the Webmaster API for faster loading</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
+    </div>
+
+    <!-- get_pornstar -->
+    <span class="section-anchor" id="client-get_pornstar"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Pornstar <code>get_pornstar()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a pornstar profile page and returns a populated <code>Pornstar</code> object with bio, about, and info fields.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_pornstar(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Pornstar</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub pornstar profile URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML profile page for metadata</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar</span>
+    </div>
+
+    <!-- get_model -->
+    <span class="section-anchor" id="client-get_model"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Model <code>get_model()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a model profile page and returns a populated <code>Model</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_model(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Model</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub model profile URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML profile page</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Model</span>
+    </div>
+
+    <!-- get_user -->
+    <span class="section-anchor" id="client-get_user"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch User <code>get_user()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a regular user profile page and returns a populated <code>User</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_user(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; User</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub user profile URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML profile page</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ User</span>
+    </div>
+
+    <!-- get_channel -->
+    <span class="section-anchor" id="client-get_channel"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Channel <code>get_channel()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a channel page and returns a populated <code>Channel</code> object with name, stats, and metadata.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_channel(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Channel</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub channel URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML page</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Channel</span>
+    </div>
+
+    <!-- get_playlist -->
+    <span class="section-anchor" id="client-get_playlist"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Playlist <code>get_playlist()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a playlist page and returns a populated <code>Playlist</code> object with title, description, tags, and video counts.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_playlist(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Playlist</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub playlist URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML page for metadata</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Playlist</span>
+    </div>
+
+    <!-- get_album -->
+    <span class="section-anchor" id="client-get_album"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Album <code>get_album()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a photo album page and returns a populated <code>Album</code> object with rating, views, tags, and author information.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_album(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Album</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub album URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML page</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Album</span>
+    </div>
+
+    <!-- get_gif -->
+    <span class="section-anchor" id="client-get_gif"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch GIF <code>get_gif()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a GIF page and returns a populated <code>GIF</code> object with title, votes, views, tags, and direct download URL.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_gif(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; GIF</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub GIF URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML page</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ GIF</span>
+    </div>
+
+    <!-- get_short -->
+    <span class="section-anchor" id="client-get_short"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Short <code>get_short()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches a short video page and returns a populated <code>Short</code> object with title, likes, and streaming URLs.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_short(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Short</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full Pornhub short URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), parses the HTML page</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Short</span>
+    </div>
+
+    <!-- search_videos -->
+    <span class="section-anchor" id="client-search_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search Videos <code>search_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Searches for videos matching the query text. Supports filtering by production type, sort order, and duration range. See <a href="#searching">Search &amp; Filtering</a> for details.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+    query: <span class="token-builtin">str</span>,
+    production_type: Literal[<span class="token-string">"professional"</span>, <span class="token-string">"homemade"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    sort_by: Literal[<span class="token-string">"mr"</span>, <span class="token-string">"mv"</span>, <span class="token-string">"tr"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    duration_min: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"30"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    duration_max: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"30"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search keywords</span></li>
+            <li class="param-item"><span class="param-name">production_type</span> <span class="param-type">str | None</span> <span class="param-desc">— Filter by <code>"professional"</code> or <code>"homemade"</code></span></li>
+            <li class="param-item"><span class="param-name">sort_by</span> <span class="param-type">str | None</span> <span class="param-desc">— <code>"mr"</code> (Most Recent), <code>"mv"</code> (Most Viewed), <code>"tr"</code> (Top Rated)</span></li>
+            <li class="param-item"><span class="param-name">duration_min</span> <span class="param-type">str | None</span> <span class="param-desc">— Minimum duration in minutes: <code>"10"</code>, <code>"20"</code>, or <code>"30"</code></span></li>
+            <li class="param-item"><span class="param-name">duration_max</span> <span class="param-type">str | None</span> <span class="param-desc">— Maximum duration in minutes: <code>"10"</code>, <code>"20"</code>, or <code>"30"</code></span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of result pages to iterate (default: <code>5</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- search_gifs -->
+    <span class="section-anchor" id="client-search_gifs"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search GIFs <code>search_gifs()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Searches for GIFs matching the query. Supports category and sort filtering.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_gifs(
+    query: <span class="token-builtin">str</span>,
+    category: Literal[<span class="token-string">"gay"</span>, <span class="token-string">"transgender"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    search_filter: Literal[<span class="token-string">"mr"</span>, <span class="token-string">"mv"</span>, <span class="token-string">"tr"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search keywords</span></li>
+            <li class="param-item"><span class="param-name">category</span> <span class="param-type">str | None</span> <span class="param-desc">— Category filter: <code>"gay"</code> or <code>"transgender"</code> (default: straight)</span></li>
+            <li class="param-item"><span class="param-name">search_filter</span> <span class="param-type">str | None</span> <span class="param-desc">— <code>"mr"</code> (Most Recent), <code>"mv"</code> (Most Viewed), <code>"tr"</code> (Top Rated)</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of result pages (default: <code>5</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- search_hubtraffic -->
+    <span class="section-anchor" id="client-search_hubtraffic"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search HubTraffic API <code>search_hubtraffic()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Searches for videos using the HubTraffic (Webmaster) API. Faster and provides pre-parsed metadata without HTML scraping.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_hubtraffic(
+    query: <span class="token-builtin">str</span>,
+    category: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    sort_by: Literal[<span class="token-string">"newest"</span>, <span class="token-string">"mostviewed"</span>, <span class="token-string">"rating"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    period: Literal[<span class="token-string">"weekly"</span>, <span class="token-string">"monthly"</span>, <span class="token-string">"alltime"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search keywords</span></li>
+            <li class="param-item"><span class="param-name">category</span> <span class="param-type">str | None</span> <span class="param-desc">— Category filter string</span></li>
+            <li class="param-item"><span class="param-name">sort_by</span> <span class="param-type">str | None</span> <span class="param-desc">— <code>"newest"</code>, <code>"mostviewed"</code>, or <code>"rating"</code></span></li>
+            <li class="param-item"><span class="param-name">period</span> <span class="param-type">str | None</span> <span class="param-desc">— Time period: <code>"weekly"</code>, <code>"monthly"</code>, or <code>"alltime"</code></span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of result pages (default: <code>5</code>)</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- login -->
+    <span class="section-anchor" id="client-login"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Login <code>login()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Authenticates the client with email/password credentials. On success, populates <code>client.account</code> with user data and enables access to account-specific methods (recommended, history, favorites, feed, subscriptions).</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.login(
+    force: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    throw: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; <span class="token-builtin">bool</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">force</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, re-login even if already logged in</span></li>
+            <li class="param-item"><span class="param-name">throw</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), raises <code>LoginFailed</code> on failure; if <code>False</code>, returns <code>False</code> instead</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool</span>
+        
+        <h4 class="method-section-title">Raises</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">LoginFailed</span> <span class="param-desc">— If credentials are invalid or login request fails</span></li>
+            <li class="param-item"><span class="param-name">ClientAlreadyLogged</span> <span class="param-desc">— If already logged in and <code>force=False</code></span></li>
+        </ul>
+    </div>
+</div>
+
+<!-- ================================================================
+     VIDEO
+     ================================================================ -->
+<div class="section" id="video-section">
+    <span class="section-anchor" id="video"></span>
+    <h2><span class="section-icon">🎬</span> Video</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with metadata from both HTML scraping and the Webmaster API. Supports dual loading modes: API-only (fast) and HTML (full data including m3u8 URLs for downloading).</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Source</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>—</td><td>The video page URL</td></tr>
+                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>—</td><td>Extracted viewkey from URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Video title</td></tr>
+                <tr><td><code>duration</code></td><td><code>int | None</code></td><td>API / HTML</td><td>Video duration in seconds</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Preview thumbnail URL</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>API / HTML</td><td>View count</td></tr>
+                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Like / rating count</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Upload / publish date</td></tr>
+                <tr><td><code>categories</code></td><td><code>dict[str, str] | None</code></td><td>API / HTML</td><td>Category name → URL mapping</td></tr>
+                <tr><td><code>tags</code></td><td><code>dict[str, str] | None</code></td><td>API / HTML</td><td>Tag name → URL mapping</td></tr>
+                <tr><td><code>is_hd</code></td><td><code>bool | None</code></td><td>HTML</td><td>Whether the video is HD</td></tr>
+                <tr><td><code>is_vr</code></td><td><code>bool | None</code></td><td>HTML</td><td>Whether the video is VR</td></tr>
+                <tr><td><code>is_vertical</code></td><td><code>bool | None</code></td><td>HTML</td><td>Whether the video is vertical (portrait)</td></tr>
+                <tr><td><code>is_video_unavailable</code></td><td><code>bool | None</code></td><td>HTML</td><td>Whether the video is unavailable</td></tr>
+                <tr><td><code>is_video_unavailable_in_your_country</code></td><td><code>bool | None</code></td><td>HTML</td><td>Whether the video is geo-blocked</td></tr>
+                <tr><td><code>available_qualities</code></td><td><code>list[int] | None</code></td><td>HTML</td><td>Sorted list of available resolution heights</td></tr>
+                <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>HTML</td><td>Synthesized master m3u8 playlist for HLS download</td></tr>
+                <tr><td><code>author_thumbnail</code></td><td><code>str | None</code></td><td>HTML</td><td>Author's avatar image URL</td></tr>
+                <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>HTML</td><td>Author's profile URL</td></tr>
+                <tr><td><code>author_information</code></td><td><code>dict | None</code></td><td>HTML</td><td>Author details: name, link, video count, subscriber count</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Important</div>
+        To download a video, you <strong>must</strong> load it with <code>load_html=True</code> (either via <code>client.get_video(url, load_html=True)</code> or by calling <code>await video.load(html=True)</code> afterward). The m3u8 streaming URLs are only available from the HTML source.
+    </div>
+
+    <h3>Methods &amp; Properties</h3>
+
+    <!-- download -->
+    <span class="section-anchor" id="video-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Video <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the video via HLS streaming. Auto-appends the video title to the output path unless <code>no_title=True</code> is set on the config.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.download(
+    configuration: DownloadConfigHLS
+) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigHLS</span> <span class="param-desc">— HLS download settings. See <a href="#downloading">Downloading</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool | DownloadReport</span>
+    </div>
+
+    <!-- author -->
+    <span class="section-anchor" id="video-author"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Author <code>author</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-property">property</span>
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns the video's author as a <code>Pornstar</code>, <code>Model</code>, or <code>Channel</code> object based on the author link URL pattern. Requires HTML data to be loaded.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.author -&gt; Pornstar | Model | Channel | <span class="token-keyword">None</span></div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar | Model | Channel | None</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     PORNSTAR
+     ================================================================ -->
+<div class="section" id="pornstar-section">
+    <span class="section-anchor" id="pornstar"></span>
+    <h2><span class="section-icon">⭐</span> Pornstar</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>UserHelper</code> → <code>BaseMedia</code>. Represents a pornstar profile. Shared base with Model and User for profile info and video iteration.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The pornstar profile URL</td></tr>
+                <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Short bio / tagline text</td></tr>
+                <tr><td><code>about</code></td><td><code>str | None</code></td><td>Extended about section text</td></tr>
+                <tr><td><code>info</code></td><td><code>dict | None</code></td><td>Structured info fields (e.g., gender, age, location)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- get_videos -->
+    <span class="section-anchor" id="pornstar-get_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Videos <code>get_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over videos featured on the pornstar's profile.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.get_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_uploads -->
+    <span class="section-anchor" id="pornstar-get_uploads"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Uploads <code>get_uploads()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over videos directly uploaded by the pornstar (as opposed to featured videos).</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.get_uploads(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_gifs -->
+    <span class="section-anchor" id="pornstar-get_gifs"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get GIFs <code>get_gifs()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over GIFs associated with the pornstar's profile.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.get_gifs(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     MODEL
+     ================================================================ -->
+<div class="section" id="model-section">
+    <span class="section-anchor" id="model"></span>
+    <h2><span class="section-icon">👤</span> Model</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>UserHelper</code> → <code>BaseMedia</code>. Represents a model profile. Shares the same attributes and methods as Pornstar/User via the <code>UserHelper</code> base.</p>
+
+    <h3>Attributes</h3>
+    <p>Same as <a href="#pornstar">Pornstar</a>: <code>url</code>, <code>bio</code>, <code>about</code>, <code>info</code>.</p>
+
+    <h3>Methods</h3>
+
+    <span class="section-anchor" id="model-get_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Videos <code>get_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over videos on the model's profile. Inherited from <code>UserHelper</code>.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> model.get_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <span class="section-anchor" id="model-get_gifs"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get GIFs <code>get_gifs()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over GIFs on the model's profile. Inherited from <code>UserHelper</code>.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> model.get_gifs(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     USER
+     ================================================================ -->
+<div class="section" id="user-section">
+    <span class="section-anchor" id="user"></span>
+    <h2><span class="section-icon">🧑</span> User</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>UserHelper</code> → <code>BaseMedia</code>. Represents a regular user profile. Shares the same attributes and methods as Pornstar/Model via the <code>UserHelper</code> base.</p>
+
+    <h3>Attributes</h3>
+    <p>Same as <a href="#pornstar">Pornstar</a>: <code>url</code>, <code>bio</code>, <code>about</code>, <code>info</code>.</p>
+
+    <h3>Methods</h3>
+
+    <span class="section-anchor" id="user-get_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Videos <code>get_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over videos on the user's profile. Inherited from <code>UserHelper</code>.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> user.get_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <span class="section-anchor" id="user-get_gifs"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get GIFs <code>get_gifs()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over GIFs on the user's profile. Inherited from <code>UserHelper</code>.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> user.get_gifs(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     CHANNEL
+     ================================================================ -->
+<div class="section" id="channel-section">
+    <span class="section-anchor" id="channel"></span>
+    <h2><span class="section-icon">📺</span> Channel</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a production channel with studio-level metadata.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The channel page URL</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Channel display name</td></tr>
+                <tr><td><code>is_award_winner</code></td><td><code>bool | None</code></td><td>Whether the channel has won awards</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Total video views across the channel</td></tr>
+                <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Subscriber count</td></tr>
+                <tr><td><code>total_videos</code></td><td><code>str | None</code></td><td>Total number of videos</td></tr>
+                <tr><td><code>rank</code></td><td><code>str | None</code></td><td>Channel rank</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Channel description text</td></tr>
+                <tr><td><code>join_date</code></td><td><code>str | None</code></td><td>When the channel joined</td></tr>
+                <tr><td><code>website</code></td><td><code>str | None</code></td><td>External website URL</td></tr>
+                <tr><td><code>user_link</code></td><td><code>str | None</code></td><td>Associated user profile URL</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <span class="section-anchor" id="channel-get_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Videos <code>get_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over videos published by the channel.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.get_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <span class="section-anchor" id="channel-get_user"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get User <code>get_user()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns the <code>User</code> object associated with this channel.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> channel.get_user(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; User</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ User</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     PLAYLIST
+     ================================================================ -->
+<div class="section" id="playlist-section">
+    <span class="section-anchor" id="playlist"></span>
+    <h2><span class="section-icon">📋</span> Playlist</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a video playlist with title, description, tags, and video count. Uses the chunked API endpoint internally for video iteration.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The playlist page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Playlist title</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Playlist description text</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>View count</td></tr>
+                <tr><td><code>rating_percent</code></td><td><code>str | None</code></td><td>Rating percentage</td></tr>
+                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>Like count</td></tr>
+                <tr><td><code>dislikes</code></td><td><code>str | None</code></td><td>Dislike count</td></tr>
+                <tr><td><code>video_count</code></td><td><code>str | None</code></td><td>Total number of videos in the playlist</td></tr>
+                <tr><td><code>unavailable_videos</code></td><td><code>int | None</code></td><td>Number of hidden / unavailable videos</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Tag name → URL mapping</td></tr>
+                <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>Playlist author's profile URL</td></tr>
+                <tr><td><code>token</code></td><td><code>str | None</code></td><td>Internal token for chunked API requests</td></tr>
+                <tr><td><code>playlist_id</code></td><td><code>str | None</code></td><td>Extracted playlist numeric ID</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <span class="section-anchor" id="playlist-get_videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Videos <code>get_videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over videos in the playlist. Uses the internal chunked API for paginated fetching.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> playlist.get_videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <span class="section-anchor" id="playlist-get_author"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Author <code>get_author()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns the <code>User</code> who created the playlist.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> playlist.get_author(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; User</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ User</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     ALBUM
+     ================================================================ -->
+<div class="section" id="album-section">
+    <span class="section-anchor" id="album"></span>
+    <h2><span class="section-icon">🖼️</span> Album</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a photo album with rating, views, tags, and individual photo download support.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The album page URL</td></tr>
+                <tr><td><code>rating_percentage</code></td><td><code>str | None</code></td><td>Album rating percentage</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>View count</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Publish date string</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Tag name → URL mapping</td></tr>
+                <tr><td><code>votes</code></td><td><code>str | None</code></td><td>Vote count string</td></tr>
+                <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>Album author's profile URL</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- get_photos -->
+    <span class="section-anchor" id="album-get_photos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Photos <code>get_photos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Iterates over all photos in the album. Each result is a dictionary containing <code>url</code>, <code>download_url</code>, <code>rating</code>, and <code>views</code>. Uses <code>ProcessPoolExecutor</code> for parallel HTML parsing across pages.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> photo <span class="token-keyword">in</span> album.get_photos(
+    pages: <span class="token-builtin">int</span>
+) -&gt; <span class="token-builtin">dict</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— <strong>Required.</strong> Number of album pages to fetch</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[dict]</span>
+        <p style="margin-top: 8px; font-size: 15px; color: var(--text-secondary);">Each dict contains: <code>url</code>, <code>download_url</code>, <code>rating</code>, <code>views</code></p>
+    </div>
+
+    <!-- download_photo -->
+    <span class="section-anchor" id="album-download_photo"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Photo <code>download_photo()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads a single photo using the RAW downloader. Use the <code>download_url</code> from <code>get_photos()</code> results.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> album.download_photo(
+    url: <span class="token-builtin">str</span>,
+    path: <span class="token-builtin">str</span>
+) -&gt; <span class="token-builtin">bool</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— Direct download URL of the photo</span></li>
+            <li class="param-item"><span class="param-name">path</span> <span class="param-type">str</span> <span class="param-desc">— Output file path</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool</span>
+    </div>
+
+    <!-- author -->
+    <span class="section-anchor" id="album-author"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Author <code>author</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-property">property</span>
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns the <code>Pornstar</code> object who authored this album.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> album.author -&gt; Pornstar</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     GIF
+     ================================================================ -->
+<div class="section" id="gif-section">
+    <span class="section-anchor" id="gif"></span>
+    <h2><span class="section-icon">🎞️</span> GIF</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single GIF with voting data, source video link, and a direct download URL.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The GIF page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>GIF title</td></tr>
+                <tr><td><code>vote_count</code></td><td><code>str | None</code></td><td>Total vote count</td></tr>
+                <tr><td><code>vote_percentage</code></td><td><code>str | None</code></td><td>Positive vote percentage</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>View count</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Upload date</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Thumbnail image URL</td></tr>
+                <tr><td><code>content_url</code></td><td><code>str | None</code></td><td>Direct MP4/WebM download URL</td></tr>
+                <tr><td><code>source_video_url</code></td><td><code>str | None</code></td><td>URL of the source video this GIF was created from</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Tag name → URL mapping</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <span class="section-anchor" id="gif-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download GIF <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the GIF using the RAW downloader (direct file download). Auto-appends the title to the output path unless <code>no_title=True</code>.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> gif.download(
+    configuration: DownloadConfigRAW
+) -&gt; <span class="token-builtin">bool</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigRAW</span> <span class="param-desc">— RAW download settings. See <a href="#downloading">Downloading</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     SHORT
+     ================================================================ -->
+<div class="section" id="short-section">
+    <span class="section-anchor" id="short"></span>
+    <h2><span class="section-icon">📱</span> Short</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a Pornhub short-form video with metadata extracted from inline JSON.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The short page URL</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Short title</td></tr>
+                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Internal video ID</td></tr>
+                <tr><td><code>video_key</code></td><td><code>str | None</code></td><td>Video key identifier</td></tr>
+                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>Like count</td></tr>
+                <tr><td><code>dislikes</code></td><td><code>str | None</code></td><td>Dislike count</td></tr>
+                <tr><td><code>favorites</code></td><td><code>str | None</code></td><td>Favorite count</td></tr>
+                <tr><td><code>comment_count</code></td><td><code>str | None</code></td><td>Comment count</td></tr>
+                <tr><td><code>is_hd</code></td><td><code>bool | None</code></td><td>Whether the short is HD</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Thumbnail image URL</td></tr>
+                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embed URL</td></tr>
+                <tr><td><code>author_name</code></td><td><code>str | None</code></td><td>Author display name</td></tr>
+                <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>Author profile URL</td></tr>
+                <tr><td><code>avatar</code></td><td><code>str | None</code></td><td>Author avatar image URL</td></tr>
+                <tr><td><code>video_url</code></td><td><code>str | None</code></td><td>Link to the full video version</td></tr>
+                <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Synthesized master m3u8 playlist</td></tr>
+                <tr><td><code>media_definitions</code></td><td><code>dict | None</code></td><td>Raw media quality definitions</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <span class="section-anchor" id="short-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Short <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the short via HLS streaming. Auto-appends the title to the output path unless <code>no_title=True</code>.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> short.download(
+    configuration: DownloadConfigHLS
+) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigHLS</span> <span class="param-desc">— HLS download settings. See <a href="#downloading">Downloading</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool | DownloadReport</span>
+    </div>
+
+    <span class="section-anchor" id="short-get_author"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Author <code>get_author()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns the <code>Pornstar</code> object who created this short.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> short.get_author(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Pornstar</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     ACCOUNT
+     ================================================================ -->
+<div class="section" id="account-section">
+    <span class="section-anchor" id="account"></span>
+    <h2><span class="section-icon">🔐</span> Account</h2>
+    <p>Represents the authenticated user account. Access via <code>client.account</code> after calling <code>client.login()</code>. Provides methods for recommendations, history, favorites, feed, and subscriptions.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Account username</td></tr>
+                <tr><td><code>avatar</code></td><td><code>str | None</code></td><td>Avatar image URL</td></tr>
+                <tr><td><code>is_premium</code></td><td><code>bool</code></td><td>Whether the account has premium status</td></tr>
+                <tr><td><code>user</code></td><td><code>User | None</code></td><td>Associated <code>User</code> object for the account profile</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> pornhub_api <span class="token-keyword">import</span> Client
+
+client = <span class="token-class">Client</span>(email=<span class="token-string">"user@example.com"</span>, password=<span class="token-string">"password"</span>)
+<span class="token-keyword">await</span> client.login()
+
+<span class="token-builtin">print</span>(client.account.name)        <span class="token-comment"># Username</span>
+<span class="token-builtin">print</span>(client.account.is_premium)   <span class="token-comment"># True/False</span>
+
+<span class="token-comment"># Get recommended videos</span>
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.account.get_recommended():
+    <span class="token-builtin">print</span>(result.video.title)</code></pre>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- get_recommended -->
+    <span class="section-anchor" id="account-get_recommended"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Recommended <code>get_recommended()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Gets recommended videos for the logged-in account. Automatically fixes recommendation cookies before fetching.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_recommended(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_history -->
+    <span class="section-anchor" id="account-get_history"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get History <code>get_history()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Gets the watch history for the logged-in account. Requires authentication.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_history(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_favorites -->
+    <span class="section-anchor" id="account-get_favorites"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Favorites <code>get_favorites()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Gets favorite/liked videos for the logged-in account. Requires authentication.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_favorites(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_feed -->
+    <span class="section-anchor" id="account-get_feed"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Feed <code>get_feed()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Gets the subscription feed for the logged-in account. Filterable by section type.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_feed(
+    section: <span class="token-builtin">str</span> = <span class="token-string">"videos"</span>,
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; ScrapeResult</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">section</span> <span class="param-type">str</span> <span class="param-desc">— Section to filter: <code>"videos"</code>, <code>"photos"</code>, <code>"posts"</code>, etc.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult]</span>
+    </div>
+
+    <!-- get_subscriptions -->
+    <span class="section-anchor" id="account-get_subscriptions"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Subscriptions <code>get_subscriptions()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Gets all subscribed users/creators for the logged-in account.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> user <span class="token-keyword">in</span> account.get_subscriptions(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>
+) -&gt; User</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[User]</span>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     SEARCH & FILTERING
+     ================================================================ -->
+<div class="section" id="searching-section">
+    <span class="section-anchor" id="searching"></span>
+    <h2><span class="section-icon">🔍</span> Search &amp; Filtering</h2>
+
+    <p>The PornHub API offers three distinct search methods with rich filtering options:</p>
+
+    <h3>Video Search Filters</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Parameter</th><th>Values</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>production_type</code></td><td><code>"professional"</code>, <code>"homemade"</code></td><td>Filter by content type</td></tr>
+                <tr><td><code>sort_by</code></td><td><code>"mr"</code>, <code>"mv"</code>, <code>"tr"</code></td><td>Most Recent, Most Viewed, Top Rated</td></tr>
+                <tr><td><code>duration_min</code></td><td><code>"10"</code>, <code>"20"</code>, <code>"30"</code></td><td>Minimum duration in minutes</td></tr>
+                <tr><td><code>duration_max</code></td><td><code>"10"</code>, <code>"20"</code>, <code>"30"</code></td><td>Maximum duration in minutes</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>GIF Search Filters</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Parameter</th><th>Values</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>category</code></td><td><code>"gay"</code>, <code>"transgender"</code></td><td>Category filter (default: straight)</td></tr>
+                <tr><td><code>search_filter</code></td><td><code>"mr"</code>, <code>"mv"</code>, <code>"tr"</code></td><td>Most Recent, Most Viewed, Top Rated</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>HubTraffic API Filters</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Parameter</th><th>Values</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>category</code></td><td>Any category string</td><td>Free-form category filter</td></tr>
+                <tr><td><code>sort_by</code></td><td><code>"newest"</code>, <code>"mostviewed"</code>, <code>"rating"</code></td><td>Sort order</td></tr>
+                <tr><td><code>period</code></td><td><code>"weekly"</code>, <code>"monthly"</code>, <code>"alltime"</code></td><td>Time period filter</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Search professional videos, sorted by most viewed</span>
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+    query=<span class="token-string">"blonde"</span>,
+    production_type=<span class="token-string">"professional"</span>,
+    sort_by=<span class="token-string">"mv"</span>,
+    pages=<span class="token-number">3</span>
+):
+    <span class="token-keyword">if</span> result.is_success:
+        <span class="token-builtin">print</span>(result.video.title)
+
+<span class="token-comment"># Fast search via HubTraffic API</span>
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_hubtraffic(
+    query=<span class="token-string">"amateur"</span>,
+    sort_by=<span class="token-string">"newest"</span>,
+    period=<span class="token-string">"weekly"</span>
+):
+    <span class="token-builtin">print</span>(result.video.title, result.video.views)</code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     DOWNLOADING
+     ================================================================ -->
+<div class="section" id="downloading-section">
+    <span class="section-anchor" id="downloading"></span>
+    <h2><span class="section-icon">⬇️</span> Downloading</h2>
+
+    <p>The PornHub API uses <strong>two download modes</strong> depending on the content type:</p>
+    <ul class="param-list" style="margin-bottom: 24px;">
+        <li class="param-item"><strong>HLS</strong> (<code>DownloadConfigHLS</code>) — For <strong>Videos</strong> and <strong>Shorts</strong>. Downloads HLS streams with quality selection, threaded segment downloading, resume support, and optional TS→MP4 remuxing.</li>
+        <li class="param-item"><strong>RAW</strong> (<code>DownloadConfigRAW</code>) — For <strong>GIFs</strong> and <strong>Album photos</strong>. Direct file downloads with multi-threaded range request support.</li>
+    </ul>
+
+    <h3>HLS Download (Videos &amp; Shorts)</h3>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS
+
+config = <span class="token-class">DownloadConfigHLS</span>(
+    quality=<span class="token-string">"best"</span>,           <span class="token-comment"># "best", "half", "worst", or height int (e.g. 720)</span>
+    path=<span class="token-string">"./downloads"</span>,       <span class="token-comment"># Output directory or file path</span>
+    no_title=<span class="token-keyword">False</span>,           <span class="token-comment"># Auto-append video.title + ".mp4" if False</span>
+)
+
+<span class="token-comment"># Must have HTML loaded for m3u8 URLs</span>
+video = <span class="token-keyword">await</span> client.get_video(url, load_html=<span class="token-keyword">True</span>)
+success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
+    </div>
+
+    <h3>RAW Download (GIFs &amp; Photos)</h3>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigRAW
+
+config = <span class="token-class">DownloadConfigRAW</span>(
+    quality=<span class="token-string">"best"</span>,           <span class="token-comment"># "best", "half", "worst", or height int</span>
+    path=<span class="token-string">"./downloads"</span>,       <span class="token-comment"># Output directory or file path</span>
+    no_title=<span class="token-keyword">False</span>,           <span class="token-comment"># Auto-append title + ".mp4" if False</span>
+    allow_multipart=<span class="token-keyword">True</span>,     <span class="token-comment"># Use multi-threaded range requests</span>
+    max_workers=<span class="token-number">5</span>             <span class="token-comment"># Number of parallel download threads</span>
+)
+
+gif = <span class="token-keyword">await</span> client.get_gif(url)
+success = <span class="token-keyword">await</span> gif.download(configuration=config)</code></pre>
+    </div>
+
+    <p>For full details on all download configuration options, refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a>.</p>
+</div>
+
+<!-- ================================================================
+     PAGINATION & ITERATORS
+     ================================================================ -->
+<div class="section" id="pagination-section">
+    <span class="section-anchor" id="pagination"></span>
+    <h2><span class="section-icon">📄</span> Pagination &amp; Iterators</h2>
+
+    <p>Methods like <code>search_videos()</code>, <code>pornstar.get_videos()</code>, <code>channel.get_videos()</code>, and all account methods return <strong>async generators</strong> yielding <code>ScrapeResult</code> instances:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(<span class="token-string">"college"</span>, pages=<span class="token-number">2</span>):
+    <span class="token-keyword">if</span> result.is_success:
+        video = result.video
+        <span class="token-builtin">print</span>(video.title)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"Failed URL {result.url}: {result.error}"</span>)</code></pre>
+    </div>
+
+    <h3>ScrapeResult</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video URL</td></tr>
+                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The populated Video object (if successful)</td></tr>
+                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The error that occurred (if any)</td></tr>
+                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scrape succeeded</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Concurrency Parameters</h3>
+    <p>All iterator methods accept concurrency tuning:</p>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Max videos loaded concurrently. Defaults to <code>config.videos_concurrency</code> (5).</span></li>
+        <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Max pages fetched concurrently. Defaults to <code>config.pages_concurrency</code> (2).</span></li>
+        <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">(url, error, attempt) → bool</span> <span class="param-desc">— Custom error callback. Return <code>True</code> to retry.</span></li>
+        <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">(url, error, attempt) → bool</span> <span class="param-desc">— Same but for page fetch failures.</span></li>
+        <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Yield results in page order (slower but deterministic).</span></li>
+    </ul>
+</div>
+
+<!-- ================================================================
+     ERROR HANDLING
+     ================================================================ -->
+<div class="section" id="error-handling-section">
+    <span class="section-anchor" id="error-handling"></span>
+    <h2><span class="section-icon">⚠️</span> Error Handling</h2>
+
+    <p>Custom exceptions are defined in <code>pornhub_api.modules.errors</code>. Base networking/session exceptions are raised from <code>eaf_base_api</code>.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
+            <tbody>
+                <tr><td><code>NotFound</code></td><td>Server returned HTTP 404</td></tr>
+                <tr><td><code>NetworkError</code></td><td>General network request failure (wraps <code>NetworkRequestError</code>)</td></tr>
+                <tr><td><code>BotDetection</code></td><td>Cloudflare or similar bot protection triggered</td></tr>
+                <tr><td><code>ProxyError</code></td><td>Invalid or failing proxy</td></tr>
+                <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download operation failed</td></tr>
+                <tr><td><code>LoginFailed</code></td><td>Authentication failed (invalid credentials or token)</td></tr>
+                <tr><td><code>ClientAlreadyLogged</code></td><td>Attempted login when already authenticated</td></tr>
+                <tr><td><code>VideoDisabled</code></td><td>The video has been disabled by the platform</td></tr>
+                <tr><td><code>GifPendingReview</code></td><td>The GIF is still pending review and cannot be accessed</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> pornhub_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection, LoginFailed
+
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(url, load_html=<span class="token-keyword">True</span>)
+<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"Video does not exist"</span>)
+<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
+    <span class="token-builtin">print</span>(<span class="token-string">"Bypassing bot protection failed"</span>)
+
+<span class="token-keyword">try</span>:
+    <span class="token-keyword">await</span> client.login()
+<span class="token-keyword">except</span> <span class="token-class">LoginFailed</span> <span class="token-keyword">as</span> e:
+    <span class="token-builtin">print</span>(f<span class="token-string">"Login failed: {e}"</span>)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     CLI USAGE
+     ================================================================ -->
+<div class="section" id="cli-section">
+    <span class="section-anchor" id="cli"></span>
+    <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>The PornHub API package includes a built-in CLI accessible via the <code>phub</code> command:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Download a single video</span>
+phub --download "https://www.pornhub.com/view_video.php?viewkey=..." --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Download from a file of URLs</span>
+phub --file urls.txt --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Download liked videos (requires login)</span>
+phub --liked --email user@example.com --password pass --quality best --output ./favorites --no-title False
+
+<span class="token-comment"># Download with video ID as filename and a limit</span>
+phub --download "https://www.pornhub.com/view_video.php?viewkey=..." --quality best --output ./downloads --no-title False --id-as-title --limit 10</code></pre>
+    </div>
+
+    <h3>CLI Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>--download URL</code></td><td>Download from the specified URL (video, short, GIF, album, pornstar, model, user, channel, or playlist)</td></tr>
+                <tr><td><code>--file FILE</code></td><td>Read and download URLs from a line-separated text file</td></tr>
+                <tr><td><code>--quality QUALITY</code></td><td><strong>Required.</strong> The video quality: <code>best</code>, <code>half</code>, <code>worst</code></td></tr>
+                <tr><td><code>--output DIR</code></td><td><strong>Required.</strong> The destination path/directory</td></tr>
+                <tr><td><code>--no-title True/False</code></td><td><strong>Required.</strong> Skip auto-appending video title to output filename</td></tr>
+                <tr><td><code>--pages N</code></td><td>Number of pages to fetch for iterables (default: <code>1</code>)</td></tr>
+                <tr><td><code>--email EMAIL</code></td><td>Account email for login</td></tr>
+                <tr><td><code>--password PASS</code></td><td>Account password for login</td></tr>
+                <tr><td><code>--id-as-title</code></td><td>Use the video ID as the output filename instead of the title</td></tr>
+                <tr><td><code>--limit N</code></td><td>Maximum number of videos to download</td></tr>
+                <tr><td><code>--liked</code></td><td>Download liked/favorite videos (requires login)</td></tr>
+                <tr><td><code>--recommended</code></td><td>Download recommended videos (requires login)</td></tr>
+                <tr><td><code>--watched</code></td><td>Download watched/history videos (requires login)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     PLATFORMS
+     ================================================================ -->
+<div class="section" id="platforms-section">
+    <span class="section-anchor" id="platforms"></span>
+    <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Platform</th><th>Architecture</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr><td>Windows 11</td><td>x64</td><td>✅ Tested</td></tr>
+                <tr><td>macOS Sequoia</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Linux (Arch)</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Android 16</td><td>aarch64</td><td>✅ Tested</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="page-footer">
+                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · Licensed under LGPLv3</span>
+                <span>Powered by <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Back to top -->
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+        // Mobile sidebar toggle
+        const toggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileOverlay');
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+
+        // Active nav highlight on scroll
+        const sections = document.querySelectorAll('.section-anchor');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navLinks.forEach(link => {
+                        const isMatch = link.getAttribute('href') === '#' + id;
+                        link.classList.toggle('active', isMatch);
+                        if (isMatch) {
+                            // Automatically expand the parent collapsible nav section
+                            const collapsible = link.closest('.nav-collapsible');
+                            if (collapsible) {
+                                collapsible.classList.remove('collapsed');
+                            }
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+        sections.forEach(s => observer.observe(s));
+
+        // Collapsible sidebar navigation groups
+        document.querySelectorAll('.nav-link-parent').forEach(parent => {
+            parent.addEventListener('click', (e) => {
+                const collapsible = parent.closest('.nav-collapsible');
+                if (collapsible) {
+                    collapsible.classList.toggle('collapsed');
+                }
+            });
+        });
+
+        // Initialize collapsed states
+        document.querySelectorAll('.nav-collapsible').forEach(collapsible => {
+            const hasActive = collapsible.querySelector('.nav-link.active');
+            if (hasActive) {
+                collapsible.classList.remove('collapsed');
+            } else {
+                collapsible.classList.add('collapsed');
+            }
+        });
+
+        // Back to top visibility
+        const backBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backBtn.classList.toggle('visible', window.scrollY > 400);
+        });
+
+        // Copy install command
+        function copyInstall(el) {
+            const text = el.textContent.replace('$', '').replace('📋', '').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                el.querySelector('.copy-icon').textContent = '✓';
+                setTimeout(() => { el.querySelector('.copy-icon').textContent = '📋'; }, 1500);
+            });
+        }
+
+        // Copy code block
+        function copyCode(btn) {
+            const code = btn.closest('.code-window').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
+        // Close sidebar on nav click (mobile)
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 900) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
