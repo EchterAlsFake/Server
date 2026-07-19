@@ -524,6 +524,12 @@ def impress():
     )
 
 
+@app.route("/transparency", methods=["GET"])
+def transparency():
+    return redirect("/docs/transparency/", code=301)
+
+
+
 @app.route("/buy_license", methods=["GET"])
 def buy_license():
     # Renders a modern-looking page with a BUY button

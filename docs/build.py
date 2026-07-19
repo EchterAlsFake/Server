@@ -296,6 +296,15 @@ def build_docs():
         
     print(f"✓ Created central index portal at {index_out_path.relative_to(base_dir)}")
 
+    # 6. Copy AI Transparency page
+    transparency_src = base_dir / "transparency.html"
+    if transparency_src.exists():
+        transparency_dist_dir = dist_dir / "transparency"
+        transparency_dist_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(transparency_src, transparency_dist_dir / "index.html")
+        print(f"✓ Copied AI Transparency statement to {transparency_dist_dir / 'index.html'}")
+
+
 if __name__ == "__main__":
     build_docs()
     print("Done!")

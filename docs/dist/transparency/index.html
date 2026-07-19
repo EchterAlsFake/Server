@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Transparency Statement — EAF Ecosystem</title>
+    <meta name="description" content="EchterAlsFake's statement on AI usage, engineering principles, human development, and code ownership.">
+    <style>
+        /* ============================================================
+           EAF PORTAL — DESIGN SYSTEM (AI Transparency Page)
+           Premium dark theme with glass morphism and accent gradients
+           ============================================================ */
+
+        @font-face {
+            font-family: 'Roboto';
+            src: url('../assets/roboto-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Roboto';
+            src: url('../assets/roboto-bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            /* Core palette */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-tertiary: #1a1a24;
+            --bg-card: rgba(22, 22, 34, 0.7);
+            --bg-card-hover: rgba(30, 30, 46, 0.8);
+
+            /* Text */
+            --text-primary: #e8e8ef;
+            --text-secondary: #9d9db5;
+            --text-muted: #6b6b82;
+            --text-accent: #38bdf8;
+
+            /* Accent gradient */
+            --accent-start: #8b5cf6;
+            --accent-mid: #a78bfa;
+            --accent-end: #c4b5fd;
+            --accent-glow: rgba(139, 92, 246, 0.15);
+            --accent-glow-strong: rgba(139, 92, 246, 0.3);
+
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(139, 92, 246, 0.25);
+
+            /* Code */
+            --code-bg: #0d0d14;
+            --code-border: rgba(139, 92, 246, 0.12);
+            --inline-code-bg: rgba(139, 92, 246, 0.1);
+            --inline-code-color: #c4b5fd;
+
+            /* Sidebar */
+            --sidebar-width: 280px;
+            --sidebar-bg: rgba(14, 14, 22, 0.95);
+
+            /* Transitions */
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+
+        /* ---- Reset & Base ---- */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 21px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ---- Scrollbar ---- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-start); }
+
+        /* ---- Selection ---- */
+        ::selection { background: var(--accent-glow-strong); color: #fff; }
+
+        /* ============================================================
+           LAYOUT
+           ============================================================ */
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ---- Sidebar ---- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-version {
+            font-size: 15px;
+            color: var(--text-muted);
+            padding: 3px 8px;
+            background: var(--inline-code-bg);
+            border-radius: 4px;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .sidebar-nav::-webkit-scrollbar { width: 3px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: var(--bg-tertiary); }
+
+        .nav-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 16px 20px 6px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 7px 20px 7px 28px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 450;
+            transition: all var(--transition-fast);
+            border-left: 2px solid transparent;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.05);
+            border-left-color: var(--accent-mid);
+        }
+
+        .nav-link.active {
+            color: var(--accent-mid);
+            background: var(--accent-glow);
+            border-left-color: var(--accent-start);
+            font-weight: 550;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: color var(--transition-fast);
+        }
+        .sidebar-footer a:hover { color: var(--accent-mid); }
+
+        /* ---- Main Content ---- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ---- Hero ---- */
+        .hero {
+            position: relative;
+            padding: 80px 60px 60px;
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.06) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            background: var(--inline-code-bg);
+            border: 1px solid var(--border-accent);
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--accent-mid);
+            margin-bottom: 20px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-start);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-size: 60px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-end) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 23px;
+            color: var(--text-secondary);
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        /* ---- Content Area ---- */
+        .content-area {
+            max-width: 1200px;
+            padding: 48px 60px 100px;
+        }
+
+        /* ---- Section ---- */
+        .section {
+            margin-bottom: 72px;
+        }
+
+        .section-anchor {
+            display: block;
+            position: relative;
+            top: -80px;
+            visibility: hidden;
+        }
+
+        .section h2 {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 10px;
+        }
+
+        .section h2 .section-icon {
+            display: inline-flex;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .section p {
+            margin-bottom: 18px;
+            color: var(--text-secondary);
+        }
+
+        .section code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--inline-code-bg);
+            color: var(--inline-code-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 17px;
+        }
+
+        /* ---- Info boxes ---- */
+        .info-box {
+            padding: 20px 24px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 18px;
+            line-height: 1.6;
+            border-left: 4px solid;
+        }
+
+        .info-box.note {
+            background: rgba(59, 130, 246, 0.06);
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+
+        .info-box.warning {
+            background: rgba(239, 68, 68, 0.06);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .info-box-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ---- Portal grid & cards ---- */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .api-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .api-card:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), 0 0 24px rgba(139, 92, 246, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card-title {
+            font-size: 21px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ---- Mobile ---- */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+
+        @media (max-width: 900px) {
+            .mobile-toggle { display: flex; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-overlay.open { display: block; }
+            .main-content { margin-left: 0; }
+            .hero { padding: 70px 24px 40px; }
+            .hero h1 { font-size: 32px; }
+            .content-area { padding: 32px 24px 80px; }
+            .portal-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ---- Animations ---- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            animation: fadeInUp 0.4s ease-out both;
+        }
+
+        .section:nth-child(2) { animation-delay: 0.05s; }
+        .section:nth-child(3) { animation-delay: 0.1s; }
+        .section:nth-child(4) { animation-delay: 0.15s; }
+
+        /* ---- Back to top ---- */
+        .back-to-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all var(--transition-smooth);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .back-to-top:hover {
+            background: var(--accent-glow);
+            border-color: var(--border-accent);
+            color: var(--accent-mid);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Footer ---- */
+        .page-footer {
+            padding: 32px 60px;
+            border-top: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+        }
+        .page-footer a { color: var(--accent-mid); text-decoration: none; }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 900px) {
+            .page-footer { padding: 24px; flex-direction: column; gap: 8px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile menu toggle -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">☰</button>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="layout">
+        <!-- ====== SIDEBAR ====== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="../" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">E</div>
+                    <span class="sidebar-logo-text">EAF Ecosystem</span>
+                </a>
+                <span class="sidebar-version">Transparency</span>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <div class="nav-section-title">Navigation</div>
+                <a href="../" class="nav-link">← Back to Portal</a>
+                
+                <div class="nav-section-title">Sections</div>
+                <a href="#philosophy" class="nav-link active">Philosophy</a>
+                <a href="#usage" class="nav-link">AI Usage Examples</a>
+                <a href="#principles" class="nav-link">Coding Principles</a>
+                <a href="#distribution" class="nav-link">AI Models Used</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="https://github.com/EchterAlsFake" target="_blank" rel="noopener">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    EchterAlsFake GitHub
+                </a>
+            </div>
+        </aside>
+
+        <!-- ====== MAIN ====== -->
+        <main class="main-content">
+            <!-- Hero -->
+            <div class="hero" id="welcome">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    Engineering Ethics &amp; Transparency
+                </div>
+                <h1>AI Transparency Statement</h1>
+                <p>On vibe-coding, generated slop, and intentional software engineering.</p>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                
+                <!-- Philosophy -->
+                <div class="section" id="philosophy-section">
+                    <span class="section-anchor" id="philosophy"></span>
+                    <h2><span class="section-icon">👁️</span> The Philosophy</h2>
+                    <p style="font-size: 24px; line-height: 1.6; color: var(--text-primary); margin-bottom: 24px;">
+                        I want to be as transparent about my AI usage as possible, especially in the days of <strong>blind vibe coding</strong>, <strong>dead internet theory</strong>, and <strong>generated slop</strong>.
+                    </p>
+                    
+                    <div class="info-box note" style="font-size: 20px;">
+                        <div class="info-box-title">Core Approach</div>
+                        I use AI when necessary or in automated repetitive tasks. I do not let AI drive the architecture or make blind decisions for me.
+                    </div>
+                </div>
+
+                <!-- Where I Use AI -->
+                <div class="section" id="usage-section">
+                    <span class="section-anchor" id="usage"></span>
+                    <h2><span class="section-icon">🛠️</span> Where I Use AI</h2>
+                    <p style="margin-bottom: 24px;">Rather than generating entire projects blindly, I target specific tasks where AI acts as a multiplier. Here are some key examples:</p>
+                    
+                    <div class="portal-grid">
+                        <div class="api-card">
+                            <div class="card-header">
+                                <div class="card-logo" style="background: linear-gradient(135deg, #a78bfa, #8b5cf6); font-size: 20px;">📄</div>
+                                <span class="card-title" style="font-size: 20px;">Documentation</span>
+                            </div>
+                            <p class="card-desc" style="font-size: 15px;">Writing API references, descriptions, and structural documentation content efficiently.</p>
+                        </div>
+                        
+                        <div class="api-card">
+                            <div class="card-header">
+                                <div class="card-logo" style="background: linear-gradient(135deg, #f472b6, #ec4899); font-size: 20px;">🐙</div>
+                                <span class="card-title" style="font-size: 20px;">GitHub READMEs</span>
+                            </div>
+                            <p class="card-desc" style="font-size: 15px;">Formatting project introductions, feature lists, and installation instructions for repositories.</p>
+                        </div>
+                        
+                        <div class="api-card">
+                            <div class="card-header">
+                                <div class="card-logo" style="background: linear-gradient(135deg, #60a5fa, #3b82f6); font-size: 20px;">🖥️</div>
+                                <span class="card-title" style="font-size: 20px;">The Server</span>
+                            </div>
+                            <p class="card-desc" style="font-size: 15px;">Implementing clean HTML templates and responsive CSS layouts for the public-facing server interface.</p>
+                        </div>
+                        
+                        <div class="api-card">
+                            <div class="card-header">
+                                <div class="card-logo" style="background: linear-gradient(135deg, #34d399, #10b981); font-size: 20px;">⚙️</div>
+                                <span class="card-title" style="font-size: 20px;">Core Networking</span>
+                            </div>
+                            <p class="card-desc" style="font-size: 15px;">Revising and optimizing the core asynchronous networking and connection handling implementation in <code>eaf_base_api</code>.</p>
+                        </div>
+                        
+                        <div class="api-card">
+                            <div class="card-header">
+                                <div class="card-logo" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); font-size: 20px;">📐</div>
+                                <span class="card-title" style="font-size: 20px;">Logic &amp; Math</span>
+                            </div>
+                            <p class="card-desc" style="font-size: 15px;">Coding visual progress bars, terminal math calculations, and complex async data handling.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coding Principles -->
+                <div class="section" id="principles-section">
+                    <span class="section-anchor" id="principles"></span>
+                    <h2><span class="section-icon">🛡️</span> Coding Principles</h2>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 16px;">
+                        <p>
+                            I want to clarify that I am <strong>NOT blindly using AI</strong> like the general mass right now. I am not sitting here with Claude and saying: <em>"Hey create project xxx for me and do xxx"</em>. That's not how it works.
+                        </p>
+                        <p>
+                            I only use AI when I am personally stuck on a problem where I don't have an idea how to fix it and it would require more than a Google Search to fix it. Additionally, I use AI when I need to work with programming languages / concepts that I don't know. E.g., for the server I had to use AI because I don't know HTML / CSS and reaching the level of these languages to write a clean website like I have now would require a significant amount of effort and I don't have the time for that.
+                        </p>
+                        
+                        <div class="info-box note">
+                            <div class="info-box-title">Strict Testing</div>
+                            I STRICTLY test code before pushing! Every single line of Python code and Qt interaction is reviewed and tested by a human.
+                        </div>
+
+                        <p>
+                            In other words, I use AI to automate things that aren't important anyway, things that would just steal my time, so that I can focus on creating something that solves a problem and is useful.
+                        </p>
+
+                        <div class="ratio-container" style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 24px; border-radius: 12px; margin: 24px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 700; font-size: 18px;">
+                                <span style="color: var(--text-accent);">🙋‍♂️ Human Written (90%)</span>
+                                <span style="color: var(--accent-mid);">🤖 AI Generated (10%)</span>
+                            </div>
+                            <div style="height: 16px; background: var(--bg-tertiary); border-radius: 8px; overflow: hidden; display: flex; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                <div style="width: 90%; background: linear-gradient(90deg, #38bdf8, #8b5cf6); height: 100%;"></div>
+                                <div style="width: 10%; background: linear-gradient(90deg, #c4b5fd, #fbbf24); height: 100%;"></div>
+                            </div>
+                            <p style="font-size: 15px; color: var(--text-secondary); margin-top: 12px; line-height: 1.5; margin-bottom: 0;">
+                                The VAST majority of my code has a 90/10 AI ratio, meaning 90% of code is generated by me, the other 10% by AI.
+                                However, this is an average estimation by external services that I use to track my code and can vary project to project!
+                            </p>
+                        </div>
+
+                        <p>
+                            Especially the Scrapers that I work on are almost entirely written by myself and have almost zero AI involved (almost...).
+                        </p>
+
+                        <div class="info-box note" style="border-left-color: var(--accent-mid);">
+                            <div class="info-box-title">Human-First Development</div>
+                            Every project I work on is made by a human. I am working on so many projects at the same time, doing commercial work and have the legal headaches of German and EU laws at my back. It would be physically impossible for a single human being to do all this. AI is the only reason why I can provide you with my projects for free and put so much effort in them.
+                        </div>
+
+                        <p style="font-size: 24px; font-weight: 700; color: var(--text-primary); text-align: center; margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 32px;">
+                            I am not a vibe coder. Each project has a passion, and each project serves an actual purpose!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- AI Models Used -->
+                <div class="section" id="distribution-section">
+                    <span class="section-anchor" id="distribution"></span>
+                    <h2><span class="section-icon">📊</span> Tool Stack &amp; Distribution</h2>
+                    <p style="margin-bottom: 24px;">What AI do I actually use in my software development workflows?</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin-top: 24px;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 700; margin-bottom: 8px;">
+                                <span>✨ Gemini 3.1 Pro</span>
+                                <span>80%</span>
+                            </div>
+                            <div style="height: 12px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden;">
+                                <div style="width: 80%; background: linear-gradient(90deg, #8b5cf6, #38bdf8); height: 100%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 700; margin-bottom: 8px;">
+                                <span>🧠 Claude Opus 4.6</span>
+                                <span>15%</span>
+                            </div>
+                            <div style="height: 12px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden;">
+                                <div style="width: 15%; background: linear-gradient(90deg, #ec4899, #f43f5e); height: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 700; margin-bottom: 8px;">
+                                <span>⚡ Gemini Flash 3.5</span>
+                                <span>5%</span>
+                            </div>
+                            <div style="height: 12px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden;">
+                                <div style="width: 5%; background: linear-gradient(90deg, #fbbf24, #d97706); height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px; border-top: 1px solid var(--border-subtle); padding-top: 32px;">
+                        <p style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+                            The Absolute Bottom Line:
+                        </p>
+                        <p style="font-size: 19px; line-height: 1.6; color: var(--text-secondary);">
+                            I understand each line of my code (except for parts of the server). I can speak Python fluently, as well as Qt. I do <strong>NOT</strong> blindly push code I don't understand.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="page-footer">
+                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · Licensed under LGPLv3</span>
+                <span><a href="../transparency/" style="font-weight: 600; text-decoration: underline;">AI Transparency</a> · Powered by <a href="../eaf_base_api/">eaf_base_api</a></span>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Back to top -->
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+        // Mobile sidebar toggle
+        const toggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileOverlay');
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+
+        // Active nav highlight on scroll
+        const sections = document.querySelectorAll('.section-anchor');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navLinks.forEach(link => {
+                        // Check if the href matches exactly #id
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+                    });
+                }
+            });
+        }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+        sections.forEach(s => observer.observe(s));
+
+        // Back to top visibility
+        const backBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backBtn.classList.toggle('visible', window.scrollY > 400);
+        });
+
+        // Close sidebar on nav click (mobile)
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 900) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
