@@ -27,13 +27,36 @@ Clearnet: **https://echteralsfake.me**
 - docs.echteralsfake.me/ -> Serves the documentation for my projects
 
 ### Endpoints
-- / -> Landing page
-- /stats -> View real-time server stats
-- /update -> Fetch update information for Porn Fetch
-- /report -> Report errors 
-- /ci -> personal endpoint for API tests
-- /buy_license -> You can buy a license for Porn Fetch here
+- / → Landing page
+- /stats → View real-time server stats
+- /update → Fetch update information for Porn Fetch
+- /report → Report errors 
+- /ci → personal endpoint for API tests
+- /buy_license → You can buy a license for Porn Fetch here
+- /impress → Impress (legal requirement in Germany)
+- /transparency → AI transparency notice
+- /refund_policy → Refund Policy
+- /terms → Terms of Service of the site (legal requirement)
+- /buy_sucess → If the payment succeeds, shows a success page
+- /buy_cancel → If user canceled the payments
+- /download_license → Downloads the actual license file
+- /check-payment-status → IPN Webhook for checking payments
+- /download_incoice → Downloads the Invoice for the payment (legal requirement)
+- /simulate-payment-success → Simulates the payment locally
+- /docs → Documentation for my APIs
+- /porn_fetch → Shows the Porn Fetch page
+- /donation → Allows you to do a crypto donation
+- /create-crypto-payment → creates the actual crypto payment on nowpayments
+- /nowpayments_ipn → Webhook for incoming payments
+- /ping → You can ping the server :)
+- /datenschutz → German translated privacy policy
+- /privacy_policy → English Privacy Policy
+- /legal-statement → Legal coverage for Porn Fetch
+- /appcast.xml → Update for macOS version of Porn Fetch
+- /checklist → I can edit the checklist here
+- /checklist/progress.svg → Shows the progress for the next Porn Fetch version
 
+That's it :) 
 
 > [!WARNING]
 > The `/buy_license` endpoint is ONLY a test environment. You won't be charged

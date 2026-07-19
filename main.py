@@ -269,12 +269,6 @@ def get_stats_snapshot():
         row = {"total_requests": 0, "total_bytes_in": 0, "total_bytes_out": 0, "server_started_at": started_at}
     else:
         row = {"total_requests": stat.total_requests, "total_bytes_in": stat.total_bytes_in, "total_bytes_out": stat.total_bytes_out, "server_started_at": stat.server_started_at}
-        return {
-            "total_requests": 0,
-            "total_bytes_in": 0,
-            "total_bytes_out": 0,
-            "server_started_at": started_at,
-        }
 
     return {
         "total_requests": row["total_requests"],
@@ -545,12 +539,6 @@ def refund_policy():
 @app.route("/terms", methods=["GET"])
 def terms():
     return render_template("terms.html")
-
-
-@app.route("/content_removal", methods=["GET"])
-def content_removal():
-    return render_template("content_removal.html")
-
 
 @app.route("/buy_success", methods=["GET"])
 def buy_success():
