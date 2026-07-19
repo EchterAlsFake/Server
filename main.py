@@ -91,7 +91,18 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
 # Protects against Cross-Site Request Forgery, where a malicious site tricks a user's browser
 # into performing unwanted actions on our site while they are authenticated.
 # We set a SECRET_KEY to cryptographically sign the CSRF tokens.
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+secret_key_path = os.path.join(SAVE_DIR, ".flask_secret")
+if os.environ.get("SECRET_KEY"):
+    secret_key = os.environ.get("SECRET_KEY")
+elif os.path.exists(secret_key_path):
+    with open(secret_key_path, "r") as f:
+        secret_key = f.read().strip()
+else:
+    secret_key = secrets.token_hex(32)
+    with open(secret_key_path, "w") as f:
+        f.write(secret_key)
+
+app.config['SECRET_KEY'] = secret_key
 app.config['WTF_CSRF_SSL_STRICT'] = False
 csrf = CSRFProtect(app)
 
@@ -571,7 +582,7 @@ def download_license():
         "kid": "v1",
         "alg": "ed25519",
         "license_key": make_license_key(),
-        "nowpayments_invoice_id": nowpayments_id,
+        "stripe_session_id": nowpayments_id,
         "created_at": created_at,
         "features": ["full_unlock"],
     }
