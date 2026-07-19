@@ -92,6 +92,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
 # into performing unwanted actions on our site while they are authenticated.
 # We set a SECRET_KEY to cryptographically sign the CSRF tokens.
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+app.config['WTF_CSRF_SSL_STRICT'] = False
 csrf = CSRFProtect(app)
 
 # --- DATABASE ORM (Security Measure) ---
