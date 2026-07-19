@@ -8,20 +8,22 @@ import hmac
 import hashlib
 import base64
 import secrets
-import sqlite3
 import markdown
 import threading
 import subprocess
-
 from io import BytesIO
 from flask_limiter import Limiter
 from email.utils import format_datetime
-from werkzeug.serving import WSGIRequestHandler
+from flask_talisman import Talisman
+from pydantic import BaseModel, Field, ConfigDict
 from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g, redirect
 from fpdf import FPDF
+from werkzeug.serving import WSGIRequestHandler
 
 
 # Configuration
@@ -35,9 +37,15 @@ KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
 LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "") # Used for update checking for my repos (long story)
+# Environment Safety: Securely ingest sensitive API keys via environment variables.
+# Using a 'fail-fast' approach to ensure critical credentials are not silently missing.
 NOWPAYMENTS_API_KEY = os.environ.get("NOWPAYMENTS_API_KEY")
 NOWPAYMENTS_IPN_SECRET = os.environ.get("NOWPAYMENTS_IPN_SECRET")
 NOWPAYMENTS_SANDBOX = os.environ.get("NOWPAYMENTS_SANDBOX", "true").lower() in ("true", "1", "yes")
+
+if not NOWPAYMENTS_SANDBOX and (not NOWPAYMENTS_API_KEY or not NOWPAYMENTS_IPN_SECRET):
+    raise ValueError("CRITICAL: NOWPAYMENTS_API_KEY and NOWPAYMENTS_IPN_SECRET must be set in production.")
+
 NOWPAYMENTS_API_URL = "https://api-sandbox.nowpayments.io/v1" if NOWPAYMENTS_SANDBOX else "https://api.nowpayments.io/v1"
 
 update_cache = {
@@ -49,118 +57,136 @@ update_cache = {
 os.makedirs(SAVE_DIR, exist_ok=True)
 DB_PATH = os.environ.get("PF_SERVER_DB", os.path.join(SAVE_DIR, "server.db"))
 
+# Strict Input Validation Schema for NOWPayments Webhook
+class NowPaymentsWebhookSchema(BaseModel):
+    model_config = ConfigDict(extra='ignore')
+    
+    payment_id: int | None = Field(None, description="NOWPayments internal ID")
+    payment_status: str | None = Field(None, max_length=50)
+    status: str | None = Field(None, max_length=50)
+    order_id: str = Field(..., min_length=1, max_length=255)
+    parent_payment_id: int | None = None
+    pay_currency: str | None = Field(None, max_length=20)
+    actually_paid: float | None = Field(None, ge=0)
+    pay_amount: float | None = Field(None, ge=0)
+    price_amount: float | None = Field(None, ge=0)
+    payin_hash: str | None = Field(None, max_length=255)
+    hash: str | None = Field(None, max_length=255)
+
+
 # Flask setup
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_REQUEST_SIZE
 
+# --- PROXY FIX (Critical for Cloudflare) ---
+# Because this app runs behind a reverse proxy and Cloudflare, all incoming requests
+# will appear to come from the proxy's IP address (127.0.0.1 or Cloudflare's IP).
+# ProxyFix tells Flask to trust the X-Forwarded-For headers to get the REAL user IP.
+# Without this, Flask-Limiter would accidentally rate-limit all of your users at once.
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
+
+
+# --- CSRF PROTECTION (Security Measure) ---
+# Protects against Cross-Site Request Forgery, where a malicious site tricks a user's browser
+# into performing unwanted actions on our site while they are authenticated.
+# We set a SECRET_KEY to cryptographically sign the CSRF tokens.
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+csrf = CSRFProtect(app)
+
+# --- DATABASE ORM (Security Measure) ---
+# Transitioned from raw SQLite to Flask-SQLAlchemy.
+# ORMs completely eliminate SQL Injection vulnerabilities by abstracting the query building
+# process. They automatically parameterize queries and escape inputs securely.
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.abspath(DB_PATH)}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Secure HTTP Headers: Automatically inject robust security headers (e.g., CSP, HSTS, Anti-sniffing)
+talisman = Talisman(
+    app,
+    force_https=False, # Often false behind a reverse proxy/tunnel that terminates TLS
+    content_security_policy={
+        'default-src': ["'self'"],
+        'img-src': ["'self'", "data:"],
+        'style-src': ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
+        'script-src': ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
+        'connect-src': ["'self'"],
+        'frame-src': ["'self'", "https://nowpayments.io"],
+        'base-uri': ["'self'"],
+        'form-action': ["'self'"],
+        'frame-ancestors': ["'none'"]
+    },
+    strict_transport_security=True,
+    strict_transport_security_max_age=31536000,
+    x_content_type_options=True,
+    x_xss_protection=True,
+    session_cookie_secure=True,
+    session_cookie_http_only=True,
+    session_cookie_samesite='Lax'
+)
+
+# Resource Protection: Rate-limiting to prevent resource exhaustion and DoS
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=[RATE_LIMIT]
 )
 
-# ---------- DB setup ----------
+# ---------- DB setup (SQLAlchemy ORM) ----------
 
-def init_db():
-    """Initialize SQLite database and tables."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("PRAGMA journal_mode=WAL;")
-    conn.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS stats (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            total_requests INTEGER NOT NULL DEFAULT 0,
-            total_bytes_in INTEGER NOT NULL DEFAULT 0,
-            total_bytes_out INTEGER NOT NULL DEFAULT 0,
-            server_started_at TEXT NOT NULL
-        );
+class Stats(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    total_requests = db.Column(db.Integer, nullable=False, default=0)
+    total_bytes_in = db.Column(db.Integer, nullable=False, default=0)
+    total_bytes_out = db.Column(db.Integer, nullable=False, default=0)
+    server_started_at = db.Column(db.String, nullable=False)
 
-        CREATE TABLE IF NOT EXISTS ci_status (
-            test_name TEXT PRIMARY KEY,
-            status TEXT NOT NULL,
-            updated_at TEXT,
-            details TEXT
-        );
+class CiStatus(db.Model):
+    test_name = db.Column(db.String, primary_key=True)
+    status = db.Column(db.String, nullable=False)
+    updated_at = db.Column(db.String)
+    details = db.Column(db.String)
 
-        CREATE TABLE IF NOT EXISTS reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tag TEXT NOT NULL,
-            message TEXT NOT NULL,
-            raw_json TEXT NOT NULL,
-            created_at TEXT NOT NULL
-        );
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    tag = db.Column(db.String, nullable=False)
+    message = db.Column(db.String, nullable=False)
+    raw_json = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.String, nullable=False)
 
-        CREATE TABLE IF NOT EXISTS write_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            bytes_written INTEGER NOT NULL,
-            created_at TEXT NOT NULL
-        );
+class WriteLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    bytes_written = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.String, nullable=False)
 
-        CREATE TABLE IF NOT EXISTS transactions (
-            session_id TEXT PRIMARY KEY,
-            purchase_id TEXT,
-            trans_id TEXT,
-            email TEXT,
-            status TEXT,
-            created_at TEXT NOT NULL
-        );
+class Transaction(db.Model):
+    session_id = db.Column(db.String, primary_key=True)
+    purchase_id = db.Column(db.String)
+    trans_id = db.Column(db.String)
+    email = db.Column(db.String)
+    status = db.Column(db.String)
+    created_at = db.Column(db.String, nullable=False)
 
-        CREATE TABLE IF NOT EXISTS checklist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task TEXT NOT NULL,
-            is_done INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL
-        );
-        """
-    )
+class Checklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    task = db.Column(db.String, nullable=False)
+    is_done = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.String, nullable=False)
 
-    started_at = datetime.utcnow().isoformat()
-
-    # Ensure a single stats row exists, and RESET it on each server start.
-    cur = conn.execute("SELECT COUNT(*) FROM stats WHERE id = 1;")
-    count = cur.fetchone()[0]
-
-    if count == 0:
-        conn.execute(
-            "INSERT INTO stats (id, total_requests, total_bytes_in, total_bytes_out, server_started_at) "
-            "VALUES (1, 0, 0, 0, ?);",
-            (started_at,),
-        )
+with app.app_context():
+    db.create_all()
+    started_at = datetime.now(timezone.utc).isoformat()
+    stat = Stats.query.get(1)
+    if not stat:
+        stat = Stats(id=1, total_requests=0, total_bytes_in=0, total_bytes_out=0, server_started_at=started_at)
+        db.session.add(stat)
     else:
-        conn.execute(
-            """
-            UPDATE stats
-            SET total_requests = 0,
-                total_bytes_in = 0,
-                total_bytes_out = 0,
-                server_started_at = ?
-            WHERE id = 1;
-            """,
-            (started_at,),
-        )
-
-    conn.commit()
-    conn.close()
-
-
-init_db()
-
-
-def get_db():
-    """Get a per-request sqlite connection."""
-    if "db" not in g:
-        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        g.db = conn
-    return g.db
-
-
-@app.teardown_appcontext
-def close_db(exception):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
-
+        stat.total_requests = 0
+        stat.total_bytes_in = 0
+        stat.total_bytes_out = 0
+        stat.server_started_at = started_at
+    db.session.commit()
 
 # ---------- Helper functions ----------
 def canonical_json_bytes(obj: dict) -> bytes:
@@ -192,26 +218,18 @@ def shutdown_server():
 
 def log_write(file_size: int):
     """Track how much data has been written in the last hour using the DB."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cutoff = now - timedelta(hours=1)
     now_str = now.isoformat()
     cutoff_str = cutoff.isoformat()
 
-    db = get_db()
-    with db:
-        db.execute(
-            "INSERT INTO write_log (bytes_written, created_at) VALUES (?, ?);",
-            (file_size, now_str),
-        )
-        db.execute(
-            "DELETE FROM write_log WHERE created_at < ?;",
-            (cutoff_str,),
-        )
-        cur = db.execute(
-            "SELECT COALESCE(SUM(bytes_written), 0) FROM write_log WHERE created_at >= ?;",
-            (cutoff_str,),
-        )
-        total_written = cur.fetchone()[0] or 0
+    new_log = WriteLog(bytes_written=file_size, created_at=now_str)
+    db.session.add(new_log)
+    WriteLog.query.filter(WriteLog.created_at < cutoff_str).delete()
+    db.session.commit()
+    
+    result = db.session.query(db.func.sum(WriteLog.bytes_written)).filter(WriteLog.created_at >= cutoff_str).scalar()
+    total_written = result or 0
 
     if total_written > MAX_HOURLY_DATA:
         shutdown_server()  # Kill Switch
@@ -221,35 +239,24 @@ def increment_stats(requests_inc: int = 0, bytes_in_inc: int = 0, bytes_out_inc:
     """Atomically increment stats counters in the DB."""
     if not (requests_inc or bytes_in_inc or bytes_out_inc):
         return
-    db = get_db()
-    with db:
-        db.execute(
-            """
-            UPDATE stats
-            SET total_requests = total_requests + ?,
-                total_bytes_in = total_bytes_in + ?,
-                total_bytes_out = total_bytes_out + ?
-            WHERE id = 1;
-            """,
-            (requests_inc, bytes_in_inc, bytes_out_inc),
-        )
+    stat = Stats.query.get(1)
+    if stat:
+        stat.total_requests += requests_inc
+        stat.total_bytes_in += bytes_in_inc
+        stat.total_bytes_out += bytes_out_inc
+        db.session.commit()
 
 
 def get_stats_snapshot():
-    db = get_db()
-    cur = db.execute(
-        "SELECT total_requests, total_bytes_in, total_bytes_out, server_started_at FROM stats WHERE id = 1;"
-    )
-    row = cur.fetchone()
-    if row is None:
-        # Should not happen, but recover gracefully
-        started_at = datetime.utcnow().isoformat()
-        with db:
-            db.execute(
-                "INSERT OR REPLACE INTO stats (id, total_requests, total_bytes_in, total_bytes_out, server_started_at) "
-                "VALUES (1, 0, 0, 0, ?);",
-                (started_at,),
-            )
+    stat = Stats.query.get(1)
+    if stat is None:
+        started_at = datetime.now(timezone.utc).isoformat()
+        stat = Stats(id=1, total_requests=0, total_bytes_in=0, total_bytes_out=0, server_started_at=started_at)
+        db.session.add(stat)
+        db.session.commit()
+        row = {"total_requests": 0, "total_bytes_in": 0, "total_bytes_out": 0, "server_started_at": started_at}
+    else:
+        row = {"total_requests": stat.total_requests, "total_bytes_in": stat.total_bytes_in, "total_bytes_out": stat.total_bytes_out, "server_started_at": stat.server_started_at}
         return {
             "total_requests": 0,
             "total_bytes_in": 0,
@@ -295,7 +302,7 @@ def set_ci_status(test_name, status, details=None):
     if norm not in VALID_CI_STATUSES:
         norm = "unknown"
 
-    updated_at = datetime.utcnow().isoformat()
+    updated_at = datetime.now(timezone.utc).isoformat()
     entry = {
         "name": test_name,
         "status": norm,
@@ -304,31 +311,23 @@ def set_ci_status(test_name, status, details=None):
     if details is not None:
         entry["details"] = str(details)
 
-    db = get_db()
-    with db:
-        db.execute(
-            """
-            INSERT INTO ci_status (test_name, status, updated_at, details)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(test_name) DO UPDATE SET
-                status = excluded.status,
-                updated_at = excluded.updated_at,
-                details = excluded.details;
-            """,
-            (test_name, norm, updated_at, details),
-        )
+    ci = CiStatus.query.get(test_name)
+    if not ci:
+        ci = CiStatus(test_name=test_name, status=norm, updated_at=updated_at, details=details)
+        db.session.add(ci)
+    else:
+        ci.status = norm
+        ci.updated_at = updated_at
+        ci.details = details
+    db.session.commit()
 
     return entry
 
 
 def get_ci_status(test_name):
-    db = get_db()
-    cur = db.execute(
-        "SELECT test_name, status, updated_at, details FROM ci_status WHERE test_name = ?;",
-        (test_name,),
-    )
-    row = cur.fetchone()
-    if row:
+    ci = CiStatus.query.get(test_name)
+    if ci:
+        row = {"test_name": ci.test_name, "status": ci.status, "updated_at": ci.updated_at, "details": ci.details}
         return {
             "name": row["test_name"],
             "status": row["status"],
@@ -346,21 +345,15 @@ def get_ci_status(test_name):
 
 
 def get_all_ci_status():
-    db = get_db()
-    cur = db.execute(
-        "SELECT test_name, status, updated_at, details FROM ci_status ORDER BY test_name ASC;"
-    )
-    rows = cur.fetchall()
+    cis = CiStatus.query.order_by(CiStatus.test_name.asc()).all()
     tests = []
-    for row in rows:
-        tests.append(
-            {
-                "name": row["test_name"],
-                "status": row["status"],
-                "updated_at": (row["updated_at"] + "Z") if row["updated_at"] else None,
-                "details": row["details"],
-            }
-        )
+    for ci in cis:
+        tests.append({
+            "name": ci.test_name,
+            "status": ci.status,
+            "updated_at": (ci.updated_at + "Z") if ci.updated_at else None,
+            "details": ci.details,
+        })
     return tests
 
 
@@ -549,9 +542,11 @@ def download_license():
         return jsonify({"error": "Missing session_id"}), 400
 
     # Verify that the session_id exists and is approved in the database
-    db = get_db()
-    cur = db.execute("SELECT status, purchase_id FROM transactions WHERE session_id = ?;", (session_id,))
-    row = cur.fetchone()
+    tx = Transaction.query.get(session_id)
+    if tx:
+        row = {"status": tx.status, "purchase_id": tx.purchase_id}
+    else:
+        row = None
     if not row or row["status"] not in ("finished", "paid"):
         return jsonify({"error": "Payment not approved or session not found"}), 402
 
@@ -586,9 +581,11 @@ def check_payment_status():
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
-    db = get_db()
-    cur = db.execute("SELECT status FROM transactions WHERE session_id = ?;", (session_id,))
-    row = cur.fetchone()
+    tx = Transaction.query.get(session_id)
+    if tx:
+        row = {"status": tx.status}
+    else:
+        row = None
     if not row:
         return jsonify({"status": "unknown"}), 404
 
@@ -610,9 +607,11 @@ def download_invoice():
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
-    db = get_db()
-    cur = db.execute("SELECT status FROM transactions WHERE session_id = ?;", (session_id,))
-    row = cur.fetchone()
+    tx = Transaction.query.get(session_id)
+    if tx:
+        row = {"status": tx.status}
+    else:
+        row = None
     if not row or row["status"] not in ("finished", "paid"):
         return jsonify({"error": "Payment not approved or session not found"}), 402
 
@@ -692,15 +691,11 @@ def simulate_payment_success():
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
-    db = get_db()
-    with db:
-        cur = db.execute("SELECT session_id FROM transactions WHERE session_id = ?;", (session_id,))
-        if not cur.fetchone():
-            return jsonify({"error": "Session not found"}), 404
-        db.execute(
-            "UPDATE transactions SET status = 'finished' WHERE session_id = ?;",
-            (session_id,)
-        )
+    tx = Transaction.query.get(session_id)
+    if not tx:
+        return jsonify({"error": "Session not found"}), 404
+    tx.status = 'finished'
+    db.session.commit()
         
     invoice_num = "INV-" + secrets.token_hex(4).upper()
     invoice_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
@@ -801,7 +796,7 @@ def create_crypto_payment():
 
     # Generate a unique order & session ID
     session_id = "NP-" + secrets.token_urlsafe(16)
-    created_at = datetime.utcnow().isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
 
     # Call NOWPayments API to create the invoice
     headers = {
@@ -826,15 +821,9 @@ def create_crypto_payment():
         invoice_data = r.json()
 
         # Save order to local database with status "pending"
-        db = get_db()
-        with db:
-            db.execute(
-                """
-                INSERT INTO transactions (session_id, purchase_id, trans_id, email, status, created_at)
-                VALUES (?, ?, ?, 'crypto-buyer@example.com', 'pending', ?);
-                """,
-                (session_id, str(invoice_data.get("id")), str(invoice_data.get("id")), created_at)
-            )
+        new_tx = Transaction(session_id=session_id, purchase_id=str(invoice_data.get("id")), trans_id=str(invoice_data.get("id")), email='crypto-buyer@example.com', status='pending', created_at=created_at)
+        db.session.add(new_tx)
+        db.session.commit()
 
         # Return the redirect invoice URL and the session_id
         return jsonify({
@@ -847,15 +836,9 @@ def create_crypto_payment():
         if NOWPAYMENTS_SANDBOX:
             app.logger.info("Falling back to local simulation due to API key error or network error.")
             invoice_id = "mock-" + secrets.token_hex(8)
-            db = get_db()
-            with db:
-                db.execute(
-                    """
-                    INSERT INTO transactions (session_id, purchase_id, trans_id, email, status, created_at)
-                    VALUES (?, ?, ?, 'crypto-buyer@example.com', 'pending', ?);
-                    """,
-                    (session_id, invoice_id, invoice_id, created_at)
-                )
+            new_tx = Transaction(session_id=session_id, purchase_id=invoice_id, trans_id=invoice_id, email='crypto-buyer@example.com', status='pending', created_at=created_at)
+            db.session.add(new_tx)
+            db.session.commit()
             return jsonify({
                 "session_id": session_id,
                 "invoice_url": f"local-sim:{session_id}"
@@ -866,6 +849,8 @@ def create_crypto_payment():
 
 
 @app.route("/nowpayments_ipn", methods=["POST"])
+@csrf.exempt  # Webhooks cannot send CSRF tokens, so we exempt them and rely on HMAC signature validation.
+@limiter.limit("20 per second")  # Accommodating high load of legitimate payment webhooks
 def nowpayments_ipn():
     """
     Webhook handler for NOWPayments IPN callbacks.
@@ -881,6 +866,13 @@ def nowpayments_ipn():
         data_dict = json.loads(request_data)
     except:
         return "Invalid JSON", 400
+        
+    # 2. Strict Input Validation using Pydantic
+    try:
+        validated_data = NowPaymentsWebhookSchema(**data_dict)
+    except Exception as e:
+        app.logger.warning(f"Webhook schema validation failed: {e}")
+        return jsonify({"error": "Invalid payload schema"}), 400
 
     # Sort JSON keys to construct signature check payload matching NOWPayments standard
     sorted_data = json.dumps(data_dict, sort_keys=True, separators=(',', ':'))
@@ -894,69 +886,63 @@ def nowpayments_ipn():
     if not hmac.compare_digest(received_sig, calculated_sig):
         return "Invalid signature verification", 403
 
-    # 2. Extract payment status
-    payment_status = data_dict.get("payment_status") or data_dict.get("status") or ""
-    order_id = data_dict.get("order_id")
+    # 3. Extract payment status safely from validated model
+    payment_status = validated_data.payment_status or validated_data.status or ""
+    order_id = validated_data.order_id
 
     # Important: Prevent automatic approval on Repeated Deposits and Wrong-Asset Deposits
     # as recommended in the NOWPayments documentation to avoid underpayment risks.
-    if data_dict.get("parent_payment_id"):
+    if validated_data.parent_payment_id:
         app.logger.warning(f"Ignored IPN for repeated/wrong-asset deposit for order {order_id}")
         return "Ignored repeated deposit", 200
 
     # If the transaction is fully finished on-chain, mark it approved
     if payment_status.lower() in ("finished", "paid"):
-        db = get_db()
         try:
-            with db:
-                cur = db.execute("SELECT status FROM transactions WHERE session_id = ?;", (order_id,))
-                row = cur.fetchone()
-                # Only process if it is pending to prevent duplicate invoice generation
-                if row and row["status"] not in ("finished", "paid"):
-                    db.execute(
-                        "UPDATE transactions SET status = 'finished' WHERE session_id = ?;",
-                        (order_id,)
-                    )
+            tx = Transaction.query.get(order_id)
+            if tx and tx.status not in ("finished", "paid"):
+                tx.status = 'finished'
+                db.session.commit()
                     
-                    invoice_num = "INV-" + secrets.token_hex(4).upper()
-                    invoice_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+                invoice_num = "INV-" + secrets.token_hex(4).upper()
+                invoice_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+                
+                pay_currency = str(validated_data.pay_currency or "").upper()
+                actually_paid = float(validated_data.actually_paid or validated_data.pay_amount or 0)
+                fiat_amount = float(validated_data.price_amount or 19.99)
+                
+                if actually_paid > 0:
+                    rate = fiat_amount / actually_paid
+                else:
+                    rate = 0
                     
-                    pay_currency = str(data_dict.get("pay_currency", "")).upper()
-                    actually_paid = float(data_dict.get("actually_paid") or data_dict.get("pay_amount", 0))
-                    fiat_amount = float(data_dict.get("price_amount", 19.99))
+                crypto_paid = f"{actually_paid} {pay_currency}"
+                exchange_rate = f"1 {pay_currency} = {rate:.2f} EUR"
+                tx_hash = str(validated_data.payin_hash or validated_data.hash or "N/A")
+                
+                invoice_data = {
+                    "Full Name": "Johannes Habel",
+                    "Address": "Bahnstr. 21 06886 Lutherstadt Wittenberg",
+                    "Tax Number": "46208375790",
+                    "Invoice Date": invoice_date,
+                    "Delivery Date": invoice_date,
+                    "Invoice Number": invoice_num,
+                    "Description": "Porn Fetch License",
+                    "Quantity": 1,
+                    "Tax Info": "Hinweis: Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+                    "Base Price in EUR": f"{fiat_amount:.2f} EUR",
+                    "Crypto Paid": crypto_paid,
+                    "Exchange Rate": exchange_rate,
+                    "Transaction Hash / TxID": tx_hash
+                }
+                
+                invoices_dir = os.path.join(SAVE_DIR, "invoices")
+                os.makedirs(invoices_dir, exist_ok=True)
+                invoice_path = os.path.join(invoices_dir, f"{order_id}.json")
+                with open(invoice_path, "w") as f:
+                    json.dump(invoice_data, f, indent=4)
                     
-                    if actually_paid > 0:
-                        rate = fiat_amount / actually_paid
-                    else:
-                        rate = 0
-                        
-                    crypto_paid = f"{actually_paid} {pay_currency}"
-                    exchange_rate = f"1 {pay_currency} = {rate:.2f} EUR"
-                    tx_hash = str(data_dict.get("payin_hash") or data_dict.get("hash") or "N/A")
-                    
-                    invoice_data = {
-                        "Full Name": "Johannes Habel",
-                        "Address": "Bahnstr. 21 06886 Lutherstadt Wittenberg",
-                        "Tax Number": "46208375790",
-                        "Invoice Date": invoice_date,
-                        "Delivery Date": invoice_date,
-                        "Invoice Number": invoice_num,
-                        "Description": "Porn Fetch License",
-                        "Quantity": 1,
-                        "Tax Info": "Hinweis: Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
-                        "Base Price in EUR": f"{fiat_amount:.2f} EUR",
-                        "Crypto Paid": crypto_paid,
-                        "Exchange Rate": exchange_rate,
-                        "Transaction Hash / TxID": tx_hash
-                    }
-                    
-                    invoices_dir = os.path.join(SAVE_DIR, "invoices")
-                    os.makedirs(invoices_dir, exist_ok=True)
-                    invoice_path = os.path.join(invoices_dir, f"{order_id}.json")
-                    with open(invoice_path, "w") as f:
-                        json.dump(invoice_data, f, indent=4)
-                        
-                    app.logger.info(f"NOWPayments order {order_id} marked as approved. Invoice {invoice_num} generated.")
+                app.logger.info(f"NOWPayments order {order_id} marked as approved. Invoice {invoice_num} generated.")
         except Exception as e:
             app.logger.error(f"Failed to update database or generate invoice for order {order_id}: {e}")
             return "Database Error", 500
@@ -1057,25 +1043,6 @@ def appcast():
     </rss>
     """
     return Response(xml, mimetype="application/rss+xml")
-# --- Security headers ---
-
-@app.after_request
-def add_security_headers(resp):
-    resp.headers["X-Content-Type-Options"] = "nosniff"
-    resp.headers["Referrer-Policy"] = "no-referrer"
-    resp.headers["X-Frame-Options"] = "DENY"
-    resp.headers["Content-Security-Policy"] = (
-        "default-src 'self'; "
-        "img-src 'self' data:; "
-        "style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "
-        "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "
-        "connect-src 'self'; "
-        "frame-src 'self' https://nowpayments.io; "
-        "base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
-    )
-    return resp
-
-
 # ---------- Kill switch endpoint ----------
 
 @app.route("/killswitch", methods=["POST"])
@@ -1127,9 +1094,9 @@ def stats_endpoint():
     try:
         started_at_dt = datetime.fromisoformat(started_at_str)
     except Exception:
-        started_at_dt = datetime.utcnow()
+        started_at_dt = datetime.now(timezone.utc)
 
-    uptime_seconds = int((datetime.utcnow() - started_at_dt).total_seconds())
+    uptime_seconds = int((datetime.now(timezone.utc) - started_at_dt).total_seconds())
 
     ci_list = get_all_ci_status()
 
@@ -1266,15 +1233,14 @@ def get_tasks():
     if not check_checklist_auth():
         return jsonify({"error": "Unauthorized"}), 401
     
-    db = get_db()
-    cur = db.execute("SELECT id, task, is_done, created_at FROM checklist ORDER BY created_at ASC;")
+    chk_tasks = Checklist.query.order_by(Checklist.created_at.asc()).all()
     tasks = []
-    for row in cur.fetchall():
+    for t in chk_tasks:
         tasks.append({
-            "id": row["id"],
-            "task": row["task"],
-            "is_done": bool(row["is_done"]),
-            "created_at": row["created_at"]
+            "id": t.id,
+            "task": t.task,
+            "is_done": bool(t.is_done),
+            "created_at": t.created_at
         })
     return jsonify(tasks)
 
@@ -1288,10 +1254,9 @@ def add_task():
     if not task:
         return jsonify({"error": "Task required"}), 400
         
-    db = get_db()
-    with db:
-        db.execute("INSERT INTO checklist (task, is_done, created_at) VALUES (?, ?, ?);",
-                   (task, 0, datetime.utcnow().isoformat()))
+    new_task = Checklist(task=task, is_done=0, created_at=datetime.now(timezone.utc).isoformat())
+    db.session.add(new_task)
+    db.session.commit()
     return jsonify({"success": True})
 
 @app.route('/checklist/api/toggle/<int:task_id>', methods=['POST'])
@@ -1301,9 +1266,10 @@ def toggle_task(task_id):
         
     data = request.json
     is_done = 1 if data.get("is_done") else 0
-    db = get_db()
-    with db:
-        db.execute("UPDATE checklist SET is_done = ? WHERE id = ?;", (is_done, task_id))
+    t = Checklist.query.get(task_id)
+    if t:
+        t.is_done = is_done
+        db.session.commit()
     return jsonify({"success": True})
 
 @app.route('/checklist/api/remove/<int:task_id>', methods=['POST'])
@@ -1311,19 +1277,15 @@ def remove_task(task_id):
     if not check_checklist_auth():
         return jsonify({"error": "Unauthorized"}), 401
         
-    db = get_db()
-    with db:
-        db.execute("DELETE FROM checklist WHERE id = ?;", (task_id,))
+    Checklist.query.filter_by(id=task_id).delete()
+    db.session.commit()
     return jsonify({"success": True})
 
 @app.route('/checklist/progress.svg', methods=['GET'])
 def checklist_progress_svg():
     # Progress SVG doesn't strictly need auth if meant for a public GitHub README
-    db = get_db()
-    cur = db.execute("SELECT COUNT(*) as total, SUM(is_done) as done FROM checklist;")
-    row = cur.fetchone()
-    total = row["total"] or 0
-    done = row["done"] or 0
+    total = db.session.query(db.func.count(Checklist.id)).scalar() or 0
+    done = db.session.query(db.func.sum(Checklist.is_done)).scalar() or 0
     
     percentage = 0
     if total > 0:
@@ -1394,4 +1356,6 @@ class NoIPLoggingHandler(WSGIRequestHandler):
 
 
 if __name__ == '__main__':
-    app.run(host="::", port=8000)
+    # Environment Safety: Bind the app to localhost (127.0.0.1) to prevent external access
+    # before passing through the reverse proxy/tunnel.
+    app.run(host="127.0.0.1", port=8000)
