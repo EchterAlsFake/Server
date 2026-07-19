@@ -170,9 +170,13 @@
         const text = newTaskInput.value.trim();
         if (!text) return;
         
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         await fetch('/checklist/api/add', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
             body: JSON.stringify({ task: text })
         });
         
@@ -181,16 +185,24 @@
     }
 
     async function toggleTask(id, is_done) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         await fetch(`/checklist/api/toggle/${id}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
             body: JSON.stringify({ is_done })
         });
         fetchTasks();
     }
 
     async function removeTask(id) {
-        await fetch(`/checklist/api/remove/${id}`, { method: 'POST' });
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        await fetch(`/checklist/api/remove/${id}`, { 
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
         fetchTasks();
     }
 

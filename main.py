@@ -821,8 +821,8 @@ def create_crypto_payment():
         "ipn_callback_url": f"{APP_DOMAIN}/nowpayments_ipn",
         "order_id": session_id,
         "order_description": "Porn Fetch License Key",
-        "success_url": f"{APP_DOMAIN}/buy_success?session_id={session_id}",
-        "cancel_url": f"{APP_DOMAIN}/buy_cancel"
+        "success_url": f"{request.host_url.rstrip('/')}/buy_success?session_id={session_id}",
+        "cancel_url": f"{request.host_url.rstrip('/')}/buy_cancel"
     }
 
     try:
