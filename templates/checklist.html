@@ -125,7 +125,12 @@
     const progressText = document.getElementById('progress-text');
 
     async function fetchTasks() {
-        const response = await fetch('/checklist/api/tasks');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const response = await fetch('/checklist/api/tasks', {
+            headers: {
+                "X-CSRFToken": csrfToken
+            }
+        });
         const tasks = await response.json();
         renderTasks(tasks);
     }
@@ -169,7 +174,7 @@
         e.preventDefault();
         const text = newTaskInput.value.trim();
         if (!text) return;
-        
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         await fetch('/checklist/api/add', {
             method: 'POST',
