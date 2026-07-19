@@ -47,6 +47,7 @@
     <p class="error-msg">{{ error }}</p>
     {% endif %}
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="password" name="password" placeholder="Enter password" required>
         <button type="submit">Login</button>
     </form>
