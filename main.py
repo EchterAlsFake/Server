@@ -986,15 +986,18 @@ def update():
         changelog = markdown.markdown(changelog_markdown)
 
     fortnite = get_update_information()
+    def get_dl(asset):
+        return asset.get("browser_download_url") if asset else None
+
     stuff = jsonify({
         "version": f"{fortnite.get('version')}",
         "url": fortnite.get("url"),
         "anonymous_download": "https://echteralsfake.me/download",
-        "download_linux_x64": fortnite.get("linux_x64")["browser_download_url"],
-        "download_linux_arm64": fortnite.get("linux_arm64")["browser_download_url"],
-        "download_windows_x64": fortnite.get("windows_x64")["browser_download_url"],
-        "download_windows_arm64": fortnite.get("windows_arm64")["browser_download_url"],
-        "download_macos_universal": fortnite.get("macos_universal")["browser_download_url"],
+        "download_linux_x64": get_dl(fortnite.get("linux_x64")),
+        "download_linux_arm64": get_dl(fortnite.get("linux_arm64")),
+        "download_windows_x64": get_dl(fortnite.get("windows_x64")),
+        "download_windows_arm64": get_dl(fortnite.get("windows_arm64")),
+        "download_macos_universal": get_dl(fortnite.get("macos_universal")),
         "changelog": changelog,
         "important_info": "Nothing here ;)"
     })
