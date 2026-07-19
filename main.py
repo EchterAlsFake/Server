@@ -411,12 +411,17 @@ def get_update_information():
         # Updating data every 5 minutes for minimal API requests
         update_cache["last_checked"] = now
 
-        get_information = httpx.get(url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest",
-                            headers={
-                                "Accept": "application/vnd.github+json",
-                                "Authorization": f"Bearer {GITHUB_TOKEN}",
-                                "X-GitHub-Api-Version": "2022-11-28"
-                            }).json()
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+        if GITHUB_TOKEN:
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+
+        get_information = httpx.get(
+            url="https://api.github.com/repos/EchterAlsFake/Porn_Fetch/releases/latest",
+            headers=headers
+        ).json()
 
         update_cache["data"] = get_information
         data = get_information
@@ -427,11 +432,18 @@ def get_update_information():
 
     version = data.get("tag_name", "unavailable")
     assets = data.get("assets", [])
-    linux_x64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_x64.bin"))
-    linux_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Linux_GUI_arm64.bin"))
-    windows_x64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_x64.exe"))
-    windows_arm64 = next((a for a in assets if a.get("name") == "PornFetch_Windows_GUI_arm64.exe"))
-    macos_universal = next((a for a in assets if a.get("name") == "PornFetch_macOS_GUI_Universal.dmg"))
+    
+    def get_asset(name):
+        asset = next((a for a in assets if a.get("name") == name), None)
+        if not asset:
+            app.logger.error(f"Missing asset on GitHub release: {name}")
+        return asset
+
+    linux_x64 = get_asset("PornFetch_Linux_GUI_x64.bin")
+    linux_arm64 = get_asset("PornFetch_Linux_GUI_arm64.bin")
+    windows_x64 = get_asset("PornFetch_Windows_GUI_x64.exe")
+    windows_arm64 = get_asset("PornFetch_Windows_GUI_arm64.exe")
+    macos_universal = get_asset("PornFetch_macOS_GUI_Universal.dmg")
     stuff = {
         "version": version,
         "linux_x64": linux_x64,
