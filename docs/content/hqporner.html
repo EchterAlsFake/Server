@@ -8,7 +8,7 @@
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for HQPorner. Fetch videos, metadata, search, get videos by actress or category, and download content — all powered by the eaf_base_api networking engine. -->
 <!-- SLOT:VERSION = 2.3 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-hqporner -->
-<!-- SLOT:PYPI_PACKAGE = hqporner_api -->
+<!-- SLOT:PYPI_PACKAGE = git+https://github.com/EchterAlsFake/unofficial-api-for-hqporner git+https://github.com/EchterAlsFake/eaf_base_api -->
 
 <!-- SIDEBAR_NAV -->
 <!-- BEGIN:SIDEBAR_NAV -->
@@ -94,16 +94,22 @@
     <span class="section-anchor" id="installation"></span>
     <h2><span class="section-icon">📦</span> Installation</h2>
 
+    <div class="info-box warning">
+        <div class="info-box-title">Note: Temporary Installation Workaround</div>
+        This manual Git installation is temporarily needed to workaround issues on PyPI and will be fixed the next days.
+    </div>
+
+
     <p>Install from PyPI using pip:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install hqporner_api</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-hqporner<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
     </div>
 
     <p>For <strong>CLI formatting</strong> support (recommended), install with the optional <code>cli</code> dependency:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install hqporner_api[cli]</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-hqporner[cli]<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
     </div>
 
     <div class="info-box note">

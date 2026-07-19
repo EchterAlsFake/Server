@@ -8,7 +8,7 @@
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine. -->
 <!-- SLOT:VERSION = 5.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-pornhub -->
-<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-pornhub -->
+<!-- SLOT:PYPI_PACKAGE = git+https://github.com/EchterAlsFake/unofficial-api-for-pornhub git+https://github.com/EchterAlsFake/eaf_base_api -->
 
 <!-- SIDEBAR_NAV -->
 <!-- BEGIN:SIDEBAR_NAV -->
@@ -178,16 +178,22 @@
     <span class="section-anchor" id="installation"></span>
     <h2><span class="section-icon">📦</span> Installation</h2>
 
+    <div class="info-box warning">
+        <div class="info-box-title">Note: Temporary Installation Workaround</div>
+        This manual Git installation is temporarily needed to workaround issues on PyPI and will be fixed the next days.
+    </div>
+
+
     <p>Install from PyPI using pip:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-pornhub</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-pornhub<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
     </div>
 
     <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-pornhub[av]</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-pornhub[av]<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
     </div>
 
     <div class="info-box note">

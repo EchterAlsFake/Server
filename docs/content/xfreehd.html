@@ -8,7 +8,7 @@
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine. -->
 <!-- SLOT:VERSION = 1.5 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xfreehd -->
-<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xfreehd -->
+<!-- SLOT:PYPI_PACKAGE = git+https://github.com/EchterAlsFake/unofficial-api-for-xfreehd git+https://github.com/EchterAlsFake/eaf_base_api -->
 
 <!-- SIDEBAR_NAV -->
 <!-- BEGIN:SIDEBAR_NAV -->
@@ -94,10 +94,16 @@
     <span class="section-anchor" id="installation"></span>
     <h2><span class="section-icon">📦</span> Installation</h2>
 
+    <div class="info-box warning">
+        <div class="info-box-title">Note: Temporary Installation Workaround</div>
+        This manual Git installation is temporarily needed to workaround issues on PyPI and will be fixed the next days.
+    </div>
+
+
     <p>Install from PyPI using pip:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-xfreehd</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-xfreehd<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
     </div>
 
     <div class="info-box note">

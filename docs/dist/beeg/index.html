@@ -1027,7 +1027,7 @@
                 <p>A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metadata by parsing external API endpoints, and download streams via HLS. Powered by the eaf_base_api networking engine.</p>
                 <div class="hero-actions">
                     <div class="install-cmd" onclick="copyInstall(this)" title="Click to copy">
-                        <span class="prefix">$</span> pip install unofficial-api-for-beeg
+                        <span class="prefix">$</span> pip install git+https://github.com/EchterAlsFake/unofficial-api-for-beeg git+https://github.com/EchterAlsFake/eaf_base_api
                         <span class="copy-icon">📋</span>
                     </div>
                     <a href="https://github.com/EchterAlsFake/unofficial-api-for-beeg" class="btn btn-secondary" target="_blank">GitHub →</a>
@@ -1077,16 +1077,23 @@
     <span class="section-anchor" id="installation"></span>
     <h2><span class="section-icon">📦</span> Installation</h2>
 
+    <div class="info-box warning">
+        <div class="info-box-title">Note: Temporary Installation Workaround</div>
+        This manual Git installation is temporarily needed to workaround issues on PyPI and will be fixed the next days.
+    </div>
+
+
     <p>Install from PyPI using pip:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-beeg</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-beeg<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
     </div>
 
     <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-beeg[av]</code></pre>
+<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-beeg[av]<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
+
     </div>
 
     <div class="info-box note">
