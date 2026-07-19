@@ -1,0 +1,9 @@
+HiddenServiceDir /data/data/com.termux/files/home/.tor/hidden_service/
+HiddenServicePort 80 127.0.0.1:8000
+SocksPort 0
+ORPort 0
+ExitRelay 0
+ExitPolicy reject *:*
+
+SafeLogging 1
+Log notice file /data/data/com.termux/files/home/.tor/tor.log
