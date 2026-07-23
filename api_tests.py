@@ -30,7 +30,6 @@ REPOS = [
     "https://github.com/EchterAlsFake/unofficial-api-for-thumbzilla",
     "https://github.com/EchterAlsFake/unofficial-api-for-redtube",
     "https://github.com/EchterAlsFake/unofficial-api-for-tube8",
-    "https://github.com/EchterAlsFake/unofficial-api-for-porngo",
     "https://github.com/EchterAlsFake/unofficial-api-for-xfreehd",
 ]
 
