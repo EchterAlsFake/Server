@@ -1152,6 +1152,7 @@ def stats_endpoint():
 # ---------- CI/CD endpoints ----------
 
 @app.route("/ci/<test_name>", methods=["POST"])
+@csrf.exempt
 @limiter.limit(RATE_LIMIT)
 def ci_update(test_name):
     """
