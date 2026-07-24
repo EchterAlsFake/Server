@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .message-box::-webkit-scrollbar { width: 6px; }
+        .message-box::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl h-[80vh] glass rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+        {% if not logged_in %}
+        <div class="flex-1 flex flex-col items-center justify-center p-8">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-8">Welcome to Chat</h1>
+            <form action="{{ url_for('chat_login') }}" method="POST" class="w-full max-w-sm space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Username</label>
+                    <input type="text" name="username" class="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white placeholder-slate-500" placeholder="Enter your username" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
+                    <input type="password" name="password" class="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white placeholder-slate-500" placeholder="Enter your password" required>
+                </div>
+                {% with messages = get_flashed_messages() %}
+                  {% if messages %}
+                    {% for message in messages %}
+                      <p class="text-red-400 text-sm text-center">{{ message }}</p>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transform hover:scale-[1.02] transition-all">Sign In</button>
+            </form>
+        </div>
+        {% else %}
+        <!-- Chat Interface -->
+        <div class="p-6 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/20">
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Live Chat</h1>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <span class="text-slate-300 text-sm font-medium">{{ username }}</span>
+                </div>
+                <a href="{{ url_for('chat_logout') }}" class="text-sm px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">Logout</a>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 message-box" id="messagesBox">
+            {% for msg in messages %}
+            <div class="flex flex-col {% if msg.username == username %}items-end{% else %}items-start{% endif %} animate-[fadeIn_0.3s_ease-out]">
+                <span class="text-xs text-slate-400 mb-1 px-1">{{ msg.username }} • {{ msg.created_at[:16].replace('T', ' ') }}</span>
+                <div class="px-5 py-3 rounded-2xl max-w-[80%] {% if msg.username == username %}bg-gradient-to-br from-blue-600 to-blue-700 rounded-tr-sm{% else %}bg-slate-700/80 rounded-tl-sm{% endif %} shadow-md">
+                    <p class="text-sm leading-relaxed break-words">{{ msg.content }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="p-4 border-t border-slate-700/50 bg-slate-800/30">
+            <form action="{{ url_for('chat') }}" method="POST" class="flex gap-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="content" autocomplete="off" class="flex-1 px-5 py-3 bg-slate-900/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-white placeholder-slate-500" placeholder="Type a message..." required>
+                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transition-all flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </form>
+        </div>
+        <script>
+            const box = document.getElementById('messagesBox');
+            if(box) box.scrollTop = box.scrollHeight;
+        </script>
+        {% endif %}
+    </div>
+</body>
+</html>
