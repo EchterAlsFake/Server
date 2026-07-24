@@ -110,14 +110,21 @@
         <!-- Tasks will be injected here via JS -->
     </ul>
 
+    {% if is_auth %}
     <form class="add-task-form" id="add-task-form">
         <input type="text" id="new-task-input" placeholder="New task..." required>
         <button type="submit">Add Task</button>
     </form>
+    {% else %}
+    <div style="margin-top: 1.5rem; text-align: center;">
+        <a href="/checklist/login" style="color: #007bff; text-decoration: none;">Login to edit</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}
 <script>
+    const isAuth = {{ 'true' if is_auth else 'false' }};
     const taskList = document.getElementById('task-list');
     const addTaskForm = document.getElementById('add-task-form');
     const newTaskInput = document.getElementById('new-task-input');
@@ -148,20 +155,26 @@
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = task.is_done;
-            checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
+            if (isAuth) {
+                checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
+            } else {
+                checkbox.disabled = true;
+            }
             
             const span = document.createElement('span');
             span.className = `task-text ${task.is_done ? 'done' : ''}`;
             span.textContent = task.task;
             
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-btn';
-            removeBtn.textContent = 'Remove';
-            removeBtn.addEventListener('click', () => removeTask(task.id));
-            
             li.appendChild(checkbox);
             li.appendChild(span);
-            li.appendChild(removeBtn);
+
+            if (isAuth) {
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', () => removeTask(task.id));
+                li.appendChild(removeBtn);
+            }
             taskList.appendChild(li);
         });
         
@@ -211,7 +224,9 @@
         fetchTasks();
     }
 
-    addTaskForm.addEventListener('submit', addTask);
+    if (addTaskForm) {
+        addTaskForm.addEventListener('submit', addTask);
+    }
     fetchTasks();
 </script>
 {% endblock %}

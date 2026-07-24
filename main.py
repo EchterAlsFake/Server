@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g, redirect
+from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g, redirect, session
 from fpdf import FPDF
 from werkzeug.serving import WSGIRequestHandler
 
@@ -1235,32 +1235,35 @@ def check_checklist_auth():
     auth_env = os.environ.get("CHECKLIST_AUTH")
     if not auth_env:
         return False
-    return request.cookies.get("checklist_auth") == auth_env
+    return session.get("checklist_auth") is True
 
-@app.route('/checklist', methods=['GET', 'POST'])
-def checklist():
+@app.route('/checklist/login', methods=['GET', 'POST'])
+def checklist_login():
     auth_env = os.environ.get("CHECKLIST_AUTH")
     if not auth_env:
         return "CHECKLIST_AUTH env variable not set", 500
 
     if request.method == 'POST':
         password = request.form.get("password", "")
-        if password == auth_env:
-            resp = make_response(redirect("/checklist"))
-            resp.set_cookie("checklist_auth", password)
-            return resp
+        if hmac.compare_digest(password.encode('utf-8'), auth_env.encode('utf-8')):
+            session["checklist_auth"] = True
+            return redirect("/checklist")
         else:
             return render_template("checklist_login.html", error="Invalid password"), 401
 
-    if not check_checklist_auth():
-        return render_template("checklist_login.html")
+    return render_template("checklist_login.html")
+
+@app.route('/checklist', methods=['GET'])
+def checklist():
+    auth_env = os.environ.get("CHECKLIST_AUTH")
+    if not auth_env:
+        return "CHECKLIST_AUTH env variable not set", 500
     
-    return render_template("checklist.html")
+    is_auth = check_checklist_auth()
+    return render_template("checklist.html", is_auth=is_auth)
 
 @app.route('/checklist/api/tasks', methods=['GET'])
 def get_tasks():
-    if not check_checklist_auth():
-        return jsonify({"error": "Unauthorized"}), 401
     
     chk_tasks = Checklist.query.order_by(Checklist.created_at.asc()).all()
     tasks = []
@@ -1325,7 +1328,9 @@ def checklist_progress_svg():
     value = f"{percentage}%"
     
     total_width = 400
-    height = 36
+    bar_height = 36
+    badge_height = 22
+    height = bar_height + badge_height + 12 # total height 70
     radius = 18
     fill_width = int((percentage / 100.0) * total_width)
 
@@ -1339,6 +1344,18 @@ def checklist_progress_svg():
         grad_start, grad_end = "#444444", "#666666"  # Grey
 
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{height}" role="img" aria-label="{label}: {value}">
+  <style>
+    @keyframes pulse {{
+      0% {{ opacity: 0.5; transform: translate(0, 0); }}
+      50% {{ opacity: 1; transform: translate(2px, -2px); }}
+      100% {{ opacity: 0.5; transform: translate(0, 0); }}
+    }}
+    .font-base {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }}
+    .arrow {{ animation: pulse 2s infinite; display: inline-block; fill: #58a6ff; }}
+    .badge {{ transition: all 0.3s ease; }}
+    svg:hover .badge-bg {{ fill: rgba(255, 255, 255, 0.1); stroke: rgba(88, 166, 255, 0.4); }}
+    svg:hover .badge-text {{ fill: #ffffff; }}
+  </style>
   <defs>
     <linearGradient id="bar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="{grad_start}" />
@@ -1349,20 +1366,28 @@ def checklist_progress_svg():
     </filter>
   </defs>
   
-  <rect width="{total_width}" height="{height}" rx="{radius}" fill="#1e1e24" filter="url(#shadow)"/>
+  <rect width="{total_width}" height="{bar_height}" rx="{radius}" fill="#1e1e24" filter="url(#shadow)"/>
   
   <mask id="fill-mask">
-    <rect width="{total_width}" height="{height}" rx="{radius}" fill="#fff"/>
+    <rect width="{total_width}" height="{bar_height}" rx="{radius}" fill="#fff"/>
   </mask>
   
   <g mask="url(#fill-mask)">
-    <rect width="{fill_width}" height="{height}" fill="url(#bar-grad)"/>
-    <rect width="{total_width}" height="{height}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" rx="{radius}"/>
+    <rect width="{fill_width}" height="{bar_height}" fill="url(#bar-grad)"/>
+    <rect width="{total_width}" height="{bar_height}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" rx="{radius}"/>
   </g>
   
-  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">
+  <g class="font-base" font-size="14" font-weight="600">
     <text x="20" y="23" fill="#ffffff">{label}</text>
     <text x="{total_width - 20}" y="23" text-anchor="end" fill="#ffffff">{value}</text>
+  </g>
+
+  <g class="badge" transform="translate({total_width/2 - 75}, {bar_height + 10})">
+    <rect class="badge-bg" width="150" height="{badge_height}" rx="11" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text class="badge-text font-base" x="75" y="15" text-anchor="middle" font-size="11" font-weight="500" fill="#a8b2bd">
+      Click for full checklist
+    </text>
+    <text class="arrow font-base" x="135" y="15" text-anchor="middle" font-size="12" font-weight="bold">↗</text>
   </g>
 </svg>'''
 
