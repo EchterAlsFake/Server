@@ -55,6 +55,13 @@ Clearnet: **https://echteralsfake.me**
 - /appcast.xml → Update for macOS version of Porn Fetch
 - /checklist → I can edit the checklist here
 - /checklist/progress.svg → Shows the progress for the next Porn Fetch version
+- /chat → Private messaging interface! (NOT FOR THE PUBLIC)
+
+# Chat Feature
+> [!CAUTION]
+> The chat feature is exclusively used for my private purposes for secure communication with my friends. It's not meant to be used
+> by the public and is not used in any way by Porn Fetch. 
+
 
 That's it :) 
 
