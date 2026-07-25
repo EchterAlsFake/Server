@@ -74,7 +74,15 @@
             </label>
         </div>
         
-        <button id="pay-btn" class="nowpayments-btn" disabled>Proceed to Payment</button>
+        <div style="margin-top: 10px; margin-bottom: 25px;">
+            <span class="nowpayments-label">Email Address (For Fiat Delivery)</span>
+            <input type="email" id="fiat-email" placeholder="Enter your email" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #1e293b; background: #0f172a; color: #f8fafc;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button id="pay-btn" class="nowpayments-btn" disabled style="flex: 1;">Pay with Crypto (€19.99)</button>
+            <button id="pay-fiat-btn" class="nowpayments-btn" disabled style="flex: 1; background-color: #3b82f6;">Buy with Credit Card (€30)</button>
+        </div>
     </div>
     
     <!-- Simulated Local Transaction Screen (Hidden by Default, used for sandbox fallback) -->
@@ -119,14 +127,23 @@
 
         let currentSessionId = null;
 
+        const fiatEmail = document.getElementById("fiat-email");
+        const payFiatBtn = document.getElementById("pay-fiat-btn");
+
         // Enable or disable the pay button based on checkboxes
         function updateButtonState() {
-            payBtn.disabled = !(chkAge.checked && chkCountry.checked && chkWithdrawal.checked);
+            const checked = chkAge.checked && chkCountry.checked && chkWithdrawal.checked;
+            payBtn.disabled = !checked;
+            
+            // Fiat also requires email
+            const emailValid = fiatEmail.value.includes("@");
+            payFiatBtn.disabled = !(checked && emailValid);
         }
 
         chkAge.addEventListener("change", updateButtonState);
         chkCountry.addEventListener("change", updateButtonState);
         chkWithdrawal.addEventListener("change", updateButtonState);
+        fiatEmail.addEventListener("input", updateButtonState);
 
         // Handle checkout progression
         payBtn.addEventListener("click", async () => {
@@ -166,7 +183,47 @@
                 console.error(err);
                 alert("Network error. Could not create payment transaction.");
                 payBtn.disabled = false;
-                payBtn.innerText = "Proceed to Payment";
+                payBtn.innerText = "Pay with Crypto (€19.99)";
+            }
+        });
+
+        payFiatBtn.addEventListener("click", async () => {
+            payFiatBtn.disabled = true;
+            payFiatBtn.innerText = "Redirecting to Transak...";
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const response = await fetch("/create-fiat-payment", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({ email: fiatEmail.value })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentSessionId = data.session_id;
+
+                    if (data.transak_url) {
+                        window.location.href = data.transak_url;
+                    } else if (data.invoice_url && data.invoice_url.startsWith("local-sim:")) {
+                        simSessionId.innerText = data.session_id;
+                        checkoutForm.style.display = "none";
+                        txScreen.style.display = "block";
+                    }
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    alert(errData.error || "Error creating fiat payment. Please try again.");
+                    payFiatBtn.disabled = false;
+                    payFiatBtn.innerText = "Buy with Credit Card (€30)";
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error. Could not create fiat payment transaction.");
+                payFiatBtn.disabled = false;
+                payFiatBtn.innerText = "Buy with Credit Card (€30)";
             }
         });
 

@@ -198,6 +198,12 @@ class ChatMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.String, nullable=False)
 
+class License(db.Model):
+    license_key = db.Column(db.String, primary_key=True)
+    state = db.Column(db.String, nullable=False, default="valid")
+    transaction_id = db.Column(db.String, nullable=True)
+    created_at = db.Column(db.String, nullable=False)
+
 with app.app_context():
     db.create_all()
     started_at = datetime.now(timezone.utc).isoformat()
@@ -589,18 +595,29 @@ def download_license():
 
     nowpayments_id = row["purchase_id"] or session_id
     created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    license_key_str = make_license_key()
     license_payload = {
         "schema": 1,
         "product": "porn-fetch",
         "kid": "v1",
         "alg": "ed25519",
-        "license_key": make_license_key(),
+        "license_key": license_key_str,
         "stripe_session_id": nowpayments_id,
         "created_at": created_at,
         "features": ["full_unlock"],
     }
 
     license_payload["sig"] = sign_license(license_payload)
+
+    # Save the license to the database
+    new_license = License(
+        license_key=license_key_str,
+        state="valid",
+        transaction_id=nowpayments_id,
+        created_at=created_at
+    )
+    db.session.add(new_license)
+    db.session.commit()
 
     file_bytes = (json.dumps(license_payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
     return send_file(
@@ -609,6 +626,21 @@ def download_license():
         download_name="porn_fetch.license",
         mimetype="application/json",
     )
+
+
+@app.route("/check_license", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
+def check_license():
+    data = request.get_json()
+    if not data or "license_key" not in data:
+        return jsonify({"error": "Missing license_key in JSON payload"}), 400
+    
+    license_key = data["license_key"]
+    lic = License.query.get(license_key)
+    if lic:
+        return jsonify({"state": lic.state}), 200
+    else:
+        return jsonify({"error": "License not found", "state": "invalid"}), 404
 
 
 @app.route("/check-payment-status", methods=["GET"])
@@ -823,6 +855,61 @@ def porn_fetch():
 @app.route("/donation", methods=["GET"])
 def donation():
     return render_template("donation.html")
+
+
+@app.route("/create-fiat-payment", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
+def create_fiat_payment():
+    if not NOWPAYMENTS_API_KEY:
+        return jsonify({"error": "NOWPayments API key not configured on server."}), 500
+
+    data = request.get_json() or {}
+    email = data.get("email", "").strip()
+    if not email:
+        return jsonify({"error": "Missing email address"}), 400
+
+    session_id = "NP-" + secrets.token_urlsafe(16)
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    headers = {
+        "x-api-key": NOWPAYMENTS_API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "price_amount": 30,
+        "price_currency": "eur",
+        "pay_currency": "ltc",
+        "ipn_callback_url": f"{APP_DOMAIN}/nowpayments_ipn",
+        "order_id": session_id,
+        "order_description": "Porn Fetch License Key (Fiat)",
+    }
+
+    try:
+        api_url = f"{NOWPAYMENTS_API_URL}/payment"
+        r = httpx.post(api_url, json=payload, headers=headers, timeout=10.0)
+        r.raise_for_status()
+        payment_data = r.json()
+        
+        pay_address = payment_data.get("pay_address")
+        payment_id = str(payment_data.get("payment_id"))
+
+        if not pay_address:
+            return jsonify({"error": "Failed to get deposit address from NOWPayments"}), 500
+
+        new_tx = Transaction(session_id=session_id, purchase_id=payment_id, trans_id=payment_id, email=email, status='pending', created_at=created_at)
+        db.session.add(new_tx)
+        db.session.commit()
+
+        transak_url = f"https://global.transak.com/?cryptoCurrencyCode=LTC&network=litecoin&fiatCurrency=EUR&fiatAmount=30&walletAddress={pay_address}&emailAddress={email}"
+
+        return jsonify({
+            "session_id": session_id,
+            "transak_url": transak_url
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"NOWPayments Fiat Payment API call failed: {e}")
+        return jsonify({"error": "Failed to create fiat payment"}), 500
 
 
 @app.route("/create-crypto-payment", methods=["POST"])
