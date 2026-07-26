@@ -8,7 +8,7 @@
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for SpankBang. Fetch videos, metadata, search, and iterate over channels, creators, or pornstars. Download content using HLS or direct RAW MP4 downloads. Powered by the eaf_base_api networking engine. -->
 <!-- SLOT:VERSION = 2.2.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-spankbang -->
-<!-- SLOT:PYPI_PACKAGE = git+https://github.com/EchterAlsFake/unofficial-api-for-spankbang git+https://github.com/EchterAlsFake/eaf_base_api -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-spankbang -->
 
 <!-- SIDEBAR_NAV -->
 <!-- BEGIN:SIDEBAR_NAV -->
@@ -83,35 +83,22 @@
         <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
     </div>
 
-    <h3 style="margin-top: 32px; font-size: 22px;">✨ Features Overview</h3>
-    <ul class="param-list" style="margin-top: 16px;">
-        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">⚡</span> <strong style="color: var(--text-primary); margin-right: 6px;">Fully Asynchronous</strong> — High-performance scraping and downloading via <code>asyncio</code> and <code>curl_cffi</code>.</li>
-        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🛡️</span> <strong style="color: var(--text-primary); margin-right: 6px;">Bot Protection Bypass</strong> — Mimics real browser TLS fingerprints to bypass bot protection.</li>
-        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">📥</span> <strong style="color: var(--text-primary); margin-right: 6px;">Flexible Downloads</strong> — Support for both HLS streamed downloads (using <code>DownloadConfigHLS</code>) and direct CDN MP4 downloads (using <code>DownloadConfigRAW</code>).</li>
-        <li class="param-item" style="padding: 10px 0;"><span style="font-size:18px; margin-right:8px;">🔍</span> <strong style="color: var(--text-primary); margin-right: 6px;">Scraping &amp; Filtering</strong> — Extract video listings by query, sorted by date, quality, duration, or search filter. Scrape details for channels, creators, and pornstars.</li>
-    </ul>
-</div>
+    </div>
 
 <div class="section" id="installation-section">
     <span class="section-anchor" id="installation"></span>
     <h2><span class="section-icon">📦</span> Installation</h2>
 
-    <div class="info-box warning">
-        <div class="info-box-title">Note: Temporary Installation Workaround</div>
-        This manual Git installation is temporarily needed to workaround issues on PyPI and will be fixed the next days.
-    </div>
-
-
     <p>Install from PyPI using pip:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-spankbang<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
+<pre><code>pip install unofficial-api-for-spankbang</code></pre>
     </div>
 
     <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
     <div class="code-window">
         <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install git+https://github.com/EchterAlsFake/unofficial-api-for-spankbang[av]<br>pip install git+https://github.com/EchterAlsFake/eaf_base_api</code></pre>
+<pre><code>pip install unofficial-api-for-spankbang[av]</code></pre>
     </div>
 
     <div class="info-box note">
