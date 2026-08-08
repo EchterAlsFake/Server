@@ -187,17 +187,6 @@ class Checklist(db.Model):
     is_done = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.String, nullable=False)
 
-class ChatAccount(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-
-class ChatMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(80), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.String, nullable=False)
-
 class License(db.Model):
     license_key = db.Column(db.String, primary_key=True)
     state = db.Column(db.String, nullable=False, default="valid")
@@ -1498,73 +1487,6 @@ def checklist_progress_svg():
     resp.headers.pop('ETag', None)
     resp.headers.pop('Last-Modified', None)
     return resp
-
-# --- CHAT ROUTES ---
-
-@app.route('/chat', methods=['GET', 'POST'])
-def chat():
-    if 'chat_username' not in session:
-        return render_template('chat.html', logged_in=False)
-    
-    if request.method == 'POST':
-        content = request.form.get('content')
-        if content:
-            msg = ChatMessage(
-                username=session['chat_username'],
-                content=content,
-                created_at=datetime.now(timezone.utc).isoformat()
-            )
-            db.session.add(msg)
-            db.session.commit()
-            return redirect(url_for('chat'))
-
-    messages = ChatMessage.query.order_by(ChatMessage.id.desc()).limit(100).all()
-    messages.reverse()
-    return render_template('chat.html', logged_in=True, messages=messages, username=session['chat_username'])
-
-@app.route('/chat/login', methods=['POST'])
-def chat_login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    acc = ChatAccount.query.filter_by(username=username).first()
-    if acc and check_password_hash(acc.password_hash, password):
-        session['chat_username'] = username
-        return redirect(url_for('chat'))
-    flash('Invalid credentials')
-    return redirect(url_for('chat'))
-
-@app.route('/chat/logout', methods=['GET', 'POST'])
-def chat_logout():
-    session.pop('chat_username', None)
-    return redirect(url_for('chat'))
-
-@app.route('/chat/master', methods=['GET', 'POST'])
-def chat_master():
-    master_pass = os.environ.get("CHAT_MASTER_PASSWORD", "admin")
-    
-    if request.method == 'POST':
-        if request.form.get('master_password') == master_pass:
-            session['chat_master'] = True
-            return redirect(url_for('chat_master'))
-        elif request.form.get('action') == 'create_account' and session.get('chat_master'):
-            username = request.form.get('username')
-            password = request.form.get('password')
-            if username and password:
-                if ChatAccount.query.filter_by(username=username).first():
-                    flash('Username already exists')
-                else:
-                    new_acc = ChatAccount(username=username, password_hash=generate_password_hash(password))
-                    db.session.add(new_acc)
-                    db.session.commit()
-                    flash('Account created successfully')
-            return redirect(url_for('chat_master'))
-            
-    if not session.get('chat_master'):
-        return render_template('chat_master.html', logged_in=False)
-        
-    accounts = ChatAccount.query.all()
-    return render_template('chat_master.html', logged_in=True, accounts=accounts)
-
 
 class NoIPLoggingHandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
