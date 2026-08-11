@@ -2,8 +2,8 @@
 
 ## Project Overview
 This is a plug-and-play documentation website system for **EchterAlsFake's Porn API** ecosystem.
-The author (Johannes Habel) maintains **15+ Python API wrappers/scrapers** for adult sites, all sharing:
-- A common base dependency: **eaf_base_api** (v3.3.3)
+The author (Johannes Habel) maintains **15 Python API wrappers/scrapers**, all sharing:
+- A common base dependency: **eaf_base_api** (v4.0.0; wrappers require `eaf-base-api>=4.0.0`)
 - A consistent architecture: `Client → Video / Pornstar / Channel` objects
 - Async-first design using `asyncio` + `curl_cffi`
 
@@ -49,52 +49,56 @@ The author (Johannes Habel) maintains **15+ Python API wrappers/scrapers** for a
 - `SLOT:PYPI_PACKAGE` — pip install name
 
 ## Completed APIs
-1. **eaf_base_api** — General networking library docs (eaf_base_api.html → builds to docs/dist/eaf_base_api/index.html)
-2. **xvideos** — Full documentation done (xvideos.html → builds to docs/dist/xvideos/index.html)
-3. **hqporner** — Full documentation done (hqporner.html → builds to docs/dist/hqporner/index.html)
-4. **pornhub** — Full documentation done (pornhub.html → builds to docs/dist/pornhub/index.html)
-5. **spankbang** — Full documentation done (spankbang.html → builds to docs/dist/spankbang/index.html)
-6. **xnxx** — Full documentation done (xnxx.html → builds to docs/dist/xnxx/index.html)
-7. **beeg** — Full documentation done (beeg.html → builds to docs/dist/beeg/index.html)
-8. **porntrex** — Full documentation done (porntrex.html → builds to docs/dist/porntrex/index.html)
-9. **xfreehd** — Full documentation done (xfreehd.html → builds to docs/dist/xfreehd/index.html)
-10. **xhamster** — Full documentation done (xhamster.html → builds to docs/dist/xhamster/index.html)
-11. **eporner** — Full documentation done (eporner.html → builds to docs/dist/eporner/index.html)
-12. **redtube** — Full documentation done (redtube.html → builds to docs/dist/redtube/index.html)
-13. **youporn** — Full documentation done (youporn.html → builds to docs/dist/youporn/index.html)
 
-## Pending APIs (to tackle later)
-- tube8, thumbzilla, missav
+The core documentation and all **15 wrapper APIs** are present and complete:
+
+1. **eaf_base_api** — shared core documentation
+2. **beeg**
+3. **eporner**
+4. **hqporner**
+5. **missav**
+6. **pornhub**
+7. **porntrex**
+8. **redtube**
+9. **spankbang**
+10. **thumbzilla**
+11. **tube8**
+12. **xfreehd**
+13. **xhamster**
+14. **xnxx**
+15. **xvideos**
+16. **youporn**
+
+There are no pending wrapper pages. Each source file builds to `dist/{api_name}/index.html`.
 
 ## File Structure
 ```
-/home/asuna/PycharmProjects/docs/
+/home/asuna/PycharmProjects/Server/docs/
 ├── BRAIN_CONTEXT.md          # This file - resume context
 ├── template.html             # Master HTML template
+├── index_template.html       # Central API portal template
 ├── build.py                  # Build script: template + content → final HTML
-├── rewrite_content.py        # Helper script that generated xvideos & eaf_base_api HTML correctly
-├── fix_html.py               # Previous helper script
-├── content/
-├── eaf_base_api.html     # Base API docs
-├── hqporner.html         # HQPorner API docs
-└── xvideos.html          # XVideos API docs
-└── dist/
-    ├── eaf_base_api/
-    │   └── index.html
-    ├── hqporner/
-    │   └── index.html
-    └── xvideos/
-        └── index.html
+├── transparency.html         # Source for the AI transparency page
+├── assets/                   # Local fonts and donation artwork
+├── content/                  # eaf_base_api.html + all 15 wrapper sources
+└── dist/                     # Generated output; never hand-edit
+    ├── index.html
+    ├── assets/
+    ├── transparency/index.html
+    └── {api_name}/index.html
 ```
 
-## eaf_base_api Summary (Key for All Docs)
-- **RuntimeConfig**: 17 configurable attributes (proxies, http_version, impersonation, ja3, timeout, retry, bandwidth limit, dns_over_https, etc.)
-- **BaseCore**: Session management, fetch with retry (tenacity), caching, m3u8 quality resolution, HLS threaded download with resume/cancel, legacy download with multipart, TS→MP4 remux via PyAV
-- **BaseMedia**: Lazy-loading dataclass base with `load(api=, html=, anything=)`, auto `DataNotLoadedError`
-- **Helper**: Concurrent scraping orchestrator using producer/consumer asyncio queues
-- **DownloadConfigHLS**: Quality, path, m3u8 url, remux, resume state, stop event, callbacks
-- **DownloadConfigRAW**: For direct file downloads, multipart range support
-- **Error Hierarchy**: ~20 custom exceptions under BaseScraperError
+## eaf_base_api v4 Summary (Key for All Docs)
+
+- **RuntimeConfig**: 26 configuration attributes. These cover separate byte-bounded response/segment cache sizes and TTLs; bounded request retries (`request_attempts`, initial/max delay, multiplier, and jitter); delay/timeout/bandwidth; singular `proxy`; HTTP version, DoH, impersonation/JA3, proxy auth, TLS/environment/cookies/locale; download workers; iterator page/item concurrency; and interface binding. `request_multiplier` is both the exponential base for `BaseCore` request backoff and the multiplier used when `IteratorConfig.resolve()` derives Helper stage policies.
+- **CachePolicy and caches**: requests use explicit cache policy with separate byte-bounded TTL caches for text responses and media segments. The old item-count/FIFO description is obsolete.
+- **BaseCore**: lazy async session lifecycle and context-manager support; `initialize_session()` is idempotent, configured cookies are applied when each new session is created, and `close()` clears the session so a later request can recreate it from the current configuration. The core also provides generic `request()` plus `fetch_text()` and `fetch_bytes()`, retry/backoff, cache policy, HLS and raw downloads, quality selection, resume/cancel/report support, and optional remuxing.
+- **BaseMedia**: source-aware lazy fields declared with `media_field("source")`. Models register `loader_methods`, then use `load_sources()`, `load_fields()`, and `get_field()`. Loader results are mapped strictly and unresolved access raises typed media-field errors.
+- **Helper / iteration**: `Helper.iterator(..., iterator_config=IteratorConfig(...))` returns a `ScrapeStream` async context manager. Wrapper methods accept one `IteratorConfig` and yield immutable `ScrapeResult[T]` values with `stage`, `url`, `page_index`, `item_index`, `attempts`, `item`, `error`, `succeeded`, and `unwrap()`.
+- **Iterator policy**: `IteratorConfig` centralizes page/item concurrency, pending-item limits, extraction threading, `ResultOrder`, `ErrorMode`, `RetryPolicy`, page/item handlers, and specific source/field loading. A wrapper-supplied default is replaced—not merged—when callers pass their own config, so preserve required sources such as `("html",)` and error behavior. Every current wrapper iterator default uses `page_error_mode=ErrorMode.SKIP`; a bare caller-created `IteratorConfig` uses `ErrorMode.YIELD`.
+- **Retry and custom errors**: `RetryPolicy.max_attempts` includes the first call and provides bounded exponential delay, jitter, and exception filtering. Independent page/item handlers receive `ScrapeErrorContext` only for their own stage and return `ErrorAction.RETRY`, `RAISE`, `YIELD`, or `SKIP`; either handler can be omitted without affecting the other stage.
+- **DownloadConfigHLS / DownloadConfigRAW**: HLS supports quality/path, remux, resume state, stop/callbacks, cleanup, segment persistence, and reports. `BaseCore.download()` uses that core's current `RuntimeConfig.timeout` and `max_workers_download` when dispatching HLS work. RAW supports direct/multipart downloads, workers, timeouts, chunks, and retries.
+- **Errors**: expanded typed networking, HTTP/proxy/bot, media-load, scrape-operation, cache/download, and configuration error hierarchy.
 
 ## XVideos API Summary
 - **Client**: Entry point. `get_video()`, `search()`, `get_playlist()`, `get_pornstar()`, `get_channel()`, `get_account()`
@@ -108,12 +112,13 @@ The author (Johannes Habel) maintains **15+ Python API wrappers/scrapers** for a
 
 ## How to Resume
 When the user says "resume", read this file to understand the full context, then:
-1. Check which APIs still need documentation.
-2. Follow the established template/content/build pattern.
-3. Create a new `content/{api_name}.html` for each new API.
+1. Work from `/home/asuna/PycharmProjects/Server/docs` and treat `content/*.html` as the source of truth. Never edit `dist/` by hand.
+2. Inspect each package's `pyproject.toml`, current public code, `git status`, and the requested `git log`/`git diff` window before editing. Update the `SLOT:VERSION`, dependency requirement, signatures, model types, configuration examples, and a dated commit-based changelog from that evidence.
+3. Keep wrapper pages concise about shared internals: link to the eaf core page, but document the wrapper's exact `IteratorConfig` parameter name, required `load_specific_sources`, package retry defaults, and `ScrapeResult[T]` behavior.
 4. Structuring Method Cards & Sidebar:
    - Restructure signatures to use one parameter per line, using the token CSS formatting classes (e.g. `token-keyword`, `token-builtin`, `token-class`, etc.) for syntax highlighting.
    - Design each method card with description and tag at the top, signature code block in the middle, and detailed parameters/returns at the bottom.
    - Nest all client and object methods under collapsible `nav-collapsible` divs in the sidebar to maintain screen clean-lines.
-5. Inject the common Intro block (Disclaimer + Donations) into `MAIN_CONTENT`. Do NOT re-explain RuntimeConfig or eaf_base_api details; link to it instead.
-6. Run `python build.py` to generate final HTML.
+5. Preserve the common Intro block (Disclaimer + Donations) in `MAIN_CONTENT`. Do not duplicate the full base reference in every wrapper; a focused v4 configuration/iteration example and link are sufficient.
+6. Run `python build.py` from `/home/asuna/PycharmProjects/Server/docs`. This rebuilds every API page and the portal, copies `assets/`, and copies `transparency.html` to `dist/transparency/index.html`.
+7. Validate slot markers, sidebar anchors, stale v3 tokens (`proxies`, iterator callback/concurrency arguments, `result.is_success`, `result.video`, `await for`), current versions, and a clean source-to-dist rebuild diff.

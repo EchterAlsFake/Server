@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = MissAV API -->
 <!-- SLOT:HERO_TITLE = MissAV API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for MissAV. Fetch JAV video metadata and download streams via HLS. Features Recombee-powered search with HMAC-signed API requests. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.3 -->
+<!-- SLOT:VERSION = 2.5 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-missav -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-missav -->
 
@@ -39,6 +39,7 @@
 <a href="#error-handling" class="nav-link">Error Handling</a>
 
 <div class="nav-section-title">Extras</div>
+<a href="#changelog" class="nav-link">Changelog</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <!-- END:SIDEBAR_NAV -->
 
@@ -89,7 +90,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. The underlying networking library <code>eaf_base_api</code> is automatically installed.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.5 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -122,7 +123,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>Proxy adjustments, HTTP headers, timeouts, and other variables are handled via <code>RuntimeConfig</code> passed to the <code>BaseCore</code> class.</p>
+    <p>Proxy/interface, timeout, request-attempt/delay, cache, and concurrency settings are handled via <code>RuntimeConfig</code> passed to <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for details.</p>
 
     <div class="code-window">
@@ -132,11 +133,41 @@ asyncio.run(main())</code></pre>
 <span class="token-keyword">from</span> missav_api <span class="token-keyword">import</span> Client
 
 my_config = <span class="token-class">RuntimeConfig</span>()
-my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+my_config.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+my_config.request_attempts = <span class="token-number">4</span>  <span class="token-comment"># Total attempts, including the first request</span>
 
 core = <span class="token-class">BaseCore</span>(configuration=my_config)
 client = <span class="token-class">Client</span>(core=core)</code></pre>
     </div>
+
+    <h3>Iterator, retry, and error policy</h3>
+    <p><code>search()</code> accepts one <code>IteratorConfig | None</code>. MissAV's default deliberately limits page concurrency to <code>1</code>, eagerly loads <code>"html"</code>, and skips terminal page failures. Preserve those settings when customizing it.</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorAction, ErrorMode, ResultOrder, RetryPolicy, ScrapeErrorContext
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
+
+<span class="token-keyword">async def</span> <span class="token-function">handle_scrape_error</span>(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-builtin">print</span>(context.stage, context.url, context.attempt, context.error)
+    <span class="token-keyword">return</span> ErrorAction.RETRY
+
+retry = <span class="token-class">RetryPolicy</span>(
+    max_attempts=<span class="token-number">3</span>, base_delay=<span class="token-number">0.5</span>, multiplier=<span class="token-number">2.0</span>, max_delay=<span class="token-number">8.0</span>, jitter=<span class="token-number">0.25</span>
+)
+iterator_config = <span class="token-class">IteratorConfig</span>(
+    max_page_concurrency=<span class="token-number">1</span>,
+    max_item_concurrency=<span class="token-number">10</span>,
+    load_specific_sources=(<span class="token-string">"html"</span>,),
+    order=ResultOrder.ORIGINAL,
+    page_retry=retry,
+    item_retry=retry,
+    page_error_mode=ErrorMode.SKIP,
+    item_error_mode=ErrorMode.YIELD,
+    page_error_handler=handle_scrape_error,
+    item_error_handler=handle_scrape_error,
+)</code></pre>
+    </div>
+    <p><code>max_attempts</code> includes the first attempt. <code>page_error_handler</code> and <code>item_error_handler</code> are routed independently. This example shares one callable because it intentionally applies the same retry decision to both stages; use separate callables when page and item policy differ. A handler receives the failing stage, URL, exception, attempt budget, and page/item indexes in <code>ScrapeErrorContext</code>; its <code>ErrorAction</code> decision remains bounded by the policy.</p>
 </div>
 
 <hr>
@@ -191,24 +222,18 @@ client = <span class="token-class">Client</span>()</code></pre>
         <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
     video_count: <span class="token-builtin">int</span> = <span class="token-number">50</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; AsyncGenerator[Video, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search query (e.g. JAV code, actress name, keyword)</span></li>
             <li class="param-item"><span class="param-name">video_count</span> <span class="param-type">int</span> <span class="param-desc">— Maximum number of results to return (default: <code>50</code>)</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Page load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep recommendation ranking order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full video object details (default: <code>True</code>)</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Per-iterator concurrency, source loading, ordering, retry, error-mode, and custom-handler settings. MissAV defaults to one page task and the <code>html</code> source.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[Video, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 </div>
 
@@ -268,13 +293,11 @@ client = <span class="token-class">Client</span>()</code></pre>
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">from</span> missav_api <span class="token-keyword">import</span> DownloadConfigHLS, Callback
 
-<span class="token-comment"># Optional progress callback</span>
-callback = <span class="token-class">Callback</span>()
-
 config = <span class="token-class">DownloadConfigHLS</span>(
     quality=<span class="token-string">"best"</span>,            <span class="token-comment"># "best", "half", "worst", or height int (e.g. 720)</span>
     path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Destination path</span>
     no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># If False, appends title + ".mp4"</span>
+    callback=Callback.custom_callback, <span class="token-comment"># Optional progress callback</span>
 )
 
 success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
@@ -304,7 +327,26 @@ success = <span class="token-keyword">await</span> video.download(configuration=
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-comment"># Search for JAV content by code or keyword</span>
 <span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"SSIS"</span>, video_count=<span class="token-number">25</span>):
-    <span class="token-builtin">print</span>(f<span class="token-string">"{result.video.title} — {result.video.publish_date}"</span>)</code></pre>
+    <span class="token-keyword">if</span> result.succeeded:
+        video = result.unwrap()
+        <span class="token-builtin">print</span>(f<span class="token-string">"{video.title} — {video.publish_date}"</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"{result.stage} failed: {result.error}"</span>)</code></pre>
+    </div>
+
+    <h3>Iterator results</h3>
+    <p>Every search iteration yields a <code>ScrapeResult[Video]</code>. Test <code>succeeded</code> before reading the value, use <code>unwrap()</code> when failure should raise, or inspect the fields directly.</p>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Member</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>succeeded</code></td><td><code>True</code> when the item was scraped successfully.</td></tr>
+                <tr><td><code>unwrap()</code></td><td>Returns the <code>Video</code>, or raises the stored error.</td></tr>
+                <tr><td><code>item</code></td><td>The optional <code>Video</code> value.</td></tr>
+                <tr><td><code>error</code></td><td>The optional exception for a failed result.</td></tr>
+                <tr><td><code>stage</code></td><td>The failing iterator stage, such as page or item.</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -312,7 +354,7 @@ success = <span class="token-keyword">await</span> video.download(configuration=
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>Exceptions are defined in <code>missav_api.modules.errors</code>.</p>
+    <p>Source loaders translate request failures into exceptions from <code>missav_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
     <div class="table-wrapper">
         <table>
@@ -330,15 +372,42 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">from</span> missav_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
+<span class="token-keyword">from</span> missav_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
 
 <span class="token-keyword">try</span>:
     video = <span class="token-keyword">await</span> client.get_video(url)
-<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
-<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)</code></pre>
+<span class="token-keyword">except</span> <span class="token-class">MediaLoadError</span> <span class="token-keyword">as</span> error:
+    <span class="token-keyword">if</span> isinstance(error.original_error, NotFound):
+        <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+    <span class="token-keyword">elif</span> isinstance(error.original_error, BotDetection):
+        <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-keyword">raise</span></code></pre>
     </div>
+</div>
+
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.5 — 2026-08-11 <code>b291d71</code></h3>
+    <ul>
+        <li>Added the <code>py.typed</code> marker for typed consumers and changed unset iterator retry policies to resolve from the live <code>RuntimeConfig</code>.</li>
+        <li>Updated the package version from 2.4 to 2.5.</li>
+    </ul>
+
+    <h3>IteratorConfig synchronization — 2026-08-08 <code>dc52215</code></h3>
+    <ul>
+        <li>Moved search iteration settings into <code>IteratorConfig</code>.</li>
+        <li>Preserved MissAV's single-page concurrency and required <code>html</code> source loading.</li>
+    </ul>
+
+    <h3>Core v4 migration — 2026-08-07 <code>9136b07</code></h3>
+    <ul>
+        <li>Migrated to the eaf-base-api 4.x runtime and result model.</li>
+        <li>Adopted policy-driven retries, structured scrape errors, and current iterator error handling.</li>
+    </ul>
 </div>
 
 <div class="section" id="platforms-section">

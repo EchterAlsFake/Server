@@ -975,24 +975,34 @@
                     <div class="sidebar-logo-icon">E</div>
                     <span class="sidebar-logo-text">eaf_base_api</span>
                 </a>
-                <span class="sidebar-version">v3.3.3</span>
+                <span class="sidebar-version">v4.0.0</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
                 <div class="nav-section-title">Getting Started</div>
-<a href="#overview" class="nav-link">Overview</a>
+<a href="#overview" class="nav-link">Overview & v4</a>
+<a href="#installation" class="nav-link">Installation</a>
 <a href="#runtime-config" class="nav-link">RuntimeConfig</a>
 <a href="#client-integration" class="nav-link">Client Integration</a>
 
-<div class="nav-section-title">Networking Engine</div>
-<a href="#networking" class="nav-link">Networking & Retries</a>
-<a href="#proxies" class="nav-link">Proxies</a>
+<div class="nav-section-title">Networking</div>
+<a href="#request-api" class="nav-link">Request API</a>
+<a href="#request-retries" class="nav-link">Request Retries</a>
+<a href="#proxies" class="nav-link">Proxy & Interface</a>
 <a href="#caching" class="nav-link">Caching</a>
 
-<div class="nav-section-title">Advanced</div>
-<a href="#download-resume" class="nav-link">Download Resume</a>
-<a href="#logging" class="nav-link">Logging</a>
+<div class="nav-section-title">Media & Iteration</div>
+<a href="#base-media" class="nav-link">BaseMedia</a>
+<a href="#iterator-config" class="nav-link">IteratorConfig</a>
+<a href="#error-policy" class="nav-link">Retry & Error Policy</a>
+<a href="#scrape-results" class="nav-link">Streams & Results</a>
+
+<div class="nav-section-title">Downloads & Reference</div>
+<a href="#downloads" class="nav-link">Download Configs</a>
+<a href="#logging" class="nav-link">Logging & Cleanup</a>
+<a href="#migration" class="nav-link">3.x → 4.0 Migration</a>
 <a href="#base-errors" class="nav-link">Error Reference</a>
+<a href="#changelog" class="nav-link">Changelog</a>
             </nav>
 
             <div class="sidebar-footer">
@@ -1009,10 +1019,10 @@
             <div class="hero">
                 <div class="hero-badge">
                     <span class="hero-badge-dot"></span>
-                    Python · Async · v3.3.3
+                    Python · Async · v4.0.0
                 </div>
                 <h1>eaf_base_api</h1>
-                <p>The core asynchronous networking engine for all EchterAlsFake scrapers and API wrappers. Handles HTTP sessions, bot bypasses, retries, HLS downloading, and caching.</p>
+                <p>The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads.</p>
                 <div class="hero-actions">
                     <div class="install-cmd" onclick="copyInstall(this)" title="Click to copy">
                         <span class="prefix">$</span> pip install eaf_base_api
@@ -1027,203 +1037,457 @@
                 
 <div class="section" id="overview-section">
     <span class="section-anchor" id="overview"></span>
-    <h2><span class="section-icon">🏗️</span> Overview</h2>
+    <h2><span class="section-icon">🏗️</span> Overview & Version 4</h2>
 
-    <p><code>eaf_base_api</code> provides the core engine behind all EchterAlsFake API wrappers:</p>
+    <div class="info-box warning">
+        <div class="info-box-title">Version 4 is intentionally breaking</div>
+        The legacy multi-mode <code>BaseCore.fetch()</code>, <code>BaseMedia.load(api=..., html=...)</code>, mutable <code>ScrapeResult.video</code>/<code>is_success</code> contract, and boolean retry callbacks were removed. Use the explicit interfaces documented below.
+    </div>
 
+    <p><code>eaf_base_api</code> is the shared engine used by all site-specific API packages. Version 4 separates each responsibility into an explicit, typed interface:</p>
     <ul class="param-list" style="margin: 16px 0;">
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>BaseCore</strong> — HTTP session management, request retrying, caching, HLS/M3U8 downloading, TS→MP4 remuxing</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>BaseMedia</strong> — Lazy-loading dataclass base with automatic <code>DataNotLoadedError</code> on missing attributes</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Helper</strong> — Concurrent page/video scraping orchestrator using async producer/consumer queues</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Cache</strong> — Thread-safe in-memory caching with FIFO eviction</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>RuntimeConfig</strong> — Global configuration singleton</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>BaseCore</strong> — HTTP sessions, request retries, response decoding, caching, proxy/interface binding, HLS inspection, and downloads</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>BaseMedia + media_field</strong> — source-aware, atomic lazy loading with deterministic source precedence</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Helper + IteratorConfig</strong> — bounded page/item scheduling, ordering, retries, error handlers, and load selection</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>ScrapeStream + ScrapeResult</strong> — deterministic stream cleanup and immutable success/failure results</li>
+        <li class="param-item" style="display: block; padding: 8px 0;"><strong>CacheBackend</strong> — replaceable storage contract; the built-in cache uses byte limits and TTL expiry</li>
     </ul>
+</div>
+
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <div class="code-window">
+        <div class="code-header"><span>shell</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install eaf_base_api
+
+<span class="token-comment"># Install optional HLS parsing/remux dependencies as well</span>
+pip install "eaf_base_api[hls]"</code></pre>
+    </div>
+    <p>Version 4 requires <strong>Python 3.12 or newer</strong>. The package ships a <code>py.typed</code> marker, so type checkers can consume its inline annotations.</p>
 </div>
 
 <div class="section" id="runtime-config-section">
     <span class="section-anchor" id="runtime-config"></span>
     <h2><span class="section-icon">🎛️</span> RuntimeConfig</h2>
 
-    <p>The <code>RuntimeConfig</code> class controls the entire networking stack. Import it from <code>base_api</code>:</p>
+    <p>Create a <code>RuntimeConfig</code> for each independently configured <code>BaseCore</code>. A process-wide <code>config</code> instance remains available as the default, but a dedicated instance avoids unrelated clients changing one another.</p>
 
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
             <tbody>
-                <tr><td><code>max_cache_items</code></td><td><code>int</code></td><td><code>200</code></td><td>Maximum number of cached responses (FIFO eviction)</td></tr>
-                <tr><td><code>max_retries</code></td><td><code>int</code></td><td><code>4</code></td><td>Max retry attempts per request (exponential backoff)</td></tr>
-                <tr><td><code>request_delay</code></td><td><code>int</code></td><td><code>0</code></td><td>Seconds to wait between requests (rate limiting)</td></tr>
-                <tr><td><code>timeout</code></td><td><code>int</code></td><td><code>20</code></td><td>Request timeout in seconds</td></tr>
-                <tr><td><code>max_bandwidth_mb</code></td><td><code>float | None</code></td><td><code>None</code></td><td>Speed limit in MB/s. Distributed across workers.</td></tr>
-                <tr><td><code>proxies</code></td><td><code>dict | None</code></td><td><code>None</code></td><td>Proxy mapping, e.g. <code>{"https": "socks5://..."}</code></td></tr>
-                <tr><td><code>http_version</code></td><td><code>str</code></td><td><code>"v3"</code></td><td>HTTP version: <code>"v1"</code>, <code>"v2"</code>, or <code>"v3"</code></td></tr>
-                <tr><td><code>dns_over_https</code></td><td><code>str | None</code></td><td><code>None</code></td><td>DoH server URL, e.g. <code>"https://1.1.1.1/dns-query"</code></td></tr>
-                <tr><td><code>impersonation</code></td><td><code>str</code></td><td><code>"chrome"</code></td><td>Browser TLS fingerprint to impersonate</td></tr>
-                <tr><td><code>custom_ja3</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Custom JA3 fingerprint string (advanced only)</td></tr>
-                <tr><td><code>proxy_auth</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Proxy authentication <code>"user:password"</code></td></tr>
-                <tr><td><code>verify_ssl</code></td><td><code>bool</code></td><td><code>True</code></td><td>Verify SSL certificates</td></tr>
-                <tr><td><code>trust_env</code></td><td><code>bool</code></td><td><code>False</code></td><td>Trust environment proxy settings</td></tr>
-                <tr><td><code>cookies</code></td><td><code>dict | None</code></td><td><code>None</code></td><td>Default cookies for all requests</td></tr>
-                <tr><td><code>locale</code></td><td><code>str</code></td><td><code>"en-US,en;q=0.9"</code></td><td>Accept-Language header value</td></tr>
-                <tr><td><code>max_workers_download</code></td><td><code>int</code></td><td><code>20</code></td><td>Concurrent segment download workers</td></tr>
-                <tr><td><code>videos_concurrency</code></td><td><code>int</code></td><td><code>5</code></td><td>Max videos to scrape concurrently</td></tr>
-                <tr><td><code>pages_concurrency</code></td><td><code>int</code></td><td><code>2</code></td><td>Max pages to fetch concurrently</td></tr>
+                <tr><td><code>response_cache_size_bytes</code></td><td><code>int</code></td><td><code>32 MiB</code></td><td>Maximum encoded size of cached text responses; set to <code>0</code> to disable</td></tr>
+                <tr><td><code>response_cache_ttl</code></td><td><code>float</code></td><td><code>300.0</code></td><td>Text-response lifetime in seconds</td></tr>
+                <tr><td><code>segment_cache_size_bytes</code></td><td><code>int</code></td><td><code>8 MiB</code></td><td>Maximum encoded size of cached HLS segment URL lists</td></tr>
+                <tr><td><code>segment_cache_ttl</code></td><td><code>float</code></td><td><code>300.0</code></td><td>HLS segment-list lifetime in seconds</td></tr>
+                <tr><td><code>request_attempts</code></td><td><code>int</code></td><td><code>4</code></td><td>Total request attempts, including the first call</td></tr>
+                <tr><td><code>request_retry_initial_delay</code></td><td><code>float</code></td><td><code>0.5</code></td><td>Initial exponential retry delay in seconds</td></tr>
+                <tr><td><code>request_retry_max_delay</code></td><td><code>float</code></td><td><code>30.0</code></td><td>Maximum exponential retry delay</td></tr>
+                <tr><td><code>request_multiplier</code></td><td><code>float</code></td><td><code>2.0</code></td><td>Exponential base for <code>BaseCore</code> request backoff and multiplier for derived page/item retry policies</td></tr>
+                <tr><td><code>request_retry_jitter</code></td><td><code>float</code></td><td><code>0.5</code></td><td>Maximum random jitter added to retry delays</td></tr>
+                <tr><td><code>request_delay</code></td><td><code>int</code></td><td><code>0</code></td><td>Minimum delay between requests made by this core</td></tr>
+                <tr><td><code>timeout</code></td><td><code>int</code></td><td><code>20</code></td><td>Default request timeout in seconds</td></tr>
+                <tr><td><code>max_bandwidth_mb</code></td><td><code>float | None</code></td><td><code>None</code></td><td>Aggregate download receive limit in MB/s</td></tr>
+                <tr><td><code>proxy</code></td><td><code>str | None</code></td><td><code>None</code></td><td>One HTTP, HTTPS, or SOCKS proxy URL</td></tr>
+                <tr><td><code>proxy_auth</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Proxy credentials as <code>"username:password"</code></td></tr>
+                <tr><td><code>interface</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Local interface IP address to bind</td></tr>
+                <tr><td><code>http_version</code></td><td><code>str</code></td><td><code>"v2"</code></td><td><code>"v1"</code>, <code>"v2"</code>, or <code>"v3"</code></td></tr>
+                <tr><td><code>dns_over_https</code></td><td><code>str | None</code></td><td><code>None</code></td><td>DNS-over-HTTPS endpoint</td></tr>
+                <tr><td><code>impersonation</code></td><td><code>str</code></td><td><code>"chrome"</code></td><td><code>curl_cffi</code> browser impersonation profile</td></tr>
+                <tr><td><code>custom_ja3</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Advanced custom TLS JA3 fingerprint</td></tr>
+                <tr><td><code>verify_ssl</code></td><td><code>bool</code></td><td><code>True</code></td><td>Verify TLS certificates</td></tr>
+                <tr><td><code>trust_env</code></td><td><code>bool</code></td><td><code>False</code></td><td>Use proxy and CA settings from the environment</td></tr>
+                <tr><td><code>cookies</code></td><td><code>dict[str, str] | None</code></td><td><code>None</code></td><td>Initial cookie mapping applied when each new HTTP session is created</td></tr>
+                <tr><td><code>locale</code></td><td><code>str</code></td><td><code>"en-US,en;q=0.9"</code></td><td>Default <code>Accept-Language</code>; changing it can affect site parsers</td></tr>
+                <tr><td><code>max_workers_download</code></td><td><code>int</code></td><td><code>20</code></td><td>HLS download worker count for this core</td></tr>
+                <tr><td><code>videos_concurrency</code></td><td><code>int</code></td><td><code>5</code></td><td>Fallback item concurrency for resolved iterator configs</td></tr>
+                <tr><td><code>pages_concurrency</code></td><td><code>int</code></td><td><code>2</code></td><td>Fallback page concurrency for resolved iterator configs</td></tr>
             </tbody>
         </table>
+    </div>
+    <h3>When changes take effect</h3>
+    <p>Cache limits/TTLs and the initial locale header are captured when <code>BaseCore</code> is constructed. Proxy, interface, TLS, HTTP, DoH, impersonation, cookies, and bandwidth options are captured whenever its session is created. Request budgets, retry delays/multiplier, and request delay are read for each request; HLS timeout/workers are read when a download begins; and omitted <code>IteratorConfig</code> values are resolved whenever a new stream is created.</p>
+    <div class="info-box note">
+        <div class="info-box-title">Applying changed session settings</div>
+        <code>initialize_session()</code> is idempotent: it creates a session only while <code>core.session</code> is <code>None</code>. To apply changed session-bound settings such as proxy, cookies, TLS, or interface, call <code>await core.close()</code>; the next request, context-manager entry, or explicit <code>initialize_session()</code> creates a fresh session from the current configuration.
     </div>
 </div>
 
 <div class="section" id="client-integration-section">
     <span class="section-anchor" id="client-integration"></span>
-    <h2><span class="section-icon">🔗</span> Client Integration</h2>
-
-    <p>All APIs built on top of <code>eaf_base_api</code> follow the exact same pattern. You instantiate a <code>BaseCore</code> with your <code>RuntimeConfig</code>, and then pass that <code>BaseCore</code> into the API's <code>Client</code>. Here is an example using the <strong>XVideos API</strong>, but the logic applies universally to Pornhub, RedTube, SpankBang, etc.</p>
+    <h2><span class="section-icon">🔗</span> Client Integration & Lifecycle</h2>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
 <span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
-<span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> Client  <span class="token-comment"># Works identical with pornhub_api, xnxx_api, etc.</span>
+<span class="token-keyword">from</span> xvideos_api <span class="token-keyword">import</span> Client
 
-<span class="token-comment"># 1. Create and tweak your config</span>
-my_config = <span class="token-class">RuntimeConfig</span>()
-my_config.timeout = <span class="token-number">60</span>
-my_config.max_retries = <span class="token-number">10</span>
-my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+runtime = <span class="token-class">RuntimeConfig</span>()
+runtime.timeout = <span class="token-number">60</span>
+runtime.request_attempts = <span class="token-number">5</span>
+runtime.request_multiplier = <span class="token-number">2.0</span>
+runtime.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+runtime.interface = <span class="token-keyword">None</span>  <span class="token-comment"># Or a local interface IP</span>
+runtime.cookies = {<span class="token-string">"session"</span>: <span class="token-string">"value"</span>}
 
-<span class="token-comment"># 2. Initialize the core engine with your custom config</span>
-core = <span class="token-class">BaseCore</span>(configuration=my_config)
-
-<span class="token-comment"># 3. Pass the configured core into ANY API client</span>
+core = <span class="token-class">BaseCore</span>(configuration=runtime)
 client = <span class="token-class">Client</span>(core=core)
 
-<span class="token-comment"># Now this client will route all its requests through your specific config/proxies!</span>
-</code></pre>
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://www.xvideos.com/video..."</span>)
+<span class="token-keyword">finally</span>:
+    <span class="token-keyword">await</span> core.close()</code></pre>
     </div>
+
+    <p><code>BaseCore</code> starts without an HTTP session. Context-manager entry, the first request, or an explicit <code>initialize_session()</code> creates it lazily; further initialization calls are no-ops while that session remains live. Prefer <code>async with BaseCore(configuration=runtime) as core:</code> for direct use. <code>await core.close()</code> closes and clears the current session, and a later request safely recreates it from the core's current configuration.</p>
 </div>
 
-<div class="section" id="networking-section">
-    <span class="section-anchor" id="networking"></span>
-    <h2><span class="section-icon">🌐</span> Networking & Retries</h2>
+<div class="section" id="request-api-section">
+    <span class="section-anchor" id="request-api"></span>
+    <h2><span class="section-icon">🌐</span> Explicit Request API</h2>
 
-    <p>Under the hood, <code>BaseCore</code> uses <a href="https://github.com/yifeikong/curl_cffi">curl_cffi</a> for HTTP requests, which provides:</p>
+    <p>Version 4 replaces the flag-driven <code>fetch()</code> method with one method per representation:</p>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Method</th><th>Returns</th><th>Cache behavior</th></tr></thead>
+            <tbody>
+                <tr><td><code>await core.request(url, ...)</code></td><td><code>curl_cffi.Response</code></td><td>Never uses the text cache</td></tr>
+                <tr><td><code>await core.fetch_text(url, ...)</code></td><td><code>str</code></td><td>Successful GET text can use the configured cache</td></tr>
+                <tr><td><code>await core.fetch_bytes(url, ...)</code></td><td><code>bytes</code></td><td>Never uses the text cache</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-    <ul class="param-list" style="margin: 16px 0;">
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Browser impersonation</strong> — TLS fingerprint mimicking (Chrome, Firefox, etc.) to bypass WAF/bot detection</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>HTTP/1.1, HTTP/2, HTTP/3</strong> — Configurable via <code>config.http_version</code></li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Custom JA3</strong> — Override TLS fingerprints for advanced users</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>DNS over HTTPS</strong> — Route DNS through HTTPS for privacy</li>
-        <li class="param-item" style="display: block; padding: 8px 0;"><strong>Bandwidth limiting</strong> — Set per-connection speed limits with <code>CurlOpt.MAX_RECV_SPEED_LARGE</code></li>
-    </ul>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore, CachePolicy
 
-    <h3>Retry Strategy</h3>
-    <p>Requests are retried using <a href="https://github.com/jd/tenacity">Tenacity</a> with exponential backoff + jitter:</p>
+<span class="token-keyword">async with</span> <span class="token-class">BaseCore</span>() <span class="token-keyword">as</span> core:
+    response = <span class="token-keyword">await</span> core.request(url)
+    text = <span class="token-keyword">await</span> core.fetch_text(url)
+    data = <span class="token-keyword">await</span> core.fetch_bytes(download_url)
+
+    refreshed = <span class="token-keyword">await</span> core.fetch_text(
+        url,
+        cache_policy=CachePolicy.REFRESH,
+    )
+    uncached = <span class="token-keyword">await</span> core.fetch_text(
+        url,
+        cache_policy=CachePolicy.BYPASS,
+    )</code></pre>
+    </div>
+
+    <p><code>CachePolicy.USE</code> reads and writes, <code>REFRESH</code> skips the read and replaces the cached value, and <code>BYPASS</code> neither reads nor writes. All three request methods accept timeout, cookies, redirects, data, HTTP method, headers, JSON, parameters, and <code>retry_non_idempotent</code>.</p>
+</div>
+
+<div class="section" id="request-retries-section">
+    <span class="section-anchor" id="request-retries"></span>
+    <h2><span class="section-icon">🔁</span> BaseCore Request Retries</h2>
+
+    <p><code>RuntimeConfig.request_attempts</code> includes the first request. Backoff uses <code>request_retry_initial_delay</code>, <code>request_multiplier</code> as Tenacity's exponential base, <code>request_retry_max_delay</code>, and <code>request_retry_jitter</code>. Idempotent methods (<code>GET</code>, <code>HEAD</code>, <code>PUT</code>, <code>DELETE</code>, <code>OPTIONS</code>, and <code>TRACE</code>) retry network failures plus HTTP 408, 425, 429, and 5xx responses. A 429 response honors <code>Retry-After</code> when available.</p>
     <ul class="param-list" style="margin: 12px 0;">
-        <li class="param-item" style="display: block; padding: 4px 0;">Initial wait: 0.5s → Max: 30s → Jitter: ±0.5s</li>
-        <li class="param-item" style="display: block; padding: 4px 0;">Retries on: <code>RequestsError</code>, <code>NetworkRequestError</code></li>
-        <li class="param-item" style="display: block; padding: 4px 0;">HTTP 429 (Rate Limited): Respects <code>Retry-After</code> header, or random 2–6s backoff</li>
-        <li class="param-item" style="display: block; padding: 4px 0;">HTTP 5xx: Automatically retried</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">POST/PATCH and other non-idempotent operations are attempted once unless <code>retry_non_idempotent=True</code> is explicitly safe.</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">Non-retryable HTTP failures—including 401/403, 404, 410, and 4xx responses other than 408, 425, and 429—are terminal.</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">Exhaustion raises <code>RequestRetriesExhausted</code> with <code>.url</code>, <code>.attempts</code>, and <code>.last_error</code>.</li>
     </ul>
+    <div class="info-box tip">
+        <div class="info-box-title">Two separate retry layers</div>
+        <code>RuntimeConfig</code> controls individual HTTP requests. <code>RetryPolicy</code> controls complete page extraction or media-item loading inside <code>Helper</code>. When those policies are derived, both layers use <code>RuntimeConfig.request_multiplier</code>; avoid multiplying both budgets unnecessarily.
+    </div>
 </div>
 
 <div class="section" id="proxies-section">
     <span class="section-anchor" id="proxies"></span>
-    <h2><span class="section-icon">🔒</span> Proxies</h2>
-
-    <p>Full proxy support including SOCKS5, HTTPS, and authenticated proxies:</p>
+    <h2><span class="section-icon">🔒</span> Proxy & Interface Binding</h2>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> config
+<pre><code><span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
 
-<span class="token-comment"># SOCKS5 proxy</span>
-config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+runtime = <span class="token-class">RuntimeConfig</span>()
+runtime.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+runtime.proxy_auth = <span class="token-string">"username:password"</span>
+runtime.interface = <span class="token-string">"192.0.2.10"</span>
 
-<span class="token-comment"># HTTPS proxy with auth</span>
-config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"https://proxy.example.com:8080"</span>}
-config.proxy_auth = <span class="token-string">"username:password"</span>
-
-<span class="token-comment"># Disable SSL verification (for MITM proxies)</span>
-config.verify_ssl = <span class="token-keyword">False</span></code></pre>
+<span class="token-comment"># Only disable verification for a proxy you control and trust.</span>
+runtime.verify_ssl = <span class="token-keyword">False</span></code></pre>
     </div>
-
-    <div class="info-box warning">
-        <div class="info-box-title">Warning</div>
-        If your proxy uses a self-signed certificate, you'll get a <code>ProxySSLError</code>. Set <code>config.verify_ssl = False</code> to disable certificate verification.
-    </div>
+    <p>The old <code>proxies</code> mapping was replaced by the singular <code>proxy</code> URL. <code>interface</code> is passed to <code>curl_cffi.AsyncSession</code> and must be a local interface IP address.</p>
 </div>
 
 <div class="section" id="caching-section">
     <span class="section-anchor" id="caching"></span>
     <h2><span class="section-icon">💾</span> Caching</h2>
 
-    <p>The <code>Cache</code> class provides thread-safe in-memory caching with FIFO eviction. Text responses are cached automatically (not binary/byte responses).</p>
+    <p>The built-in <code>Cache</code> uses separate, thread-safe TTL caches for text responses and HLS segment lists. Limits are measured in UTF-8 bytes, not item counts. Request keys include method, URL, redirects, parameters, body, headers, and cookies; sensitive values are fingerprinted rather than stored in plaintext keys.</p>
+    <ul class="param-list" style="margin: 12px 0;">
+        <li class="param-item" style="display: block; padding: 4px 0;">Only successful GET text responses are stored.</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">Concurrent cache misses for the same request share one in-flight network operation.</li>
+        <li class="param-item" style="display: block; padding: 4px 0;"><code>core.cache.clear()</code> clears both built-in caches.</li>
+        <li class="param-item" style="display: block; padding: 4px 0;">Pass a custom <code>CacheBackend</code> to <code>BaseCore(cache=...)</code> to replace storage.</li>
+    </ul>
+</div>
 
+<div class="section" id="base-media-section">
+    <span class="section-anchor" id="base-media"></span>
+    <h2><span class="section-icon">🧩</span> Source-aware BaseMedia</h2>
+
+    <p>Remote fields are declared with <code>media_field()</code>. The first source has highest precedence. A loader is async, returns a complete mapping, and never mutates the object directly; results are validated and committed atomically.</p>
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-comment"># Adjust max cache size</span>
-config.max_cache_items = <span class="token-number">500</span>  <span class="token-comment"># Default: 200</span>
+<pre><code><span class="token-keyword">from</span> dataclasses <span class="token-keyword">import</span> dataclass
+<span class="token-keyword">from</span> typing <span class="token-keyword">import</span> ClassVar
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseMedia, media_field
 
-<span class="token-comment"># The cache can be accessed on the BaseCore instance:</span>
-core = client.core
-core.cache.cache_dictionary  <span class="token-comment"># The raw dict</span></code></pre>
+@dataclass(kw_only=<span class="token-keyword">True</span>, slots=<span class="token-keyword">True</span>)
+<span class="token-keyword">class</span> <span class="token-class">Video</span>(BaseMedia):
+    title: str | <span class="token-keyword">None</span> = media_field(<span class="token-string">"html"</span>, <span class="token-string">"api"</span>)
+    duration: int | <span class="token-keyword">None</span> = media_field(<span class="token-string">"api"</span>)
+
+    loader_methods: ClassVar[dict[str, str]] = {
+        <span class="token-string">"html"</span>: <span class="token-string">"_load_html"</span>,
+        <span class="token-string">"api"</span>: <span class="token-string">"_load_api"</span>,
+    }
+
+    <span class="token-keyword">async def</span> _load_html(self) -&gt; dict[str, object]:
+        data = <span class="token-keyword">await</span> fetch_html(self.url)
+        <span class="token-keyword">return</span> {<span class="token-string">"title"</span>: data.get(<span class="token-string">"title"</span>)}
+
+    <span class="token-keyword">async def</span> _load_api(self) -&gt; dict[str, object]:
+        data = <span class="token-keyword">await</span> fetch_api(self.url)
+        <span class="token-keyword">return</span> {<span class="token-string">"title"</span>: data.get(<span class="token-string">"title"</span>), <span class="token-string">"duration"</span>: data.get(<span class="token-string">"duration"</span>)}</code></pre>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Operation</th><th>Meaning</th></tr></thead>
+            <tbody>
+                <tr><td><code>await media.load_sources("html", "api")</code></td><td>Load named sources concurrently; repeated calls are idempotent</td></tr>
+                <tr><td><code>await media.load_fields("title")</code></td><td>Select the smallest useful source set for unresolved fields</td></tr>
+                <tr><td><code>await media.get_field("title")</code></td><td>Load one field if necessary and return it</td></tr>
+                <tr><td><code>media.loaded_sources</code></td><td>Immutable set of successful source names</td></tr>
+                <tr><td><code>media.source_state("html")</code></td><td><code>NOT_LOADED</code>, <code>LOADING</code>, <code>LOADED</code>, or <code>FAILED</code></td></tr>
+                <tr><td><code>media.source_errors</code></td><td>Copy of the latest failure per source</td></tr>
+                <tr><td><code>media.is_field_loaded(name)</code></td><td>True even when a loader deliberately returned <code>None</code></td></tr>
+                <tr><td><code>media.unloaded_fields()</code></td><td>Names still holding the private unloaded marker</td></tr>
+                <tr><td><code>media.to_dict()</code></td><td>Serialize loaded public fields without triggering lazy-field errors</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p>Direct access to an unresolved field raises <code>DataNotLoadedError</code>. Use <code>retry_failed=False</code> with a load method when a previously failed source should not be attempted again.</p>
+</div>
+
+<div class="section" id="iterator-config-section">
+    <span class="section-anchor" id="iterator-config"></span>
+    <h2><span class="section-icon">⚙️</span> IteratorConfig</h2>
+
+    <p>Site-specific iterator methods now accept one <code>IteratorConfig</code> instead of many concurrency, ordering, loading, and callback parameters. Values left as <code>None</code> are resolved from the active core's <code>RuntimeConfig</code>.</p>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>max_page_concurrency</code></td><td><code>RuntimeConfig.pages_concurrency</code></td><td>Concurrent page operations</td></tr>
+                <tr><td><code>max_item_concurrency</code></td><td><code>RuntimeConfig.videos_concurrency</code></td><td>Concurrent media-item operations</td></tr>
+                <tr><td><code>max_pending_items</code></td><td><code>4 × item concurrency</code></td><td>Backpressure limit for extracted items awaiting work</td></tr>
+                <tr><td><code>extract_in_thread</code></td><td><code>True</code></td><td>Run the synchronous extractor and its iteration in a worker thread</td></tr>
+                <tr><td><code>order</code></td><td><code>ResultOrder.COMPLETION</code></td><td>Yield fastest results first or restore original page/item order</td></tr>
+                <tr><td><code>page_error_mode</code></td><td><code>ErrorMode.YIELD</code></td><td>Terminal page failure behavior</td></tr>
+                <tr><td><code>item_error_mode</code></td><td><code>ErrorMode.YIELD</code></td><td>Terminal item failure behavior</td></tr>
+                <tr><td><code>page_retry</code></td><td><code>derived from RuntimeConfig</code></td><td>Bounded retry policy for a complete page operation</td></tr>
+                <tr><td><code>item_retry</code></td><td><code>derived from RuntimeConfig</code></td><td>Bounded retry policy for construction/loading of one item</td></tr>
+                <tr><td><code>page_error_handler</code></td><td><code>None</code></td><td>Optional sync/async handler receiving <code>ScrapeErrorContext</code></td></tr>
+                <tr><td><code>item_error_handler</code></td><td><code>None</code></td><td>Optional sync/async handler receiving <code>ScrapeErrorContext</code></td></tr>
+                <tr><td><code>load_specific_fields</code></td><td><code>()</code></td><td>Fields each constructed media item must load</td></tr>
+                <tr><td><code>load_specific_sources</code></td><td><code>()</code></td><td>Sources each constructed media item must load before fields</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="info-box warning">
+        <div class="info-box-title">Preserve package loading defaults</div>
+        Passing a custom <code>IteratorConfig</code> replaces that API method's default config. Include the method's required <code>load_specific_sources</code> or <code>load_specific_fields</code>; most site packages use <code>("html",)</code>, while some dual-source APIs use both <code>"api"</code> and <code>"html"</code>.
     </div>
 </div>
 
-<div class="section" id="download-resume-section">
-    <span class="section-anchor" id="download-resume"></span>
-    <h2><span class="section-icon">🔄</span> Download Resume & Cancel</h2>
+<div class="section" id="error-policy-section">
+    <span class="section-anchor" id="error-policy"></span>
+    <h2><span class="section-icon">🛡️</span> RetryPolicy & Custom Error Handling</h2>
 
-    <p>The base HLS downloader supports <strong>resume</strong> and <strong>cancellation</strong> via state files and stop events. This works universally across all APIs when calling <code>video.download()</code>:</p>
-
+    <p><code>RetryPolicy.max_attempts</code> includes the first attempt. Without a custom handler, eligible exception classes are selected with <code>retry_for</code>; the delay is bounded exponential backoff plus uniformly random jitter.</p>
+    <div class="info-box note">
+        <div class="info-box-title">Resolved defaults and nested retry budgets</div>
+        A standalone <code>RetryPolicy()</code> performs one stage attempt. When an <code>IteratorConfig</code> leaves <code>page_retry</code> or <code>item_retry</code> unset, <code>resolve()</code> instead creates both policies from the active <code>RuntimeConfig</code>; the shipped defaults are four stage attempts, <code>base_delay=0.5</code>, <code>multiplier=2.0</code>, <code>max_delay=30.0</code>, and <code>jitter=0.5</code>. A stage attempt may call <code>BaseCore</code>, whose separate four-attempt request budget can therefore multiply the number of HTTP calls. Set both layers deliberately for your workload.
+    </div>
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">import</span> asyncio
-<span class="token-keyword">import</span> threading
-<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> (
+    ErrorAction,
+    ErrorMode,
+    MediaLoadError,
+    MediaLoadErrors,
+    ResultOrder,
+    RetryPolicy,
+    ScrapeErrorContext,
+)
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
+<span class="token-keyword">from</span> base_api.modules.errors <span class="token-keyword">import</span> ResourceGone
 
-stop = threading.Event()
+<span class="token-keyword">def</span> resource_is_gone(error: BaseException) -&gt; bool:
+    <span class="token-keyword">if</span> isinstance(error, ResourceGone):
+        <span class="token-keyword">return</span> <span class="token-keyword">True</span>
+    <span class="token-keyword">if</span> isinstance(error, MediaLoadError):
+        <span class="token-keyword">return</span> resource_is_gone(error.original_error)
+    <span class="token-keyword">if</span> isinstance(error, MediaLoadErrors):
+        <span class="token-keyword">return</span> any(resource_is_gone(item) <span class="token-keyword">for</span> item <span class="token-keyword">in</span> error.errors)
+    <span class="token-keyword">return</span> <span class="token-keyword">False</span>
 
-config = <span class="token-class">DownloadConfigHLS</span>(
-    quality=<span class="token-string">"720"</span>,
-    path=<span class="token-string">"video.mp4"</span>,
-    segment_state_path=<span class="token-string">"video.state.json"</span>,  <span class="token-comment"># Enables resume</span>
-    keep_segment_dir=<span class="token-keyword">True</span>,                   <span class="token-comment"># Keep downloaded parts</span>
-    stop_event=stop,                          <span class="token-comment"># Cancel trigger</span>
+<span class="token-keyword">def</span> handle_page_error(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-builtin">print</span>(<span class="token-string">"page"</span>, context.url, context.attempt, context.error)
+    <span class="token-keyword">return</span> ErrorAction.RETRY
+
+<span class="token-keyword">async def</span> handle_item_error(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-builtin">print</span>(<span class="token-string">"item"</span>, context.url, context.attempt, context.error)
+    <span class="token-keyword">if</span> resource_is_gone(context.error):
+        <span class="token-keyword">return</span> ErrorAction.SKIP
+    <span class="token-keyword">return</span> ErrorAction.RETRY
+
+iterator_config = <span class="token-class">IteratorConfig</span>(
+    max_page_concurrency=<span class="token-number">2</span>,
+    max_item_concurrency=<span class="token-number">8</span>,
+    order=ResultOrder.ORIGINAL,
+    item_retry=<span class="token-class">RetryPolicy</span>(
+        max_attempts=<span class="token-number">3</span>,
+        base_delay=<span class="token-number">0.5</span>,
+        multiplier=<span class="token-number">2.0</span>,
+        max_delay=<span class="token-number">8.0</span>,
+        jitter=<span class="token-number">0.25</span>,
+        retry_for=(Exception,),
+    ),
+    page_error_handler=handle_page_error,
+    item_error_handler=handle_item_error,
+    item_error_mode=ErrorMode.YIELD,
+    page_error_mode=ErrorMode.SKIP,
+    load_specific_sources=(<span class="token-string">"html"</span>,),
+)</code></pre>
+    </div>
+    <p>Page and item handlers are independent; each receives only failures from its own stage, and either field may be left unset to use automatic policy for that stage. A sync or async handler runs on every failed stage attempt and may return <code>RETRY</code>, <code>RAISE</code>, <code>YIELD</code>, or <code>SKIP</code>. An explicit <code>RETRY</code> can override <code>retry_for</code>, but it cannot exceed the policy's hard limit; on the final attempt it falls back to the configured error mode. Page failures containing a nested HTTP 404 remain terminal. A handler that raises or returns another value produces a fatal <code>ErrorHandlerError</code>.</p>
+</div>
+
+<div class="section" id="scrape-results-section">
+    <span class="section-anchor" id="scrape-results"></span>
+    <h2><span class="section-icon">🌊</span> ScrapeStream & ScrapeResult</h2>
+
+    <p><code>Helper.iterator()</code> returns a lazily started <code>ScrapeStream</code>. Exhausting it cleans up normally; use it as an async context manager whenever the consumer may stop early.</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>stream = helper.iterator(
+    target_page_urls=page_urls,
+    item_extractor=extractor,
+    iterator_config=iterator_config,
 )
 
-<span class="token-comment"># Cancel from another thread: stop.set()</span>
-<span class="token-comment"># Resume: just run video.download(configuration=config) again</span></code></pre>
+<span class="token-keyword">async with</span> stream:
+    <span class="token-keyword">async for</span> result <span class="token-keyword">in</span> stream:
+        <span class="token-keyword">if not</span> result.succeeded:
+            <span class="token-builtin">print</span>(result.stage, result.url, result.error)
+            <span class="token-keyword">continue</span>
+        media = result.unwrap()  <span class="token-comment"># Same object as result.item after the check</span></code></pre>
     </div>
 
-    <div class="info-box tip">
-        <div class="info-box-title">How Resume Works</div>
-        When cancelled, a JSON state file is written with segment URLs and progress. On the next run, the downloader loads this state, scans the segment directory for existing files, and only fetches what's missing. On success, the state file is automatically deleted.
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>ScrapeResult field</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>stage</code></td><td><code>ScrapeStage.PAGE</code> or <code>ScrapeStage.ITEM</code></td></tr>
+                <tr><td><code>url</code></td><td>Page or item URL associated with this outcome</td></tr>
+                <tr><td><code>page_index</code> / <code>item_index</code></td><td>Stable original ordering coordinates</td></tr>
+                <tr><td><code>attempts</code></td><td>Number of attempts consumed</td></tr>
+                <tr><td><code>item</code></td><td>Loaded media on success, otherwise <code>None</code></td></tr>
+                <tr><td><code>error</code></td><td>Typed <code>PageFetchError</code>/<code>ItemFetchError</code> on yielded failure</td></tr>
+                <tr><td><code>succeeded</code></td><td>True exactly when the result contains an item</td></tr>
+                <tr><td><code>unwrap()</code></td><td>Return the item or raise the stored typed scrape error</td></tr>
+            </tbody>
+        </table>
     </div>
+</div>
+
+<div class="section" id="downloads-section">
+    <span class="section-anchor" id="downloads"></span>
+    <h2><span class="section-icon">⬇️</span> Download Configurations</h2>
+
+    <h3>Shared fields</h3>
+    <p><code>DownloadConfigHLS</code> and <code>DownloadConfigRAW</code> share <code>quality</code>, <code>path</code>, <code>callback</code>, <code>no_title</code>, and <code>stop_event</code>. Quality accepts a supported integer height or <code>"best"</code>, <code>"half"</code>, <code>"worst"</code>, and common <code>"720p"</code>-style values.</p>
+
+    <h3>DownloadConfigHLS</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Field</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>m3u8_base_url</code></td><td><code>None</code></td><td>Master playlist URL, awaitable, or callable used by <code>BaseCore.download</code></td></tr>
+                <tr><td><code>remux</code></td><td><code>False</code></td><td>Remux concatenated transport stream to MP4</td></tr>
+                <tr><td><code>start_segment</code></td><td><code>0</code></td><td>First segment index</td></tr>
+                <tr><td><code>segment_state_path</code></td><td><code>None</code></td><td>JSON resume-state file</td></tr>
+                <tr><td><code>segment_dir</code></td><td><code>None</code></td><td>Directory for downloaded segments</td></tr>
+                <tr><td><code>return_report</code></td><td><code>False</code></td><td>Return a <code>DownloadReport</code> instead of only a boolean</td></tr>
+                <tr><td><code>cleanup_on_stop</code></td><td><code>True</code></td><td>Remove temporary state when cancelled</td></tr>
+                <tr><td><code>keep_segment_dir</code></td><td><code>False</code></td><td>Retain segment files after completion</td></tr>
+                <tr><td><code>callback_remux</code></td><td><code>None</code></td><td>Progress callback for remuxing</td></tr>
+                <tr><td><code>ios_support</code></td><td><code>False</code></td><td>Enable the iOS-compatible remux path</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p><code>BaseCore.download()</code> reads <code>RuntimeConfig.timeout</code> and <code>RuntimeConfig.max_workers_download</code> from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout and worker settings isolated from the process-wide default configuration.</p>
+
+    <h3>DownloadConfigRAW</h3>
+    <p>Direct-file downloads add <code>allow_multipart=True</code>, <code>max_workers=5</code>, <code>read_timeout=120.0</code>, <code>chunk_size=1024</code>, and <code>max_retries=5</code>. These downloader retries are separate from <code>RuntimeConfig.request_attempts</code>.</p>
 </div>
 
 <div class="section" id="logging-section">
     <span class="section-anchor" id="logging"></span>
-    <h2><span class="section-icon">📝</span> Logging</h2>
-
-    <p>Both the base API and child APIs use Python's <code>logging</code> module. Enable verbose logging:</p>
+    <h2><span class="section-icon">📝</span> Logging & Cleanup</h2>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">import</span> logging
 
-<span class="token-comment"># Enable BaseCore logging</span>
 core.enable_logging(level=logging.DEBUG)
-
-<span class="token-comment"># Log to a file</span>
 core.enable_logging(log_file=<span class="token-string">"api.log"</span>, level=logging.INFO)
-
-<span class="token-comment"># Remote HTTP logging (sends logs to a server)</span>
 core.enable_logging(
     log_ip=<span class="token-string">"192.168.1.100"</span>,
     log_port=<span class="token-number">8080</span>,
-    level=logging.DEBUG
-)</code></pre>
+    level=logging.DEBUG,
+)
+
+<span class="token-comment"># Always release the curl_cffi connection pool.</span>
+<span class="token-keyword">await</span> core.close()</code></pre>
+    </div>
+</div>
+
+<div class="section" id="migration-section">
+    <span class="section-anchor" id="migration"></span>
+    <h2><span class="section-icon">🚚</span> Migration from 3.x</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>3.x</th><th>4.0 replacement</th></tr></thead>
+            <tbody>
+                <tr><td><code>fetch(url)</code></td><td><code>fetch_text(url)</code></td></tr>
+                <tr><td><code>fetch(..., get_bytes=True)</code></td><td><code>fetch_bytes(...)</code></td></tr>
+                <tr><td><code>fetch(..., get_response=True)</code></td><td><code>request(...)</code></td></tr>
+                <tr><td><code>fetch(..., save_cache=False)</code></td><td><code>fetch_text(..., cache_policy=CachePolicy.BYPASS)</code></td></tr>
+                <tr><td><code>max_cache_items</code></td><td><code>response_cache_size_bytes</code> + <code>segment_cache_size_bytes</code></td></tr>
+                <tr><td><code>max_retries</code></td><td><code>request_attempts</code></td></tr>
+                <tr><td><code>proxies</code></td><td><code>proxy</code></td></tr>
+                <tr><td><code>load(api=True, html=False)</code></td><td><code>load_sources("api")</code> or <code>load_fields(...)</code></td></tr>
+                <tr><td><code>on_error_hint</code> returning <code>bool</code></td><td><code>ErrorHandler</code> returning <code>ErrorAction</code></td></tr>
+                <tr><td><code>keep_original_order=True</code></td><td><code>IteratorConfig(order=ResultOrder.ORIGINAL)</code></td></tr>
+                <tr><td><code>max_video_concurrency</code></td><td><code>IteratorConfig(max_item_concurrency=...)</code></td></tr>
+                <tr><td><code>result.is_success</code></td><td><code>result.succeeded</code></td></tr>
+                <tr><td><code>result.video</code></td><td><code>result.unwrap()</code> or checked <code>result.item</code></td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -1231,25 +1495,41 @@ core.enable_logging(
     <span class="section-anchor" id="base-errors"></span>
     <h2><span class="section-icon">🚨</span> Error Reference</h2>
 
-    <p>The <code>eaf_base_api</code> defines a comprehensive error hierarchy under <code>base_api.modules.errors</code>. You may catch these when calling methods from any of the APIs:</p>
+    <p>Errors live in <code>base_api.modules.errors</code>; frequently used version 4 errors are also exported from <code>base_api</code>.</p>
+    <div class="info-box note">
+        <div class="info-box-title">Loader exceptions are wrapped</div>
+        An exception raised by one source loader is exposed as <code>MediaLoadError</code>; inspect its <code>original_error</code> for a site package's <code>NotFound</code>, <code>RegionBlocked</code>, or similar exception. If several requested sources fail together, <code>MediaLoadErrors.errors</code> contains each failure. Helper item failures add one more typed <code>ItemFetchError</code> layer whose <code>original_error</code> is the media-load error.
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Family</th><th>Exceptions and meaning</th></tr></thead>
+            <tbody>
+                <tr><td>HTTP/network</td><td><code>NetworkRequestError</code>, <code>HTTPStatusError</code>, <code>RateLimitError</code>, <code>RequestRetriesExhausted</code>, <code>ResourceGone</code>, <code>AccessDeniedError</code>, <code>InvalidProxy</code>, <code>ProxySSLError</code></td></tr>
+                <tr><td>Media fields</td><td><code>UnknownMediaFieldError</code>, <code>FieldNotLoadableError</code>, <code>DataNotLoadedError</code></td></tr>
+                <tr><td>Media loaders</td><td><code>LoaderConfigurationError</code>, <code>LoaderContractError</code>, <code>MediaLoadError</code>, <code>MediaLoadErrors</code></td></tr>
+                <tr><td>Scrape operations</td><td><code>PageFetchError</code>, <code>ItemFetchError</code>, <code>ErrorHandlerError</code></td></tr>
+                <tr><td>Downloads/playlists</td><td><code>DownloadCancelled</code>, <code>SegmentError</code>, <code>PlaylistExtractionError</code>, <code>StateLoadError</code>, <code>MaxRetriesExceeded</code></td></tr>
+                <tr><td>Bot challenges</td><td><code>BotProtectionDetected</code>, <code>ChallengeRegexError</code>, <code>ChallengeMathError</code>, <code>SecurityAbort</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📋</span> Changelog</h2>
 
     <div class="table-wrapper">
         <table>
-            <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
+            <thead><tr><th>Date / Version</th><th>Changes since 3.3.3</th></tr></thead>
             <tbody>
-                <tr><td><code>UnknownError</code></td><td>Unexpected errors not covered by specific exceptions</td></tr>
-                <tr><td><code>ResourceGone</code></td><td>HTTP 410 — resource permanently removed</td></tr>
-                <tr><td><code>NetworkRequestError</code></td><td>General network request failures</td></tr>
-                <tr><td><code>HTTPStatusError</code></td><td>Non-200 HTTP responses (has <code>.status_code</code>, <code>.url</code>)</td></tr>
-                <tr><td><code>RateLimitError</code></td><td>HTTP 429 — too many requests (has <code>.retry_after</code>)</td></tr>
-                <tr><td><code>AccessDeniedError</code></td><td>HTTP 403 — blocked by server</td></tr>
-                <tr><td><code>InvalidProxy</code></td><td>Proxy configuration is invalid or unreachable</td></tr>
-                <tr><td><code>ProxySSLError</code></td><td>Proxy SSL certificate verification failed</td></tr>
-                <tr><td><code>BotProtectionDetected</code></td><td>Cloudflare or similar WAF detected</td></tr>
-                <tr><td><code>DownloadCancelled</code></td><td>Download was stopped via <code>stop_event</code></td></tr>
-                <tr><td><code>PlaylistExtractionError</code></td><td>Failed to parse M3U8 master playlist</td></tr>
-                <tr><td><code>DataNotLoadedError</code></td><td>Attribute accessed before <code>load()</code> was called</td></tr>
-                <tr><td><code>SecurityAbort</code></td><td>Illegal characters detected in bot challenge code</td></tr>
+                <tr><td><strong>2026-08-11 — 4.0.0</strong></td><td>Added the <code>py.typed</code> marker; finalized runtime-resolved <code>IteratorConfig</code> values; expanded typed exports; improved page/item exception logging and terminal error context. Commits <code>13b4105</code>–<code>184df57</code>.</td></tr>
+                <tr><td><strong>2026-08-08 — 4.0.0</strong></td><td>Centralized page/item concurrency, ordering, loading, retry policies, and handlers in <code>IteratorConfig</code>; resolved omitted policies from <code>RuntimeConfig</code>; expanded inline API documentation. Commits <code>2705faa</code>–<code>baccdfd</code>.</td></tr>
+                <tr><td><strong>2026-08-07 — 4.0.0</strong></td><td>Breaking v4 redesign: explicit request methods and cache policies; byte-bounded TTL caches and single-flight text fetches; source-aware atomic media loading; bounded dynamic Helper scheduling; immutable <code>ScrapeResult</code>; owned <code>ScrapeStream</code>; structured retry/error policies. Commits <code>37176cb</code>, <code>7294115</code>.</td></tr>
+                <tr><td><strong>2026-08-07 — 3.3.6</strong></td><td>Improved legacy iterator ordering and ensured worker cancellation/cleanup when iteration finishes or the consumer exits early. Commits <code>34286d0</code>, <code>76b3023</code>.</td></tr>
+                <tr><td><strong>2026-08-04 — 3.3.5</strong></td><td>Added local interface binding and corrected proxy initialization to use a single proxy URL. Commit <code>a3ca95e</code>.</td></tr>
+                <tr><td><strong>2026-07-27 — 3.3.4</strong></td><td>Hardened output filename sanitization against path traversal and invalid filename components. Commit <code>eec47e3</code>.</td></tr>
+                <tr><td><strong>2026-07-26 — 3.3.3</strong></td><td>Baseline requested for this documentation update; licensing changed to AGPL-3.0-or-later. Commit <code>3ee47f7</code>.</td></tr>
             </tbody>
         </table>
     </div>
@@ -1259,7 +1539,7 @@ core.enable_logging(
 
             <!-- Footer -->
             <footer class="page-footer">
-                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · Licensed under LGPLv3</span>
+                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · API projects licensed under AGPLv3</span>
                 <span>Powered by <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
             </footer>
         </main>

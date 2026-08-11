@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = XFreeHD API -->
 <!-- SLOT:HERO_TITLE = XFreeHD API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.5 -->
+<!-- SLOT:VERSION = 1.7 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xfreehd -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xfreehd -->
 
@@ -48,6 +48,7 @@
 <a href="#error-handling" class="nav-link">Error Handling</a>
 
 <div class="nav-section-title">Extras</div>
+<a href="#changelog" class="nav-link">Changelog</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <!-- END:SIDEBAR_NAV -->
 
@@ -95,7 +96,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. The networking core package <code>eaf_base_api</code> is automatically fetched and configured.
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.0.0</code>. The compatible networking core is installed automatically.
     </div>
 </div>
 
@@ -138,7 +139,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>XFreeHD API uses <code>eaf_base_api</code> for networking. You can configure proxies, timeouts, limits, and HTTP parameters via a custom <code>BaseCore</code>.</p>
+    <p>XFreeHD API uses <code>eaf_base_api</code> 4.x for networking. You can configure a proxy, timeouts, request attempts, limits, and HTTP parameters via a custom <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and <code>BaseCore</code>.</p>
 
     <div class="code-window">
@@ -148,11 +149,44 @@ asyncio.run(main())</code></pre>
 <span class="token-keyword">from</span> xfreehd_api <span class="token-keyword">import</span> Client
 
 my_config = <span class="token-class">RuntimeConfig</span>()
-my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+my_config.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+my_config.request_attempts = <span class="token-number">4</span>
 
 core = <span class="token-class">BaseCore</span>(configuration=my_config)
 client = <span class="token-class">Client</span>(core=core)</code></pre>
     </div>
+
+    <h3>IteratorConfig, retry policy, and custom scrape errors</h3>
+    <p>Iterator methods take one <code>iterator_config</code> object. Keep <code>load_specific_sources=("html",)</code> when replacing XFreeHD's defaults so full <code>Video</code> metadata is loaded.</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorAction, ErrorMode, ResultOrder, RetryPolicy, ScrapeErrorContext
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
+
+<span class="token-keyword">async def</span> <span class="token-function">handle_scrape_error</span>(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-builtin">print</span>(context.stage, context.url, context.error, context.attempt)
+    <span class="token-keyword">return</span> ErrorAction.RETRY
+
+retry = <span class="token-class">RetryPolicy</span>(
+    max_attempts=<span class="token-number">3</span>, base_delay=<span class="token-number">0.5</span>, multiplier=<span class="token-number">2</span>, max_delay=<span class="token-number">8</span>, jitter=<span class="token-number">0.25</span>
+)
+iterator_config = <span class="token-class">IteratorConfig</span>(
+    max_page_concurrency=<span class="token-number">2</span>,
+    max_item_concurrency=<span class="token-number">5</span>,
+    order=ResultOrder.ORIGINAL,
+    load_specific_sources=(<span class="token-string">"html"</span>,),
+    page_retry=retry,
+    item_retry=retry,
+    page_error_mode=ErrorMode.SKIP,
+    item_error_mode=ErrorMode.YIELD,
+    page_error_handler=handle_scrape_error,
+    item_error_handler=handle_scrape_error,
+)
+
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"beach"</span>, iterator_config=iterator_config):
+    <span class="token-builtin">print</span>(result.unwrap().title <span class="token-keyword">if</span> result.succeeded <span class="token-keyword">else</span> result.error)</code></pre>
+    </div>
+    <p><code>max_attempts</code> includes the first attempt. <code>page_error_handler</code> and <code>item_error_handler</code> are routed independently. This example shares one callable because it intentionally applies the same retry decision to both stages; use separate callables when page and item policy differ.</p>
 </div>
 
 <hr>
@@ -241,31 +275,21 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries XFreeHD search and streams video results via an asynchronous generator.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
     pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
-    max_videos_concurrency: <span class="token-builtin">int</span> = <span class="token-number">20</span>,
-    max_pages_concurrency: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search keywords</span></li>
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of search pages to parse (default: <code>5</code>)</span></li>
-            <li class="param-item"><span class="param-name">max_videos_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Concurrency limit for video parsing (default: <code>20</code>)</span></li>
-            <li class="param-item"><span class="param-name">max_pages_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Concurrency limit for page parsing (default: <code>2</code>)</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Maintain chronological ordering</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, pre-fetches full metadata for every video yielded</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Error callback coroutine for single videos</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Error callback coroutine for index pages</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Per-iterator concurrency, source loading, ordering, retry, error-mode, and custom-handler settings. The package default loads the <code>html</code> source.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 </div>
 
@@ -429,11 +453,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"beach"</span>, pages=<span class="token-number">2</span>):
-    <span class="token-keyword">if</span> result.is_success:
-        video = result.video        <span class="token-comment"># The Video object</span>
+    <span class="token-keyword">if</span> result.succeeded:
+        video = result.unwrap()     <span class="token-comment"># The Video object</span>
         <span class="token-builtin">print</span>(video.title)
     <span class="token-keyword">else</span>:
-        <span class="token-builtin">print</span>(f<span class="token-string">"Error for {result.url}: {result.error}"</span>)</code></pre>
+        <span class="token-builtin">print</span>(f<span class="token-string">"{result.stage} failed: {result.error}"</span>)</code></pre>
     </div>
 
     <h3>ScrapeResult Attributes</h3>
@@ -441,10 +465,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
         <table>
             <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
-                <tr><td><code>url</code></td><td><code>str</code></td><td>The parsed video target URL</td></tr>
-                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The parsed Video object (if successful)</td></tr>
-                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The exception raised (if failed)</td></tr>
-                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded</td></tr>
+                <tr><td><code>succeeded</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded.</td></tr>
+                <tr><td><code>unwrap()</code></td><td><code>Video</code></td><td>Returns the parsed video, or raises the stored error.</td></tr>
+                <tr><td><code>item</code></td><td><code>Video | None</code></td><td>The parsed video when successful.</td></tr>
+                <tr><td><code>error</code></td><td><code>ScrapeOperationError | None</code></td><td>The typed page or item failure.</td></tr>
+                <tr><td><code>stage</code></td><td><code>ScrapeStage</code></td><td>The iterator stage: <code>PAGE</code> or <code>ITEM</code>.</td></tr>
             </tbody>
         </table>
     </div>
@@ -457,7 +482,7 @@ success = <span class="token-keyword">await</span> video.download(configuration=
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>Custom exceptions are defined in <code>xfreehd_api.modules.errors</code>. Network-level errors bubble up from the underlying <code>eaf_base_api</code> package.</p>
+    <p>Source loaders translate request failures into exceptions from <code>xfreehd_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
     <div class="table-wrapper">
         <table>
@@ -475,15 +500,46 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">from</span> xfreehd_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
+<span class="token-keyword">from</span> xfreehd_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
 
 <span class="token-keyword">try</span>:
     video = <span class="token-keyword">await</span> client.get_video(url)
-<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
-<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)</code></pre>
+<span class="token-keyword">except</span> <span class="token-class">MediaLoadError</span> <span class="token-keyword">as</span> error:
+    <span class="token-keyword">if</span> isinstance(error.original_error, NotFound):
+        <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+    <span class="token-keyword">elif</span> isinstance(error.original_error, BotDetection):
+        <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-keyword">raise</span></code></pre>
     </div>
+</div>
+
+<!-- ================================================================
+     CHANGELOG
+     ================================================================ -->
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.7 — 2026-08-11 <code>d41c536</code></h3>
+    <ul>
+        <li>Added the <code>py.typed</code> marker and changed unset iterator retry policies to resolve from the live <code>RuntimeConfig</code>.</li>
+        <li>Updated the package version from 1.6 to 1.7.</li>
+    </ul>
+
+    <h3>IteratorConfig synchronization — 2026-08-08 <code>5f55f07</code></h3>
+    <ul>
+        <li>Replaced the legacy per-call iterator arguments with <code>IteratorConfig</code>.</li>
+        <li>Preserved the required <code>html</code> source loading for search results.</li>
+    </ul>
+
+    <h3>Core v4 migration — 2026-08-07 <code>bf40a03</code></h3>
+    <ul>
+        <li>Migrated to eaf-base-api 4.x with explicit request methods and source-aware media loading.</li>
+        <li>Added bounded retries, structured errors, extractor validation, improved concurrency, and deterministic stream cleanup.</li>
+        <li>Removed obsolete compatibility code and adopted the current <code>ScrapeResult</code> model.</li>
+    </ul>
 </div>
 
 <!-- ================================================================

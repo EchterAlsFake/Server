@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Redtube API -->
 <!-- SLOT:HERO_TITLE = Redtube API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Redtube. Fetch video details, custom playlists, publishers channels, users, and pornstars. Stream downloads via HLS. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.2 -->
+<!-- SLOT:VERSION = 1.4 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-redtube -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-redtube -->
 
@@ -68,6 +68,7 @@
 <a href="#error-handling" class="nav-link">Error Handling</a>
 
 <div class="nav-section-title">Extras</div>
+<a href="#changelog" class="nav-link">Changelog</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <!-- END:SIDEBAR_NAV -->
 
@@ -121,7 +122,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. The underlying networking library <code>eaf_base_api</code> is automatically installed.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically.
     </div>
 </div>
 
@@ -157,7 +158,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>Proxy adjustments, HTTP headers, timeouts, and other variables are handled via <code>RuntimeConfig</code> passed to the <code>BaseCore</code> class.</p>
+    <p>Redtube API uses <code>eaf_base_api ≥ 4.0.0</code>. Its singular proxy, request attempts, timeouts, and other networking behavior are configured through <code>RuntimeConfig</code> passed to <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for details.</p>
 
     <div class="code-window">
@@ -167,7 +168,8 @@ asyncio.run(main())</code></pre>
 <span class="token-keyword">from</span> redtube_api <span class="token-keyword">import</span> Client
 
 my_config = <span class="token-class">RuntimeConfig</span>()
-my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+my_config.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+my_config.request_attempts = <span class="token-number">3</span>
 
 core = <span class="token-class">BaseCore</span>(configuration=my_config)
 client = <span class="token-class">Client</span>(core=core)</code></pre>
@@ -360,31 +362,21 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries Redtube search index pages and yields video scrape results.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
     pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search query words</span></li>
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of search pages to parse</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Index page scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full video object details</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 concurrency, ordering, eager-source, retry, and error-handling policy. The package default eagerly loads <code>html</code>.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 </div>
 
@@ -406,17 +398,17 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
                 <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video key ID</td></tr>
                 <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
-                <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Video duration in seconds</td></tr>
+                <tr><td><code>duration</code></td><td><code>int | str | None</code></td><td>Video duration supplied by the page player data</td></tr>
                 <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Thumbnail cover image URL</td></tr>
                 <tr><td><code>embed_code</code></td><td><code>str | None</code></td><td>Embed code for web players</td></tr>
                 <tr><td><code>locale</code></td><td><code>str | None</code></td><td>Locale code identifier</td></tr>
-                <tr><td><code>media_definitions</code></td><td><code>dict | None</code></td><td>Raw media list configurations</td></tr>
+                <tr><td><code>media_definitions</code></td><td><code>list[dict] | None</code></td><td>Raw media definitions from the player configuration</td></tr>
                 <tr><td><code>is_auto_play_enabled</code></td><td><code>bool | None</code></td><td>Autoplay status</td></tr>
                 <tr><td><code>is_vr</code></td><td><code>bool | None</code></td><td>VR video flag</td></tr>
                 <tr><td><code>author_url</code></td><td><code>str | None</code></td><td>The author's profile page URL</td></tr>
                 <tr><td><code>m3u8_source_url</code></td><td><code>str | None</code></td><td>The raw HLS playlists URL source path</td></tr>
                 <tr><td><code>mp4_url</code></td><td><code>str | None</code></td><td>Raw MP4 direct download link (if available)</td></tr>
-                <tr><td><code>action_tags_raw</code></td><td><code>dict | None</code></td><td>Raw action tags parameters</td></tr>
+                <tr><td><code>action_tags_raw</code></td><td><code>object</code></td><td>Raw action-tag payload (currently a string or mapping at runtime)</td></tr>
                 <tr><td><code>action_tags</code></td><td><code>dict | None</code></td><td>Decoded action tags mapped by keyword and timestamp</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Constructed HLS master playlist string</td></tr>
                 <tr><td><code>author_name</code></td><td><code>str | None</code></td><td>Name of the video author</td></tr>
@@ -542,29 +534,19 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results nested inside this playlist.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> result <span class="token-keyword">in</span> playlist.get_videos(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> playlist.get_videos(
     pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Page index scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full video object details</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 iterator policy. The default eagerly loads each video's <code>html</code> source.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 </div>
 
@@ -602,29 +584,19 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields videos uploaded by or featuring this profile.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> profile.get_videos(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> profile.get_videos(
     pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Page index scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full video object details</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 iterator policy. The default eagerly loads each video's <code>html</code> source.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 
     <!-- user-get_playlists -->
@@ -636,30 +608,20 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Yields playlists created by the user. <strong>Available for User objects only.</strong> Requires that the HTML has been pre-loaded.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> playlist <span class="token-keyword">in</span> user.get_playlists(
+        <div class="method-desc">Yields playlists created by the user. <strong>Available for User objects only.</strong></div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> user.get_playlists(
     pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Playlist], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Page index scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full playlist object details</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 iterator policy. The default eagerly loads each playlist's <code>html</code> source.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Playlist], None]</span>
     </div>
 </div>
 
@@ -700,29 +662,19 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results uploaded by this studio channel.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> channel.get_videos(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.get_videos(
     pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Page index scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full video object details</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 iterator policy. The default eagerly loads each video's <code>html</code> source.</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 </div>
 
@@ -743,7 +695,6 @@ config = <span class="token-class">DownloadConfigHLS</span>(
     quality=<span class="token-string">"best"</span>,            <span class="token-comment"># "best", "half", "worst", or height int (e.g. 720)</span>
     path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Destination path</span>
     no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># If False, automatically appends title + ".mp4"</span>
-    max_workers=<span class="token-number">5</span>              <span class="token-comment"># Concurrent download segment threads</span>
 )
 
 success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
@@ -758,16 +709,16 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="scraping-results-section">
     <span class="section-anchor" id="scraping-results"></span>
     <h2><span class="section-icon">📊</span> Scraping Results</h2>
-    <p>Concurrently iterated methods yield a standard <code>ScrapeResult</code> wrapper:</p>
+    <p>Iterator methods yield a typed <code>ScrapeResult[T]</code> wrapper. Use <code>succeeded</code> to branch safely or <code>unwrap()</code> to return the item and raise its terminal error on failure:</p>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"beach"</span>, pages=<span class="token-number">2</span>):
-    <span class="token-keyword">if</span> result.is_success:
-        video = result.video        <span class="token-comment"># The Video object</span>
+    <span class="token-keyword">if</span> result.succeeded:
+        video = result.unwrap()
         <span class="token-builtin">print</span>(video.title)
     <span class="token-keyword">else</span>:
-        <span class="token-builtin">print</span>(f<span class="token-string">"Error for {result.url}: {result.error}"</span>)</code></pre>
+        <span class="token-builtin">print</span>(result.stage, result.url, result.error)</code></pre>
     </div>
 
     <h3>ScrapeResult Attributes</h3>
@@ -775,12 +726,61 @@ success = <span class="token-keyword">await</span> video.download(configuration=
         <table>
             <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
+                <tr><td><code>stage</code></td><td><code>ScrapeStage</code></td><td>Whether the result came from the page or item stage</td></tr>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The parsed video target URL</td></tr>
-                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The parsed Video object (if successful)</td></tr>
-                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The exception raised (if failed)</td></tr>
-                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded</td></tr>
+                <tr><td><code>page_index</code></td><td><code>int</code></td><td>Zero-based source page index</td></tr>
+                <tr><td><code>item_index</code></td><td><code>int | None</code></td><td>Zero-based item index, or <code>None</code> for a page failure</td></tr>
+                <tr><td><code>attempts</code></td><td><code>int</code></td><td>Number of attempts used by the yielding stage</td></tr>
+                <tr><td><code>item</code></td><td><code>T | None</code></td><td>The parsed <code>Video</code> or <code>Playlist</code> on success</td></tr>
+                <tr><td><code>error</code></td><td><code>ScrapeOperationError | None</code></td><td>The typed terminal page or item error on failure</td></tr>
+                <tr><td><code>succeeded</code></td><td><code>bool</code></td><td><code>True</code> when <code>error is None</code></td></tr>
             </tbody>
         </table>
+    </div>
+
+    <h3>IteratorConfig, bounded retries, and custom handlers</h3>
+    <p>All iterator-only controls now live in one <code>IteratorConfig</code>. Redtube's package default uses <code>ErrorMode.SKIP</code> for terminal page failures; a supplied config replaces that behavior, and a bare <code>IteratorConfig</code> instead defaults to <code>ErrorMode.YIELD</code>. A retry policy's <code>max_attempts</code> includes the initial attempt, so this example makes at most three stage attempts per failed page or item. Each stage attempt may itself perform the request retries configured on <code>BaseCore</code>. Fully populated results require the <code>html</code> source.</p>
+    <p>Leave <code>page_retry</code> or <code>item_retry</code> as <code>None</code> to derive that stage's bounded policy from the active <code>RuntimeConfig</code> request-attempt and backoff settings; an explicit <code>RetryPolicy</code> overrides it per stage.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorAction, RetryPolicy, ScrapeErrorContext
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
+
+<span class="token-keyword">async def</span> handle_scrape_error(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-keyword">if</span> context.attempt &lt; context.max_attempts:
+        <span class="token-keyword">return</span> ErrorAction.RETRY
+    <span class="token-keyword">return</span> ErrorAction.YIELD
+
+retry = <span class="token-class">RetryPolicy</span>(
+    max_attempts=<span class="token-number">3</span>, base_delay=<span class="token-number">0.5</span>, multiplier=<span class="token-number">2.0</span>,
+    max_delay=<span class="token-number">4.0</span>, jitter=<span class="token-number">0.2</span>
+)
+iterator_config = <span class="token-class">IteratorConfig</span>(
+    max_page_concurrency=<span class="token-number">2</span>,
+    max_item_concurrency=<span class="token-number">8</span>,
+    max_pending_items=<span class="token-number">16</span>,
+    load_specific_sources=(<span class="token-string">"html"</span>,),
+    page_retry=retry,
+    item_retry=retry,
+    page_error_handler=handle_scrape_error,
+    item_error_handler=handle_scrape_error,
+)
+
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+    <span class="token-string">"beach"</span>, pages=<span class="token-number">2</span>, iterator_config=iterator_config
+):
+    <span class="token-keyword">if</span> result.succeeded:
+        <span class="token-builtin">print</span>(result.unwrap().title)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(result.stage, result.error)</code></pre>
+    </div>
+
+    <p><code>ScrapeErrorContext</code> supplies <code>stage</code>, <code>url</code>, <code>error</code>, <code>attempt</code>, <code>max_attempts</code>, <code>page_index</code>, and <code>item_index</code>. A handler returns <code>ErrorAction.RETRY</code>, <code>RAISE</code>, <code>YIELD</code>, or <code>SKIP</code>.</p>
+
+    <div class="info-box note">
+        <div class="info-box-title">Independent page and item handlers</div>
+        <p>The core routes page-stage failures to <code>page_error_handler</code> and item-stage failures to <code>item_error_handler</code>. Assign the same callable to both fields only when both stages should use the same policy; otherwise configure either handler independently.</p>
     </div>
 </div>
 
@@ -791,7 +791,7 @@ success = <span class="token-keyword">await</span> video.download(configuration=
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>Exceptions are defined in <code>redtube_api.modules.errors</code>. Network-level errors bubble up from the underlying <code>eaf_base_api</code> package.</p>
+    <p>Source loaders translate request failures into exceptions from <code>redtube_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
     <div class="table-wrapper">
         <table>
@@ -809,15 +809,42 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">from</span> redtube_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
+<span class="token-keyword">from</span> redtube_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
 
 <span class="token-keyword">try</span>:
     video = <span class="token-keyword">await</span> client.get_video(url)
-<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
-<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)</code></pre>
+<span class="token-keyword">except</span> <span class="token-class">MediaLoadError</span> <span class="token-keyword">as</span> error:
+    <span class="token-keyword">if</span> isinstance(error.original_error, NotFound):
+        <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+    <span class="token-keyword">elif</span> isinstance(error.original_error, BotDetection):
+        <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-keyword">raise</span></code></pre>
     </div>
+</div>
+
+<!-- ================================================================
+     CHANGELOG
+     ================================================================ -->
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.4 — 2026-08-11</h3>
+    <ul>
+        <li><code>8fcf5ec</code> — Added generic <code>ScrapeResult</code> typing and the PEP 561 <code>py.typed</code> marker, left iterator retry policies unset so they resolve from <code>RuntimeConfig</code>, and released 1.4.</li>
+    </ul>
+
+    <h3>1.3 — 2026-08-08</h3>
+    <ul>
+        <li><code>eb45470</code> — Consolidated playlist, user, channel, and search iterator concurrency, ordering, source loading, retry, and error controls into <code>IteratorConfig</code>.</li>
+    </ul>
+
+    <h3>1.3 migration — 2026-08-07</h3>
+    <ul>
+        <li><code>46fc0fd</code> — Migrated to the eaf_base_api v4 request and scraping model: <code>fetch_text()</code>/<code>request()</code>, structured exceptions, source-aware media loading, typed scrape streams/results, and bounded retries.</li>
+    </ul>
 </div>
 
 <!-- ================================================================

@@ -975,7 +975,7 @@
                     <div class="sidebar-logo-icon">E</div>
                     <span class="sidebar-logo-text">Beeg API</span>
                 </a>
-                <span class="sidebar-version">v1.5</span>
+                <span class="sidebar-version">v1.7</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -1005,6 +1005,7 @@
 
 <div class="nav-section-title">Extras</div>
 <a href="#platforms" class="nav-link">Platforms</a>
+<a href="#changelog" class="nav-link">Changelog</a>
             </nav>
 
             <div class="sidebar-footer">
@@ -1021,7 +1022,7 @@
             <div class="hero">
                 <div class="hero-badge">
                     <span class="hero-badge-dot"></span>
-                    Python · Async · v1.5
+                    Python · Async · v1.7
                 </div>
                 <h1>Beeg API</h1>
                 <p>A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metadata by parsing external API endpoints, and download streams via HLS. Powered by the eaf_base_api networking engine.</p>
@@ -1084,7 +1085,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. The underlying networking library <code>eaf_base_api</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically as a dependency.
     </div>
 </div>
 
@@ -1132,10 +1133,16 @@ asyncio.run(main())</code></pre>
 <span class="token-keyword">from</span> beeg_api <span class="token-keyword">import</span> Client
 
 my_config = <span class="token-class">RuntimeConfig</span>()
-my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+my_config.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+my_config.request_attempts = <span class="token-number">4</span>
 
 core = <span class="token-class">BaseCore</span>(configuration=my_config)
 client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">eaf_base_api 4</div>
+        Version 1.7 uses the v4 request and source-aware media contracts. <code>RuntimeConfig.proxy</code> is a single proxy URL (the old <code>proxies</code> mapping was removed), and request retries are configured with <code>request_attempts</code> plus the <code>request_retry_*</code> settings.
     </div>
 </div>
 
@@ -1190,6 +1197,11 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Video</span>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Source-aware fields</div>
+        Beeg has no paginated <code>Helper</code> iterator: <code>get_video()</code> is its only fetch operation, so <code>IteratorConfig</code>, iterator <code>RetryPolicy</code>, custom scrape handlers, and <code>ScrapeResult</code> do not apply here. With <code>load_api=True</code>, all remote fields are loaded from the <code>"api"</code> source. If you construct a lightweight object with <code>load_api=False</code>, call <code>await video.load_sources("api")</code>, <code>await video.load_fields("title", "duration")</code>, or <code>await video.get_field("title")</code> before reading unresolved fields. Direct unresolved access raises <code>DataNotLoadedError</code>; a real loaded <code>None</code> does not.
     </div>
 </div>
 
@@ -1261,10 +1273,10 @@ config = <span class="token-class">DownloadConfigHLS</span>(
     quality=<span class="token-string">"best"</span>,            <span class="token-comment"># "best", "half", "worst", or height int</span>
     path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Destination path</span>
     no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># If False, automatically appends title + ".mp4"</span>
-    max_workers=<span class="token-number">5</span>              <span class="token-comment"># Concurrent download segment threads</span>
+    return_report=<span class="token-keyword">True</span>         <span class="token-comment"># Return a DownloadReport instead of bool</span>
 )
 
-success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
+report = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
     </div>
 
     <p>For full details on download options and setup configurations, see the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a>.</p>
@@ -1277,7 +1289,7 @@ success = <span class="token-keyword">await</span> video.download(configuration=
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>Custom exceptions are defined in <code>beeg_api.modules.errors</code>. Network-level errors bubble up from <code>eaf_base_api</code> exceptions.</p>
+    <p>Source loaders translate request failures into exceptions from <code>beeg_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
     <div class="table-wrapper">
         <table>
@@ -1295,12 +1307,16 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">from</span> beeg_api.modules.errors <span class="token-keyword">import</span> NotFound
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
+<span class="token-keyword">from</span> beeg_api.modules.errors <span class="token-keyword">import</span> NotFound
 
 <span class="token-keyword">try</span>:
     video = <span class="token-keyword">await</span> client.get_video(url)
-<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"This video was not found on Beeg!"</span>)</code></pre>
+<span class="token-keyword">except</span> <span class="token-class">MediaLoadError</span> <span class="token-keyword">as</span> error:
+    <span class="token-keyword">if</span> isinstance(error.original_error, NotFound):
+        <span class="token-builtin">print</span>(<span class="token-string">"This video was not found on Beeg!"</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-keyword">raise</span></code></pre>
     </div>
 </div>
 
@@ -1324,11 +1340,31 @@ success = <span class="token-keyword">await</span> video.download(configuration=
     </div>
 </div>
 
+<!-- ================================================================
+     CHANGELOG
+     ================================================================ -->
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📜</span> Changelog</h2>
+
+    <h3>1.7 — August 11, 2026</h3>
+    <ul class="param-list" style="margin: 12px 0;">
+        <li class="param-item" style="display: block; padding: 6px 0;"><code>9eb18ac</code> — Added complete public type hints and the <code>py.typed</code> marker, updated package metadata for 1.7, and reverted the temporary exact-suffix ID parsing change. The current implementation again uses <code>strip("-0")</code>.</li>
+    </ul>
+
+    <h3>Changes during August 7–10, 2026</h3>
+    <ul class="param-list" style="margin: 12px 0;">
+        <li class="param-item" style="display: block; padding: 6px 0;"><code>3f3f68d</code> (August 7) — Migrated to <code>eaf_base_api 4</code>: explicit request methods, source-aware <code>media_field("api")</code> loaders, strict loader results, and removal of the v3 compatibility code.</li>
+        <li class="param-item" style="display: block; padding: 6px 0;"><code>2c0a098</code> (August 9) — Temporarily changed Beeg ID parsing to remove only the exact <code>"-0"</code> suffix.</li>
+        <li class="param-item" style="display: block; padding: 6px 0;"><code>41d4443</code> (August 10) — Merged that temporary ID parsing change; it was subsequently reverted by <code>9eb18ac</code>.</li>
+    </ul>
+</div>
+
             </div>
 
             <!-- Footer -->
             <footer class="page-footer">
-                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · Licensed under LGPLv3</span>
+                <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · API projects licensed under AGPLv3</span>
                 <span>Powered by <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
             </footer>
         </main>

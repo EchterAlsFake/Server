@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Eporner API -->
 <!-- SLOT:HERO_TITLE = Eporner API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.3 -->
+<!-- SLOT:VERSION = 2.4 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-eporner -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-eporner -->
 
@@ -51,6 +51,7 @@
 <a href="#error-handling" class="nav-link">Error Handling</a>
 
 <div class="nav-section-title">Extras</div>
+<a href="#changelog" class="nav-link">Changelog</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <!-- END:SIDEBAR_NAV -->
 
@@ -104,7 +105,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. The networking dependency package <code>eaf_base_api</code> is automatically installed.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.4 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -140,7 +141,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>Adjust scraper properties (headers, cookies, timeouts, proxies) using the shared <code>RuntimeConfig</code> passed into <code>BaseCore</code>.</p>
+    <p>Adjust timeouts, a proxy or bound interface, request retry/delay settings, cache limits, and iterator concurrency using the shared <code>RuntimeConfig</code> passed into <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference.</p>
 
     <div class="code-window">
@@ -150,11 +151,41 @@ asyncio.run(main())</code></pre>
 <span class="token-keyword">from</span> eporner_api <span class="token-keyword">import</span> Client
 
 my_config = <span class="token-class">RuntimeConfig</span>()
-my_config.proxies = {<span class="token-string">"https"</span>: <span class="token-string">"socks5://127.0.0.1:9050"</span>}
+my_config.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+my_config.request_attempts = <span class="token-number">4</span>  <span class="token-comment"># Total attempts, including the first request</span>
 
 core = <span class="token-class">BaseCore</span>(configuration=my_config)
 client = <span class="token-class">Client</span>(core=core)</code></pre>
     </div>
+
+    <h3>Iterator, retry, and error policy</h3>
+    <p>All listing methods accept one <code>IteratorConfig | None</code>. If omitted, Eporner eagerly loads both <code>"api"</code> and <code>"html"</code>, skips terminal page failures, and installs a handler that skips <code>ResourceGone</code>/<code>NotFound</code> failures (including those nested in media-load errors) while retrying other failures within the resolved budget. A supplied config replaces that complete default.</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorAction, ErrorMode, ResultOrder, RetryPolicy, ScrapeErrorContext
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
+
+<span class="token-keyword">async def</span> <span class="token-function">handle_scrape_error</span>(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-builtin">print</span>(context.stage, context.url, context.attempt, context.error)
+    <span class="token-keyword">return</span> ErrorAction.RETRY
+
+retry = <span class="token-class">RetryPolicy</span>(
+    max_attempts=<span class="token-number">3</span>, base_delay=<span class="token-number">0.5</span>, multiplier=<span class="token-number">2.0</span>, max_delay=<span class="token-number">8.0</span>, jitter=<span class="token-number">0.25</span>
+)
+iterator_config = <span class="token-class">IteratorConfig</span>(
+    max_page_concurrency=<span class="token-number">2</span>,
+    max_item_concurrency=<span class="token-number">10</span>,
+    load_specific_sources=(<span class="token-string">"api"</span>, <span class="token-string">"html"</span>),
+    order=ResultOrder.ORIGINAL,
+    page_retry=retry,
+    item_retry=retry,
+    page_error_mode=ErrorMode.SKIP,
+    item_error_mode=ErrorMode.YIELD,
+    page_error_handler=handle_scrape_error,
+    item_error_handler=handle_scrape_error,
+)</code></pre>
+    </div>
+    <p><code>max_attempts</code> includes the first attempt. <code>page_error_handler</code> and <code>item_error_handler</code> are routed independently. This example shares one callable because it intentionally applies the same retry decision to both stages; use separate callables when page and item policy differ. A handler may return <code>RETRY</code>, <code>RAISE</code>, <code>YIELD</code>, or <code>SKIP</code>; retrying remains capped, and a final <code>RETRY</code> falls back to the stage's configured <code>ErrorMode</code>.</p>
 </div>
 
 <hr>
@@ -220,21 +251,15 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries search endpoints and streams video results.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.search_videos(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
     query: <span class="token-builtin">str</span>,
     sorting_gay: str | Gay,
     sorting_order: str | Order,
     sorting_low_quality: str | LowQuality,
     per_page: <span class="token-builtin">int</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>,
     pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    max_video_concurrency: <span class="token-builtin">int</span> = <span class="token-number">20</span>,
-    max_page_concurrency: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -243,18 +268,12 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             <li class="param-item"><span class="param-name">sorting_order</span> <span class="param-type">Order | str</span> <span class="param-desc">— Sort order (see <a href="#sorting-enums">Sorting Enums</a>)</span></li>
             <li class="param-item"><span class="param-name">sorting_low_quality</span> <span class="param-type">LowQuality | str</span> <span class="param-desc">— Low quality exclusions (see <a href="#sorting-enums">Sorting Enums</a>)</span></li>
             <li class="param-item"><span class="param-name">per_page</span> <span class="param-type">int</span> <span class="param-desc">— Number of video results per index page</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, pre-fetches full HTML video properties</span></li>
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of search pages to parse</span></li>
-            <li class="param-item"><span class="param-name">max_video_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">max_page_concurrency</span> <span class="param-type">int</span> <span class="param-desc">— Page index scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Page error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video error callback handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from json endpoints</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy; defaults to Eporner's API+HTML configuration</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 
     <!-- client-get_videos_by_category -->
@@ -267,31 +286,19 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Retrieves video lists categorized under specific tags.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> client.get_videos_by_category(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_videos_by_category(
     category: str | Category,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">category</span> <span class="param-type">Category | str</span> <span class="param-desc">— Eporner Category enum (e.g. <code>Category._4K</code>)</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Page index scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video error callback handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Page error callback handler</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full HTML video properties</span></li>
-            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from JSON API</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Maintain listing order</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy; defaults to Eporner's API+HTML configuration</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 
     <!-- client-get_pornstar -->
@@ -435,7 +442,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields pornstar profiles starring in this video.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> star <span class="token-keyword">in</span> video.get_authors(
+        <div class="method-signature"><span class="token-keyword">async for</span> star <span class="token-keyword">in</span> video.get_authors(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
 ) -&gt; AsyncGenerator[Pornstar, None]</div>
         
@@ -501,31 +508,19 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results associated with this pornstar.</div>
-        <div class="method-signature"><span class="token-keyword">await for</span> video <span class="token-keyword">in</span> pornstar.videos(
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
     pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
-    videos_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages_concurrency: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    on_video_error: on_error_hint = on_error,
-    on_page_error: on_error_hint = <span class="token-keyword">None</span>,
-    keep_original_order: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
-    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; AsyncGenerator[ScrapeResult, None]</div>
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, automatically calculates pages based on total <code>video_amount</code>)</span></li>
-            <li class="param-item"><span class="param-name">videos_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Video worker limit</span></li>
-            <li class="param-item"><span class="param-name">pages_concurrency</span> <span class="param-type">int | None</span> <span class="param-desc">— Index page scraper worker limit</span></li>
-            <li class="param-item"><span class="param-name">on_video_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Video load error handler</span></li>
-            <li class="param-item"><span class="param-name">on_page_error</span> <span class="param-type">coroutine</span> <span class="param-desc">— Index page load error handler</span></li>
-            <li class="param-item"><span class="param-name">keep_original_order</span> <span class="param-type">bool</span> <span class="param-desc">— Keep chronological listing order</span></li>
-            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load full HTML video properties</span></li>
-            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— Fetch base properties from JSON API</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy; defaults to Eporner's API+HTML configuration</span></li>
         </ul>
         
         <h4 class="method-section-title">Returns</h4>
-        <span class="returns-tag">→ AsyncGenerator[ScrapeResult, None]</span>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 </div>
 
@@ -564,16 +559,16 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
 <div class="section" id="scraping-results-section">
     <span class="section-anchor" id="scraping-results"></span>
     <h2><span class="section-icon">📊</span> Scraping Results</h2>
-    <p>Concurrently iterated methods yield a standard <code>ScrapeResult</code> wrapper:</p>
+    <p>Concurrently iterated methods yield immutable <code>ScrapeResult[Video]</code> values. A result contains exactly one of <code>item</code> or <code>error</code>:</p>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(<span class="token-string">"couple"</span>, sorting_gay=<span class="token-string">"0"</span>, sorting_order=<span class="token-string">"latest"</span>, sorting_low_quality=<span class="token-string">"1"</span>, per_page=<span class="token-number">10</span>):
-    <span class="token-keyword">if</span> result.is_success:
-        video = result.video        <span class="token-comment"># The Video object</span>
+    <span class="token-keyword">if</span> result.succeeded:
+        video = result.unwrap()     <span class="token-comment"># Returns Video or raises the typed scrape error</span>
         <span class="token-builtin">print</span>(video.title)
     <span class="token-keyword">else</span>:
-        <span class="token-builtin">print</span>(f<span class="token-string">"Error for {result.url}: {result.error}"</span>)</code></pre>
+        <span class="token-builtin">print</span>(f<span class="token-string">"{result.stage} error for {result.url}: {result.error}"</span>)</code></pre>
     </div>
 
     <h3>ScrapeResult Attributes</h3>
@@ -582,12 +577,31 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
             <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The parsed video target URL</td></tr>
-                <tr><td><code>video</code></td><td><code>Video | None</code></td><td>The parsed Video object (if successful)</td></tr>
-                <tr><td><code>error</code></td><td><code>Exception | None</code></td><td>The exception raised (if failed)</td></tr>
-                <tr><td><code>is_success</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded</td></tr>
+                <tr><td><code>stage</code></td><td><code>ScrapeStage</code></td><td><code>ITEM</code> for media results or <code>PAGE</code> for yielded page failures</td></tr>
+                <tr><td><code>page_index</code></td><td><code>int</code></td><td>Zero-based target-page index</td></tr>
+                <tr><td><code>item_index</code></td><td><code>int | None</code></td><td>Extractor position, or <code>None</code> for a page failure</td></tr>
+                <tr><td><code>attempts</code></td><td><code>int</code></td><td>Number of stage attempts used</td></tr>
+                <tr><td><code>item</code></td><td><code>Video | None</code></td><td>The parsed Video when successful</td></tr>
+                <tr><td><code>error</code></td><td><code>ScrapeOperationError | None</code></td><td>The typed page or item failure</td></tr>
+                <tr><td><code>succeeded</code></td><td><code>bool</code></td><td>True when <code>item</code> is present</td></tr>
+                <tr><td><code>unwrap()</code></td><td><code>Video</code></td><td>Returns the item or raises the stored typed error</td></tr>
             </tbody>
         </table>
     </div>
+</div>
+
+<!-- ================================================================
+     CHANGELOG
+     ================================================================ -->
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📜</span> Changelog</h2>
+    <h3>2.4 (current)</h3>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">2026-08-11 · <code>c8f2974</code></span> <span class="param-desc">— Added typed <code>ScrapeResult[Video]</code> annotations and <code>py.typed</code>; fixed the Eporner v2 API URL/list response handling and treated package <code>NotFound</code> as a terminal resource error. Default iterator error handling now uses the structured <code>ScrapeErrorContext</code>/<code>ErrorAction</code> handler.</span></li>
+        <li class="param-item"><span class="param-name">2026-08-08 · <code>f862f1c</code></span> <span class="param-desc">— Replaced all per-method concurrency, loading, ordering, retry, and callback arguments with <code>IteratorConfig</code> while preserving eager <code>("api", "html")</code> loading.</span></li>
+        <li class="param-item"><span class="param-name">2026-08-07 · <code>e3c682a</code></span> <span class="param-desc">— Migrated to <code>eaf-base-api&gt;=4.0.0</code>: explicit request methods, source-aware media loaders, bounded scheduling, deterministic stream cleanup, structured scrape results, and validated extractors.</span></li>
+    </ul>
 </div>
 
 <!-- ================================================================
@@ -646,7 +660,7 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>Exceptions are defined in <code>eporner_api.modules.errors</code>. Network-level errors bubble up from the underlying <code>eaf_base_api</code> package.</p>
+    <p>Source loaders translate request failures into exceptions from <code>eporner_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
     <div class="table-wrapper">
         <table>
@@ -664,14 +678,18 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code><span class="token-keyword">from</span> eporner_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
+<span class="token-keyword">from</span> eporner_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
 
 <span class="token-keyword">try</span>:
     video = <span class="token-keyword">await</span> client.get_video(url)
-<span class="token-keyword">except</span> <span class="token-class">NotFound</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
-<span class="token-keyword">except</span> <span class="token-class">BotDetection</span>:
-    <span class="token-builtin">print</span>(<span class="token-string">"Blocked by anti-bot measures."</span>)</code></pre>
+<span class="token-keyword">except</span> <span class="token-class">MediaLoadError</span> <span class="token-keyword">as</span> error:
+    <span class="token-keyword">if</span> isinstance(error.original_error, NotFound):
+        <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+    <span class="token-keyword">elif</span> isinstance(error.original_error, BotDetection):
+        <span class="token-builtin">print</span>(<span class="token-string">"Blocked by anti-bot measures."</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-keyword">raise</span></code></pre>
     </div>
 </div>
 
