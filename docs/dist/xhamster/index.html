@@ -1413,20 +1413,30 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             <tbody>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
                 <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video key ID</td></tr>
+                <tr><td><code>video_hash</code></td><td><code>str | None</code></td><td>Hashed slug associated with the video ID</td></tr>
                 <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Video description</td></tr>
+                <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Video duration in seconds</td></tr>
+                <tr><td><code>views</code></td><td><code>int | None</code></td><td>Total view count</td></tr>
+                <tr><td><code>comments_count</code></td><td><code>int | None</code></td><td>Total comment count</td></tr>
+                <tr><td><code>created_timestamp</code></td><td><code>str | None</code></td><td>Creation timestamp supplied by the page data</td></tr>
+                <tr><td><code>date_ago</code></td><td><code>str | None</code></td><td>Human-readable age of the upload</td></tr>
                 <tr><td><code>rating_percentage</code></td><td><code>int | None</code></td><td>Like percentage value</td></tr>
                 <tr><td><code>likes</code></td><td><code>int | None</code></td><td>Number of likes</td></tr>
                 <tr><td><code>dislikes</code></td><td><code>int | None</code></td><td>Number of dislikes</td></tr>
+                <tr><td><code>is_vr</code></td><td><code>bool | None</code></td><td>Whether the video is a VR video</td></tr>
+                <tr><td><code>is_hd</code></td><td><code>bool | None</code></td><td>Whether the video is available in HD</td></tr>
+                <tr><td><code>max_resolution</code></td><td><code>str | None</code></td><td>Highest resolution reported by the page data</td></tr>
+                <tr><td><code>orientation</code></td><td><code>str | None</code></td><td>Content orientation label, such as <code>"straight"</code> or <code>"gay"</code></td></tr>
                 <tr><td><code>uploader_name</code></td><td><code>str | None</code></td><td>Uploader profile name</td></tr>
                 <tr><td><code>uploader_subscribers</code></td><td><code>str | None</code></td><td>Uploader subscriber count</td></tr>
                 <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>List of tags</td></tr>
                 <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>List of category labels</td></tr>
                 <tr><td><code>pornstars</code></td><td><code>list[str] | None</code></td><td>Pornstars starring in the video</td></tr>
                 <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Thumbnail cover image URL</td></tr>
+                <tr><td><code>preview_thumbnail</code></td><td><code>str | None</code></td><td>Preview sprite or animated thumbnail URL</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>HLS playlist URL</td></tr>
-                <tr><td><code>length</code></td><td><code>str | None</code></td><td>Uploader-specified duration</td></tr>
                 <tr><td><code>preview_video</code></td><td><code>str | None</code></td><td>Preview media path</td></tr>
-                <tr><td><code>views</code></td><td><code>str | None</code></td><td>Total views count</td></tr>
             </tbody>
         </table>
     </div>
