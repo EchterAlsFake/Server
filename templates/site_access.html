@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="color-scheme" content="dark">
+    <title>Zugriff geschützt</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #090d16;
+            color: #eef2ff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100dvh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: radial-gradient(circle at top, #18233e 0, #090d16 48%);
+        }
+        main {
+            width: min(100%, 420px);
+            padding: 28px;
+            border: 1px solid #2b3651;
+            border-radius: 22px;
+            background: rgba(18, 25, 42, 0.94);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        }
+        .lock {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            place-items: center;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            background: #26375d;
+            font-size: 1.4rem;
+        }
+        h1 { margin: 0 0 10px; font-size: clamp(1.55rem, 6vw, 2rem); }
+        p { margin: 0 0 22px; color: #adb8d0; line-height: 1.55; }
+        label { display: block; font-weight: 650; }
+        input[type="password"] {
+            width: 100%;
+            min-height: 48px;
+            margin: 8px 0 14px;
+            padding: 0 14px;
+            border: 1px solid #394767;
+            border-radius: 12px;
+            background: #0c1220;
+            color: #fff;
+            font: inherit;
+        }
+        input:focus-visible { outline: 3px solid #7aa2ff; outline-offset: 2px; }
+        button {
+            width: 100%;
+            min-height: 48px;
+            border: 0;
+            border-radius: 12px;
+            background: #6f96f7;
+            color: #07101f;
+            font: inherit;
+            font-weight: 750;
+            cursor: pointer;
+        }
+        .message {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #3a2028;
+            color: #ffd9df;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="lock" aria-hidden="true">🔒</div>
+        <h1>Geschützter Bereich</h1>
+        {% if unavailable %}
+            <p class="message" role="alert">Der Zugriff ist momentan deaktiviert.</p>
+        {% else %}
+            <p>Diese private Seite ist nicht öffentlich zugänglich.</p>
+            {% if error %}<p class="message" role="alert">{{ error }}</p>{% endif %}
+            <form method="post" action="{{ url_for('site_access') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ next_url }}">
+                <label for="access-password">Passwort</label>
+                <input id="access-password" type="password" name="password" autocomplete="current-password" required autofocus>
+                <button type="submit">Anmelden</button>
+            </form>
+        {% endif %}
+    </main>
+</body>
+</html>

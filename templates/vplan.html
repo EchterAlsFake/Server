@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f7fb">
+    <meta name="color-scheme" content="light dark">
+    <title>Vertretungsplan</title>
+    <script>
+        try {
+            const savedTheme = localStorage.getItem("vplan-theme");
+            const useDarkTheme = savedTheme === "dark" ||
+                (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            document.documentElement.dataset.theme = useDarkTheme ? "dark" : "light";
+        } catch (error) {
+            document.documentElement.dataset.theme = "light";
+        }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='vplan.css') }}">
+    <script src="{{ url_for('static', filename='vplan.js') }}" defer></script>
+</head>
+<body class="disclaimer-pending">
+    <a class="skip-link" href="#plan-content">Zum Vertretungsplan springen</a>
+
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand-row">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/>
+                        <path d="m9 14 2 2 4-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="eyebrow">Schulalltag</p>
+                    <h1>Vertretungsplan</h1>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                {% if plan %}
+                    <p class="updated">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        Stand: <time>{{ updated_at }}</time>
+                    </p>
+                {% endif %}
+                <button class="icon-button" type="button" data-theme-toggle aria-label="Dunkelmodus aktivieren" title="Darstellung wechseln">
+                    <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"/>
+                    </svg>
+                    <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="plan-content" class="page-shell" tabindex="-1">
+        {% if error %}
+            <section class="empty-state error-state" role="alert">
+                <div class="empty-icon" aria-hidden="true">!</div>
+                <h2>Plan momentan nicht verfügbar</h2>
+                <p>Die Datei konnte nicht gelesen werden. Bitte versuche es später noch einmal.</p>
+            </section>
+        {% elif not plan.tage %}
+            <section class="empty-state">
+                <div class="empty-icon" aria-hidden="true">✓</div>
+                <h2>Keine Änderungen</h2>
+                <p>Im aktuellen Plan sind keine Tage eingetragen.</p>
+            </section>
+        {% else %}
+            <nav class="day-tabs" role="tablist" aria-label="Tag auswählen">
+                {% for day in plan.tage %}
+                    <button
+                        class="day-tab{% if loop.first %} is-active{% endif %}"
+                        type="button"
+                        role="tab"
+                        id="day-tab-{{ loop.index0 }}"
+                        aria-controls="day-panel-{{ loop.index0 }}"
+                        aria-selected="{{ 'true' if loop.first else 'false' }}"
+                        tabindex="{{ '0' if loop.first else '-1' }}"
+                        data-day-target="day-panel-{{ loop.index0 }}"
+                    >
+                        <span class="day-tab-label">{{ day.DATUM|default('Unbekannter Tag', true) }}</span>
+                        {% set tab_entry_count = day.EINTRAEGE_KLASSEN|default([], true)|length %}
+                        <span class="day-tab-count">{{ tab_entry_count }} {{ 'Änderung' if tab_entry_count == 1 else 'Änderungen' }}</span>
+                    </button>
+                {% endfor %}
+            </nav>
+
+            <section class="personalization-bar" aria-label="Persönliche Auswahl">
+                <div class="personalization-copy">
+                    <div class="personalization-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p>Mein Plan</p>
+                        <span data-personalization-summary>Optional: Klasse und Kurse auswählen</span>
+                    </div>
+                </div>
+                <button class="secondary-button" type="button" data-personalization-open>Einrichten</button>
+            </section>
+
+            {% for day in plan.tage %}
+                {% set day_index = loop.index0 %}
+                {% set entries = day.EINTRAEGE_KLASSEN|default([], true) %}
+                {% set important_notices = day.WICHTIGE_HINWEISE|default([], true) %}
+                {% set other_notices = day.WEITERE_HINWEISE|default([], true) %}
+                <section
+                    class="day-panel{% if loop.first %} is-active{% endif %}"
+                    id="day-panel-{{ day_index }}"
+                    role="tabpanel"
+                    aria-labelledby="day-tab-{{ day_index }}"
+                    {% if not loop.first %}hidden{% endif %}
+                >
+                    <div class="date-heading">
+                        <p class="date-kicker">Ausgewählter Tag</p>
+                        <h2>{{ day.DATUM|default('Unbekannter Tag', true) }}</h2>
+                        <p class="panel-updated">Stand: {{ updated_at }}</p>
+                    </div>
+
+                    {% if important_notices or other_notices %}
+                        <section class="notices" aria-labelledby="notices-title-{{ day_index }}">
+                            <div class="section-title-row">
+                                <div class="section-icon notice-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" focusable="false">
+                                        <path d="M12 9v4M12 17h.01M10.3 4.5 3.4 17a2 2 0 0 0 1.8 3h13.6a2 2 0 0 0 1.8-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/>
+                                    </svg>
+                                </div>
+                                <h3 id="notices-title-{{ day_index }}">Hinweise</h3>
+                            </div>
+
+                            <div class="notice-list">
+                                {% for notice in important_notices %}
+                                    <article class="notice-card notice-important">
+                                        <span class="sr-only">Wichtiger Hinweis: </span>
+                                        {% if notice is string %}
+                                            <h4>{{ notice|striptags|redact_teacher_codes }}</h4>
+                                        {% else %}
+                                            <h4>{{ notice[0]|default('Wichtiger Hinweis', true)|striptags|redact_teacher_codes }}</h4>
+                                            {% if notice|length > 1 and notice[1] %}<p>{{ notice[1]|striptags|redact_teacher_codes }}</p>{% endif %}
+                                        {% endif %}
+                                    </article>
+                                {% endfor %}
+                                {% for notice in other_notices %}
+                                    <article class="notice-card">
+                                        {% if notice is string %}
+                                            <h4>{{ notice|striptags|redact_teacher_codes }}</h4>
+                                        {% else %}
+                                            <h4>{{ notice[0]|default('Hinweis', true)|striptags|redact_teacher_codes }}</h4>
+                                            {% if notice|length > 1 and notice[1] %}<p>{{ notice[1]|striptags|redact_teacher_codes }}</p>{% endif %}
+                                        {% endif %}
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endif %}
+
+                    <section class="changes" aria-labelledby="changes-title-{{ day_index }}">
+                        <div class="changes-heading">
+                            <div>
+                                <p class="section-kicker">Dein Stundenplan</p>
+                                <h3 id="changes-title-{{ day_index }}">Änderungen</h3>
+                            </div>
+                            <span class="result-count" data-result-count aria-live="polite">{{ entries|length }} Einträge</span>
+                        </div>
+
+                        <div class="controls" aria-label="Plan filtern">
+                            <label class="search-field">
+                                <span class="sr-only">Nach Klasse, Fach oder Raum suchen</span>
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>
+                                </svg>
+                                <input
+                                    type="search"
+                                    inputmode="search"
+                                    autocomplete="off"
+                                    placeholder="Klasse, Fach oder Raum …"
+                                    data-plan-search
+                                >
+                            </label>
+                            <div class="filter-chips" role="group" aria-label="Art der Änderung">
+                                <button class="filter-chip is-active" type="button" data-filter="all" aria-pressed="true">Alle</button>
+                                <button class="filter-chip" type="button" data-filter="cancelled" aria-pressed="false">Nur Ausfälle</button>
+                            </div>
+                        </div>
+
+                        <div class="entry-list" data-entry-list>
+                            {% for entry in entries %}
+                                {% set is_cancelled = 'ausfall' in (entry.NEU|default('', true)|lower) %}
+                                <article
+                                    class="entry-card{% if is_cancelled %} is-cancelled{% endif %}"
+                                    data-plan-entry
+                                    data-status="{{ 'cancelled' if is_cancelled else 'changed' }}"
+                                    data-plan-code="{{ entry.KLASSE|default('', true)|striptags }}"
+                                >
+                                    <div class="entry-status" aria-hidden="true"></div>
+                                    <div class="entry-main">
+                                        <div class="entry-topline">
+                                            <span class="class-badge">{{ entry.KLASSE|default('–', true)|striptags }}</span>
+                                            {% if is_cancelled %}
+                                                <span class="status-badge cancelled-badge">Ausfall</span>
+                                            {% else %}
+                                                <span class="status-badge change-badge">Änderung</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <p class="entry-description">{{ entry.NEU|default('Keine Beschreibung', true)|striptags|redact_teacher_codes }}</p>
+
+                                        <div class="entry-meta">
+                                            <span>
+                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                    <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+                                                </svg>
+                                                <span class="sr-only">Uhrzeit: </span>{{ entry.STUNDE|default('Zeit unbekannt', true)|striptags }}
+                                            </span>
+                                        </div>
+
+                                        {% if entry.BEMERKUNGEN %}
+                                            <p class="entry-note">
+                                                <span aria-hidden="true">i</span>
+                                                <span><strong>Bemerkung:</strong> {{ entry.BEMERKUNGEN|striptags|redact_teacher_codes }}</span>
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+
+                        <div class="no-results" data-no-results hidden>
+                            <div class="empty-icon" aria-hidden="true">⌕</div>
+                            <h4>Keine passenden Einträge</h4>
+                            <p>Ändere den Suchbegriff oder zeige wieder alle Änderungen an.</p>
+                        </div>
+
+                        {% if not entries %}
+                            <div class="no-results static-empty">
+                                <div class="empty-icon" aria-hidden="true">✓</div>
+                                <h4>Keine Änderungen für diesen Tag</h4>
+                                <p>Der reguläre Stundenplan gilt.</p>
+                            </div>
+                        {% endif %}
+                    </section>
+                </section>
+            {% endfor %}
+        {% endif %}
+    </main>
+
+    <footer class="app-footer">
+        <p>Inoffizielle private Ansicht · Alle Angaben ohne Gewähr · Einstellungen bleiben lokal auf diesem Gerät.</p>
+        <nav aria-label="Rechtliche Informationen">
+            <button type="button" data-info-open="controller-dialog">Verantwortlicher</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" data-info-open="privacy-dialog">Datenschutz</button>
+        </nav>
+    </footer>
+
+    <dialog class="settings-dialog" data-settings-dialog aria-labelledby="settings-title">
+        <form class="dialog-card settings-card" data-settings-form>
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Optional</p>
+                    <h2 id="settings-title">Meinen Plan einrichten</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-settings-close aria-label="Einstellungen schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <p class="dialog-intro">Wähle einmalig deine Klasse und Kurse. Die Auswahl wird nur in diesem Browser gespeichert und kann jederzeit geändert oder deaktiviert werden.</p>
+
+            <div class="beta-notice" role="note" aria-label="Hinweis zur Testphase">
+                <span aria-hidden="true">!</span>
+                <p><strong>Noch in der Testphase:</strong> Diese Funktion ist noch nicht vollständig entwickelt. Einträge können falsch oder unvollständig gefiltert werden. Prüfe deshalb immer auch den vollständigen und den offiziellen Vertretungsplan.</p>
+            </div>
+
+            <label class="switch-row">
+                <span>
+                    <strong>Persönlichen Filter verwenden</strong>
+                    <small>Nur passende Einträge anzeigen</small>
+                </span>
+                <input type="checkbox" data-preference-enabled>
+                <span class="switch" aria-hidden="true"></span>
+            </label>
+
+            <div class="form-grid">
+                <label class="field-label">
+                    <span>Jahrgang</span>
+                    <select data-grade-select>
+                        <option value="">Bitte auswählen</option>
+                        {% for grade in range(5, 13) %}
+                            <option value="{{ '%02d'|format(grade) }}">Klasse {{ grade }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="field-label" data-class-field hidden>
+                    <span>Klasse</span>
+                    <select data-class-letter>
+                        <option value="">Bitte auswählen</option>
+                        {% for letter in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] %}
+                            <option value="{{ letter }}">Klasse {{ letter }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+
+            <section class="course-settings" data-course-settings hidden aria-labelledby="course-settings-title">
+                <div class="settings-section-heading">
+                    <h3 id="course-settings-title">Kurse</h3>
+                    <p data-course-help>Wähle nur die Kurse, die du besuchst.</p>
+                </div>
+                <div class="course-options" data-course-options></div>
+                <p class="course-empty" data-course-empty hidden>Im aktuellen Plan wurden für diesen Jahrgang noch keine Kurskennungen gefunden.</p>
+
+                <label class="field-label custom-courses">
+                    <span>Weitere Kurskennungen <small>(optional)</small></span>
+                    <input type="text" data-custom-courses autocomplete="off" placeholder="z. B. 11_phy2, 11_eng1">
+                    <small>Mehrere Kennungen mit Komma trennen. Hilfreich für Kurse, die heute nicht im Plan vorkommen.</small>
+                </label>
+            </section>
+
+            <p class="form-error" data-settings-error role="alert" hidden></p>
+
+            <div class="dialog-actions settings-actions">
+                <button class="text-button danger-text" type="button" data-settings-reset>Auswahl löschen</button>
+                <div>
+                    <button class="text-button" type="button" data-settings-close>Abbrechen</button>
+                    <button class="primary-button" type="submit">Speichern</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="info-dialog" id="controller-dialog" data-info-dialog aria-labelledby="controller-title">
+        <article class="dialog-card info-card">
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Angaben gemäß § 5 DDG</p>
+                    <h2 id="controller-title">Verantwortlicher</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Dialog schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="info-content">
+                <section>
+                    <h3>Johannes Habel</h3>
+                    <address>
+                        Bahnstr. 21<br>
+                        06886 Lutherstadt Wittenberg<br>
+                        Deutschland
+                    </address>
+                </section>
+                <section>
+                    <h3>Kontakt</h3>
+                    <p>
+                        E-Mail: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>
+                        Telefon: <a href="tel:+491744646064">+49 174 4646064</a>
+                    </p>
+                </section>
+                <p class="info-small">Dieses private Schülerprojekt steht in keiner Verbindung zur Schule oder zur Edith-Stein-Schulstiftung.</p>
+            </div>
+
+            <div class="dialog-actions info-actions">
+                <button class="primary-button" type="button" data-info-close>Schließen</button>
+            </div>
+        </article>
+    </dialog>
+
+    <dialog class="info-dialog" id="privacy-dialog" data-info-dialog aria-labelledby="privacy-title">
+        <article class="dialog-card info-card">
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Kurzinformation</p>
+                    <h2 id="privacy-title">Datenschutz</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Dialog schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="info-content privacy-content">
+                <section>
+                    <h3>Keine Speicherung auf diesem Server</h3>
+                    <p>Der Betreiber speichert auf dem eigenen Ursprungsserver keine Besucher-IP-Adressen und keine anderen personenbezogenen Nutzungsdaten. Es gibt keine Nutzerkonten, keine Reichweitenanalyse und kein Profiling. Lediglich nicht personenbezogene Gesamtzähler für Anfragen und Datenvolumen werden geführt.</p>
+                </section>
+                <section>
+                    <h3>Lokale Einstellungen</h3>
+                    <p>Die gewählte Klasse, Kurse, Darstellung und Filtereinstellungen werden ausschließlich im lokalen Speicher deines Browsers gespeichert. Sie werden nicht an den Server übertragen.</p>
+                </section>
+                <section>
+                    <h3>Cloudflare</h3>
+                    <p>Für die öffentliche Erreichbarkeit, TLS-Verschlüsselung sowie den Schutz vor Angriffen wird Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA eingesetzt. Cloudflare erhält technisch bedingt insbesondere deine IP-Adresse und HTTP-Verbindungsdaten und kann notwendige Sicherheits-Cookies setzen. Die Verarbeitung dient der sicheren und zuverlässigen Bereitstellung dieser Webseite.</p>
+                    <p>Eine Verarbeitung außerhalb des EWR kann nicht ausgeschlossen werden. Cloudflare verwendet hierfür nach eigenen Angaben unter anderem geeignete Garantien wie die EU-Standardvertragsklauseln.</p>
+                </section>
+                <section>
+                    <h3>Rechtsgrundlage und Rechte</h3>
+                    <p>Soweit personenbezogene Daten für den sicheren Betrieb verarbeitet werden, erfolgt dies auf Grundlage des berechtigten Interesses an Sicherheit und Verfügbarkeit gemäß Art. 6 Abs. 1 lit. f DSGVO. Dir stehen insbesondere die gesetzlichen Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung und Widerspruch sowie ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde zu.</p>
+                </section>
+                <p class="info-small">Verantwortlicher und Kontaktmöglichkeiten findest du über den Button „Verantwortlicher“. Weitere Einzelheiten enthalten die ausführliche Datenschutzerklärung und die Datenschutzhinweise von Cloudflare.</p>
+            </div>
+
+            <div class="dialog-actions info-actions info-actions-wrap">
+                <a class="text-button" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare-Datenschutz</a>
+                <button class="primary-button" type="button" data-info-close>Schließen</button>
+            </div>
+        </article>
+    </dialog>
+
+    <dialog class="disclaimer-dialog" data-disclaimer-dialog aria-labelledby="disclaimer-title" aria-describedby="disclaimer-description" open>
+        <form class="dialog-card disclaimer-card" data-disclaimer-form>
+            <div class="disclaimer-symbol" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 9v4M12 17h.01M10.3 4.5 3.4 17a2 2 0 0 0 1.8 3h13.6a2 2 0 0 0 1.8-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/>
+                </svg>
+            </div>
+            <p class="dialog-kicker">Bitte aufmerksam lesen</p>
+            <h2 id="disclaimer-title">Wichtiger Hinweis vor der Nutzung</h2>
+
+            <div class="disclaimer-content" id="disclaimer-description">
+                <p>Diese Webseite ist ein rein privates Schülerprojekt und dient ausschließlich der übersichtlicheren Darstellung für den persönlichen Gebrauch.</p>
+                <p><strong>Keine offizielle Vertretung:</strong> Dieses Angebot steht in keinerlei Verbindung zur Schule oder der Edith-Stein-Schulstiftung.</p>
+                <p><strong>Keine Gewähr:</strong> Alle Angaben erfolgen ohne Gewähr auf Richtigkeit, Vollständigkeit oder Aktualität. Es können Verzögerungen oder Fehler bei der Synchronisation auftreten.</p>
+                <p><strong>Rechtliche Verbindlichkeit:</strong> Verbindlich ist stets ausschließlich der offizielle Vertretungsplan der Schule. Für verpasste Stunden, Ausfälle oder Fehlzeiten wird keinerlei Haftung übernommen.</p>
+                <p class="privacy-note"><strong>Datenschutz:</strong> Auf dem privaten Ursprungsserver werden keine Besucher-IP-Adressen oder persönlichen Nutzungsdaten gespeichert. Deine Klasse, Kurse und Darstellungseinstellungen verbleiben ausschließlich lokal auf deinem Gerät. Cloudflare verarbeitet für die öffentliche Bereitstellung und den Schutz der Seite technisch notwendige Verbindungsdaten, insbesondere die IP-Adresse.</p>
+            </div>
+
+            <label class="confirm-checkbox">
+                <input type="checkbox" data-disclaimer-checkbox>
+                <span>Ich habe verstanden, dass dies eine inoffizielle Ansicht ist und nutze die Seite eigenverantwortlich.</span>
+            </label>
+
+            <button class="primary-button disclaimer-submit" type="submit" data-disclaimer-submit disabled>Verstanden und fortfahren</button>
+        </form>
+    </dialog>
+</body>
+</html>

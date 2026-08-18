@@ -57,6 +57,51 @@ Clearnet: **https://echteralsfake.me**
 - /checklist/progress.svg → Shows the progress for the next Porn Fetch version
 - /chat → Private messaging interface! (NOT FOR THE PUBLIC)
 
+# Substitution plan synchronization
+
+The public `/vplan` view is backed by a local `vplan.json`. A background task checks the
+school's lightweight modification endpoint every two minutes. Because that endpoint can
+return its null timestamp (`0001-01-01 00:00:00`), the complete HTML board is refreshed at
+most once per hour as a fallback. A malformed or failed download never replaces the last
+valid local plan.
+
+The defaults can be changed through environment variables:
+
+- `VPLAN_SYNC_ENABLED`: set to `false` to disable automatic updates
+- `VPLAN_SCHOOL_ID`: required school identifier, loaded from the local `.env` file
+- `VPLAN_JSON_PATH`: local output path for the extracted JSON
+- `VPLAN_CHECK_INTERVAL_SECONDS`: modification checks, defaults to `120` (minimum `60`)
+- `VPLAN_FULL_REFRESH_INTERVAL_SECONDS`: fallback HTML refresh, defaults to `3600`
+- `VPLAN_REQUEST_TIMEOUT_SECONDS`: upstream request timeout, defaults to `20`
+
+The JSON file, synchronization state, lock file, and SQLite database are local runtime
+files and are excluded from Git.
+
+## VPlan subdomain and proxy privacy
+
+Requests to `https://vplan.echteralsfake.me/` render the plan directly. On that hostname,
+the Flask application exposes only the plan, static assets, imprint, and German privacy
+policy. The hostname can be changed with `VPLAN_PUBLIC_HOST`.
+
+The application deliberately does not trust `X-Forwarded-For` and removes common visitor-IP
+headers before Flask or Flask-Limiter can inspect them. HTTPS and host forwarding remain
+enabled. Gunicorn access logging should stay disabled; if it is explicitly enabled elsewhere,
+its format must not contain request headers or remote addresses.
+
+Publish `vplan.echteralsfake.me` through the same Cloudflare Tunnel as the main site, mapping it
+to `http://localhost:8000`. If the existing main Worker does not already use a wildcard route
+covering all subdomains, add `vplan.echteralsfake.me/*` as another route on that same Worker.
+No separate Worker is required. The tunnel preserves the public hostname, allowing Flask to
+select the VPlan view while serving the same local process and port.
+
+## Main landing-page access gate
+
+The main `/` landing page is protected by a neutral login that reuses the `CHECKLIST_AUTH`
+password. If the variable is missing, the page fails closed with HTTP 503. A successful login
+creates a separate `site_auth` session and does not grant checklist editing rights. Changing
+`CHECKLIST_AUTH` invalidates existing landing-page sessions. The VPlan and documentation
+subdomains are unaffected.
+
 # Chat Feature
 > [!CAUTION]
 > The chat feature is exclusively used for my private purposes for secure communication with my friends. It's not meant to be used

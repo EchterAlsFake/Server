@@ -138,6 +138,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
 env/
@@ -147,6 +149,14 @@ env.bak/
 venv.bak/
 
 invoices/
+
+# Local server state and substitution-plan data
+vplan.json
+*.sync-state.json
+*.sync.lock
+server.db
+server.db-*
+.flask_secret
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -176,7 +186,7 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/
 
 # Abstra
 # Abstra is an AI-powered process automation framework.

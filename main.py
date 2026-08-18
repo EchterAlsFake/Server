@@ -25,6 +25,7 @@ from flask import Flask, request, jsonify, make_response, send_file, Response, r
 from fpdf import FPDF
 from werkzeug.serving import WSGIRequestHandler
 from werkzeug.security import generate_password_hash, check_password_hash
+from vplan_sync import VPlanSyncConfig, VPlanSynchronizer, redact_teacher_codes
 
 
 # Configuration
@@ -58,6 +59,17 @@ update_cache = {
 os.makedirs(SAVE_DIR, exist_ok=True)
 DB_PATH = os.environ.get("PF_SERVER_DB", os.path.join(SAVE_DIR, "server.db"))
 
+# Local substitution-plan synchronization. The lightweight modification endpoint is
+# checked every two minutes by default; the HTML board is fetched at most hourly
+# when that endpoint returns its currently observed null timestamp.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+VPLAN_SYNC_CONFIG = VPlanSyncConfig.from_environment(BASE_DIR)
+VPLAN_JSON_PATH = VPLAN_SYNC_CONFIG.plan_path
+vplan_synchronizer = VPlanSynchronizer(VPLAN_SYNC_CONFIG)
+VPLAN_PUBLIC_HOST = os.environ.get(
+    "VPLAN_PUBLIC_HOST", "vplan.echteralsfake.me"
+).strip().lower().rstrip(".")
+
 # Strict Input Validation Schema for NOWPayments Webhook
 class NowPaymentsWebhookSchema(BaseModel):
     model_config = ConfigDict(extra='ignore')
@@ -78,14 +90,43 @@ class NowPaymentsWebhookSchema(BaseModel):
 # Flask setup
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_REQUEST_SIZE
+app.jinja_env.filters["redact_teacher_codes"] = redact_teacher_codes
 
-# --- PROXY FIX (Critical for Cloudflare) ---
-# Because this app runs behind a reverse proxy and Cloudflare, all incoming requests
-# will appear to come from the proxy's IP address (127.0.0.1 or Cloudflare's IP).
-# ProxyFix tells Flask to trust the X-Forwarded-For headers to get the REAL user IP.
-# Without this, Flask-Limiter would accidentally rate-limit all of your users at once.
+
+@app.before_request
+def ensure_vplan_synchronizer_started():
+    """Start after Gunicorn has forked; repeated calls are intentionally harmless."""
+    vplan_synchronizer.start()
+
+# --- Privacy-preserving proxy handling ---
 from werkzeug.middleware.proxy_fix import ProxyFix
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
+
+
+class StripVisitorIPHeaders:
+    """Drop visitor-IP headers before Flask, extensions, or request hooks see them."""
+
+    ENVIRONMENT_KEYS = (
+        "HTTP_CF_CONNECTING_IP",
+        "HTTP_CF_CONNECTING_IPV6",
+        "HTTP_TRUE_CLIENT_IP",
+        "HTTP_X_FORWARDED_FOR",
+        "HTTP_X_REAL_IP",
+        "HTTP_FORWARDED",
+    )
+
+    def __init__(self, application):
+        self.application = application
+
+    def __call__(self, environ, start_response):
+        for key in self.ENVIRONMENT_KEYS:
+            environ.pop(key, None)
+        return self.application(environ, start_response)
+
+
+# Trust the proxy only for the public scheme/host. x_for=0 is intentional: the
+# application must see the local proxy address, never the visitor's address.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=0, x_proto=1, x_host=1, x_prefix=1)
+app.wsgi_app = StripVisitorIPHeaders(app.wsgi_app)
 
 
 # --- CSRF PROTECTION (Security Measure) ---
@@ -524,6 +565,58 @@ def initiate_poweroff():
 
 
 # ---------- Routes ----------
+@app.route("/vplan", methods=["GET"])
+@limiter.exempt
+def vplan():
+    """Render the current substitution plan without authentication."""
+    try:
+        with open(VPLAN_JSON_PATH, "r", encoding="utf-8") as vplan_file:
+            plan = json.load(vplan_file)
+
+        if not isinstance(plan, dict) or not isinstance(plan.get("tage"), list):
+            raise ValueError("Expected a JSON object containing a 'tage' list.")
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        app.logger.error("Could not load substitution plan from %s: %s", VPLAN_JSON_PATH, exc)
+        response = make_response(render_template("vplan.html", plan=None, error=True), 503)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    raw_updated_at = plan.get("meta", {}).get("stand", "unbekannt")
+    try:
+        parsed_updated_at = datetime.fromisoformat(str(raw_updated_at))
+        updated_at = parsed_updated_at.strftime("%d.%m.%Y · %H:%M Uhr")
+    except ValueError:
+        updated_at = str(raw_updated_at)
+
+    response = make_response(
+        render_template("vplan.html", plan=plan, error=False, updated_at=updated_at)
+    )
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _request_hostname():
+    """Return a normalized DNS hostname without a possible development port."""
+    return request.host.partition(":")[0].strip().lower().rstrip(".")
+
+
+@app.before_request
+def handle_vplan_subdomain():
+    """Serve only the plan and its required public pages on the VPlan hostname."""
+    if _request_hostname() != VPLAN_PUBLIC_HOST:
+        return None
+
+    if request.method not in {"GET", "HEAD"}:
+        return "Not Found", 404
+    if request.path == "/":
+        return vplan()
+    if request.path in {"/vplan", "/impress", "/datenschutz"}:
+        return None
+    if request.path.startswith("/static/"):
+        return None
+    return "Not Found", 404
+
+
 @app.route("/impress", methods=["GET"])
 def impress():
     # Renders a modern-looking page with a (hopefully) legal impress (required by german law)
@@ -834,8 +927,92 @@ def serve_docs_subpath(path):
 
 @app.route("/", methods=["GET"])
 def landing_page():
-    # templates/index.html contains your landing page HTML
-    return render_template("index.html")
+    if not check_site_auth():
+        response = redirect(url_for("site_access", next="/"))
+    else:
+        response = make_response(render_template("index.html"))
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+def check_site_auth():
+    """Keep the main landing page closed unless CHECKLIST_AUTH was verified."""
+    auth_secret = os.environ.get("CHECKLIST_AUTH")
+    saved_marker = session.get("site_auth")
+    if not auth_secret or not isinstance(saved_marker, str):
+        return False
+    return hmac.compare_digest(saved_marker, _site_auth_marker(auth_secret))
+
+
+def _site_auth_marker(auth_secret):
+    """Bind an authenticated session to both the current password and server secret."""
+    signing_key = str(app.config["SECRET_KEY"]).encode("utf-8")
+    return hmac.new(
+        signing_key,
+        b"site-auth\x00" + auth_secret.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _safe_local_redirect(value, default="/"):
+    """Allow only absolute paths on this server, never external redirects."""
+    if (
+        isinstance(value, str)
+        and value.startswith("/")
+        and not value.startswith("//")
+        and "\\" not in value
+        and not any(character in value for character in ("\r", "\n", "\x00"))
+    ):
+        return value
+    return default
+
+
+def _render_site_access(*, unavailable, next_url, error=None, status=200):
+    response = make_response(
+        render_template(
+            "site_access.html",
+            unavailable=unavailable,
+            next_url=next_url,
+            error=error,
+        ),
+        status,
+    )
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
+
+
+@app.route("/access", methods=["GET", "POST"])
+@limiter.limit("30 per minute")
+def site_access():
+    """Neutral access gate for the main landing page using CHECKLIST_AUTH."""
+    auth_secret = os.environ.get("CHECKLIST_AUTH")
+    next_url = _safe_local_redirect(
+        request.form.get("next") if request.method == "POST" else request.args.get("next"),
+        default="/",
+    )
+
+    if not auth_secret:
+        return _render_site_access(unavailable=True, next_url=next_url, status=503)
+
+    if request.method == "POST":
+        provided = request.form.get("password", "")
+        if hmac.compare_digest(provided.encode("utf-8"), auth_secret.encode("utf-8")):
+            session["site_auth"] = _site_auth_marker(auth_secret)
+            response = redirect(next_url)
+            response.headers["Cache-Control"] = "private, no-store"
+            return response
+        return _render_site_access(
+            error="Das Passwort ist nicht korrekt.",
+            unavailable=False,
+            next_url=next_url,
+            status=401,
+        )
+
+    if check_site_auth():
+        return redirect(next_url)
+    return _render_site_access(unavailable=False, next_url=next_url)
 
 @app.route("/porn_fetch", methods=["GET"])
 def porn_fetch():
@@ -1490,13 +1667,14 @@ def checklist_progress_svg():
 
 class NoIPLoggingHandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
-        # Only log method, path, and response code — no IP (For your privacy XD)
+        # Log neither IP addresses nor query strings, which may contain credentials.
         method = self.command
-        path = self.path
+        path = self.path.partition("?")[0]
         print(f'{method} {path} -> {code}')
 
 
 if __name__ == '__main__':
     # Environment Safety: Bind the app to localhost (127.0.0.1) to prevent external access
     # before passing through the reverse proxy/tunnel.
-    app.run(host="127.0.0.1", port=8000)
+    vplan_synchronizer.start()
+    app.run(host="127.0.0.1", port=8000, request_handler=NoIPLoggingHandler)
