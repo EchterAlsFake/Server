@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import fcntl
+import hashlib
 import json
 import logging
 import os
@@ -24,10 +25,6 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_BOARD_URL = (
     "https://edith-stein-schulstiftung.a4.school/schedulemanager/TemplateFiles/"
     "SubstitutionBoardViewCommon/SubstitutionBoardViewCommon.aspx?schoolId={school_id}"
-)
-DEFAULT_MODIFICATION_URL = (
-    "https://edith-stein-schulstiftung.a4.school/api/Api/Substitution/"
-    "GetLastModificationDate"
 )
 VPLAN_ASSIGNMENT_RE = re.compile(r"\bvar\s+vplanTage\s*=\s*", re.MULTILINE)
 STAND_RE = re.compile(r'\bvar\s+datum_stand\s*=\s*"([^"\r\n]*)"\s*;')
@@ -90,9 +87,7 @@ class VPlanSyncConfig:
     state_path: Path
     lock_path: Path
     board_url: str
-    modification_url: str
     check_interval_seconds: int
-    full_refresh_interval_seconds: int
     request_timeout_seconds: int
     max_response_bytes: int
 
@@ -103,9 +98,6 @@ class VPlanSyncConfig:
         school_id = _required_env_int("VPLAN_SCHOOL_ID", 1, 1_000_000)
         plan_path = Path(os.environ.get("VPLAN_JSON_PATH", root / "vplan.json")).resolve()
         check_interval = _env_int("VPLAN_CHECK_INTERVAL_SECONDS", 120, 60, 86_400)
-        full_refresh_interval = _env_int(
-            "VPLAN_FULL_REFRESH_INTERVAL_SECONDS", 3_600, check_interval, 604_800
-        )
 
         return cls(
             enabled=_env_bool("VPLAN_SYNC_ENABLED", True),
@@ -120,16 +112,27 @@ class VPlanSyncConfig:
             board_url=os.environ.get(
                 "VPLAN_SOURCE_URL", DEFAULT_BOARD_URL.format(school_id=school_id)
             ),
-            modification_url=os.environ.get(
-                "VPLAN_MODIFICATION_URL", DEFAULT_MODIFICATION_URL
-            ),
             check_interval_seconds=check_interval,
-            full_refresh_interval_seconds=full_refresh_interval,
             request_timeout_seconds=_env_int("VPLAN_REQUEST_TIMEOUT_SECONDS", 20, 5, 120),
             max_response_bytes=_env_int(
                 "VPLAN_MAX_RESPONSE_BYTES", 5 * 1024 * 1024, 64 * 1024, 20 * 1024 * 1024
             ),
         )
+
+
+def plan_content_hash(plan: dict[str, Any]) -> str:
+    """Hash source-controlled fields while ignoring local synchronization metadata."""
+    source_content = {
+        "stand": str(plan.get("meta", {}).get("stand", "")),
+        "tage": plan.get("tage", []),
+    }
+    canonical_json = json.dumps(
+        source_content,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
 
 
 def parse_vplan_html(html_text: str, school_id: int) -> dict[str, Any]:
@@ -159,7 +162,7 @@ def parse_vplan_html(html_text: str, school_id: int) -> dict[str, Any]:
     if stand_match is None or not stand_match.group(1).strip():
         raise VPlanSyncError("'var datum_stand' was not found in the downloaded page")
 
-    return {
+    plan = {
         "meta": {
             "stand": stand_match.group(1).strip(),
             "schoolId": school_id,
@@ -167,20 +170,8 @@ def parse_vplan_html(html_text: str, school_id: int) -> dict[str, Any]:
         },
         "tage": days,
     }
-
-
-def _valid_modification_date(value: Any) -> str | None:
-    if not isinstance(value, str) or not value.strip():
-        return None
-    candidate = value.strip()
-    try:
-        parsed = datetime.strptime(candidate, "%Y-%m-%d %H:%M:%S")
-    except ValueError:
-        return None
-    # The API currently returns year 1 when it has no usable school context.
-    if parsed.year < 2000:
-        return None
-    return candidate
+    plan["meta"]["content_sha256"] = plan_content_hash(plan)
+    return plan
 
 
 def _read_json_object(path: Path) -> dict[str, Any]:
@@ -271,7 +262,7 @@ class VPlanSynchronizer:
             if not force and now_epoch - last_checked_epoch < self.config.check_interval_seconds:
                 return {"status": "not_due"}
 
-            result = self._sync_locked(state, now_epoch, force=force)
+            result = self._sync_locked(state, now_epoch)
             state["last_checked_epoch"] = now_epoch
             state["last_checked_at"] = _utc_now()
             state["last_result"] = result["status"]
@@ -286,36 +277,8 @@ class VPlanSynchronizer:
             _atomic_write_json(self.config.state_path, state)
             return result
 
-    def _sync_locked(
-        self, state: dict[str, Any], now_epoch: float, *, force: bool
-    ) -> dict[str, Any]:
+    def _sync_locked(self, state: dict[str, Any], now_epoch: float) -> dict[str, Any]:
         current_plan = _read_json_object(self.config.plan_path)
-        current_stand = str(current_plan.get("meta", {}).get("stand", ""))
-
-        remote_modified: str | None = None
-        modification_warning: str | None = None
-        try:
-            remote_modified = self._get_remote_modification()
-            if remote_modified is None:
-                modification_warning = "Modification API returned no usable timestamp"
-        except (httpx.HTTPError, ValueError, VPlanSyncError) as exc:
-            modification_warning = f"Modification check failed: {exc}"
-
-        last_full_refresh = float(state.get("last_full_refresh_epoch", 0) or 0)
-        full_refresh_due = (
-            force
-            or not current_plan
-            or now_epoch - last_full_refresh >= self.config.full_refresh_interval_seconds
-        )
-        source_changed = bool(remote_modified and remote_modified != current_stand)
-
-        if not source_changed and remote_modified is not None and current_plan and not force:
-            return {"status": "checked", "remote_modified": remote_modified}
-        if not source_changed and not full_refresh_due:
-            result: dict[str, Any] = {"status": "checked"}
-            if modification_warning:
-                result["warning"] = modification_warning
-            return result
 
         try:
             downloaded_plan = self._download_plan()
@@ -324,29 +287,39 @@ class VPlanSynchronizer:
             return {
                 "status": "error",
                 "error": str(exc),
-                **({"warning": modification_warning} if modification_warning else {}),
             }
 
-        state["last_full_refresh_epoch"] = now_epoch
-        state["last_full_refresh_at"] = _utc_now()
+        downloaded_hash = plan_content_hash(downloaded_plan)
+        downloaded_plan.setdefault("meta", {})["content_sha256"] = downloaded_hash
         downloaded_stand = str(downloaded_plan.get("meta", {}).get("stand", ""))
-        state["last_source_modified_at"] = downloaded_stand
+        current_hash = plan_content_hash(current_plan) if current_plan else None
 
-        if current_plan and downloaded_stand == current_stand:
+        state["last_fetch_epoch"] = now_epoch
+        state["last_fetch_at"] = _utc_now()
+        state["last_source_stand"] = downloaded_stand
+        state["last_content_sha256"] = downloaded_hash
+        for obsolete_key in (
+            "last_full_refresh_epoch",
+            "last_full_refresh_at",
+            "last_source_modified_at",
+        ):
+            state.pop(obsolete_key, None)
+
+        if current_hash == downloaded_hash:
             return {
                 "status": "unchanged",
-                "remote_modified": downloaded_stand,
-                **({"warning": modification_warning} if modification_warning else {}),
+                "source_stand": downloaded_stand,
+                "content_sha256": downloaded_hash,
             }
 
         _atomic_write_json(self.config.plan_path, downloaded_plan)
         state["last_success_at"] = _utc_now()
-        LOGGER.info("Updated substitution plan to source timestamp %s", downloaded_stand)
+        LOGGER.info("Updated substitution plan to content hash %s", downloaded_hash)
         return {
             "status": "updated",
-            "remote_modified": downloaded_stand,
+            "source_stand": downloaded_stand,
+            "content_sha256": downloaded_hash,
             "days": len(downloaded_plan["tage"]),
-            **({"warning": modification_warning} if modification_warning else {}),
         }
 
     def _request(self, client: httpx.Client, url: str) -> httpx.Response:
@@ -355,21 +328,6 @@ class VPlanSynchronizer:
         if len(response.content) > self.config.max_response_bytes:
             raise VPlanSyncError("Remote response exceeded the configured size limit")
         return response
-
-    def _get_remote_modification(self) -> str | None:
-        with httpx.Client(
-            timeout=self.config.request_timeout_seconds,
-            follow_redirects=True,
-            headers={
-                "Accept": "application/json",
-                "User-Agent": "PrivateStudentVPlan/1.0 (+personal school project)",
-            },
-        ) as client:
-            response = self._request(client, self.config.modification_url)
-            payload = response.json()
-        if not isinstance(payload, dict):
-            raise VPlanSyncError("Modification API did not return a JSON object")
-        return _valid_modification_date(payload.get("DATUM"))
 
     def _download_plan(self) -> dict[str, Any]:
         with httpx.Client(

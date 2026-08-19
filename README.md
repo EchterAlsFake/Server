@@ -59,19 +59,18 @@ Clearnet: **https://echteralsfake.me**
 
 # Substitution plan synchronization
 
-The public `/vplan` view is backed by a local `vplan.json`. A background task checks the
-school's lightweight modification endpoint every two minutes. Because that endpoint can
-return its null timestamp (`0001-01-01 00:00:00`), the complete HTML board is refreshed at
-most once per hour as a fallback. A malformed or failed download never replaces the last
-valid local plan.
+The public `/vplan` view is backed by a local `vplan.json`. Every two minutes a background
+task downloads and parses the complete HTML board. A canonical SHA-256 hash of its source
+timestamp and plan days is compared with the local version, so the JSON file is replaced
+only when the actual content changes. A malformed or failed download never replaces the
+last valid local plan.
 
 The defaults can be changed through environment variables:
 
 - `VPLAN_SYNC_ENABLED`: set to `false` to disable automatic updates
 - `VPLAN_SCHOOL_ID`: required school identifier, loaded from the local `.env` file
 - `VPLAN_JSON_PATH`: local output path for the extracted JSON
-- `VPLAN_CHECK_INTERVAL_SECONDS`: modification checks, defaults to `120` (minimum `60`)
-- `VPLAN_FULL_REFRESH_INTERVAL_SECONDS`: fallback HTML refresh, defaults to `3600`
+- `VPLAN_CHECK_INTERVAL_SECONDS`: complete HTML checks, defaults to `120` (minimum `60`)
 - `VPLAN_REQUEST_TIMEOUT_SECONDS`: upstream request timeout, defaults to `20`
 
 The JSON file, synchronization state, lock file, and SQLite database are local runtime

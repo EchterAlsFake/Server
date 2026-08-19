@@ -59,9 +59,8 @@ update_cache = {
 os.makedirs(SAVE_DIR, exist_ok=True)
 DB_PATH = os.environ.get("PF_SERVER_DB", os.path.join(SAVE_DIR, "server.db"))
 
-# Local substitution-plan synchronization. The lightweight modification endpoint is
-# checked every two minutes by default; the HTML board is fetched at most hourly
-# when that endpoint returns its currently observed null timestamp.
+# Local substitution-plan synchronization. The complete HTML board is checked every
+# two minutes and the local JSON is replaced only when its canonical content hash changes.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VPLAN_SYNC_CONFIG = VPlanSyncConfig.from_environment(BASE_DIR)
 VPLAN_JSON_PATH = VPLAN_SYNC_CONFIG.plan_path
