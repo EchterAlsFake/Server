@@ -1,0 +1,40 @@
+{
+    "id": "/vplan",
+    "name": "Vertretungsplan",
+    "short_name": "VPlan",
+    "description": "Der persönliche Vertretungsplan – schnell und übersichtlich.",
+    "lang": "de-DE",
+    "start_url": "/vplan?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#f5f7fb",
+    "theme_color": "#4f46e5",
+    "categories": ["education", "productivity"],
+    "icons": [
+        {
+            "src": "/static/vplan-icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/vplan-icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/vplan-icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/static/vplan-icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}

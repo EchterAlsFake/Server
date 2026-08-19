@@ -3,6 +3,8 @@
 
     const THEME_KEY = "vplan-theme";
     const PREFERENCES_KEY = "vplan-preferences";
+    const SUBJECT_OVERRIDES_KEY = "vplan-subject-overrides";
+    const DISCLAIMER_ACCEPTED_KEY = "vplan-disclaimer-accepted-v1";
     const root = document.documentElement;
 
     const safeStorage = {
@@ -24,8 +26,10 @@
         remove(key) {
             try {
                 localStorage.removeItem(key);
+                return true;
             } catch (error) {
                 // The UI still resets for this page when storage is unavailable.
+                return false;
             }
         },
     };
@@ -55,9 +59,14 @@
     const disclaimerSubmit = document.querySelector("[data-disclaimer-submit]");
 
     if (disclaimerDialog) {
-        if (disclaimerDialog.open) disclaimerDialog.close();
-        disclaimerDialog.showModal();
-        disclaimerDialog.addEventListener("cancel", (event) => event.preventDefault());
+        if (safeStorage.get(DISCLAIMER_ACCEPTED_KEY) === "true") {
+            if (disclaimerDialog.open) disclaimerDialog.close();
+            document.body.classList.remove("disclaimer-pending");
+        } else {
+            if (disclaimerDialog.open) disclaimerDialog.close();
+            disclaimerDialog.showModal();
+            disclaimerDialog.addEventListener("cancel", (event) => event.preventDefault());
+        }
     }
 
     disclaimerCheckbox?.addEventListener("change", () => {
@@ -67,6 +76,7 @@
     disclaimerForm?.addEventListener("submit", (event) => {
         event.preventDefault();
         if (!disclaimerCheckbox?.checked) return;
+        safeStorage.set(DISCLAIMER_ACCEPTED_KEY, "true");
         disclaimerDialog?.close();
         document.body.classList.remove("disclaimer-pending");
         document.querySelector("#plan-content")?.focus({ preventScroll: true });
@@ -138,6 +148,33 @@
 
     let preferences = loadPreferences();
     const normalize = (value) => String(value || "").toLocaleLowerCase("de-DE").trim();
+
+    const loadSubjectOverrides = () => {
+        const rawOverrides = safeStorage.get(SUBJECT_OVERRIDES_KEY);
+        if (!rawOverrides) return {};
+
+        try {
+            const saved = JSON.parse(rawOverrides);
+            if (!saved || typeof saved !== "object" || Array.isArray(saved)) return {};
+
+            return Object.fromEntries(
+                Object.entries(saved)
+                    .filter(([, value]) => value && typeof value === "object" && typeof value.name === "string" && value.name.trim())
+                    .map(([code, value]) => [
+                        normalize(code),
+                        {
+                            name: value.name.trim().slice(0, 60),
+                            teacher: typeof value.teacher === "string" ? value.teacher.trim().slice(0, 60) : "",
+                        },
+                    ])
+                    .filter(([code]) => code),
+            );
+        } catch (error) {
+            return {};
+        }
+    };
+
+    let subjectOverrides = loadSubjectOverrides();
     const allPlanCodes = [...new Set(
         Array.from(document.querySelectorAll("[data-plan-code]"))
             .map((entry) => entry.dataset.planCode?.trim())
@@ -184,7 +221,8 @@
             let visibleCount = 0;
 
             entries.forEach((entry) => {
-                const matchesText = !query || normalize(entry.textContent).includes(query);
+                const searchableText = `${entry.textContent} ${entry.dataset.planCode || ""}`;
+                const matchesText = !query || normalize(searchableText).includes(query);
                 const matchesStatus = activeFilter === "all" || entry.dataset.status === activeFilter;
                 const matchesPersonal = matchesPersonalPlan(entry.dataset.planCode);
                 const isVisible = matchesText && matchesStatus && matchesPersonal;
@@ -231,17 +269,209 @@
     const settingsError = document.querySelector("[data-settings-error]");
     const personalizationSummary = document.querySelector("[data-personalization-summary]");
 
+    const subjects = [
+        { id: "frz", name: "Französisch", code: "frz", pattern: /\b(?:frz|französisch)\b/i },
+        { id: "lat", name: "Latein", code: "lat", pattern: /\b(?:lat|latein)\b/i },
+        { id: "krel", name: "Katholische Religion", code: "krel", pattern: /\b(?:krel|kath(?:olische)?\s+religion)\b/i },
+        { id: "erel", name: "Evangelische Religion", code: "erel", pattern: /\b(?:erel|ev(?:angelische)?\s+religion)\b/i },
+        { id: "mat", name: "Mathematik", code: "mat", pattern: /\b(?:ma|mat|mathe|mathematik)\b/i },
+        { id: "deu", name: "Deutsch", code: "deu", pattern: /\b(?:deu|deutsch)\b/i },
+        { id: "eng", name: "Englisch", code: "eng", pattern: /\b(?:eng|englisch)\b/i },
+        { id: "che", name: "Chemie", code: "che", pattern: /\b(?:che|chemie)\b/i },
+        { id: "phy", name: "Physik", code: "phy", pattern: /\b(?:phy|physik)\b/i },
+        { id: "bio", name: "Biologie", code: "bio", pattern: /\b(?:bio|biologie)\b/i },
+        { id: "mus", name: "Musik", code: "mus", pattern: /\b(?:mu|mus|musik)\b/i },
+        { id: "ges", name: "Geschichte", code: "ges", pattern: /\b(?:ges|gesch|geschichte)\b/i },
+        { id: "geo", name: "Geografie", code: "geo", pattern: /\b(?:geo|geografie|geographie|erdkunde)\b/i },
+        { id: "spo", name: "Sport", code: "spo", pattern: /\b(?:sp|spo|sport)\b/i },
+        { id: "kun", name: "Kunst", code: "kun", pattern: /\b(?:ku|kun|kunst)\b/i },
+        { id: "inf", name: "Informatik", code: "inf", pattern: /\b(?:inf|informatik)\b/i },
+        { id: "eth", name: "Ethik", code: "eth", pattern: /\b(?:eth|ethik)\b/i },
+        { id: "rel", name: "Religion", code: "kar", pattern: /\b(?:rel|religion)\b/i },
+        { id: "gw", name: "GW", code: "gw", pattern: /\bgw\b/i },
+    ];
+
     const courseName = (code) => {
         const normalizedCode = normalize(code);
-        const subjects = [
-            ["frz", "Französisch"], ["lat", "Latein"], ["krel", "Katholische Religion"],
-            ["erel", "Evangelische Religion"], ["mat", "Mathematik"], ["deu", "Deutsch"],
-            ["eng", "Englisch"], ["che", "Chemie"], ["phy", "Physik"],
-            ["bio", "Biologie"], ["mus", "Musik"], ["ges", "Geschichte"],
-            ["geo", "Geografie"], ["spo", "Sport"], ["kar", "Religion"], ["gw", "GW"],
-        ];
-        return subjects.find(([key]) => normalizedCode.includes(key))?.[1] || "Kurs";
+        return subjects.find((subject) => normalizedCode.includes(subject.code))?.name || "Kurs";
     };
+
+    const subjectOverrideFor = (storageKey) => {
+        const normalizedKey = normalize(storageKey);
+        return Object.prototype.hasOwnProperty.call(subjectOverrides, normalizedKey)
+            ? subjectOverrides[normalizedKey]
+            : undefined;
+    };
+    const subjectDisplayName = (code) => subjectOverrideFor(code)?.name || courseName(code);
+    const originalSubjectName = (code) => {
+        const detectedName = courseName(code);
+        return detectedName === "Kurs" ? code : detectedName;
+    };
+    const isEditableSubject = (code) => Boolean(String(code || "").trim());
+
+    const detectSubject = (description) => subjects
+        .map((subject) => ({ subject, index: String(description || "").search(subject.pattern) }))
+        .filter((match) => match.index >= 0)
+        .sort((first, second) => first.index - second.index)[0]?.subject;
+
+    const fallbackSubjectName = (description) => {
+        const withoutStatus = String(description || "")
+            .replace(/^\s*(?:ausfall|vertretung|änderung|raumänderung|entfall)\s*:?\s*/i, "")
+            .trim();
+        const firstSegment = withoutStatus
+            .split(/\s+(?:bei|durch|in|statt|wird|entfällt)\b|[,;(]/i)[0]
+            ?.trim();
+        return firstSegment || withoutStatus || "Fach";
+    };
+
+    const entrySubjectDetails = (entry) => {
+        const code = entry?.dataset.planCode?.trim() || "";
+        const grade = extractGrade(code);
+        if (!grade || !isBaseClass(code, grade)) {
+            return {
+                code,
+                key: normalize(code),
+                name: originalSubjectName(code),
+                label: code,
+            };
+        }
+
+        const description = entry?.querySelector(".entry-description")?.textContent || "";
+        const detectedSubject = detectSubject(description);
+        const fallbackName = fallbackSubjectName(description);
+        const fallbackId = normalize(fallbackName)
+            .replace(/[^a-z0-9äöüß]+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 60) || "fach";
+        const subjectId = detectedSubject?.id || fallbackId;
+        const subjectName = detectedSubject?.name || fallbackName;
+
+        return {
+            code,
+            key: `${normalize(code)}::${subjectId}`,
+            name: subjectName,
+            label: `${code} · ${subjectName}`,
+        };
+    };
+
+    const subjectDialog = document.querySelector("[data-subject-dialog]");
+    const subjectForm = document.querySelector("[data-subject-form]");
+    const subjectNameInput = document.querySelector("[data-subject-new-name]");
+    const subjectTeacherInput = document.querySelector("[data-subject-new-teacher]");
+    const subjectOriginalName = document.querySelector("[data-subject-original-name]");
+    const subjectOriginalCode = document.querySelector("[data-subject-original-code]");
+    const subjectError = document.querySelector("[data-subject-error]");
+    const subjectReset = document.querySelector("[data-subject-reset]");
+    let activeSubjectKey = "";
+
+    const updateSubjectEntries = () => {
+        document.querySelectorAll("[data-plan-entry]").forEach((entry) => {
+            const subject = entrySubjectDetails(entry);
+            const override = subjectOverrideFor(subject.key);
+            const name = entry.querySelector("[data-subject-name]");
+            const editButton = entry.querySelector("[data-subject-edit]");
+            const teacherRow = entry.querySelector("[data-subject-teacher-row]");
+            const teacher = entry.querySelector("[data-subject-teacher]");
+
+            if (name) {
+                name.textContent = override?.name || subject.code || "–";
+                name.classList.toggle("is-customized", Boolean(override));
+                name.title = override ? `Original: ${subject.label}` : "";
+            }
+
+            if (editButton) {
+                const editable = isEditableSubject(subject.code);
+                editButton.hidden = !editable;
+                editButton.setAttribute("aria-label", `${override?.name || subject.name} umbenennen`);
+            }
+
+            if (teacher) teacher.textContent = override?.teacher || "";
+            if (teacherRow) teacherRow.hidden = !override?.teacher;
+        });
+    };
+
+    const openSubjectDialog = (entry) => {
+        const subject = entrySubjectDetails(entry);
+        if (!subjectDialog || !subjectNameInput || !subjectTeacherInput || !isEditableSubject(subject.code)) return;
+        activeSubjectKey = subject.key;
+        const override = subjectOverrideFor(activeSubjectKey);
+
+        if (subjectOriginalName) subjectOriginalName.textContent = subject.name;
+        if (subjectOriginalCode) subjectOriginalCode.textContent = subject.label;
+        subjectNameInput.value = override?.name || "";
+        subjectTeacherInput.value = override?.teacher || "";
+        if (subjectReset) subjectReset.hidden = !override;
+        if (subjectError) subjectError.hidden = true;
+
+        subjectDialog.showModal();
+        window.setTimeout(() => subjectNameInput.focus(), 0);
+    };
+
+    document.querySelectorAll("[data-subject-edit]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const entry = button.closest("[data-plan-entry]");
+            openSubjectDialog(entry);
+        });
+    });
+
+    document.querySelectorAll("[data-subject-close]").forEach((button) => {
+        button.addEventListener("click", () => subjectDialog?.close());
+    });
+
+    subjectForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = subjectNameInput?.value.trim() || "";
+        const teacher = subjectTeacherInput?.value.trim() || "";
+
+        if (!name) {
+            if (subjectError) {
+                subjectError.textContent = "Bitte gib einen neuen Namen für das Fach ein.";
+                subjectError.hidden = false;
+            }
+            subjectNameInput?.focus();
+            return;
+        }
+
+        const nextOverrides = {
+            ...subjectOverrides,
+            [normalize(activeSubjectKey)]: { name, teacher },
+        };
+        if (!safeStorage.set(SUBJECT_OVERRIDES_KEY, JSON.stringify(nextOverrides))) {
+            if (subjectError) {
+                subjectError.textContent = "Die Bezeichnung konnte in diesem Browser nicht gespeichert werden.";
+                subjectError.hidden = false;
+            }
+            return;
+        }
+
+        subjectOverrides = nextOverrides;
+        updateSubjectEntries();
+        renderCourseOptions();
+        filterControllers.forEach((updateResults) => updateResults());
+        subjectDialog?.close();
+    });
+
+    subjectReset?.addEventListener("click", () => {
+        const nextOverrides = { ...subjectOverrides };
+        delete nextOverrides[normalize(activeSubjectKey)];
+        const stored = Object.keys(nextOverrides).length
+            ? safeStorage.set(SUBJECT_OVERRIDES_KEY, JSON.stringify(nextOverrides))
+            : safeStorage.remove(SUBJECT_OVERRIDES_KEY);
+
+        if (!stored) {
+            if (subjectError) {
+                subjectError.textContent = "Die eigene Bezeichnung konnte nicht gelöscht werden.";
+                subjectError.hidden = false;
+            }
+            return;
+        }
+
+        subjectOverrides = nextOverrides;
+        updateSubjectEntries();
+        renderCourseOptions();
+        filterControllers.forEach((updateResults) => updateResults());
+        subjectDialog?.close();
+    });
 
     const renderCourseOptions = () => {
         if (!courseOptions || !gradeSelect) return;
@@ -264,9 +494,10 @@
             checkbox.dataset.courseChoice = "";
 
             const text = document.createElement("span");
-            text.textContent = courseName(code);
+            text.textContent = subjectDisplayName(code);
             const identifier = document.createElement("code");
-            identifier.textContent = code;
+            const teacher = subjectOverrideFor(code)?.teacher;
+            identifier.textContent = teacher ? `${code} · ${teacher}` : code;
             text.append(identifier);
 
             label.append(checkbox, text);
@@ -303,8 +534,8 @@
     const updatePersonalizationSummary = () => {
         if (!personalizationSummary || !settingsOpen) return;
         if (!preferences.grade) {
-            personalizationSummary.textContent = "Optional: Klasse und Kurse auswählen";
-            settingsOpen.textContent = "Einrichten";
+            personalizationSummary.textContent = "Klasse und Kurse auswählen";
+            settingsOpen.title = "Persönlichen Plan einrichten";
             return;
         }
 
@@ -313,7 +544,7 @@
             : `Jahrgang ${Number(preferences.grade)}`;
         const courseLabel = `${preferences.courses.length} ${preferences.courses.length === 1 ? "Kurs" : "Kurse"}`;
         personalizationSummary.textContent = `${preferences.enabled ? "Aktiv" : "Pausiert"} · ${gradeLabel} · ${courseLabel}`;
-        settingsOpen.textContent = "Bearbeiten";
+        settingsOpen.title = "Persönlichen Plan bearbeiten";
     };
 
     const applyPreferences = () => {
@@ -379,5 +610,224 @@
         });
     });
 
+    const feedbackDialog = document.querySelector("[data-feedback-dialog]");
+    const feedbackForm = document.querySelector("[data-feedback-form]");
+    const feedbackMessage = document.querySelector("[data-feedback-message]");
+    const feedbackPrivacy = document.querySelector("[data-feedback-privacy]");
+    const feedbackCount = document.querySelector("[data-feedback-count]");
+    const feedbackError = document.querySelector("[data-feedback-error]");
+    const feedbackSuccess = document.querySelector("[data-feedback-success]");
+    const feedbackSubmit = document.querySelector("[data-feedback-submit]");
+
+    const feedbackContentError = (message) => {
+        if (/<[^>\n]{1,100}>/.test(message)) {
+            return "Bitte verwende ausschließlich normalen Text ohne HTML.";
+        }
+        if (/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(message)
+            || /(?:https?:\/\/|www\.)\S+/i.test(message)) {
+            return "Bitte entferne E-Mail-Adressen und Links aus der Nachricht.";
+        }
+
+        const phoneCandidates = message.match(/\+?\d[\d\s()./-]{5,}\d/g) || [];
+        if (phoneCandidates.some((candidate) => {
+            const digits = candidate.replace(/\D/g, "");
+            return digits.length >= 7
+                && (/^[+0]/.test(candidate.trim()) || digits.length >= 10);
+        })) {
+            return "Bitte entferne Telefonnummern aus der Nachricht.";
+        }
+        return "";
+    };
+
+    const resetFeedbackForm = () => {
+        feedbackForm?.reset();
+        if (feedbackCount) feedbackCount.textContent = "0";
+        if (feedbackError) feedbackError.hidden = true;
+        if (feedbackSuccess) feedbackSuccess.hidden = true;
+        if (feedbackMessage) feedbackMessage.disabled = false;
+        if (feedbackPrivacy) feedbackPrivacy.disabled = false;
+        if (feedbackSubmit) {
+            feedbackSubmit.disabled = false;
+            feedbackSubmit.textContent = "Nachricht senden";
+        }
+    };
+
+    document.querySelector("[data-feedback-open]")?.addEventListener("click", () => {
+        resetFeedbackForm();
+        feedbackDialog?.showModal();
+        window.setTimeout(() => feedbackMessage?.focus(), 0);
+    });
+    document.querySelectorAll("[data-feedback-close]").forEach((button) => {
+        button.addEventListener("click", () => feedbackDialog?.close());
+    });
+    feedbackMessage?.addEventListener("input", () => {
+        if (feedbackCount) feedbackCount.textContent = String(feedbackMessage.value.length);
+        if (feedbackError) feedbackError.hidden = true;
+    });
+
+    feedbackForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const message = feedbackMessage?.value.trim() || "";
+        if (feedbackError) feedbackError.hidden = true;
+        if (feedbackSuccess) feedbackSuccess.hidden = true;
+
+        if (message.length < 10) {
+            if (feedbackError) {
+                feedbackError.textContent = "Bitte beschreibe den Fehler mit mindestens 10 Zeichen.";
+                feedbackError.hidden = false;
+            }
+            feedbackMessage?.focus();
+            return;
+        }
+        const contentError = feedbackContentError(message);
+        if (contentError) {
+            if (feedbackError) {
+                feedbackError.textContent = contentError;
+                feedbackError.hidden = false;
+            }
+            feedbackMessage?.focus();
+            return;
+        }
+        if (!feedbackPrivacy?.checked) {
+            if (feedbackError) {
+                feedbackError.textContent = "Bitte bestätige, dass deine Nachricht keine personenbezogenen Informationen enthält.";
+                feedbackError.hidden = false;
+            }
+            feedbackPrivacy?.focus();
+            return;
+        }
+
+        if (feedbackSubmit) {
+            feedbackSubmit.disabled = true;
+            feedbackSubmit.textContent = "Wird gesendet …";
+        }
+
+        try {
+            const response = await fetch("/vplan/feedback", {
+                method: "POST",
+                credentials: "omit",
+                referrerPolicy: "no-referrer",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-VPlan-Request": "feedback",
+                },
+                body: JSON.stringify({ message, privacy_confirmed: true }),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || "Die Nachricht konnte nicht gespeichert werden.");
+
+            if (feedbackSuccess) feedbackSuccess.hidden = false;
+            if (feedbackMessage) feedbackMessage.disabled = true;
+            if (feedbackPrivacy) feedbackPrivacy.disabled = true;
+            if (feedbackSubmit) feedbackSubmit.textContent = "Gesendet";
+        } catch (error) {
+            if (feedbackError) {
+                feedbackError.textContent = error instanceof Error
+                    ? error.message
+                    : "Die Nachricht konnte nicht gespeichert werden.";
+                feedbackError.hidden = false;
+            }
+            if (feedbackSubmit) {
+                feedbackSubmit.disabled = false;
+                feedbackSubmit.textContent = "Erneut versuchen";
+            }
+        }
+    });
+
+    const pwaEnabled = document.body.dataset.pwaEnabled === "true";
+    const installButtons = document.querySelectorAll("[data-install-app], [data-install-help]");
+    const installLabel = document.querySelector("[data-install-label]");
+    const installDescription = document.querySelector("[data-install-description]");
+    const installDialog = document.querySelector("[data-install-dialog]");
+    const installIntro = document.querySelector("[data-install-intro]");
+    const installSteps = document.querySelector("[data-install-steps]");
+    let installPrompt = null;
+
+    const isStandalone = () => (
+        window.matchMedia("(display-mode: standalone)").matches
+        || window.navigator.standalone === true
+    );
+    const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
+        || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
+
+    const showInstalledState = () => {
+        installButtons.forEach((button) => button.disabled = true);
+        if (installLabel) installLabel.textContent = "App installiert";
+        if (installDescription) installDescription.textContent = "Bereit im Startmenü";
+    };
+
+    const setInstallInstructions = () => {
+        if (!installIntro || !installSteps) return;
+        const instructions = isIos
+            ? [
+                "Tippe in Safari auf das Teilen-Symbol.",
+                "Wähle „Zum Home-Bildschirm“.",
+                "Bestätige oben rechts mit „Hinzufügen“.",
+            ]
+            : [
+                "Öffne das Menü deines Browsers.",
+                "Wähle „Vertretungsplan installieren“ oder „App installieren“.",
+                "Bestätige die Installation.",
+            ];
+
+        installIntro.textContent = isIos
+            ? "Auf iPhone und iPad wird die App direkt über Safari hinzugefügt:"
+            : "Falls kein direkter Installationsdialog erscheint, füge die App über das Browsermenü hinzu:";
+        installSteps.replaceChildren(...instructions.map((instruction) => {
+            const item = document.createElement("li");
+            item.textContent = instruction;
+            return item;
+        }));
+    };
+
+    const requestAppInstall = async () => {
+        if (!installPrompt) {
+            setInstallInstructions();
+            installDialog?.showModal();
+            return;
+        }
+
+        const prompt = installPrompt;
+        installPrompt = null;
+        try {
+            await prompt.prompt();
+            const choice = await prompt.userChoice;
+            if (choice.outcome === "accepted") showInstalledState();
+        } catch (error) {
+            setInstallInstructions();
+            installDialog?.showModal();
+        }
+    };
+
+    installButtons.forEach((button) => {
+        button.addEventListener("click", requestAppInstall);
+    });
+    document.querySelectorAll("[data-install-close]").forEach((button) => {
+        button.addEventListener("click", () => installDialog?.close());
+    });
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+        if (!pwaEnabled) return;
+        event.preventDefault();
+        installPrompt = event;
+    });
+    window.addEventListener("appinstalled", () => {
+        installPrompt = null;
+        showInstalledState();
+    });
+
+    if (pwaEnabled && isStandalone()) {
+        showInstalledState();
+    }
+
+    if (pwaEnabled && "serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+                // Installation remains optional; the normal website still works.
+            });
+        });
+    }
+
+    updateSubjectEntries();
     applyPreferences();
 })();

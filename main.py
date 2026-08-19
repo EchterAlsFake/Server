@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 load_dotenv()
 import json
@@ -21,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g, redirect, session, url_for, flash
+from flask import Flask, request, jsonify, make_response, send_file, send_from_directory, Response, render_template, g, redirect, session, url_for, flash
 from fpdf import FPDF
 from werkzeug.serving import WSGIRequestHandler
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -68,6 +69,14 @@ vplan_synchronizer = VPlanSynchronizer(VPLAN_SYNC_CONFIG)
 VPLAN_PUBLIC_HOST = os.environ.get(
     "VPLAN_PUBLIC_HOST", "vplan.echteralsfake.me"
 ).strip().lower().rstrip(".")
+VPLAN_PWA_TEST_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+VPLAN_FEEDBACK_MAX_LENGTH = 1500
+VPLAN_FEEDBACK_RETENTION_DAYS = 180
+VPLAN_FEEDBACK_EMAIL_RE = re.compile(
+    r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE
+)
+VPLAN_FEEDBACK_URL_RE = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
+VPLAN_FEEDBACK_PHONE_CANDIDATE_RE = re.compile(r"(?:\+?\d[\d\s()./-]{5,}\d)")
 
 # Strict Input Validation Schema for NOWPayments Webhook
 class NowPaymentsWebhookSchema(BaseModel):
@@ -213,6 +222,14 @@ class Report(db.Model):
     tag = db.Column(db.String, nullable=False)
     message = db.Column(db.String, nullable=False)
     raw_json = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.String, nullable=False)
+
+
+class VPlanFeedback(db.Model):
+    __tablename__ = "vplan_feedback"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.String, nullable=False)
 
 class WriteLog(db.Model):
@@ -549,6 +566,8 @@ def track_response(response):
 
     length = max(int(length or 0), 0)
     increment_stats(bytes_out_inc=length)
+    if request.endpoint == "submit_vplan_feedback":
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -571,6 +590,23 @@ def initiate_poweroff():
 
 
 # ---------- Routes ----------
+@app.route("/sw.js", methods=["GET"])
+@limiter.exempt
+def vplan_service_worker():
+    """Serve the VPlan worker at the origin root so it can control the app route."""
+    response = make_response(
+        send_from_directory(
+            app.static_folder,
+            "vplan-sw.js",
+            mimetype="application/javascript",
+            conditional=True,
+        )
+    )
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
+
+
 @app.route("/vplan", methods=["GET"])
 @limiter.exempt
 def vplan():
@@ -583,7 +619,15 @@ def vplan():
             raise ValueError("Expected a JSON object containing a 'tage' list.")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         app.logger.error("Could not load substitution plan from %s: %s", VPLAN_JSON_PATH, exc)
-        response = make_response(render_template("vplan.html", plan=None, error=True), 503)
+        response = make_response(
+            render_template(
+                "vplan.html",
+                plan=None,
+                error=True,
+                pwa_enabled=_vplan_pwa_enabled(),
+            ),
+            503,
+        )
         response.headers["Cache-Control"] = "no-store"
         return response
 
@@ -595,7 +639,13 @@ def vplan():
         updated_at = str(raw_updated_at)
 
     response = make_response(
-        render_template("vplan.html", plan=plan, error=False, updated_at=updated_at)
+        render_template(
+            "vplan.html",
+            plan=plan,
+            error=False,
+            updated_at=updated_at,
+            pwa_enabled=_vplan_pwa_enabled(),
+        )
     )
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -603,7 +653,81 @@ def vplan():
 
 def _request_hostname():
     """Return a normalized DNS hostname without a possible development port."""
-    return request.host.partition(":")[0].strip().lower().rstrip(".")
+    raw_host = request.host.strip().lower()
+    if raw_host.startswith("["):
+        return raw_host[1:].partition("]")[0].rstrip(".")
+    return raw_host.partition(":")[0].rstrip(".")
+
+
+def _vplan_pwa_enabled():
+    """Enable installation on the public VPlan host and secure local test hosts."""
+    hostname = _request_hostname()
+    return hostname == VPLAN_PUBLIC_HOST or hostname in VPLAN_PWA_TEST_HOSTS
+
+
+def validate_vplan_feedback(value):
+    """Return a normalized plain-text report or a user-facing validation error."""
+    if not isinstance(value, str):
+        return None, "Bitte gib eine Textnachricht ein."
+
+    message = value.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if len(message) < 10:
+        return None, "Bitte beschreibe den Fehler mit mindestens 10 Zeichen."
+    if len(message) > VPLAN_FEEDBACK_MAX_LENGTH:
+        return None, f"Die Nachricht darf höchstens {VPLAN_FEEDBACK_MAX_LENGTH} Zeichen enthalten."
+    if any(ord(character) < 32 and character not in {"\n", "\t"} for character in message):
+        return None, "Die Nachricht enthält nicht unterstützte Steuerzeichen."
+    if re.search(r"<[^>\n]{1,100}>", message):
+        return None, "Bitte verwende ausschließlich normalen Text ohne HTML."
+    if VPLAN_FEEDBACK_EMAIL_RE.search(message) or VPLAN_FEEDBACK_URL_RE.search(message):
+        return None, "Bitte entferne E-Mail-Adressen und Links aus der Nachricht."
+
+    for candidate in VPLAN_FEEDBACK_PHONE_CANDIDATE_RE.findall(message):
+        digits = re.sub(r"\D", "", candidate)
+        if len(digits) >= 7 and (candidate.lstrip().startswith(("+", "0")) or len(digits) >= 10):
+            return None, "Bitte entferne Telefonnummern aus der Nachricht."
+
+    return message, None
+
+
+@app.route("/vplan/feedback", methods=["POST"])
+@csrf.exempt
+@limiter.limit("10 per minute")
+def submit_vplan_feedback():
+    """Store a short, deliberately anonymous plain-text VPlan error report."""
+    if request.headers.get("X-VPlan-Request") != "feedback" or not request.is_json:
+        return jsonify({"error": "Ungültige Anfrage."}), 400
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or payload.get("privacy_confirmed") is not True:
+        return jsonify({"error": "Bitte bestätige den Datenschutzhinweis."}), 400
+
+    message, validation_error = validate_vplan_feedback(payload.get("message"))
+    if validation_error:
+        return jsonify({"error": validation_error}), 400
+
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=VPLAN_FEEDBACK_RETENTION_DAYS)).isoformat()
+    report = VPlanFeedback(
+        message=message,
+        created_at=now.isoformat(),
+    )
+
+    try:
+        VPlanFeedback.query.filter(VPlanFeedback.created_at < cutoff).delete(
+            synchronize_session=False
+        )
+        db.session.add(report)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Could not store an anonymous VPlan feedback report")
+        return jsonify({"error": "Die Nachricht konnte momentan nicht gespeichert werden."}), 503
+
+    response = jsonify({"ok": True})
+    response.status_code = 201
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.before_request
@@ -612,11 +736,13 @@ def handle_vplan_subdomain():
     if _request_hostname() != VPLAN_PUBLIC_HOST:
         return None
 
+    if request.path == "/vplan/feedback" and request.method == "POST":
+        return None
     if request.method not in {"GET", "HEAD"}:
         return "Not Found", 404
     if request.path == "/":
         return vplan()
-    if request.path in {"/vplan", "/impress", "/datenschutz"}:
+    if request.path in {"/vplan", "/sw.js", "/impress", "/datenschutz"}:
         return None
     if request.path.startswith("/static/"):
         return None

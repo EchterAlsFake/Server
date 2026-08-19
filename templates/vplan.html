@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#f5f7fb">
     <meta name="color-scheme" content="light dark">
+    {% if pwa_enabled %}
+        <meta name="application-name" content="Vertretungsplan">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="VPlan">
+    {% endif %}
     <title>Vertretungsplan</title>
     <script>
         try {
@@ -16,11 +22,27 @@
             document.documentElement.dataset.theme = "light";
         }
     </script>
+    {% if pwa_enabled %}<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">{% endif %}
+    <link rel="icon" href="{{ url_for('static', filename='vplan-icon.svg') }}" type="image/svg+xml">
+    {% if pwa_enabled %}<link rel="apple-touch-icon" href="{{ url_for('static', filename='vplan-icon-192.png') }}">{% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='vplan.css') }}">
     <script src="{{ url_for('static', filename='vplan.js') }}" defer></script>
 </head>
-<body class="disclaimer-pending">
+<body class="disclaimer-pending" data-pwa-enabled="{{ 'true' if pwa_enabled else 'false' }}">
     <a class="skip-link" href="#plan-content">Zum Vertretungsplan springen</a>
+
+    <aside class="utility-header" aria-label="Informationen zum Angebot">
+        <div class="utility-header-inner">
+            <span>Inoffizielles Schülerprojekt</span>
+            <nav aria-label="Rechtliche Informationen und Credits">
+                <button type="button" data-info-open="controller-dialog">Verantwortlicher</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" data-info-open="privacy-dialog">Datenschutz</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" data-info-open="credits-dialog">Credits</button>
+            </nav>
+        </div>
+    </aside>
 
     <header class="app-header">
         <div class="header-inner">
@@ -57,19 +79,7 @@
     </header>
 
     <main id="plan-content" class="page-shell" tabindex="-1">
-        {% if error %}
-            <section class="empty-state error-state" role="alert">
-                <div class="empty-icon" aria-hidden="true">!</div>
-                <h2>Plan momentan nicht verfügbar</h2>
-                <p>Die Datei konnte nicht gelesen werden. Bitte versuche es später noch einmal.</p>
-            </section>
-        {% elif not plan.tage %}
-            <section class="empty-state">
-                <div class="empty-icon" aria-hidden="true">✓</div>
-                <h2>Keine Änderungen</h2>
-                <p>Im aktuellen Plan sind keine Tage eingetragen.</p>
-            </section>
-        {% else %}
+        {% if not error and plan.tage %}
             <nav class="day-tabs" role="tablist" aria-label="Tag auswählen">
                 {% for day in plan.tage %}
                     <button
@@ -88,22 +98,59 @@
                     </button>
                 {% endfor %}
             </nav>
+        {% endif %}
 
-            <section class="personalization-bar" aria-label="Persönliche Auswahl">
-                <div class="personalization-copy">
-                    <div class="personalization-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p>Mein Plan</p>
-                        <span data-personalization-summary>Optional: Klasse und Kurse auswählen</span>
-                    </div>
-                </div>
-                <button class="secondary-button" type="button" data-personalization-open>Einrichten</button>
+        <section class="quick-actions" aria-label="Schnellaktionen">
+            <button class="quick-action" type="button" data-personalization-open>
+                <span class="quick-action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>
+                    </svg>
+                </span>
+                <span class="quick-action-copy">
+                    <strong>Mein Plan</strong>
+                    <small data-personalization-summary>Klasse und Kurse auswählen</small>
+                </span>
+            </button>
+
+            <button class="quick-action" type="button" data-install-app{% if not pwa_enabled %} disabled{% endif %}>
+                <span class="quick-action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M12 3v11M8 10l4 4 4-4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/>
+                    </svg>
+                </span>
+                <span class="quick-action-copy">
+                    <strong data-install-label>App installieren</strong>
+                    <small data-install-description>{{ 'Zum Startbildschirm hinzufügen' if pwa_enabled else 'Auf dieser Adresse nicht verfügbar' }}</small>
+                </span>
+            </button>
+
+            <button class="quick-action" type="button" data-feedback-open>
+                <span class="quick-action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/><path d="M12 7v5M12 15h.01"/>
+                    </svg>
+                </span>
+                <span class="quick-action-copy">
+                    <strong>Fehler melden</strong>
+                    <small>Kurze Nachricht senden</small>
+                </span>
+            </button>
+        </section>
+
+        {% if error %}
+            <section class="empty-state error-state" role="alert">
+                <div class="empty-icon" aria-hidden="true">!</div>
+                <h2>Plan momentan nicht verfügbar</h2>
+                <p>Die Datei konnte nicht gelesen werden. Bitte versuche es später noch einmal.</p>
             </section>
-
+        {% elif not plan.tage %}
+            <section class="empty-state">
+                <div class="empty-icon" aria-hidden="true">✓</div>
+                <h2>Keine Änderungen</h2>
+                <p>Im aktuellen Plan sind keine Tage eingetragen.</p>
+            </section>
+        {% else %}
             {% for day in plan.tage %}
                 {% set day_index = loop.index0 %}
                 {% set entries = day.EINTRAEGE_KLASSEN|default([], true) %}
@@ -200,7 +247,24 @@
                                     <div class="entry-status" aria-hidden="true"></div>
                                     <div class="entry-main">
                                         <div class="entry-topline">
-                                            <span class="class-badge">{{ entry.KLASSE|default('–', true)|striptags }}</span>
+                                            <div class="entry-subject">
+                                                <span
+                                                    class="class-badge"
+                                                    data-subject-name
+                                                >{{ entry.KLASSE|default('–', true)|striptags }}</span>
+                                                <button
+                                                    class="subject-edit-button"
+                                                    type="button"
+                                                    data-subject-edit
+                                                    aria-label="Fach umbenennen"
+                                                    title="Fach umbenennen"
+                                                    hidden
+                                                >
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                        <path d="m4 16.5-.7 4.2 4.2-.7L19 8.5 15.5 5 4 16.5Z"/><path d="m13.8 6.7 3.5 3.5"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
                                             {% if is_cancelled %}
                                                 <span class="status-badge cancelled-badge">Ausfall</span>
                                             {% else %}
@@ -216,6 +280,12 @@
                                                     <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
                                                 </svg>
                                                 <span class="sr-only">Uhrzeit: </span>{{ entry.STUNDE|default('Zeit unbekannt', true)|striptags }}
+                                            </span>
+                                            <span data-subject-teacher-row hidden>
+                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                    <circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+                                                </svg>
+                                                <span class="sr-only">Lehrer: </span><span data-subject-teacher></span>
                                             </span>
                                         </div>
 
@@ -249,13 +319,129 @@
         {% endif %}
     </main>
 
+    <dialog class="subject-dialog" data-subject-dialog aria-labelledby="subject-dialog-title">
+        <form class="dialog-card subject-card" data-subject-form>
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Nur für dich</p>
+                    <h2 id="subject-dialog-title">Fach umbenennen</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-subject-close aria-label="Dialog schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="subject-original" aria-label="Ausgewähltes Fach">
+                <span class="subject-original-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>
+                </span>
+                <span>
+                    <small>Original</small>
+                    <strong data-subject-original-name>Fach</strong>
+                    <code data-subject-original-code></code>
+                </span>
+            </div>
+
+            <p class="dialog-intro">Gib dem Fach einen Namen, den du sofort erkennst. Die Änderung gilt nur für dieses Fach beziehungsweise diesen Kurs und bleibt ausschließlich in diesem Browser.</p>
+
+            <div class="subject-form-fields">
+                <label class="field-label">
+                    <span>Neuer Name</span>
+                    <input type="text" data-subject-new-name maxlength="60" autocomplete="off" placeholder="z. B. Mathe LK" required>
+                    <small>Wird anstelle der ursprünglichen Kennung angezeigt.</small>
+                </label>
+
+                <label class="field-label">
+                    <span>Lehrer <small>(optional)</small></span>
+                    <input type="text" data-subject-new-teacher maxlength="60" autocomplete="off" placeholder="z. B. Frau Müller">
+                    <small>Erscheint direkt beim Fach im Vertretungsplan.</small>
+                </label>
+            </div>
+
+            <p class="form-error" data-subject-error role="alert" hidden></p>
+
+            <div class="dialog-actions subject-actions">
+                <button class="text-button danger-text" type="button" data-subject-reset>Eigene Bezeichnung löschen</button>
+                <div>
+                    <button class="text-button" type="button" data-subject-close>Abbrechen</button>
+                    <button class="primary-button" type="submit">Speichern</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="feedback-dialog" data-feedback-dialog aria-labelledby="feedback-dialog-title">
+        <form class="dialog-card feedback-card" data-feedback-form>
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Hilf uns beim Verbessern</p>
+                    <h2 id="feedback-dialog-title">Fehler melden</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-feedback-close aria-label="Dialog schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <p class="dialog-intro">Beschreibe kurz, was nicht funktioniert oder falsch dargestellt wird. Gespeichert werden nur deine Nachricht und der Zeitpunkt des Eingangs.</p>
+
+            <div class="privacy-guard" role="note">
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 5 6v5c0 4.6 2.9 8.8 7 10 4.1-1.2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/></svg>
+                </span>
+                <p><strong>Bitte anonym bleiben:</strong> Keine Namen, E-Mail-Adressen, Telefonnummern, Links oder andere personenbezogene Informationen eingeben.</p>
+            </div>
+
+            <label class="field-label feedback-message-field">
+                <span>Nachricht</span>
+                <textarea data-feedback-message minlength="10" maxlength="1500" rows="6" placeholder="z. B. Beim Wechsel auf Donnerstag wird noch der Mittwoch angezeigt …" required></textarea>
+                <small><span data-feedback-count>0</span>/1500 Zeichen · Nur normaler Text</small>
+            </label>
+
+            <label class="confirm-checkbox feedback-confirm">
+                <input type="checkbox" data-feedback-privacy required>
+                <span>Meine Nachricht enthält keine personenbezogenen Informationen.</span>
+            </label>
+
+            <p class="form-error" data-feedback-error role="alert" hidden></p>
+            <p class="form-success" data-feedback-success role="status" hidden>Danke! Deine Fehlermeldung wurde gespeichert.</p>
+
+            <div class="dialog-actions">
+                <button class="text-button" type="button" data-feedback-close>Abbrechen</button>
+                <button class="primary-button" type="submit" data-feedback-submit>Nachricht senden</button>
+            </div>
+        </form>
+    </dialog>
+
+    {% if pwa_enabled %}<dialog class="info-dialog install-dialog" data-install-dialog aria-labelledby="install-dialog-title">
+        <article class="dialog-card info-card">
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Schneller Zugriff</p>
+                    <h2 id="install-dialog-title">Vertretungsplan installieren</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-install-close aria-label="Dialog schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="info-content install-instructions">
+                <p data-install-intro>Falls dein Browser keinen direkten Installationsdialog anbietet, kannst du die App über das Browsermenü hinzufügen:</p>
+                <ol data-install-steps>
+                    <li>Öffne das Menü deines Browsers.</li>
+                    <li>Wähle <strong>„Vertretungsplan installieren“</strong> oder <strong>„App installieren“</strong>.</li>
+                    <li>Bestätige die Installation. Danach findest du den Vertretungsplan im Startmenü beziehungsweise auf dem Startbildschirm.</li>
+                </ol>
+                <p class="info-small">Dabei wird keine native App aus einem Store geladen. Die Webseite öffnet sich in einem eigenen App-Fenster und deine Einstellungen bleiben weiterhin lokal in diesem Browserprofil.</p>
+            </div>
+
+            <div class="dialog-actions info-actions">
+                <button class="primary-button" type="button" data-install-close>Verstanden</button>
+            </div>
+        </article>
+    </dialog>{% endif %}
+
     <footer class="app-footer">
         <p>Inoffizielle private Ansicht · Alle Angaben ohne Gewähr · Einstellungen bleiben lokal auf diesem Gerät.</p>
-        <nav aria-label="Rechtliche Informationen">
-            <button type="button" data-info-open="controller-dialog">Verantwortlicher</button>
-            <span aria-hidden="true">·</span>
-            <button type="button" data-info-open="privacy-dialog">Datenschutz</button>
-        </nav>
     </footer>
 
     <dialog class="settings-dialog" data-settings-dialog aria-labelledby="settings-title">
@@ -386,12 +572,16 @@
 
             <div class="info-content privacy-content">
                 <section>
-                    <h3>Keine Speicherung auf diesem Server</h3>
-                    <p>Der Betreiber speichert auf dem eigenen Ursprungsserver keine Besucher-IP-Adressen und keine anderen personenbezogenen Nutzungsdaten. Es gibt keine Nutzerkonten, keine Reichweitenanalyse und kein Profiling. Lediglich nicht personenbezogene Gesamtzähler für Anfragen und Datenvolumen werden geführt.</p>
+                    <h3>Keine automatische Besucherspeicherung</h3>
+                    <p>Der Betreiber speichert auf dem eigenen Ursprungsserver keine Besucher-IP-Adressen, Browserkennungen oder Kontodaten. Es gibt keine Nutzerkonten, keine Reichweitenanalyse und kein Profiling. Lediglich nicht personenbezogene Gesamtzähler für Anfragen und Datenvolumen werden geführt.</p>
                 </section>
                 <section>
                     <h3>Lokale Einstellungen</h3>
-                    <p>Die gewählte Klasse, Kurse, Darstellung und Filtereinstellungen werden ausschließlich im lokalen Speicher deines Browsers gespeichert. Sie werden nicht an den Server übertragen.</p>
+                    <p>Die gewählte Klasse, Kurse, eigene Fachnamen, Lehrernamen, Darstellung, Filtereinstellungen und die Bestätigung des Nutzungshinweises werden ausschließlich im lokalen Speicher deines Browsers gespeichert. Sie werden nicht an den Server übertragen.</p>
+                </section>
+                <section>
+                    <h3>Freiwillige Fehlermeldungen</h3>
+                    <p>Wenn du „Fehler melden“ verwendest, werden ausschließlich der eingegebene Nachrichtentext und der Eingangszeitpunkt auf dem Ursprungsserver gespeichert. Die Nachricht wird nicht mit einer IP-Adresse, Browserkennung, Klasse oder deinen lokalen Einstellungen verknüpft; ältere Meldungen werden beim Eingang neuer Meldungen automatisch bereinigt. Bitte gib dort keine Namen, Kontaktdaten oder anderen personenbezogenen Informationen ein.</p>
                 </section>
                 <section>
                     <h3>Cloudflare</h3>
@@ -412,6 +602,77 @@
         </article>
     </dialog>
 
+    <dialog class="info-dialog credits-dialog" id="credits-dialog" data-info-dialog aria-labelledby="credits-title">
+        <article class="dialog-card credits-card">
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Mitwirkende &amp; Technik</p>
+                    <h2 id="credits-title">Credits</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Credits schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="credits-content">
+                <section aria-labelledby="credits-stack-title">
+                    <div class="credits-section-heading">
+                        <span aria-hidden="true">01</span>
+                        <div>
+                            <p>Technik</p>
+                            <h3 id="credits-stack-title">Stack</h3>
+                        </div>
+                    </div>
+
+                    <ul class="tech-stack" aria-label="Verwendete Sprachen und Frameworks">
+                        <li><span class="tech-icon tech-python" aria-hidden="true">Py</span><strong>Python</strong></li>
+                        <li><span class="tech-icon tech-html" aria-hidden="true">5</span><strong>HTML</strong></li>
+                        <li><span class="tech-icon tech-css" aria-hidden="true">3</span><strong>CSS</strong></li>
+                        <li><span class="tech-icon tech-js" aria-hidden="true">JS</span><strong>JavaScript</strong></li>
+                        <li>
+                            <span class="tech-icon tech-flask" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 15h9"/></svg>
+                            </span>
+                            <strong>Flask</strong>
+                        </li>
+                    </ul>
+
+                    <dl class="credit-details">
+                        <div><dt>Programmierung</dt><dd>Codex 5.6 SOL <span>(high)</span></dd></div>
+                        <div><dt>Hosting</dt><dd>Cloudflare · Google Pixel 7 Pro</dd></div>
+                        <div><dt>IDE</dt><dd>PyCharm</dd></div>
+                        <div><dt>Code</dt><dd>GitHub</dd></div>
+                    </dl>
+                </section>
+
+                <section aria-labelledby="credits-ideas-title">
+                    <div class="credits-section-heading">
+                        <span aria-hidden="true">02</span>
+                        <div>
+                            <p>Danke</p>
+                            <h3 id="credits-ideas-title">Features &amp; Ideen</h3>
+                        </div>
+                    </div>
+
+                    <ul class="idea-credits">
+                        <li>
+                            <span aria-hidden="true">→</span>
+                            <div><strong>Umbenennung der Fächer / Lehrer</strong><small>Mara Rosenberg</small></div>
+                        </li>
+                        <li>
+                            <span aria-hidden="true">→</span>
+                            <div><strong>Installation der App</strong><small>Richard Lewerenz</small></div>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+
+            <div class="dialog-actions info-actions">
+                <button class="primary-button" type="button" data-info-close>Schließen</button>
+            </div>
+        </article>
+    </dialog>
+
     <dialog class="disclaimer-dialog" data-disclaimer-dialog aria-labelledby="disclaimer-title" aria-describedby="disclaimer-description" open>
         <form class="dialog-card disclaimer-card" data-disclaimer-form>
             <div class="disclaimer-symbol" aria-hidden="true">
@@ -427,7 +688,7 @@
                 <p><strong>Keine offizielle Vertretung:</strong> Dieses Angebot steht in keinerlei Verbindung zur Schule oder der Edith-Stein-Schulstiftung.</p>
                 <p><strong>Keine Gewähr:</strong> Alle Angaben erfolgen ohne Gewähr auf Richtigkeit, Vollständigkeit oder Aktualität. Es können Verzögerungen oder Fehler bei der Synchronisation auftreten.</p>
                 <p><strong>Rechtliche Verbindlichkeit:</strong> Verbindlich ist stets ausschließlich der offizielle Vertretungsplan der Schule. Für verpasste Stunden, Ausfälle oder Fehlzeiten wird keinerlei Haftung übernommen.</p>
-                <p class="privacy-note"><strong>Datenschutz:</strong> Auf dem privaten Ursprungsserver werden keine Besucher-IP-Adressen oder persönlichen Nutzungsdaten gespeichert. Deine Klasse, Kurse und Darstellungseinstellungen verbleiben ausschließlich lokal auf deinem Gerät. Cloudflare verarbeitet für die öffentliche Bereitstellung und den Schutz der Seite technisch notwendige Verbindungsdaten, insbesondere die IP-Adresse.</p>
+                <p class="privacy-note"><strong>Datenschutz:</strong> Auf dem privaten Ursprungsserver werden keine Besucher-IP-Adressen oder automatischen persönlichen Nutzungsdaten gespeichert. Deine Klasse, Kurse, eigenen Fach- und Lehrernamen sowie Darstellungseinstellungen verbleiben ausschließlich lokal auf deinem Gerät. Nur freiwillig abgesendete, nicht mit Nutzungsdaten verknüpfte Fehlermeldungen werden gespeichert. Cloudflare verarbeitet für die öffentliche Bereitstellung und den Schutz der Seite technisch notwendige Verbindungsdaten, insbesondere die IP-Adresse.</p>
             </div>
 
             <label class="confirm-checkbox">

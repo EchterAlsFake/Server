@@ -1,0 +1,324 @@
+# Vertretungsplan – Kontext für zukünftige AI-Modelle
+
+> Stand: 19. August 2026. Dieses Dokument beschreibt ausschließlich den Vertretungsplan.
+> Der restliche Inhalt dieses Repositories ist für VPlan-Aufgaben grundsätzlich außerhalb
+> des Scopes. Vor Änderungen trotzdem immer den aktuellen Code und `git status` prüfen.
+
+## 1. Ziel und Produktverständnis
+
+Der Vertretungsplan ist ein privates, inoffizielles Schülerprojekt. Er stellt den offiziellen
+Plan lesbarer dar, ersetzt ihn aber ausdrücklich nicht. Die Oberfläche soll auf Smartphones
+besonders einfach funktionieren, ohne Nutzerkonto auskommen und so wenig Daten wie möglich
+an den Server übertragen.
+
+Wichtige Produktprinzipien:
+
+- Mobile-first, ruhig, intuitiv und barrierearm gestalten.
+- Der offizielle Plan bleibt die verbindliche Quelle.
+- Persönliche Klasse, Kurse, eigene Fachnamen und Lehrernamen bleiben im Browser.
+- Niemals ungefragt VPlan-Inhalte oder lokale Einstellungen an externe Dienste senden.
+- Die VPlan-Subdomain darf keine fachfremden Serverfunktionen offenlegen.
+- Originale Lehrerkennungen des Quellsystems werden vor der Ausgabe redigiert.
+
+## 2. Relevante Dateien
+
+| Datei | Aufgabe |
+| --- | --- |
+| `main.py` | Flask-Routen, Host-Isolation, PWA-Auslieferung, Feedback-Validierung und Datenbankmodell |
+| `vplan_sync.py` | Abruf, Validierung und atomare Aktualisierung des lokalen Plans |
+| `templates/vplan.html` | Gesamte Jinja-/HTML-Oberfläche einschließlich Dialogen und Credits |
+| `static/vplan.css` | Ausschließliches Styling der VPlan-Oberfläche |
+| `static/vplan.js` | Tabs, Filter, Personalisierung, Fachnamen, Dialoge, Feedback und PWA-Installation |
+| `static/manifest.webmanifest` | PWA-Metadaten |
+| `static/vplan-sw.js` | Service Worker für lokale App-Ressourcen |
+| `static/vplan-icon*` | Normale und maskierbare PWA-Icons |
+| `tests/test_vplan_app.py` | Flask-, UI-Vertrags-, Datenschutz- und PWA-Tests |
+| `tests/test_vplan_sync.py` | Parser-, Redaktions- und Synchronisationstests |
+| `README.md` | Kurze Betriebs- und Proxy-Dokumentation |
+
+`main.py` enthält viele andere Anwendungen. Bei einer VPlan-Aufgabe nur die ausdrücklich
+zugehörigen Konstanten, Modelle, Hooks und Routen verändern. Keine anderen Endpunkte im Zuge
+einer VPlan-Änderung „aufräumen“.
+
+## 3. Datenfluss
+
+```text
+Offizielle HTML-Seite
+        │
+        ▼
+vplan_sync.py: herunterladen → eingebettetes JSON prüfen → Lehrerkennungen später redigieren
+        │
+        ▼
+lokale vplan.json (atomar ersetzt, nur bei geänderten Inhalten)
+        │
+        ▼
+main.py: /vplan → templates/vplan.html → static/vplan.js + static/vplan.css
+        │
+        ├── persönliche Einstellungen → ausschließlich localStorage
+        └── freiwillige Fehlermeldung → POST /vplan/feedback → SQLite
+```
+
+Die Synchronisation prüft standardmäßig alle 120 Sekunden die vollständige Quellseite. Ein
+kanonischer SHA-256-Hash aus Quellenzeitpunkt und Tagen verhindert unnötige Neuschreibungen.
+Fehlerhafte oder unvollständige Downloads dürfen den letzten gültigen Plan nie überschreiben.
+Dateiänderungen erfolgen atomar; Thread- und Dateisperren verhindern konkurrierende Updates.
+
+## 4. Planformat
+
+Der lokale Plan ist ein JSON-Objekt mit mindestens einer Liste `tage`:
+
+```json
+{
+  "meta": {
+    "stand": "2026-08-19 06:00:00",
+    "schoolId": 123,
+    "synced_at": "ISO-8601",
+    "content_sha256": "..."
+  },
+  "tage": [
+    {
+      "DATUM": "Mittwoch, 19. August 2026",
+      "WICHTIGE_HINWEISE": [],
+      "WEITERE_HINWEISE": [],
+      "EINTRAEGE_KLASSEN": [
+        {
+          "STUNDE": "08:35 - 09:20",
+          "NEU": "Ausfall: Mathematik",
+          "BEMERKUNGEN": "",
+          "KLASSE": "7a"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Das Template behandelt einen Eintrag als Ausfall, wenn `NEU` das Wort `ausfall` enthält.
+Alle von der Quelle kommenden sichtbaren Werte werden mit Jinja `striptags` behandelt.
+Zusätzlich entfernt der Filter `redact_teacher_codes` Kennungen wie `LiGyDe.Name` und ersetzt
+sie durch `Lehrkraft`.
+
+## 5. HTTP-Routen und Host-Isolation
+
+- `GET /vplan`: Rendert den aktuellen Plan ohne Anmeldung und mit `Cache-Control: no-store`.
+- `GET /` auf dem konfigurierten VPlan-Host: Rendert direkt dieselbe VPlan-Ansicht.
+- `GET /sw.js`: Liefert den Service Worker am Origin-Root aus.
+- `POST /vplan/feedback`: Nimmt eine freiwillige Klartext-Fehlermeldung an.
+- Auf dem VPlan-Host sind ansonsten nur benötigte statische Dateien sowie `/impress` und
+  `/datenschutz` erreichbar. Andere Routen und andere POST-Anfragen liefern 404.
+
+Der öffentliche Host ist standardmäßig `vplan.echteralsfake.me` und kann über
+`VPLAN_PUBLIC_HOST` geändert werden. `StripVisitorIPHeaders` entfernt bekannte weitergeleitete
+Besucher-IP-Header, bevor Flask und Flask-Limiter sie sehen. `ProxyFix` vertraut Host und
+Schema des vorgeschalteten Proxys, ausdrücklich aber keiner weitergeleiteten Besucher-IP.
+
+## 6. Oberfläche
+
+Die Seite besitzt aktuell:
+
+- eine dezente obere Leiste mit „Verantwortlicher“, „Datenschutz“ und „Credits“;
+- einen App-Header mit Aktualisierungszeit und Hell-/Dunkelmodus;
+- Tastatur-bedienbare Tag-Tabs;
+- drei immer sichtbare Schnellaktionen in einer Reihe:
+  1. „Mein Plan“,
+  2. „App installieren“,
+  3. „Fehler melden“;
+- Hinweise, Suche und Filter „Alle“/„Nur Ausfälle“;
+- persönliche Filter nach Jahrgang, Klasse und Kursen;
+- Bearbeitung jedes Eintrags über „Neuer Name“ und „Lehrer (optional)“;
+- Informationsdialoge, Installationshilfe, Feedbackdialog und einmaligen Nutzungshinweis;
+- Credits mit Stack und bisherigen Danksagungen.
+
+Die Schnellaktionen bleiben auch bei leerem oder vorübergehend nicht verfügbarem Plan sichtbar.
+Dialoge verwenden das native `<dialog>`-Element. Neue Interaktionen sollen die vorhandenen
+`data-*`-Hooks fortführen und sichtbaren dynamischen Text grundsätzlich mit `textContent`,
+nicht mit `innerHTML`, einsetzen.
+
+## 7. Browser-Speicherung
+
+Es gibt keine Nutzerkonten. Diese Schlüssel liegen ausschließlich im `localStorage` des
+jeweiligen Origins:
+
+| Schlüssel | Inhalt |
+| --- | --- |
+| `vplan-theme` | `light` oder `dark` |
+| `vplan-preferences` | `{ enabled, grade, classLetter, courses }` |
+| `vplan-subject-overrides` | Objekt aus stabilem Fachschlüssel und `{ name, teacher }` |
+| `vplan-disclaimer-accepted-v1` | `"true"`, nachdem der Nutzungshinweis bestätigt wurde |
+
+Alle Zugriffe laufen, abgesehen vom frühen Theme-Lesen im Template, über `safeStorage`, damit
+die Seite auch bei gesperrtem oder vollem Browser-Speicher weiter bedienbar bleibt. Daten auf
+`localhost` und auf der öffentlichen Domain sind wegen der Origin-Trennung nicht identisch.
+
+### Fach- und Lehrernamen
+
+Die Schlüsselbildung ist absichtlich differenziert:
+
+- Eindeutige Kurskennung, zum Beispiel `12_mat1`: normalisierte Kurskennung als Schlüssel.
+- Basisklasse, zum Beispiel `7a`: `7a::<erkanntes-fach>`, beispielsweise `7a::eng` oder
+  `7a::ges`.
+
+Diese Trennung ist kritisch. Ein Lehrer für Englisch in `7a` darf niemals bei Geschichte in
+`7a` erscheinen. Bei Basisklassen wird das Fach deshalb aus `NEU` erkannt; bekannte Fächer
+stehen in der `subjects`-Liste in `static/vplan.js`. Für unbekannte Beschreibungen wird ein
+normalisierter Fallback aus dem Beschreibungstext gebildet.
+
+Eigene Werte sind auf 60 Zeichen begrenzt. Sie verändern nur die Anzeige und die lokale Suche,
+nicht die Quelldatei. Einträge mit einer nicht leeren Klassen-/Kurskennung sind bearbeitbar.
+
+## 8. Installierbare Web-App (PWA)
+
+Die PWA ist auf dem öffentlichen VPlan-Host sowie auf `localhost`, `127.0.0.1` und `::1`
+aktiviert. Loopback-Adressen gelten in modernen Browsern als geeigneter lokaler Testkontext;
+eine beliebige LAN-IP über unverschlüsseltes HTTP ist dagegen normalerweise nicht installierbar.
+
+Das Manifest startet unter `/vplan?source=pwa` im Modus `standalone`. Wenn der Browser ein
+`beforeinstallprompt` bereitstellt, verwendet der Installationsbutton diesen. Andernfalls zeigt
+die Seite verständliche manuelle Installationsschritte, einschließlich iOS/Safari.
+
+Der Service Worker hält Plan-Navigationen immer netzwerkaktuell. Er speichert nur App-Ressourcen
+zwischen und verwendet für diese Netzwerk-zuerst mit Cache-Fallback. Der eigentliche Plan ist
+bewusst kein Offline-Snapshot. Bei relevanten Cache-Strategieänderungen `CACHE_NAME` erhöhen.
+
+## 9. Fehlermeldungen
+
+Das Formular enthält genau ein Textfeld mit 10 bis 1500 Zeichen und eine verpflichtende
+Bestätigung, dass keine personenbezogenen Informationen enthalten sind. Der Browser und der
+Server weisen erkennbare E-Mail-Adressen, URLs, Telefonnummern und HTML zurück. Beliebige Namen
+lassen sich technisch nicht zuverlässig automatisch erkennen; deshalb sind der deutliche
+Hinweis und die Bestätigung Teil des Sicherheitskonzepts und dürfen nicht entfernt werden.
+
+Der Request ist JSON:
+
+```json
+{
+  "message": "Beschreibung des Fehlers",
+  "privacy_confirmed": true
+}
+```
+
+Zusätzlich ist `X-VPlan-Request: feedback` erforderlich. Der Browser verwendet
+`credentials: "omit"` und `referrerPolicy: "no-referrer"`. Der Endpunkt ist bewusst von der
+sessionbasierten CSRF-Prüfung ausgenommen, akzeptiert aber nur JSON mit dem eigenen Header und
+ist auf 10 Anfragen pro Minute begrenzt.
+
+SQLite-Modell und Tabelle heißen `VPlanFeedback` beziehungsweise `vplan_feedback`. Gespeichert
+werden ausschließlich:
+
+- `id`,
+- `message`,
+- `created_at` als UTC-ISO-Zeitpunkt.
+
+Es werden keine Klasse, lokalen Einstellungen, Browserkennung oder Besucher-IP an den Datensatz
+angehängt. Meldungen älter als 180 Tage werden beim Eingang einer neuen Meldung gelöscht. Für
+Fehlerantworten und Erfolge gilt `Cache-Control: no-store`. Es existiert aktuell keine öffentliche
+Ansicht zum Lesen der Meldungen; sie liegen in der lokalen `server.db`.
+
+## 10. Nutzungshinweis und Datenschutz
+
+Beim ersten Aufruf erscheint ein nicht wegklickbarer Hinweis, dass die Seite inoffiziell und
+ohne Gewähr ist. Erst nach Aktivieren der Checkbox kann er bestätigt werden. Die Bestätigung
+wird in `vplan-disclaimer-accepted-v1` gespeichert und bei späteren Aufrufen desselben Origins
+nicht erneut abgefragt.
+
+Die Datenschutzaussagen in der Oberfläche müssen bei neuen Serverfunktionen aktualisiert werden.
+Cloudflare sieht für Bereitstellung und Schutz technisch bedingt Verbindungsdaten; der private
+Ursprungsserver soll keine Besucher-IP protokollieren. Gunicorn-Zugriffslogs müssen deaktiviert
+bleiben oder ein Format ohne Remote-Adresse, Query-String und sensible Header verwenden.
+
+## 11. Credits
+
+Die Credits-Ansicht enthält aktuell:
+
+- Stack: Python, HTML, CSS, JavaScript und Flask;
+- Programmierung: Codex 5.6 SOL (high);
+- Hosting: Cloudflare und Google Pixel 7 Pro;
+- IDE: PyCharm;
+- Code: GitHub;
+- Umbenennung der Fächer/Lehrer: Mara Rosenberg;
+- Installation der App: Richard Lewerenz.
+
+Die Liste soll unkompliziert erweiterbar bleiben. Bestehende Nennungen nicht ohne ausdrücklichen
+Auftrag entfernen oder umformulieren.
+
+## 12. Übersetzungen – noch nicht implementiert
+
+Die Oberfläche ist derzeit deutsch (`lang="de"`, Manifest `de-DE`). Eine spätere Übersetzung
+ist gut möglich. Empfohlene Umsetzung:
+
+- feste UI-Texte über stabile Übersetzungsschlüssel und lokale Sprachdateien übersetzen;
+- Sprachwahl im `localStorage` speichern;
+- `html[lang]`, zugängliche Beschriftungen, Dialogtexte, Clientfehler und Serverfehler gemeinsam
+  berücksichtigen;
+- eigene Fachnamen und Lehrernamen niemals übersetzen;
+- freie Originalbemerkungen des Vertretungsplans zunächst unverändert lassen, damit keine
+  automatisch erzeugte Übersetzung als verbindlicher Schulhinweis missverstanden wird;
+- keine Laufzeit-Übersetzung über externe APIs, wenn dafür Planinhalte übertragen würden.
+
+AI-generierte Sprachdateien sind als Ausgangspunkt geeignet, benötigen vor Veröffentlichung
+aber eine menschliche Prüfung. Nicht annehmen, dass bereits ein i18n-System vorhanden ist.
+
+## 13. Konfiguration
+
+Relevante Umgebungsvariablen:
+
+- `VPLAN_SCHOOL_ID` – erforderlich;
+- `VPLAN_SYNC_ENABLED` – automatische Synchronisation, standardmäßig aktiv;
+- `VPLAN_JSON_PATH` – Pfad zur lokalen Plandatei;
+- `VPLAN_SYNC_STATE_PATH` – optionaler Statuspfad;
+- `VPLAN_SYNC_LOCK_PATH` – optionaler Lock-Pfad;
+- `VPLAN_SOURCE_URL` – optionale alternative Quelle;
+- `VPLAN_CHECK_INTERVAL_SECONDS` – Standard 120, Minimum 60;
+- `VPLAN_REQUEST_TIMEOUT_SECONDS` – Standard 20;
+- `VPLAN_MAX_RESPONSE_BYTES` – Größenlimit der Quelle;
+- `VPLAN_PUBLIC_HOST` – Standard `vplan.echteralsfake.me`;
+- `PF_SERVER_DB` – Pfad zur SQLite-Datenbank einschließlich Feedbacktabelle.
+
+Die Plandatei, Sync-Statusdatei, Sperrdatei und SQLite-Datenbank sind Laufzeitdaten und gehören
+nicht in Git.
+
+## 14. Entwicklung und Prüfungen
+
+Lokaler Start aus dem Repository-Root:
+
+```bash
+VPLAN_SCHOOL_ID=<id> python main.py
+```
+
+Danach ist die Testansicht unter `http://localhost:8000/vplan` erreichbar. Für Entwicklung ohne
+Quellabrufe zusätzlich `VPLAN_SYNC_ENABLED=false` setzen und eine gültige `vplan.json` verwenden.
+
+Vor Übergabe einer VPlan-Änderung mindestens ausführen:
+
+```bash
+python -m unittest discover -s tests
+python -m py_compile main.py vplan_sync.py tests/test_vplan_app.py tests/test_vplan_sync.py
+node --check static/vplan.js
+git diff --check
+```
+
+Wichtige Testverträge:
+
+- Subdomain-Root rendert nur den VPlan und gibt fachfremde Routen nicht frei.
+- Fehlende oder ungültige Plandatei liefert 503, ohne einen gültigen Cache zu zerstören.
+- Lehrerkennungen werden redigiert.
+- Fachschlüssel unterscheiden bei Basisklassen zwischen einzelnen Fächern.
+- Nutzungshinweis wird lokal gemerkt.
+- PWA funktioniert auf öffentlichem Host und lokalen Loopback-Hosts.
+- Feedback speichert nur Nachricht und Zeitpunkt und lehnt erkennbare Kontaktdaten ab.
+
+## 15. Regeln für zukünftige Änderungen
+
+1. Zuerst `VPLAN_CONTEXT.md`, `git status` und die tatsächlich betroffenen Dateien lesen.
+2. Bestehende Nutzeränderungen im Worktree erhalten; keine fachfremden Dateien zurücksetzen.
+3. Daten der Quelle als nicht vertrauenswürdig behandeln: serverseitig bereinigen und im DOM nie
+   unsicher als HTML einsetzen.
+4. Keine neue Server-Speicherung einführen, ohne Datenmodell, Datenschutzhinweis, Löschlogik und
+   Tests gemeinsam zu aktualisieren.
+5. Personalisierung standardmäßig lokal halten und stabile, fachgenaue Schlüssel verwenden.
+6. Plan-Navigationen nicht offline cachen; Aktualität ist wichtiger als ein veralteter Offlineplan.
+7. Mobile Breiten, Tastaturbedienung, Dark Mode, Dialog-Fokus und leere/fehlerhafte Pläne prüfen.
+8. Neue sichtbare UI-Texte so strukturieren, dass eine spätere i18n-Umstellung möglich bleibt.
+9. Die Tests proportional zur Änderung ergänzen und die vollständige Suite ausführen.
+10. Diese Datei aktualisieren, wenn sich Architektur, Speicherung, Routen oder zentrale
+    Produktentscheidungen des Vertretungsplans ändern.
