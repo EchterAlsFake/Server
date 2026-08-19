@@ -94,7 +94,14 @@ app.jinja_env.filters["redact_teacher_codes"] = redact_teacher_codes
 
 @app.before_request
 def ensure_vplan_synchronizer_started():
-    """Start after Gunicorn has forked; repeated calls are intentionally harmless."""
+    """Bootstrap a missing plan cache, then start after Gunicorn has forked."""
+    if VPLAN_SYNC_CONFIG.enabled and not VPLAN_JSON_PATH.is_file():
+        result = vplan_synchronizer.sync_if_due(force=True)
+        if result.get("status") == "error":
+            app.logger.warning(
+                "Initial substitution-plan download failed: %s",
+                result.get("error", "unknown error"),
+            )
     vplan_synchronizer.start()
 
 # --- Privacy-preserving proxy handling ---

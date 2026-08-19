@@ -1,6 +1,10 @@
 import os
 import re
+import json
+import tempfile
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -21,6 +25,55 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Vertretungsplan", response.get_data(as_text=True))
         self.assertNotIn("LiGyDe.", response.get_data(as_text=True))
+
+    def test_missing_plan_file_is_downloaded_before_rendering(self):
+        plan = {
+            "meta": {"stand": "2026-08-19 06:00:00"},
+            "tage": [],
+        }
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            plan_path = Path(temporary_directory) / "vplan.json"
+
+            def create_plan(*, force=False):
+                self.assertTrue(force)
+                plan_path.write_text(json.dumps(plan), encoding="utf-8")
+                return {"status": "updated"}
+
+            with (
+                patch.object(main, "VPLAN_JSON_PATH", plan_path),
+                patch.object(main, "VPLAN_SYNC_CONFIG", SimpleNamespace(enabled=True)),
+                patch.object(
+                    main.vplan_synchronizer,
+                    "sync_if_due",
+                    side_effect=create_plan,
+                ) as sync,
+            ):
+                response = self.client.get(
+                    "/", headers={"Host": "vplan.echteralsfake.me"}
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Keine Änderungen", response.get_data(as_text=True))
+        sync.assert_called_once_with(force=True)
+
+    def test_missing_plan_and_failed_download_returns_service_unavailable(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            plan_path = Path(temporary_directory) / "vplan.json"
+            with (
+                patch.object(main, "VPLAN_JSON_PATH", plan_path),
+                patch.object(main, "VPLAN_SYNC_CONFIG", SimpleNamespace(enabled=True)),
+                patch.object(
+                    main.vplan_synchronizer,
+                    "sync_if_due",
+                    return_value={"status": "error", "error": "upstream unavailable"},
+                ),
+            ):
+                response = self.client.get(
+                    "/", headers={"Host": "vplan.echteralsfake.me"}
+                )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("Plan momentan nicht verfügbar", response.get_data(as_text=True))
 
     def test_worker_forwarded_host_routes_without_trusting_forwarded_ip(self):
         response = self.client.get(
