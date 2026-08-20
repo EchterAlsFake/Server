@@ -94,6 +94,34 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn('class="utility-header"', html)
         self.assertIn('data-day-date="2026-08-19"', html)
 
+    def test_dark_theme_is_default_and_toggle_persists_before_catalog_loading(self):
+        page_response = self.client.get(
+            "/", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        theme_response = self.client.get(
+            "/static/vplan-theme.js", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        app_response = self.client.get(
+            "/static/vplan.js", headers={"Host": "vplan.echteralsfake.me"}
+        )
+
+        html = page_response.get_data(as_text=True)
+        theme_javascript = theme_response.get_data(as_text=True)
+        app_javascript = app_response.get_data(as_text=True)
+        self.assertIn('<html lang="de" data-theme="dark">', html)
+        self.assertIn('<meta name="theme-color" content="#0c111d">', html)
+        self.assertIn('const DEFAULT_THEME = "dark"', theme_javascript)
+        self.assertIn('new Set(["dark", "light"])', theme_javascript)
+        self.assertNotIn("matchMedia", theme_javascript)
+        self.assertIn("safeStorage.get(THEME_KEY) !== nextTheme", app_javascript)
+        self.assertLess(
+            app_javascript.index('themeToggle?.addEventListener("click"'),
+            app_javascript.index('await fetchJson("/static/i18n/languages.json")'),
+        )
+        page_response.close()
+        theme_response.close()
+        app_response.close()
+
     def test_learned_courses_are_available_even_when_not_in_current_plan(self):
         with patch.object(
             main,
@@ -149,6 +177,7 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn("Zuverlässigkeit und App-Installation verbessert", html)
         self.assertIn("Die Oberfläche kann jetzt übersetzt", html)
         self.assertIn("Ab 15 Uhr öffnet sich automatisch", html)
+        self.assertIn("Der Dunkelmodus ist wieder der Standard", html)
         self.assertIn("Codex 5.6 SOL", html)
         self.assertIn("Anonym", html)
         self.assertIn("Richard Lewerenz", html)

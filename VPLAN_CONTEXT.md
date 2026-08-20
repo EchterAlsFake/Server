@@ -254,6 +254,13 @@ Das frühe Theme-Lesen liegt in einer kleinen externen Datei und fängt Speicher
 Schlägt ein schreibender Zugriff fehl, weist die Oberfläche darauf hin, dass die Änderung nicht
 dauerhaft gespeichert wurde.
 
+Ohne gespeicherte Auswahl startet die VPlan-Oberfläche im Dunkelmodus. Ein gültiger Wert aus
+`vplan-theme` wird bereits im `<head>` vor dem Laden des Stylesheets angewandt. Der Theme-Schalter
+wird vor den asynchron geladenen Sprachkatalogen aktiviert, speichert `dark` oder `light` und liest
+den Wert zur Kontrolle unmittelbar wieder aus. So bleibt die Auswahl bei späteren Aufrufen
+erhalten und der Schalter funktioniert auch bei langsamen oder vorübergehend nicht verfügbaren
+Übersetzungsdateien.
+
 Die serverseitig erlernte Liste verfügbarer Kurskennungen ist davon getrennt: Sie enthält nur
 das Kursangebot aus den Quelldaten. Die konkrete Auswahl eines Kindes bleibt ausschließlich im
 jeweiligen Browser in `vplan-preferences`.

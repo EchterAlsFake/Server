@@ -36,6 +36,30 @@
         },
     };
 
+    const storageNotice = document.querySelector("[data-storage-notice]");
+    const showStorageNotice = () => {
+        if (!storageNotice) return;
+        storageNotice.hidden = false;
+        window.setTimeout(() => {
+            storageNotice.hidden = true;
+        }, 6000);
+    };
+    const themeToggle = document.querySelector("[data-theme-toggle]");
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    const updateThemeColor = () => {
+        if (themeColor) themeColor.content = root.dataset.theme === "dark" ? "#0c111d" : "#f5f7fb";
+    };
+    let updateThemeControls = updateThemeColor;
+
+    themeToggle?.addEventListener("click", () => {
+        const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+        root.dataset.theme = nextTheme;
+        if (!safeStorage.set(THEME_KEY, nextTheme) || safeStorage.get(THEME_KEY) !== nextTheme) {
+            showStorageNotice();
+        }
+        updateThemeControls();
+    });
+
     const fetchJson = async (url) => {
         const response = await fetch(url, {
             credentials: "omit",
@@ -166,14 +190,6 @@
             }).format(date);
         }
     });
-    const storageNotice = document.querySelector("[data-storage-notice]");
-    const showStorageNotice = () => {
-        if (!storageNotice) return;
-        storageNotice.hidden = false;
-        window.setTimeout(() => {
-            storageNotice.hidden = true;
-        }, 6000);
-    };
     const languageNotice = document.querySelector("[data-translation-notice]");
     if (languageNotice) languageNotice.hidden = activeLanguage === languageConfig.default;
     const languagePicker = document.querySelector("[data-language-picker]");
@@ -217,26 +233,17 @@
         apply: applyTranslations,
     });
 
-    const themeToggle = document.querySelector("[data-theme-toggle]");
-    const themeColor = document.querySelector('meta[name="theme-color"]');
-
-    const updateThemeControls = () => {
+    updateThemeControls = () => {
         const isDark = root.dataset.theme === "dark";
         if (themeToggle) {
             themeToggle.setAttribute("aria-label", isDark
                 ? t("theme.enable_light", {}, "Hellmodus aktivieren")
                 : t("theme.enable_dark", {}, "Dunkelmodus aktivieren"));
         }
-        if (themeColor) themeColor.content = isDark ? "#0c111d" : "#f5f7fb";
+        updateThemeColor();
     };
 
     updateThemeControls();
-    themeToggle?.addEventListener("click", () => {
-        const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-        root.dataset.theme = nextTheme;
-        if (!safeStorage.set(THEME_KEY, nextTheme)) showStorageNotice();
-        updateThemeControls();
-    });
 
     const disclaimerDialog = document.querySelector("[data-disclaimer-dialog]");
     const disclaimerForm = document.querySelector("[data-disclaimer-form]");
