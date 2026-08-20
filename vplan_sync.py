@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 from dotenv import load_dotenv
@@ -28,19 +29,115 @@ DEFAULT_BOARD_URL = (
 )
 VPLAN_ASSIGNMENT_RE = re.compile(r"\bvar\s+vplanTage\s*=\s*", re.MULTILINE)
 STAND_RE = re.compile(r'\bvar\s+datum_stand\s*=\s*"([^"\r\n]*)"\s*;')
+TEACHER_TOKEN_PATTERN = r"[A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]{1,15}"
 TEACHER_CODE_RE = re.compile(
-    r"\bLiGyDe\.[\wÄÖÜäöüß-]+(?:\s*,\s*LiGyDe\.[\wÄÖÜäöüß-]+)*",
+    r"\bLiGyDe\.[^\s,;.<>()]+(?:\s*,\s*LiGyDe\.[^\s,;.<>()]+)*",
     re.IGNORECASE,
 )
+EXPLICIT_TEACHER_CAPTURE_RE = re.compile(
+    rf"\bLiGyDe\.({TEACHER_TOKEN_PATTERN})\b", re.IGNORECASE
+)
+TASKS_FROM_TEACHER_RE = re.compile(
+    rf"(\bAufgaben\s+von\s+)(?!Lehrkraft\b)({TEACHER_TOKEN_PATTERN})\b"
+)
+TEACHER_PAIR_BEFORE_ROOM_RE = re.compile(
+    r"\b([A-ZÄÖÜ][a-zäöüß]{2})\s+(?:und|&|/)\s+"
+    r"([A-ZÄÖÜ][a-zäöüß]{2})(?=\s+in\s+(?:[A-ZÄÖÜ]\d{2,4}|TH\d+|Aula)\b)"
+)
+COURSE_CODE_RE = re.compile(r"^(?:0?[5-9]|1[0-2])[A-Za-z0-9ÄÖÜäöüß_.-]{1,62}$")
+TEACHER_CODE_VALUE_RE = re.compile(rf"^{TEACHER_TOKEN_PATTERN}$")
+MULTIPLE_TEACHERS_RE = re.compile(
+    r"\bLehrkraft(?:\s*(?:,|und|&|/)\s*Lehrkraft)+\b"
+)
+LEARNING_STATE_KEY = "vplan_learning"
+LEARNING_TIMEZONE = ZoneInfo("Europe/Berlin")
 
 
 class VPlanSyncError(RuntimeError):
     """Raised when a downloaded plan cannot safely replace the local copy."""
 
 
-def redact_teacher_codes(value: Any) -> str:
-    """Remove one or more teacher identifiers from text shown to visitors."""
-    return TEACHER_CODE_RE.sub("Lehrkraft", str(value or ""))
+def _normalized_teacher_codes(values: Any) -> tuple[str, ...]:
+    if isinstance(values, str):
+        values = values.split(",")
+    if not isinstance(values, (list, tuple, set, frozenset)):
+        return ()
+    codes = {
+        str(value).strip()
+        for value in values
+        if TEACHER_CODE_VALUE_RE.fullmatch(str(value).strip())
+    }
+    return tuple(sorted(codes, key=str.casefold))[:256]
+
+
+def discover_teacher_codes(value: Any) -> set[str]:
+    """Learn teacher codes only from strongly identifying source contexts."""
+    if isinstance(value, str):
+        discovered = {
+            match.group(1) for match in EXPLICIT_TEACHER_CAPTURE_RE.finditer(value)
+        }
+        discovered.update(match.group(2) for match in TASKS_FROM_TEACHER_RE.finditer(value))
+        for match in TEACHER_PAIR_BEFORE_ROOM_RE.finditer(value):
+            discovered.update(match.groups())
+        return discovered
+    if isinstance(value, list):
+        return set().union(*(discover_teacher_codes(item) for item in value)) if value else set()
+    if isinstance(value, dict):
+        return set().union(*(discover_teacher_codes(item) for item in value.values())) if value else set()
+    return set()
+
+
+def redact_teacher_codes(value: Any, known_teacher_codes: Any = ()) -> str:
+    """Replace explicit and contextual teacher identifiers with a neutral label."""
+    redacted = TEACHER_CODE_RE.sub("Lehrkraft", str(value or ""))
+    redacted = TASKS_FROM_TEACHER_RE.sub(r"\1Lehrkraft", redacted)
+    known_codes = _normalized_teacher_codes(known_teacher_codes)
+    if known_codes:
+        standalone_codes = re.compile(
+            rf"(?<![\w.])(?:{'|'.join(re.escape(code) for code in known_codes)})(?![\w-])",
+            re.IGNORECASE,
+        )
+        redacted = standalone_codes.sub("Lehrkraft", redacted)
+    return MULTIPLE_TEACHERS_RE.sub("Lehrkräfte", redacted)
+
+
+def redact_teacher_data(value: Any, known_teacher_codes: Any = ()) -> Any:
+    """Recursively redact teacher identifiers before plan data is persisted."""
+    if isinstance(value, str):
+        return redact_teacher_codes(value, known_teacher_codes)
+    if isinstance(value, list):
+        return [redact_teacher_data(item, known_teacher_codes) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: redact_teacher_data(item, known_teacher_codes)
+            for key, item in value.items()
+        }
+    return value
+
+
+def discover_course_codes(plan: dict[str, Any]) -> set[str]:
+    """Collect usable class/course identifiers observed in a parsed plan."""
+    discovered: set[str] = set()
+    for day in plan.get("tage", []):
+        if not isinstance(day, dict):
+            continue
+        for entry in day.get("EINTRAEGE_KLASSEN", []):
+            if not isinstance(entry, dict):
+                continue
+            code = str(entry.get("KLASSE", "")).strip()
+            if COURSE_CODE_RE.fullmatch(code):
+                discovered.add(code)
+    return discovered
+
+
+def school_year_for_timestamp(now_epoch: float | None = None) -> str:
+    """Return the August-to-July school year used to scope learned values."""
+    current = datetime.fromtimestamp(
+        time.time() if now_epoch is None else now_epoch,
+        tz=LEARNING_TIMEZONE,
+    )
+    first_year = current.year if current.month >= 8 else current.year - 1
+    return f"{first_year}-{first_year + 1}"
 
 
 def _utc_now() -> str:
@@ -87,6 +184,7 @@ class VPlanSyncConfig:
     state_path: Path
     lock_path: Path
     board_url: str
+    teacher_code_seeds: tuple[str, ...]
     check_interval_seconds: int
     request_timeout_seconds: int
     max_response_bytes: int
@@ -112,6 +210,9 @@ class VPlanSyncConfig:
             board_url=os.environ.get(
                 "VPLAN_SOURCE_URL", DEFAULT_BOARD_URL.format(school_id=school_id)
             ),
+            teacher_code_seeds=_normalized_teacher_codes(
+                os.environ.get("VPLAN_TEACHER_CODE_SEEDS", "")
+            ),
             check_interval_seconds=check_interval,
             request_timeout_seconds=_env_int("VPLAN_REQUEST_TIMEOUT_SECONDS", 20, 5, 120),
             max_response_bytes=_env_int(
@@ -135,7 +236,13 @@ def plan_content_hash(plan: dict[str, Any]) -> str:
     return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
 
 
-def parse_vplan_html(html_text: str, school_id: int) -> dict[str, Any]:
+def parse_vplan_html(
+    html_text: str,
+    school_id: int,
+    *,
+    known_teacher_codes: Any = (),
+    discovered_teacher_codes: set[str] | None = None,
+) -> dict[str, Any]:
     """Extract and validate the embedded JSON without trying to parse JavaScript."""
     assignment = VPLAN_ASSIGNMENT_RE.search(html_text)
     if assignment is None:
@@ -157,6 +264,16 @@ def parse_vplan_html(html_text: str, school_id: int) -> dict[str, Any]:
         entries = day.get("EINTRAEGE_KLASSEN", [])
         if not isinstance(entries, list):
             raise VPlanSyncError(f"Entries for plan day {index} are not a JSON list")
+
+    newly_discovered = discover_teacher_codes(days)
+    if discovered_teacher_codes is not None:
+        discovered_teacher_codes.update(newly_discovered)
+    redaction_codes = _normalized_teacher_codes(
+        [*_normalized_teacher_codes(known_teacher_codes), *newly_discovered]
+    )
+
+    # Redact before hashing or writing so teacher identifiers never enter the local cache.
+    days = redact_teacher_data(days, redaction_codes)
 
     stand_match = STAND_RE.search(html_text)
     if stand_match is None or not stand_match.group(1).strip():
@@ -181,6 +298,54 @@ def _read_json_object(path: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def _learning_for_state(
+    state: dict[str, Any],
+    now_epoch: float,
+    teacher_code_seeds: Any = (),
+) -> dict[str, Any]:
+    school_year = school_year_for_timestamp(now_epoch)
+    stored = state.get(LEARNING_STATE_KEY, {})
+    if not isinstance(stored, dict) or stored.get("school_year") != school_year:
+        stored = {}
+
+    teacher_codes = _normalized_teacher_codes(
+        [
+            *_normalized_teacher_codes(teacher_code_seeds),
+            *_normalized_teacher_codes(stored.get("teacher_codes", [])),
+        ]
+    )
+    stored_course_codes = stored.get("course_codes", [])
+    if not isinstance(stored_course_codes, (list, tuple, set, frozenset)):
+        stored_course_codes = []
+    course_codes = sorted(
+        {
+            str(code).strip()
+            for code in stored_course_codes
+            if COURSE_CODE_RE.fullmatch(str(code).strip())
+        },
+        key=lambda code: (code.casefold(), code),
+    )[:1000]
+    return {
+        "school_year": school_year,
+        "teacher_codes": list(teacher_codes),
+        "course_codes": course_codes,
+    }
+
+
+def load_vplan_learning(
+    state_path: Path,
+    teacher_code_seeds: Any = (),
+    *,
+    now_epoch: float | None = None,
+) -> dict[str, Any]:
+    """Read only the current school year's validated private learning state."""
+    return _learning_for_state(
+        _read_json_object(state_path),
+        time.time() if now_epoch is None else now_epoch,
+        teacher_code_seeds,
+    )
 
 
 def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -279,15 +444,37 @@ class VPlanSynchronizer:
 
     def _sync_locked(self, state: dict[str, Any], now_epoch: float) -> dict[str, Any]:
         current_plan = _read_json_object(self.config.plan_path)
+        learning = _learning_for_state(
+            state,
+            now_epoch,
+            self.config.teacher_code_seeds,
+        )
+        state[LEARNING_STATE_KEY] = learning
 
         try:
-            downloaded_plan = self._download_plan()
+            downloaded_plan, discovered_teachers = self._download_plan(
+                learning["teacher_codes"]
+            )
         except (httpx.HTTPError, ValueError, VPlanSyncError, OSError) as exc:
             LOGGER.warning("Could not refresh substitution plan: %s", exc)
             return {
                 "status": "error",
                 "error": str(exc),
             }
+
+        learning["teacher_codes"] = list(
+            _normalized_teacher_codes(
+                [*learning["teacher_codes"], *discovered_teachers]
+            )
+        )
+        learning["course_codes"] = sorted(
+            {
+                *learning["course_codes"],
+                *discover_course_codes(downloaded_plan),
+            },
+            key=lambda code: (code.casefold(), code),
+        )[:1000]
+        state[LEARNING_STATE_KEY] = learning
 
         downloaded_hash = plan_content_hash(downloaded_plan)
         downloaded_plan.setdefault("meta", {})["content_sha256"] = downloaded_hash
@@ -329,7 +516,9 @@ class VPlanSynchronizer:
             raise VPlanSyncError("Remote response exceeded the configured size limit")
         return response
 
-    def _download_plan(self) -> dict[str, Any]:
+    def _download_plan(
+        self, known_teacher_codes: Any
+    ) -> tuple[dict[str, Any], set[str]]:
         with httpx.Client(
             timeout=self.config.request_timeout_seconds,
             follow_redirects=True,
@@ -339,4 +528,11 @@ class VPlanSynchronizer:
             },
         ) as client:
             response = self._request(client, self.config.board_url)
-        return parse_vplan_html(response.text, self.config.school_id)
+        discovered_teacher_codes: set[str] = set()
+        plan = parse_vplan_html(
+            response.text,
+            self.config.school_id,
+            known_teacher_codes=known_teacher_codes,
+            discovered_teacher_codes=discovered_teacher_codes,
+        )
+        return plan, discovered_teacher_codes

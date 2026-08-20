@@ -1,6 +1,6 @@
 # Vertretungsplan – Kontext für zukünftige AI-Modelle
 
-> Stand: 19. August 2026. Dieses Dokument beschreibt ausschließlich den Vertretungsplan.
+> Stand: 20. August 2026. Dieses Dokument beschreibt ausschließlich den Vertretungsplan.
 > Der restliche Inhalt dieses Repositories ist für VPlan-Aufgaben grundsätzlich außerhalb
 > des Scopes. Vor Änderungen trotzdem immer den aktuellen Code und `git status` prüfen.
 
@@ -25,7 +25,7 @@ Wichtige Produktprinzipien:
 | Datei | Aufgabe |
 | --- | --- |
 | `main.py` | Flask-Routen, Host-Isolation, PWA-Auslieferung, Feedback-Validierung und Datenbankmodell |
-| `vplan_sync.py` | Abruf, Validierung und atomare Aktualisierung des lokalen Plans |
+| `vplan_sync.py` | Abruf, Validierung, Lehrerredaktion, schuljahresweises Lernen und atomare Planaktualisierung |
 | `templates/vplan.html` | Gesamte Jinja-/HTML-Oberfläche einschließlich Dialogen und Credits |
 | `static/vplan.css` | Ausschließliches Styling der VPlan-Oberfläche |
 | `static/vplan.js` | Tabs, Filter, Personalisierung, Fachnamen, Dialoge, Feedback und PWA-Installation |
@@ -35,6 +35,7 @@ Wichtige Produktprinzipien:
 | `tests/test_vplan_app.py` | Flask-, UI-Vertrags-, Datenschutz- und PWA-Tests |
 | `tests/test_vplan_sync.py` | Parser-, Redaktions- und Synchronisationstests |
 | `README.md` | Kurze Betriebs- und Proxy-Dokumentation |
+| `vplan.json.sync-state.json` | Private Laufzeitdatei mit Sync-Metadaten sowie gelernten Lehrer- und Kurskennungen; niemals committen |
 
 `main.py` enthält viele andere Anwendungen. Bei einer VPlan-Aufgabe nur die ausdrücklich
 zugehörigen Konstanten, Modelle, Hooks und Routen verändern. Keine anderen Endpunkte im Zuge
@@ -46,22 +47,61 @@ einer VPlan-Änderung „aufräumen“.
 Offizielle HTML-Seite
         │
         ▼
-vplan_sync.py: herunterladen → eingebettetes JSON prüfen → Lehrerkennungen später redigieren
+vplan_sync.py: herunterladen → eingebettetes JSON prüfen → sichere Lehrerkontexte erkennen
+        │                                      │
+        │                                      └── Lehrer- und Kurskennungen lernen
+        │                                                   │
+        ▼                                                   ▼
+Lehrerkennungen redigieren → Hash bilden        private Sync-Statusdatei
         │
         ▼
-lokale vplan.json (atomar ersetzt, nur bei geänderten Inhalten)
+lokale vplan.json (bereinigt und atomar ersetzt, nur bei geänderten Inhalten)
         │
         ▼
-main.py: /vplan → templates/vplan.html → static/vplan.js + static/vplan.css
+main.py: erneut defensiv redigieren → /vplan → Template, JavaScript und CSS
         │
         ├── persönliche Einstellungen → ausschließlich localStorage
         └── freiwillige Fehlermeldung → POST /vplan/feedback → SQLite
 ```
 
 Die Synchronisation prüft standardmäßig alle 120 Sekunden die vollständige Quellseite. Ein
-kanonischer SHA-256-Hash aus Quellenzeitpunkt und Tagen verhindert unnötige Neuschreibungen.
-Fehlerhafte oder unvollständige Downloads dürfen den letzten gültigen Plan nie überschreiben.
-Dateiänderungen erfolgen atomar; Thread- und Dateisperren verhindern konkurrierende Updates.
+kanonischer SHA-256-Hash aus Quellenzeitpunkt und bereits bereinigten Tagen verhindert unnötige
+Neuschreibungen. Fehlerhafte oder unvollständige Downloads dürfen den letzten gültigen Plan nie
+überschreiben. Eine noch nicht vorhandene Plan- oder Statusdatei ist ein unterstützter
+Erststartfall. Dateiänderungen erfolgen atomar; Thread- und Dateisperren verhindern
+konkurrierende Updates.
+
+### Serverseitiges Lernen und Lehrerredaktion
+
+Der private Sync-Status enthält unter `vplan_learning`:
+
+- `school_year`, zum Beispiel `2026-2027`;
+- `teacher_codes`, ausschließlich serverseitig verwendete bekannte Lehrerkennungen;
+- `course_codes`, alle im laufenden Schuljahr beobachteten Klassen-/Kurskennungen.
+
+Das Schuljahr läuft für diese Funktion vom 1. August bis 31. Juli. Beim ersten Lauf in einem
+neuen Schuljahr werden die erlernten Werte automatisch verworfen. Manuelle Lehrer-Startwerte
+aus `VPLAN_TEACHER_CODE_SEEDS` werden danach wieder ergänzt. Startwerte gehören nur in die
+lokale `.env`; echte Kürzel niemals als Konstanten, Tests oder Dokumentationsbeispiele in Git
+ablegen.
+
+Lehrerkennungen werden nur aus stark strukturierten Kontexten gelernt, derzeit insbesondere:
+
+- explizite Quellkennungen wie `LiGyDe.<Kürzel>`;
+- die standardisierte Formulierung `Aufgaben von <Kürzel>`;
+- Paare nach dem Muster `<Kürzel> und <Kürzel> in <Raum>`.
+
+Die zuletzt genannte Heuristik ist bewusst eng: Sie verlangt zwei dreibuchstabige,
+namensähnliche Tokens und danach einen plausiblen Raum. Nicht beliebige großgeschriebene Wörter
+als Lehrerkürzel lernen, da ein Fehlfund anschließend legitimen Hinweistext verfälschen würde.
+Bekannte Kennungen werden rekursiv in allen Quellstrings ersetzt; mehrere Lehrkräfte werden als
+`Lehrkräfte` dargestellt. Neu gefundene Kennungen werden vor Hashbildung und Speicherung aus
+dem Plan entfernt.
+
+Kurskennungen werden aus `KLASSE` gültiger Planeinträge gesammelt. Sie bleiben bis zum
+Schuljahreswechsel verfügbar, selbst wenn sie im aktuellen Plan nicht vorkommen. Das Frontend
+erhält nur diese Kurskennungen für die Auswahl, niemals die serverseitige Lehrerliste. Das Lernen
+kennt keine individuellen Kurswahlen und speichert keine Zuordnung zwischen Schülern und Kursen.
 
 ## 4. Planformat
 
@@ -94,9 +134,12 @@ Der lokale Plan ist ein JSON-Objekt mit mindestens einer Liste `tage`:
 ```
 
 Das Template behandelt einen Eintrag als Ausfall, wenn `NEU` das Wort `ausfall` enthält.
-Alle von der Quelle kommenden sichtbaren Werte werden mit Jinja `striptags` behandelt.
-Zusätzlich entfernt der Filter `redact_teacher_codes` Kennungen wie `LiGyDe.Name` und ersetzt
-sie durch `Lehrkraft`.
+Alle von der Quelle kommenden sichtbaren Werte werden mit Jinja `striptags` behandelt. Die
+primäre Lehrerredaktion erfolgt bereits beim Parsen vor Hash und lokaler Speicherung. `main.py`
+wendet vor jedem Rendern zusätzlich die aktuelle Lernliste und neu im vorhandenen Cache
+erkennbare Kontexte rekursiv an. Dadurch werden auch ältere, noch unbereinigte lokale
+Plandateien defensiv geschützt. Der Jinja-Filter `redact_teacher_codes` bleibt eine weitere
+Ausgabesicherung für explizite `LiGyDe.*`-Kennungen.
 
 ## 5. HTTP-Routen und Host-Isolation
 
@@ -124,7 +167,8 @@ Die Seite besitzt aktuell:
   2. „App installieren“,
   3. „Fehler melden“;
 - Hinweise, Suche und Filter „Alle“/„Nur Ausfälle“;
-- persönliche Filter nach Jahrgang, Klasse und Kursen;
+- optionale persönliche Filter nach Jahrgang, Klasse und Kursen;
+- eine Kursauswahl aus aktuellem Plan plus der im laufenden Schuljahr erlernten Historie;
 - Bearbeitung jedes Eintrags über „Neuer Name“ und „Lehrer (optional)“;
 - Informationsdialoge, Installationshilfe, Feedbackdialog und einmaligen Nutzungshinweis;
 - Credits mit Stack und bisherigen Danksagungen.
@@ -149,6 +193,10 @@ jeweiligen Origins:
 Alle Zugriffe laufen, abgesehen vom frühen Theme-Lesen im Template, über `safeStorage`, damit
 die Seite auch bei gesperrtem oder vollem Browser-Speicher weiter bedienbar bleibt. Daten auf
 `localhost` und auf der öffentlichen Domain sind wegen der Origin-Trennung nicht identisch.
+
+Die serverseitig erlernte Liste verfügbarer Kurskennungen ist davon getrennt: Sie enthält nur
+das Kursangebot aus den Quelldaten. Die konkrete Auswahl eines Kindes bleibt ausschließlich im
+jeweiligen Browser in `vplan-preferences`.
 
 ### Fach- und Lehrernamen
 
@@ -268,6 +316,8 @@ Relevante Umgebungsvariablen:
 - `VPLAN_SYNC_STATE_PATH` – optionaler Statuspfad;
 - `VPLAN_SYNC_LOCK_PATH` – optionaler Lock-Pfad;
 - `VPLAN_SOURCE_URL` – optionale alternative Quelle;
+- `VPLAN_TEACHER_CODE_SEEDS` – optionale, kommaseparierte Lehrer-Startwerte aus der lokalen
+  `.env`; niemals in Git übernehmen;
 - `VPLAN_CHECK_INTERVAL_SECONDS` – Standard 120, Minimum 60;
 - `VPLAN_REQUEST_TIMEOUT_SECONDS` – Standard 20;
 - `VPLAN_MAX_RESPONSE_BYTES` – Größenlimit der Quelle;
@@ -275,7 +325,10 @@ Relevante Umgebungsvariablen:
 - `PF_SERVER_DB` – Pfad zur SQLite-Datenbank einschließlich Feedbacktabelle.
 
 Die Plandatei, Sync-Statusdatei, Sperrdatei und SQLite-Datenbank sind Laufzeitdaten und gehören
-nicht in Git.
+nicht in Git. Die Sync-Statusdatei ist nicht nur ein Zeitstempel-Cache: Das Löschen setzt auch
+die automatisch gelernten Lehrer- und Kurskennungen zurück. Bei einem Umzug oder Deployment die
+lokale `.env` bewusst übernehmen, da die darin gesetzten Startwerte nicht aus dem Repository
+kommen.
 
 ## 14. Entwicklung und Prüfungen
 
@@ -301,7 +354,11 @@ Wichtige Testverträge:
 
 - Subdomain-Root rendert nur den VPlan und gibt fachfremde Routen nicht frei.
 - Fehlende oder ungültige Plandatei liefert 503, ohne einen gültigen Cache zu zerstören.
-- Lehrerkennungen werden redigiert.
+- Lehrerkennungen werden in expliziten, standardisierten und eng strukturierten Kontexten
+  gelernt und vor Speicherung sowie erneut vor Ausgabe redigiert.
+- Lernwerte sammeln sich innerhalb eines Schuljahres an und werden zum 1. August zurückgesetzt.
+- Früher beobachtete Kurse bleiben in der persönlichen Auswahl, auch wenn sie im aktuellen Plan
+  fehlen; Lehrerkennungen gelangen dabei nicht ins HTML.
 - Fachschlüssel unterscheiden bei Basisklassen zwischen einzelnen Fächern.
 - Nutzungshinweis wird lokal gemerkt.
 - PWA funktioniert auf öffentlichem Host und lokalen Loopback-Hosts.
@@ -313,12 +370,14 @@ Wichtige Testverträge:
 2. Bestehende Nutzeränderungen im Worktree erhalten; keine fachfremden Dateien zurücksetzen.
 3. Daten der Quelle als nicht vertrauenswürdig behandeln: serverseitig bereinigen und im DOM nie
    unsicher als HTML einsetzen.
-4. Keine neue Server-Speicherung einführen, ohne Datenmodell, Datenschutzhinweis, Löschlogik und
+4. Lehrerkennungen vor Hashbildung und Speicherung entfernen. Neue Erkennungsheuristiken nur mit
+   eindeutigem Kontext und Tests ergänzen; keine pauschale Dreizeichen-Ersetzung einführen.
+5. Keine neue Server-Speicherung einführen, ohne Datenmodell, Datenschutzhinweis, Löschlogik und
    Tests gemeinsam zu aktualisieren.
-5. Personalisierung standardmäßig lokal halten und stabile, fachgenaue Schlüssel verwenden.
-6. Plan-Navigationen nicht offline cachen; Aktualität ist wichtiger als ein veralteter Offlineplan.
-7. Mobile Breiten, Tastaturbedienung, Dark Mode, Dialog-Fokus und leere/fehlerhafte Pläne prüfen.
-8. Neue sichtbare UI-Texte so strukturieren, dass eine spätere i18n-Umstellung möglich bleibt.
-9. Die Tests proportional zur Änderung ergänzen und die vollständige Suite ausführen.
-10. Diese Datei aktualisieren, wenn sich Architektur, Speicherung, Routen oder zentrale
+6. Personalisierung standardmäßig lokal halten und stabile, fachgenaue Schlüssel verwenden.
+7. Plan-Navigationen nicht offline cachen; Aktualität ist wichtiger als ein veralteter Offlineplan.
+8. Mobile Breiten, Tastaturbedienung, Dark Mode, Dialog-Fokus und leere/fehlerhafte Pläne prüfen.
+9. Neue sichtbare UI-Texte so strukturieren, dass eine spätere i18n-Umstellung möglich bleibt.
+10. Die Tests proportional zur Änderung ergänzen und die vollständige Suite ausführen.
+11. Diese Datei aktualisieren, wenn sich Architektur, Speicherung, Routen oder zentrale
     Produktentscheidungen des Vertretungsplans ändern.

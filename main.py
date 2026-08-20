@@ -26,7 +26,14 @@ from flask import Flask, request, jsonify, make_response, send_file, send_from_d
 from fpdf import FPDF
 from werkzeug.serving import WSGIRequestHandler
 from werkzeug.security import generate_password_hash, check_password_hash
-from vplan_sync import VPlanSyncConfig, VPlanSynchronizer, redact_teacher_codes
+from vplan_sync import (
+    VPlanSyncConfig,
+    VPlanSynchronizer,
+    discover_teacher_codes,
+    load_vplan_learning,
+    redact_teacher_codes,
+    redact_teacher_data,
+)
 
 
 # Configuration
@@ -617,6 +624,15 @@ def vplan():
 
         if not isinstance(plan, dict) or not isinstance(plan.get("tage"), list):
             raise ValueError("Expected a JSON object containing a 'tage' list.")
+
+        learning = load_vplan_learning(
+            VPLAN_SYNC_CONFIG.state_path,
+            VPLAN_SYNC_CONFIG.teacher_code_seeds,
+        )
+        plan = redact_teacher_data(
+            plan,
+            [*learning["teacher_codes"], *discover_teacher_codes(plan)],
+        )
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         app.logger.error("Could not load substitution plan from %s: %s", VPLAN_JSON_PATH, exc)
         response = make_response(
@@ -624,6 +640,7 @@ def vplan():
                 "vplan.html",
                 plan=None,
                 error=True,
+                learned_course_codes=[],
                 pwa_enabled=_vplan_pwa_enabled(),
             ),
             503,
@@ -644,6 +661,7 @@ def vplan():
             plan=plan,
             error=False,
             updated_at=updated_at,
+            learned_course_codes=learning["course_codes"],
             pwa_enabled=_vplan_pwa_enabled(),
         )
     )

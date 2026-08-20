@@ -64,6 +64,51 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertLess(html.index("Mein Plan"), html.index("App installieren"))
         self.assertLess(html.index("App installieren"), html.index("Fehler melden"))
         self.assertIn('class="utility-header"', html)
+
+    def test_learned_courses_are_available_even_when_not_in_current_plan(self):
+        with patch.object(
+            main,
+            "load_vplan_learning",
+            return_value={
+                "school_year": "2026-2027",
+                "teacher_codes": [],
+                "course_codes": ["12_che1"],
+            },
+        ):
+            response = self.client.get(
+                "/", headers={"Host": "vplan.echteralsfake.me"}
+            )
+
+        html = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('data-learned-plan-code="12_che1"', html)
+
+    def test_cached_notice_teacher_codes_are_redacted_before_rendering(self):
+        plan = {
+            "meta": {"stand": "2026-08-20 06:00:00"},
+            "tage": [
+                {
+                    "DATUM": "Donnerstag, 20. August 2026",
+                    "WICHTIGE_HINWEISE": [
+                        ["Klassentag 5b", "Abc und Def in B204"]
+                    ],
+                    "WEITERE_HINWEISE": [],
+                    "EINTRAEGE_KLASSEN": [],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            plan_path = Path(temporary_directory) / "vplan.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            with patch.object(main, "VPLAN_JSON_PATH", plan_path):
+                response = self.client.get(
+                    "/", headers={"Host": "vplan.echteralsfake.me"}
+                )
+
+        html = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Lehrkräfte in B204", html)
+        self.assertNotIn("Abc und Def", html)
         self.assertIn('data-info-open="controller-dialog"', html)
         self.assertIn('data-info-open="privacy-dialog"', html)
         self.assertIn('data-info-open="credits-dialog"', html)
@@ -238,7 +283,15 @@ class VPlanSubdomainTests(unittest.TestCase):
 
             with (
                 patch.object(main, "VPLAN_JSON_PATH", plan_path),
-                patch.object(main, "VPLAN_SYNC_CONFIG", SimpleNamespace(enabled=True)),
+                patch.object(
+                    main,
+                    "VPLAN_SYNC_CONFIG",
+                    SimpleNamespace(
+                        enabled=True,
+                        state_path=Path(temporary_directory) / "state.json",
+                        teacher_code_seeds=(),
+                    ),
+                ),
                 patch.object(
                     main.vplan_synchronizer,
                     "sync_if_due",
@@ -258,7 +311,15 @@ class VPlanSubdomainTests(unittest.TestCase):
             plan_path = Path(temporary_directory) / "vplan.json"
             with (
                 patch.object(main, "VPLAN_JSON_PATH", plan_path),
-                patch.object(main, "VPLAN_SYNC_CONFIG", SimpleNamespace(enabled=True)),
+                patch.object(
+                    main,
+                    "VPLAN_SYNC_CONFIG",
+                    SimpleNamespace(
+                        enabled=True,
+                        state_path=Path(temporary_directory) / "state.json",
+                        teacher_code_seeds=(),
+                    ),
+                ),
                 patch.object(
                     main.vplan_synchronizer,
                     "sync_if_due",

@@ -69,12 +69,19 @@ The defaults can be changed through environment variables:
 
 - `VPLAN_SYNC_ENABLED`: set to `false` to disable automatic updates
 - `VPLAN_SCHOOL_ID`: required school identifier, loaded from the local `.env` file
+- `VPLAN_TEACHER_CODE_SEEDS`: optional comma-separated teacher-code seeds kept in `.env`
 - `VPLAN_JSON_PATH`: local output path for the extracted JSON
 - `VPLAN_CHECK_INTERVAL_SECONDS`: complete HTML checks, defaults to `120` (minimum `60`)
 - `VPLAN_REQUEST_TIMEOUT_SECONDS`: upstream request timeout, defaults to `20`
 
 The JSON file, synchronization state, lock file, and SQLite database are local runtime
 files and are excluded from Git.
+
+The private synchronization state learns teacher codes from explicit `LiGyDe.*` values,
+standard task remarks, and strongly structured notice contexts. It also accumulates every
+observed course identifier for the personal-plan picker. Learned values are scoped to an
+August-to-July school year and reset automatically on August 1. Teacher codes remain
+server-side; only learned course identifiers are rendered as picker options.
 
 ## VPlan subdomain and proxy privacy
 

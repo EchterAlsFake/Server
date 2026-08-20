@@ -79,6 +79,11 @@
     </header>
 
     <main id="plan-content" class="page-shell" tabindex="-1">
+        <div hidden aria-hidden="true" data-learned-courses>
+            {% for code in learned_course_codes|default([], true) %}
+                <span data-learned-plan-code="{{ code }}"></span>
+            {% endfor %}
+        </div>
         {% if not error and plan.tage %}
             <nav class="day-tabs" role="tablist" aria-label="Tag auswählen">
                 {% for day in plan.tage %}
@@ -460,7 +465,8 @@
 
             <div class="beta-notice" role="note" aria-label="Hinweis zur Testphase">
                 <span aria-hidden="true">!</span>
-                <p><strong>Noch in der Testphase:</strong> Diese Funktion ist noch nicht vollständig entwickelt. Einträge können falsch oder unvollständig gefiltert werden. Prüfe deshalb immer auch den vollständigen und den offiziellen Vertretungsplan.</p>
+                <p><strong>Noch in der Testphase:</strong> Diese Funktion ist noch nicht vollständig entwickelt. Einträge können falsch oder unvollständig gefiltert werden. Prüfe deshalb immer auch den vollständigen und den offiziellen Vertretungsplan.
+                Das Programm lernt automatisch im Hintergrund die neuen Kurse, bitte warte ein paar Wochen bis alle Kurse vollständig angezeigt werden.</p>
             </div>
 
             <label class="switch-row">
@@ -500,12 +506,12 @@
                     <p data-course-help>Wähle nur die Kurse, die du besuchst.</p>
                 </div>
                 <div class="course-options" data-course-options></div>
-                <p class="course-empty" data-course-empty hidden>Im aktuellen Plan wurden für diesen Jahrgang noch keine Kurskennungen gefunden.</p>
+                <p class="course-empty" data-course-empty hidden>In diesem Schuljahr wurden für diesen Jahrgang noch keine Kurskennungen gefunden.</p>
 
                 <label class="field-label custom-courses">
                     <span>Weitere Kurskennungen <small>(optional)</small></span>
                     <input type="text" data-custom-courses autocomplete="off" placeholder="z. B. 11_phy2, 11_eng1">
-                    <small>Mehrere Kennungen mit Komma trennen. Hilfreich für Kurse, die heute nicht im Plan vorkommen.</small>
+                    <small>Mehrere Kennungen mit Komma trennen. Neu erkannte Kurse werden künftig automatisch ergänzt.</small>
                 </label>
             </section>
 

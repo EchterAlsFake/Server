@@ -176,8 +176,8 @@
 
     let subjectOverrides = loadSubjectOverrides();
     const allPlanCodes = [...new Set(
-        Array.from(document.querySelectorAll("[data-plan-code]"))
-            .map((entry) => entry.dataset.planCode?.trim())
+        Array.from(document.querySelectorAll("[data-plan-code], [data-learned-plan-code]"))
+            .map((entry) => (entry.dataset.planCode || entry.dataset.learnedPlanCode)?.trim())
             .filter(Boolean),
     )].sort((first, second) => first.localeCompare(second, "de", { numeric: true }));
 
