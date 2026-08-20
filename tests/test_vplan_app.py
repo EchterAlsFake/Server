@@ -58,6 +58,8 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn("data-subject-edit", html)
         self.assertIn("Neuer Name", html)
         self.assertIn("Lehrer <small>(optional)</small>", html)
+        self.assertIn("Akzentfarbe <small>(optional)</small>", html)
+        self.assertEqual(html.count("data-subject-color-choice"), 9)
         self.assertIn('rel="manifest"', html)
         self.assertIn("data-install-app", html)
         self.assertEqual(html.count('class="quick-action"'), 3)
@@ -115,7 +117,7 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn('data-info-open="changelog-dialog"', html)
         self.assertIn('id="changelog-dialog"', html)
         self.assertIn("Änderungsprotokoll", html)
-        for commit in ("b8b865f", "6f60944", "c6dc4bd", "276b94a", "d2b2cc4"):
+        for commit in ("791ce5a", "b8b865f", "6f60944", "c6dc4bd", "276b94a", "d2b2cc4"):
             self.assertIn(commit, html)
         self.assertIn("Codex 5.6 SOL", html)
         self.assertIn("Anonym", html)
@@ -221,6 +223,9 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn('id: "eng", name: "Englisch"', javascript)
         self.assertIn('id: "ges", name: "Geschichte"', javascript)
         self.assertIn('key: `${normalize(code)}::${subjectId}`', javascript)
+        self.assertIn('violet: "#b388ff"', javascript)
+        self.assertIn("color: validSubjectColor(value.color)", javascript)
+        self.assertIn('element.style.setProperty("--subject-color", resolvedColor)', javascript)
         response.close()
 
     def test_disclaimer_confirmation_is_remembered_locally(self):

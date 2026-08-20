@@ -148,6 +148,21 @@
 
     let preferences = loadPreferences();
     const normalize = (value) => String(value || "").toLocaleLowerCase("de-DE").trim();
+    const SUBJECT_COLORS = Object.freeze({
+        violet: "#b388ff",
+        blue: "#40a9ff",
+        cyan: "#00e5ff",
+        green: "#39e58c",
+        lime: "#c6ff00",
+        amber: "#ffd43b",
+        orange: "#ff8a1f",
+        pink: "#ff5cad",
+    });
+    const validSubjectColor = (value) => (
+        typeof value === "string" && Object.prototype.hasOwnProperty.call(SUBJECT_COLORS, value)
+            ? value
+            : ""
+    );
 
     const loadSubjectOverrides = () => {
         const rawOverrides = safeStorage.get(SUBJECT_OVERRIDES_KEY);
@@ -159,15 +174,16 @@
 
             return Object.fromEntries(
                 Object.entries(saved)
-                    .filter(([, value]) => value && typeof value === "object" && typeof value.name === "string" && value.name.trim())
-                    .map(([code, value]) => [
-                        normalize(code),
-                        {
-                            name: value.name.trim().slice(0, 60),
+                    .filter(([, value]) => value && typeof value === "object")
+                    .map(([code, value]) => {
+                        const override = {
+                            name: typeof value.name === "string" ? value.name.trim().slice(0, 60) : "",
                             teacher: typeof value.teacher === "string" ? value.teacher.trim().slice(0, 60) : "",
-                        },
-                    ])
-                    .filter(([code]) => code),
+                            color: validSubjectColor(value.color),
+                        };
+                        return [normalize(code), override];
+                    })
+                    .filter(([code, value]) => code && (value.name || value.teacher || value.color)),
             );
         } catch (error) {
             return {};
@@ -362,7 +378,39 @@
     const subjectOriginalCode = document.querySelector("[data-subject-original-code]");
     const subjectError = document.querySelector("[data-subject-error]");
     const subjectReset = document.querySelector("[data-subject-reset]");
+    const subjectColorPreview = document.querySelector("[data-subject-color-preview]");
+    const subjectColorChoices = Array.from(document.querySelectorAll("[data-subject-color-choice]"));
     let activeSubjectKey = "";
+
+    const applySubjectColor = (element, color) => {
+        if (!element) return;
+        const resolvedColor = SUBJECT_COLORS[validSubjectColor(color)];
+        if (resolvedColor) {
+            element.dataset.subjectAccent = color;
+            element.style.setProperty("--subject-color", resolvedColor);
+            return;
+        }
+        delete element.dataset.subjectAccent;
+        element.style.removeProperty("--subject-color");
+    };
+
+    const selectedSubjectColor = () => validSubjectColor(
+        subjectColorChoices.find((choice) => choice.checked)?.value,
+    );
+
+    const selectSubjectColor = (color) => {
+        const validColor = validSubjectColor(color);
+        subjectColorChoices.forEach((choice) => {
+            choice.checked = choice.value === validColor;
+        });
+        applySubjectColor(subjectColorPreview, validColor);
+    };
+
+    subjectColorChoices.forEach((choice) => {
+        choice.addEventListener("change", () => {
+            if (choice.checked) applySubjectColor(subjectColorPreview, choice.value);
+        });
+    });
 
     const updateSubjectEntries = () => {
         document.querySelectorAll("[data-plan-entry]").forEach((entry) => {
@@ -373,16 +421,18 @@
             const teacherRow = entry.querySelector("[data-subject-teacher-row]");
             const teacher = entry.querySelector("[data-subject-teacher]");
 
+            applySubjectColor(entry, override?.color);
+
             if (name) {
                 name.textContent = override?.name || subject.code || "–";
-                name.classList.toggle("is-customized", Boolean(override));
-                name.title = override ? `Original: ${subject.label}` : "";
+                name.classList.toggle("is-customized", Boolean(override?.name));
+                name.title = override?.name ? `Original: ${subject.label}` : "";
             }
 
             if (editButton) {
                 const editable = isEditableSubject(subject.code);
                 editButton.hidden = !editable;
-                editButton.setAttribute("aria-label", `${override?.name || subject.name} umbenennen`);
+                editButton.setAttribute("aria-label", `${override?.name || subject.name} anpassen`);
             }
 
             if (teacher) teacher.textContent = override?.teacher || "";
@@ -400,6 +450,7 @@
         if (subjectOriginalCode) subjectOriginalCode.textContent = subject.label;
         subjectNameInput.value = override?.name || "";
         subjectTeacherInput.value = override?.teacher || "";
+        selectSubjectColor(override?.color || "");
         if (subjectReset) subjectReset.hidden = !override;
         if (subjectError) subjectError.hidden = true;
 
@@ -422,23 +473,20 @@
         event.preventDefault();
         const name = subjectNameInput?.value.trim() || "";
         const teacher = subjectTeacherInput?.value.trim() || "";
+        const color = selectedSubjectColor();
 
-        if (!name) {
-            if (subjectError) {
-                subjectError.textContent = "Bitte gib einen neuen Namen für das Fach ein.";
-                subjectError.hidden = false;
-            }
-            subjectNameInput?.focus();
-            return;
+        const nextOverrides = { ...subjectOverrides };
+        if (name || teacher || color) {
+            nextOverrides[normalize(activeSubjectKey)] = { name, teacher, color };
+        } else {
+            delete nextOverrides[normalize(activeSubjectKey)];
         }
-
-        const nextOverrides = {
-            ...subjectOverrides,
-            [normalize(activeSubjectKey)]: { name, teacher },
-        };
-        if (!safeStorage.set(SUBJECT_OVERRIDES_KEY, JSON.stringify(nextOverrides))) {
+        const stored = Object.keys(nextOverrides).length
+            ? safeStorage.set(SUBJECT_OVERRIDES_KEY, JSON.stringify(nextOverrides))
+            : safeStorage.remove(SUBJECT_OVERRIDES_KEY);
+        if (!stored) {
             if (subjectError) {
-                subjectError.textContent = "Die Bezeichnung konnte in diesem Browser nicht gespeichert werden.";
+                subjectError.textContent = "Die Anpassung konnte in diesem Browser nicht gespeichert werden.";
                 subjectError.hidden = false;
             }
             return;

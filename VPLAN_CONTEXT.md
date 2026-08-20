@@ -169,7 +169,7 @@ Die Seite besitzt aktuell:
 - Hinweise, Suche und Filter „Alle“/„Nur Ausfälle“;
 - optionale persönliche Filter nach Jahrgang, Klasse und Kursen;
 - eine Kursauswahl aus aktuellem Plan plus der im laufenden Schuljahr erlernten Historie;
-- Bearbeitung jedes Eintrags über „Neuer Name“ und „Lehrer (optional)“;
+- Bearbeitung jedes Eintrags über optionalen Namen, Lehrkraft und eine Material-ähnliche Akzentfarbe;
 - Informationsdialoge, Installationshilfe, Feedbackdialog und einmaligen Nutzungshinweis;
 - Credits mit Stack und bisherigen Danksagungen.
 
@@ -192,7 +192,7 @@ jeweiligen Origins:
 | --- | --- |
 | `vplan-theme` | `light` oder `dark` |
 | `vplan-preferences` | `{ enabled, grade, classLetter, courses }` |
-| `vplan-subject-overrides` | Objekt aus stabilem Fachschlüssel und `{ name, teacher }` |
+| `vplan-subject-overrides` | Objekt aus stabilem Fachschlüssel und `{ name, teacher, color }` |
 | `vplan-disclaimer-accepted-v1` | `"true"`, nachdem der Nutzungshinweis bestätigt wurde |
 
 Alle Zugriffe laufen, abgesehen vom frühen Theme-Lesen im Template, über `safeStorage`, damit
@@ -216,7 +216,12 @@ Diese Trennung ist kritisch. Ein Lehrer für Englisch in `7a` darf niemals bei G
 stehen in der `subjects`-Liste in `static/vplan.js`. Für unbekannte Beschreibungen wird ein
 normalisierter Fallback aus dem Beschreibungstext gebildet.
 
-Eigene Werte sind auf 60 Zeichen begrenzt. Sie verändern nur die Anzeige und die lokale Suche,
+Eigene Textwerte sind auf 60 Zeichen begrenzt. Name, Lehrkraft und Farbe können unabhängig
+voneinander gesetzt werden. Erlaubte Farbwerte sind ausschließlich die festen IDs `violet`,
+`blue`, `cyan`, `green`, `lime`, `amber`, `orange` und `pink`; unbekannte gespeicherte Werte
+werden ignoriert. Die Palette verwendet bewusst leuchtende, kontrastreiche Farben. Im Dark Mode
+werden Kontur, obere Akzentkante, Badge und ein leichter Glow verstärkt, während der rote
+Ausfallstatus semantisch unverändert bleibt. Alle Anpassungen verändern nur die Anzeige und die lokale Suche,
 nicht die Quelldatei. Einträge mit einer nicht leeren Klassen-/Kurskennung sind bearbeitbar.
 
 ## 8. Installierbare Web-App (PWA)

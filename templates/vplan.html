@@ -263,8 +263,8 @@
                                                     class="subject-edit-button"
                                                     type="button"
                                                     data-subject-edit
-                                                    aria-label="Fach umbenennen"
-                                                    title="Fach umbenennen"
+                                                    aria-label="Fach anpassen"
+                                                    title="Fach anpassen"
                                                     hidden
                                                 >
                                                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -331,14 +331,14 @@
             <div class="dialog-heading">
                 <div>
                     <p class="dialog-kicker">Nur für dich</p>
-                    <h2 id="subject-dialog-title">Fach umbenennen</h2>
+                    <h2 id="subject-dialog-title">Fach anpassen</h2>
                 </div>
                 <button class="icon-button dialog-close" type="button" data-subject-close aria-label="Dialog schließen">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
-            <div class="subject-original" aria-label="Ausgewähltes Fach">
+            <div class="subject-original" data-subject-color-preview aria-label="Vorschau für das ausgewählte Fach">
                 <span class="subject-original-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>
                 </span>
@@ -349,12 +349,12 @@
                 </span>
             </div>
 
-            <p class="dialog-intro">Gib dem Fach einen Namen, den du sofort erkennst. Die Änderung gilt nur für dieses Fach beziehungsweise diesen Kurs und bleibt ausschließlich in diesem Browser.</p>
+            <p class="dialog-intro">Name, Lehrkraft und Farbe gelten nur für dieses Fach beziehungsweise diesen Kurs und bleiben ausschließlich in diesem Browser.</p>
 
             <div class="subject-form-fields">
                 <label class="field-label">
-                    <span>Neuer Name</span>
-                    <input type="text" data-subject-new-name maxlength="60" autocomplete="off" placeholder="z. B. Mathe LK" required>
+                    <span>Neuer Name <small>(optional)</small></span>
+                    <input type="text" data-subject-new-name maxlength="60" autocomplete="off" placeholder="z. B. Mathe LK">
                     <small>Wird anstelle der ursprünglichen Kennung angezeigt.</small>
                 </label>
 
@@ -363,12 +363,36 @@
                     <input type="text" data-subject-new-teacher maxlength="60" autocomplete="off" placeholder="z. B. Frau Müller">
                     <small>Erscheint direkt beim Fach im Vertretungsplan.</small>
                 </label>
+
+                <fieldset class="subject-color-picker">
+                    <legend>Akzentfarbe <small>(optional)</small></legend>
+                    <p>Eine dezente Farbtönung hilft dir, Fächer schneller wiederzufinden.</p>
+                    <div class="subject-color-options">
+                        {% for color_id, color_label in [
+                            ('', 'Standard'),
+                            ('violet', 'Violett'),
+                            ('blue', 'Blau'),
+                            ('cyan', 'Türkis'),
+                            ('green', 'Grün'),
+                            ('lime', 'Limette'),
+                            ('amber', 'Gold'),
+                            ('orange', 'Orange'),
+                            ('pink', 'Rosa')
+                        ] %}
+                            <label class="subject-color-choice" data-color-swatch="{{ color_id or 'default' }}">
+                                <input type="radio" name="subject-color" value="{{ color_id }}" data-subject-color-choice{% if not color_id %} checked{% endif %}>
+                                <span class="subject-color-swatch" aria-hidden="true"></span>
+                                <small>{{ color_label }}</small>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
             </div>
 
             <p class="form-error" data-subject-error role="alert" hidden></p>
 
             <div class="dialog-actions subject-actions">
-                <button class="text-button danger-text" type="button" data-subject-reset>Eigene Bezeichnung löschen</button>
+                <button class="text-button danger-text" type="button" data-subject-reset>Anpassungen löschen</button>
                 <div>
                     <button class="text-button" type="button" data-subject-close>Abbrechen</button>
                     <button class="primary-button" type="submit">Speichern</button>
@@ -665,7 +689,7 @@
                     <ul class="idea-credits">
                         <li>
                             <span aria-hidden="true">→</span>
-                            <div><strong>Umbenennung der Fächer / Lehrer</strong><small>Anonym</small></div>
+                            <div><strong>Umbenennung der Fächer / Lehrer</strong><small>Anonym (Starke Frau btw 🔥)</small></div>
                         </li>
                         <li>
                             <span aria-hidden="true">→</span>
@@ -700,6 +724,13 @@
                     <div class="changelog-date">
                         <time id="changelog-2026-08-20" datetime="2026-08-20">20. August 2026</time>
                     </div>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit 791ce5a">791ce5a</span>
+                        <div>
+                            <h3>Änderungsprotokoll ergänzt</h3>
+                            <p>Die wichtigsten Neuerungen lassen sich jetzt direkt auf der Seite nachlesen.</p>
+                        </div>
+                    </article>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit b8b865f">b8b865f</span>
                         <div>

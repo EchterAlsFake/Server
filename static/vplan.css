@@ -728,6 +728,18 @@ h1 {
     display: none;
 }
 
+.entry-card[data-subject-accent] {
+    border-color: color-mix(in srgb, var(--subject-color) 48%, var(--border));
+    background: linear-gradient(
+        115deg,
+        color-mix(in srgb, var(--subject-color) 14%, var(--surface)) 0,
+        var(--surface) 62%
+    );
+    box-shadow:
+        inset 0 3px 0 color-mix(in srgb, var(--subject-color) 90%, transparent),
+        0 8px 25px rgba(26, 35, 58, 0.07);
+}
+
 .entry-status {
     background: var(--brand);
 }
@@ -782,6 +794,13 @@ h1 {
 .class-badge.is-customized {
     background: var(--brand-soft);
     color: var(--brand-dark);
+}
+
+.entry-card[data-subject-accent] .class-badge {
+    border: 1px solid color-mix(in srgb, var(--subject-color) 68%, transparent);
+    background: color-mix(in srgb, var(--subject-color) 24%, var(--surface));
+    color: var(--ink);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--subject-color) 16%, transparent);
 }
 
 .subject-edit-button {
@@ -1113,6 +1132,17 @@ dialog::backdrop {
     background: var(--surface-soft);
 }
 
+.subject-original[data-subject-accent] {
+    border-color: color-mix(in srgb, var(--subject-color) 60%, var(--border));
+    background: color-mix(in srgb, var(--subject-color) 16%, var(--surface));
+    box-shadow: inset 0 3px 0 var(--subject-color);
+}
+
+.subject-original[data-subject-accent] .subject-original-icon {
+    background: color-mix(in srgb, var(--subject-color) 30%, var(--surface));
+    color: var(--ink);
+}
+
 .subject-original-icon {
     display: grid;
     flex: 0 0 38px;
@@ -1155,6 +1185,116 @@ dialog::backdrop {
     display: grid;
     gap: 14px;
 }
+
+.subject-color-picker {
+    min-width: 0;
+    margin: 2px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.subject-color-picker legend {
+    padding: 0;
+    color: var(--text-strong);
+    font-size: 0.78rem;
+    font-weight: 750;
+}
+
+.subject-color-picker legend small,
+.subject-color-picker > p {
+    color: var(--muted);
+    font-weight: 550;
+}
+
+.subject-color-picker > p {
+    margin: 5px 0 10px;
+    font-size: 0.72rem;
+}
+
+.subject-color-options {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.subject-color-choice {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    gap: 5px;
+    justify-items: center;
+    padding: 8px 3px 6px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.subject-color-choice:hover {
+    background: var(--surface-soft);
+}
+
+.subject-color-choice input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.subject-color-swatch {
+    --swatch-color: var(--raised-muted);
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 2px solid color-mix(in srgb, var(--swatch-color) 62%, var(--border));
+    border-radius: 50%;
+    background: var(--swatch-color);
+    color: #08111f;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.subject-color-choice input:checked + .subject-color-swatch {
+    border-color: var(--surface);
+    box-shadow:
+        0 0 0 3px var(--swatch-color),
+        0 0 16px color-mix(in srgb, var(--swatch-color) 58%, transparent);
+    transform: scale(0.93);
+}
+
+.subject-color-choice input:checked + .subject-color-swatch::after {
+    font-size: 0.85rem;
+    font-weight: 900;
+    content: "✓";
+}
+
+.subject-color-choice input:focus-visible + .subject-color-swatch {
+    outline: 3px solid rgba(79, 70, 229, 0.55);
+    outline-offset: 4px;
+}
+
+.subject-color-choice small {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.62rem;
+    font-weight: 650;
+    text-overflow: ellipsis;
+}
+
+.subject-color-choice[data-color-swatch="default"] .subject-color-swatch {
+    background: linear-gradient(135deg, var(--raised-muted) 50%, var(--brand-soft) 50%);
+    color: var(--ink);
+}
+
+.subject-color-choice[data-color-swatch="violet"] .subject-color-swatch { --swatch-color: #b388ff; }
+.subject-color-choice[data-color-swatch="blue"] .subject-color-swatch { --swatch-color: #40a9ff; }
+.subject-color-choice[data-color-swatch="cyan"] .subject-color-swatch { --swatch-color: #00e5ff; }
+.subject-color-choice[data-color-swatch="green"] .subject-color-swatch { --swatch-color: #39e58c; }
+.subject-color-choice[data-color-swatch="lime"] .subject-color-swatch { --swatch-color: #c6ff00; }
+.subject-color-choice[data-color-swatch="amber"] .subject-color-swatch { --swatch-color: #ffd43b; }
+.subject-color-choice[data-color-swatch="orange"] .subject-color-swatch { --swatch-color: #ff8a1f; }
+.subject-color-choice[data-color-swatch="pink"] .subject-color-swatch { --swatch-color: #ff5cad; }
 
 .subject-actions [hidden] {
     display: none;
@@ -1881,6 +2021,33 @@ html[data-theme="dark"] .notice-important p {
     color: #ffb6c1;
 }
 
+html[data-theme="dark"] .entry-card[data-subject-accent] {
+    border-color: color-mix(in srgb, var(--subject-color) 76%, var(--border));
+    background: linear-gradient(
+        115deg,
+        color-mix(in srgb, var(--subject-color) 25%, var(--surface)) 0,
+        var(--surface) 66%
+    );
+    box-shadow:
+        inset 0 3px 0 var(--subject-color),
+        0 0 22px color-mix(in srgb, var(--subject-color) 18%, transparent),
+        0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .entry-card[data-subject-accent] .class-badge {
+    border-color: color-mix(in srgb, var(--subject-color) 84%, transparent);
+    background: color-mix(in srgb, var(--subject-color) 34%, var(--surface));
+    box-shadow: 0 0 16px color-mix(in srgb, var(--subject-color) 28%, transparent);
+}
+
+html[data-theme="dark"] .subject-original[data-subject-accent] {
+    border-color: color-mix(in srgb, var(--subject-color) 78%, var(--border));
+    background: color-mix(in srgb, var(--subject-color) 24%, var(--surface));
+    box-shadow:
+        inset 0 3px 0 var(--subject-color),
+        0 0 18px color-mix(in srgb, var(--subject-color) 16%, transparent);
+}
+
 html[data-theme="dark"] .entry-card.is-cancelled {
     border-color: #5b303a;
 }
@@ -2017,6 +2184,10 @@ html[data-theme="dark"] .error-state {
 
     .changelog-commit {
         grid-template-columns: 1fr;
+    }
+
+    .subject-color-options {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
