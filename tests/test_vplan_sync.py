@@ -10,10 +10,12 @@ from vplan_sync import (
     VPlanSyncConfig,
     VPlanSyncError,
     VPlanSynchronizer,
+    extract_teacher_names,
     load_vplan_learning,
     parse_vplan_html,
     plan_content_hash,
     redact_teacher_codes,
+    sanitize_cached_plan,
 )
 
 
@@ -80,18 +82,45 @@ class ParseVPlanHtmlTests(unittest.TestCase):
             "Klasse hat Aufgaben von Lehrkraft.",
         )
 
+    def test_redacts_titled_names_without_requiring_a_database_match(self):
+        self.assertEqual(
+            redact_teacher_codes(
+                "Bemerkung: Frau Beispiel kommt mit dem Zug verspätet."
+            ),
+            "Bemerkung: Lehrkraft kommt mit dem Zug verspätet.",
+        )
+        self.assertEqual(
+            redact_teacher_codes("Vertretung durch Herr Dr. Muster-Mann."),
+            "Vertretung durch Lehrkraft.",
+        )
+
+    def test_extracts_unique_names_from_a_copied_staff_table(self):
+        names = extract_teacher_names(
+            "Name\tFunktion\n"
+            "Frau Beispiel\tEng, Deu\n"
+            "Herr Dr. Muster-Mann  Mat, Phy\n"
+            "Frau Beispiel (in Elternzeit)\tDeu\n"
+            "NTA\tTeam Nachteilsausgleich\n"
+        )
+
+        self.assertEqual(names, ("Frau Beispiel", "Herr Dr. Muster-Mann"))
+
     def test_scraped_plan_is_redacted_before_hashing(self):
         html = sample_html(description="Mat bei LiGyDe.Shz in C103").replace(
             '"BEMERKUNGEN": ""',
-            '"BEMERKUNGEN": "Kurs hat Aufgaben von Hil."',
+            '"BEMERKUNGEN": "Frau Beispiel kommt verspätet; Aufgaben von Hil."',
         )
 
         result = parse_vplan_html(html, TEST_SCHOOL_ID)
         entry = result["tage"][0]["EINTRAEGE_KLASSEN"][0]
 
         self.assertEqual(entry["NEU"], "<b>Ausfall:</b> Mat bei Lehrkraft in C103")
-        self.assertEqual(entry["BEMERKUNGEN"], "Kurs hat Aufgaben von Lehrkraft.")
+        self.assertEqual(
+            entry["BEMERKUNGEN"],
+            "Lehrkraft kommt verspätet; Aufgaben von Lehrkraft.",
+        )
         self.assertNotIn("LiGyDe.", json.dumps(result, ensure_ascii=False))
+        self.assertNotIn("Frau Beispiel", json.dumps(result, ensure_ascii=False))
         self.assertEqual(result["meta"]["content_sha256"], plan_content_hash(result))
 
     def test_learns_codes_from_explicit_tasks_and_notice_contexts(self):
@@ -122,6 +151,28 @@ class ParseVPlanHtmlTests(unittest.TestCase):
         self.assertEqual(
             redact_teacher_codes("Abc und Def in B204", ("Abc", "Def")),
             "Lehrkräfte in B204",
+        )
+
+    def test_existing_cache_is_atomically_sanitized_and_rehashed(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            plan_path = Path(temporary_directory) / "vplan.json"
+            plan = {
+                "meta": {"stand": "2026-08-20 06:00:00"},
+                "tage": [{"BEMERKUNGEN": "Frau Beispiel kommt verspätet."}],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+            changed = sanitize_cached_plan(plan_path)
+            sanitized = json.loads(plan_path.read_text(encoding="utf-8"))
+
+        self.assertTrue(changed)
+        self.assertEqual(
+            sanitized["tage"][0]["BEMERKUNGEN"],
+            "Lehrkraft kommt verspätet.",
+        )
+        self.assertEqual(
+            sanitized["meta"]["content_sha256"],
+            plan_content_hash(sanitized),
         )
 
 

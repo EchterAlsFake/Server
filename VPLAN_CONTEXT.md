@@ -18,7 +18,8 @@ Wichtige Produktprinzipien:
 - Persönliche Klasse, Kurse, eigene Fachnamen und Lehrernamen bleiben im Browser.
 - Niemals ungefragt VPlan-Inhalte oder lokale Einstellungen an externe Dienste senden.
 - Die VPlan-Subdomain darf keine fachfremden Serverfunktionen offenlegen.
-- Originale Lehrerkennungen des Quellsystems werden vor der Ausgabe redigiert.
+- Originale Lehrerkürzel und ausgeschriebene Namen des Quellsystems werden vor Speicherung
+  und Ausgabe redigiert.
 
 ## 2. Relevante Dateien
 
@@ -53,6 +54,8 @@ vplan_sync.py: herunterladen → eingebettetes JSON prüfen → sichere Lehrerko
         │                                                   │
         ▼                                                   ▼
 Lehrerkennungen redigieren → Hash bilden        private Sync-Statusdatei
+        ▲
+        └── private Namensliste aus SQLite (zusätzliche Redaktionsschicht)
         │
         ▼
 lokale vplan.json (bereinigt und atomar ersetzt, nur bei geänderten Inhalten)
@@ -98,6 +101,33 @@ Bekannte Kennungen werden rekursiv in allen Quellstrings ersetzt; mehrere Lehrkr
 `Lehrkräfte` dargestellt. Neu gefundene Kennungen werden vor Hashbildung und Speicherung aus
 dem Plan entfernt.
 
+Ausgeschriebene Namen mit Anrede (`Frau`/`Herr`, optional `Dr.`) werden unabhängig von der
+Lernliste bereits beim Parsen erkannt und durch `Lehrkraft` ersetzt. Damit schützt auch der erste
+Abruf eine noch unbekannte Lehrkraft. Als zweite Schicht enthält die private SQLite-Tabelle
+`vplan_teacher_names` die administrativ importierte Namensliste. Sie wird weder an Templates noch
+an JavaScript ausgeliefert. Ein Import aus einer lokal gespeicherten, kopierten Personaltabelle
+erfolgt mit:
+
+```bash
+uv run flask --app main import-vplan-teachers private-personalliste.txt
+```
+
+Der Import liest ausschließlich Einträge der ersten Spalte in der Form `Frau/Herr Nachname`,
+entfernt Zusätze in Klammern, dedupliziert und bereinigt außerdem einen vorhandenen Plan-Cache
+atomar. Die Quelldatei und echte Namen niemals committen. Die gesamte private Namensliste kann
+bei Bedarf mit `uv run flask --app main clear-vplan-teachers` nach Bestätigung gelöscht werden.
+
+Der Export ist zeilenbasiert und dadurch direkt wieder importierbar. Ohne Ziel schreibt er nur
+die Namen nach stdout; mit Ziel erstellt er eine neue Datei mit Berechtigung `0600`. Vorhandene
+Dateien werden nicht überschrieben:
+
+```bash
+uv run flask --app main export-vplan-teachers
+uv run flask --app main export-vplan-teachers vplan-teachers-export.txt
+```
+
+Exportdateien sind private Laufzeitdaten und werden durch `.gitignore` abgedeckt.
+
 Kurskennungen werden aus `KLASSE` gültiger Planeinträge gesammelt. Sie bleiben bis zum
 Schuljahreswechsel verfügbar, selbst wenn sie im aktuellen Plan nicht vorkommen. Das Frontend
 erhält nur diese Kurskennungen für die Auswahl, niemals die serverseitige Lehrerliste. Das Lernen
@@ -136,10 +166,11 @@ Der lokale Plan ist ein JSON-Objekt mit mindestens einer Liste `tage`:
 Das Template behandelt einen Eintrag als Ausfall, wenn `NEU` das Wort `ausfall` enthält.
 Alle von der Quelle kommenden sichtbaren Werte werden mit Jinja `striptags` behandelt. Die
 primäre Lehrerredaktion erfolgt bereits beim Parsen vor Hash und lokaler Speicherung. `main.py`
-wendet vor jedem Rendern zusätzlich die aktuelle Lernliste und neu im vorhandenen Cache
-erkennbare Kontexte rekursiv an. Dadurch werden auch ältere, noch unbereinigte lokale
+wendet vor jedem Rendern zusätzlich die aktuelle Lernliste, die private Namensliste und neu im
+vorhandenen Cache erkennbare Kontexte rekursiv an. Dadurch werden auch ältere, noch unbereinigte
+lokale
 Plandateien defensiv geschützt. Der Jinja-Filter `redact_teacher_codes` bleibt eine weitere
-Ausgabesicherung für explizite `LiGyDe.*`-Kennungen.
+Ausgabesicherung für explizite `LiGyDe.*`-Kennungen und Namen mit Anrede.
 
 ## 5. HTTP-Routen und Host-Isolation
 
@@ -334,6 +365,10 @@ Relevante Umgebungsvariablen:
 - `VPLAN_PUBLIC_HOST` – Standard `vplan.echteralsfake.me`;
 - `PF_SERVER_DB` – Pfad zur SQLite-Datenbank einschließlich Feedbacktabelle.
 
+Die SQLite-Datenbank enthält zusätzlich die private Tabelle `vplan_teacher_names`. Ein
+prozessübergreifender Schema-Lock serialisiert `db.create_all()` beim parallelen Start mehrerer
+Gunicorn-Worker und verhindert konkurrierende Tabellenerstellung.
+
 Die Plandatei, Sync-Statusdatei, Sperrdatei und SQLite-Datenbank sind Laufzeitdaten und gehören
 nicht in Git. Die Sync-Statusdatei ist nicht nur ein Zeitstempel-Cache: Das Löschen setzt auch
 die automatisch gelernten Lehrer- und Kurskennungen zurück. Bei einem Umzug oder Deployment die
@@ -364,8 +399,9 @@ Wichtige Testverträge:
 
 - Subdomain-Root rendert nur den VPlan und gibt fachfremde Routen nicht frei.
 - Fehlende oder ungültige Plandatei liefert 503, ohne einen gültigen Cache zu zerstören.
-- Lehrerkennungen werden in expliziten, standardisierten und eng strukturierten Kontexten
-  gelernt und vor Speicherung sowie erneut vor Ausgabe redigiert.
+- Lehrerkürzel werden in expliziten, standardisierten und eng strukturierten Kontexten gelernt;
+  ausgeschriebene Namen mit Anrede werden allgemein erkannt. Beides wird vor Speicherung sowie
+  erneut vor Ausgabe redigiert.
 - Lernwerte sammeln sich innerhalb eines Schuljahres an und werden zum 1. August zurückgesetzt.
 - Früher beobachtete Kurse bleiben in der persönlichen Auswahl, auch wenn sie im aktuellen Plan
   fehlen; Lehrerkennungen gelangen dabei nicht ins HTML.

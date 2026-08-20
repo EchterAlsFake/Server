@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -30,6 +30,16 @@ DEFAULT_BOARD_URL = (
 VPLAN_ASSIGNMENT_RE = re.compile(r"\bvar\s+vplanTage\s*=\s*", re.MULTILINE)
 STAND_RE = re.compile(r'\bvar\s+datum_stand\s*=\s*"([^"\r\n]*)"\s*;')
 TEACHER_TOKEN_PATTERN = r"[A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]{1,15}"
+PERSON_NAME_PART_PATTERN = (
+    r"[A-ZÄÖÜÀ-ÖØ-ÞĀ-Ž]"
+    r"[A-Za-zÄÖÜäöüßÀ-ÖØ-öø-ÿĀ-ž'’-]{1,60}"
+)
+TITLED_PERSON_PATTERN = (
+    rf"(?:Frau|Herr)\s+(?:Dr\.\s+)?{PERSON_NAME_PART_PATTERN}"
+    rf"(?:\s+{PERSON_NAME_PART_PATTERN}){{0,2}}"
+)
+TITLED_PERSON_RE = re.compile(rf"\b{TITLED_PERSON_PATTERN}(?![\w-])")
+TITLED_PERSON_VALUE_RE = re.compile(rf"^{TITLED_PERSON_PATTERN}$")
 TEACHER_CODE_RE = re.compile(
     r"\bLiGyDe\.[^\s,;.<>()]+(?:\s*,\s*LiGyDe\.[^\s,;.<>()]+)*",
     re.IGNORECASE,
@@ -70,6 +80,30 @@ def _normalized_teacher_codes(values: Any) -> tuple[str, ...]:
     return tuple(sorted(codes, key=str.casefold))[:256]
 
 
+def _normalized_teacher_names(values: Any) -> tuple[str, ...]:
+    if isinstance(values, str):
+        values = (values,)
+    if not isinstance(values, (list, tuple, set, frozenset)):
+        return ()
+    names = {
+        " ".join(str(value).split())
+        for value in values
+        if TITLED_PERSON_VALUE_RE.fullmatch(" ".join(str(value).split()))
+    }
+    return tuple(sorted(names, key=str.casefold))[:1000]
+
+
+def extract_teacher_names(text: str) -> tuple[str, ...]:
+    """Extract titled names from the first column of a copied staff table."""
+    names: set[str] = set()
+    for raw_line in str(text or "").splitlines():
+        first_column = re.split(r"\t+|\s{2,}", raw_line.strip(), maxsplit=1)[0]
+        first_column = re.sub(r"\s*\([^()]*\)\s*$", "", first_column).strip()
+        normalized = _normalized_teacher_names((first_column,))
+        names.update(normalized)
+    return tuple(sorted(names, key=str.casefold))
+
+
 def discover_teacher_codes(value: Any) -> set[str]:
     """Learn teacher codes only from strongly identifying source contexts."""
     if isinstance(value, str):
@@ -87,9 +121,24 @@ def discover_teacher_codes(value: Any) -> set[str]:
     return set()
 
 
-def redact_teacher_codes(value: Any, known_teacher_codes: Any = ()) -> str:
+def redact_teacher_codes(
+    value: Any,
+    known_teacher_codes: Any = (),
+    known_teacher_names: Any = (),
+) -> str:
     """Replace explicit and contextual teacher identifiers with a neutral label."""
-    redacted = TEACHER_CODE_RE.sub("Lehrkraft", str(value or ""))
+    redacted = str(value or "")
+    known_names = _normalized_teacher_names(known_teacher_names)
+    if known_names:
+        exact_names = re.compile(
+            rf"(?<!\w)(?:{'|'.join(re.escape(name) for name in known_names)})(?![\w-])",
+            re.IGNORECASE,
+        )
+        redacted = exact_names.sub("Lehrkraft", redacted)
+    # This generic rule is intentionally independent of the database. A newly hired
+    # person's titled name must still be removed during the very first scrape.
+    redacted = TITLED_PERSON_RE.sub("Lehrkraft", redacted)
+    redacted = TEACHER_CODE_RE.sub("Lehrkraft", redacted)
     redacted = TASKS_FROM_TEACHER_RE.sub(r"\1Lehrkraft", redacted)
     known_codes = _normalized_teacher_codes(known_teacher_codes)
     if known_codes:
@@ -101,15 +150,22 @@ def redact_teacher_codes(value: Any, known_teacher_codes: Any = ()) -> str:
     return MULTIPLE_TEACHERS_RE.sub("Lehrkräfte", redacted)
 
 
-def redact_teacher_data(value: Any, known_teacher_codes: Any = ()) -> Any:
+def redact_teacher_data(
+    value: Any,
+    known_teacher_codes: Any = (),
+    known_teacher_names: Any = (),
+) -> Any:
     """Recursively redact teacher identifiers before plan data is persisted."""
     if isinstance(value, str):
-        return redact_teacher_codes(value, known_teacher_codes)
+        return redact_teacher_codes(value, known_teacher_codes, known_teacher_names)
     if isinstance(value, list):
-        return [redact_teacher_data(item, known_teacher_codes) for item in value]
+        return [
+            redact_teacher_data(item, known_teacher_codes, known_teacher_names)
+            for item in value
+        ]
     if isinstance(value, dict):
         return {
-            key: redact_teacher_data(item, known_teacher_codes)
+            key: redact_teacher_data(item, known_teacher_codes, known_teacher_names)
             for key, item in value.items()
         }
     return value
@@ -241,6 +297,7 @@ def parse_vplan_html(
     school_id: int,
     *,
     known_teacher_codes: Any = (),
+    known_teacher_names: Any = (),
     discovered_teacher_codes: set[str] | None = None,
 ) -> dict[str, Any]:
     """Extract and validate the embedded JSON without trying to parse JavaScript."""
@@ -273,7 +330,7 @@ def parse_vplan_html(
     )
 
     # Redact before hashing or writing so teacher identifiers never enter the local cache.
-    days = redact_teacher_data(days, redaction_codes)
+    days = redact_teacher_data(days, redaction_codes, known_teacher_names)
 
     stand_match = STAND_RE.search(html_text)
     if stand_match is None or not stand_match.group(1).strip():
@@ -372,15 +429,56 @@ def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
             os.unlink(temporary_path)
 
 
+def sanitize_cached_plan(
+    path: Path,
+    known_teacher_codes: Any = (),
+    known_teacher_names: Any = (),
+) -> bool:
+    """Redact an existing cache atomically; return whether it was rewritten."""
+    plan = _read_json_object(path)
+    if not plan or not isinstance(plan.get("tage"), list):
+        return False
+    redacted_plan = redact_teacher_data(
+        plan,
+        known_teacher_codes,
+        known_teacher_names,
+    )
+    if redacted_plan == plan:
+        return False
+    redacted_plan.setdefault("meta", {})["content_sha256"] = plan_content_hash(
+        redacted_plan
+    )
+    _atomic_write_json(path, redacted_plan)
+    return True
+
+
 class VPlanSynchronizer:
     """Coordinates polite refreshes across threads and Gunicorn workers."""
 
-    def __init__(self, config: VPlanSyncConfig):
+    def __init__(
+        self,
+        config: VPlanSyncConfig,
+        teacher_names_provider: Callable[[], Any] | None = None,
+    ):
         self.config = config
+        self._teacher_names_provider = teacher_names_provider
         self._thread_lock = threading.Lock()
         self._start_lock = threading.Lock()
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
+
+    def set_teacher_names_provider(self, provider: Callable[[], Any]) -> None:
+        """Attach the private database lookup after the Flask models exist."""
+        self._teacher_names_provider = provider
+
+    def _known_teacher_names(self) -> tuple[str, ...]:
+        if self._teacher_names_provider is None:
+            return ()
+        try:
+            return _normalized_teacher_names(self._teacher_names_provider())
+        except Exception:
+            LOGGER.exception("Could not load private teacher names for VPlan redaction")
+            return ()
 
     def start(self) -> bool:
         """Start one scheduler thread for this process. Safe to call repeatedly."""
@@ -533,6 +631,7 @@ class VPlanSynchronizer:
             response.text,
             self.config.school_id,
             known_teacher_codes=known_teacher_codes,
+            known_teacher_names=self._known_teacher_names(),
             discovered_teacher_codes=discovered_teacher_codes,
         )
         return plan, discovered_teacher_codes

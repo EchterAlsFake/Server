@@ -156,6 +156,8 @@ vplan.json
 *.sync.lock
 server.db
 server.db-*
+private-personalliste*.txt
+vplan-teachers*.txt
 .flask_secret
 # Spyder project settings
 .spyderproject

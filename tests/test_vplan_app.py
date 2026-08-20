@@ -123,6 +123,85 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn("Anonym", html)
         self.assertIn("Richard Lewerenz", html)
 
+    def test_cached_full_teacher_name_is_redacted_before_rendering(self):
+        plan = {
+            "meta": {"stand": "2026-08-20 06:00:00"},
+            "tage": [
+                {
+                    "DATUM": "Donnerstag, 20. August 2026",
+                    "WICHTIGE_HINWEISE": [],
+                    "WEITERE_HINWEISE": [],
+                    "EINTRAEGE_KLASSEN": [
+                        {
+                            "STUNDE": "08:35 - 09:20",
+                            "NEU": "Ausfall: Englisch",
+                            "BEMERKUNGEN": "Frau Beispiel kommt mit dem Zug verspätet.",
+                            "KLASSE": "8c",
+                        }
+                    ],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            plan_path = Path(temporary_directory) / "vplan.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            with patch.object(main, "VPLAN_JSON_PATH", plan_path):
+                response = self.client.get(
+                    "/", headers={"Host": "vplan.echteralsfake.me"}
+                )
+
+        html = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Lehrkraft kommt mit dem Zug verspätet.", html)
+        self.assertNotIn("Frau Beispiel", html)
+
+    def test_private_teacher_name_table_stores_no_plan_or_contact_data(self):
+        self.assertEqual(
+            set(main.VPlanTeacherName.__table__.columns.keys()),
+            {"id", "name", "created_at"},
+        )
+
+    def test_private_teacher_names_can_be_exported_and_reimported(self):
+        runner = main.app.test_cli_runner()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            export_path = Path(temporary_directory) / "vplan-teachers-export.txt"
+            with patch.object(
+                main,
+                "load_vplan_teacher_names",
+                return_value=("Herr Muster", "Frau Beispiel"),
+            ):
+                result = runner.invoke(
+                    args=["export-vplan-teachers", str(export_path)]
+                )
+
+            exported_text = export_path.read_text(encoding="utf-8")
+            extracted_names = main.extract_teacher_names(exported_text)
+            file_mode = export_path.stat().st_mode & 0o777
+
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertEqual(exported_text, "Frau Beispiel\nHerr Muster\n")
+        self.assertEqual(extracted_names, ("Frau Beispiel", "Herr Muster"))
+        self.assertEqual(file_mode, 0o600)
+
+    def test_teacher_name_export_does_not_overwrite_an_existing_file(self):
+        runner = main.app.test_cli_runner()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            export_path = Path(temporary_directory) / "existing.txt"
+            export_path.write_text("bestehender Inhalt\n", encoding="utf-8")
+            with patch.object(
+                main,
+                "load_vplan_teacher_names",
+                return_value=("Frau Beispiel",),
+            ):
+                result = runner.invoke(
+                    args=["export-vplan-teachers", str(export_path)]
+                )
+            preserved_text = export_path.read_text(encoding="utf-8")
+
+        self.assertNotEqual(result.exit_code, 0)
+        self.assertIn("existiert bereits", result.output)
+        self.assertEqual(preserved_text, "bestehender Inhalt\n")
+
     def test_feedback_validation_accepts_plain_text_and_rejects_contact_data(self):
         message, error = main.validate_vplan_feedback(
             "  Beim Wechsel auf Donnerstag bleibt der Mittwoch sichtbar.\r\nBitte prüfen.  "

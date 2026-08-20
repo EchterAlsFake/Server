@@ -1,5 +1,8 @@
 import os
 import re
+import fcntl
+import click
+from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 import json
@@ -30,9 +33,11 @@ from vplan_sync import (
     VPlanSyncConfig,
     VPlanSynchronizer,
     discover_teacher_codes,
+    extract_teacher_names,
     load_vplan_learning,
     redact_teacher_codes,
     redact_teacher_data,
+    sanitize_cached_plan,
 )
 
 
@@ -239,6 +244,16 @@ class VPlanFeedback(db.Model):
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.String, nullable=False)
 
+
+class VPlanTeacherName(db.Model):
+    """Private list used as a second layer for teacher-name redaction."""
+
+    __tablename__ = "vplan_teacher_names"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(160), unique=True, nullable=False, index=True)
+    created_at = db.Column(db.String, nullable=False)
+
 class WriteLog(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     bytes_written = db.Column(db.Integer, nullable=False)
@@ -264,19 +279,123 @@ class License(db.Model):
     transaction_id = db.Column(db.String, nullable=True)
     created_at = db.Column(db.String, nullable=False)
 
-with app.app_context():
-    db.create_all()
-    started_at = datetime.now(timezone.utc).isoformat()
-    stat = Stats.query.get(1)
-    if not stat:
-        stat = Stats(id=1, total_requests=0, total_bytes_in=0, total_bytes_out=0, server_started_at=started_at)
-        db.session.add(stat)
-    else:
-        stat.total_requests = 0
-        stat.total_bytes_in = 0
-        stat.total_bytes_out = 0
-        stat.server_started_at = started_at
+schema_lock_path = f"{os.path.abspath(DB_PATH)}-schema.lock"
+with open(schema_lock_path, "a+", encoding="utf-8") as schema_lock:
+    # Gunicorn workers import this module concurrently. Serialize create_all so a
+    # newly introduced SQLite table cannot be created by two workers at once.
+    fcntl.flock(schema_lock.fileno(), fcntl.LOCK_EX)
+    with app.app_context():
+        db.create_all()
+        started_at = datetime.now(timezone.utc).isoformat()
+        stat = db.session.get(Stats, 1)
+        if not stat:
+            stat = Stats(id=1, total_requests=0, total_bytes_in=0, total_bytes_out=0, server_started_at=started_at)
+            db.session.add(stat)
+        else:
+            stat.total_requests = 0
+            stat.total_bytes_in = 0
+            stat.total_bytes_out = 0
+            stat.server_started_at = started_at
+        db.session.commit()
+
+
+def load_vplan_teacher_names() -> tuple[str, ...]:
+    """Load the private teacher-name list without exposing it to templates."""
+    with app.app_context():
+        statement = db.select(VPlanTeacherName.name).order_by(VPlanTeacherName.name)
+        return tuple(db.session.execute(statement).scalars().all())
+
+
+vplan_synchronizer.set_teacher_names_provider(load_vplan_teacher_names)
+
+
+@app.cli.command("import-vplan-teachers")
+@click.argument("source", type=click.File("r", encoding="utf-8"))
+def import_vplan_teachers(source):
+    """Import titled names from a private, copied staff table."""
+    names = extract_teacher_names(source.read())
+    if not names:
+        raise click.ClickException(
+            "Keine gueltigen Namen in der Form 'Frau/Herr Nachname' gefunden."
+        )
+
+    existing_names = set(
+        db.session.execute(db.select(VPlanTeacherName.name)).scalars().all()
+    )
+    created_at = datetime.now(timezone.utc).isoformat()
+    for name in names:
+        if name not in existing_names:
+            db.session.add(VPlanTeacherName(name=name, created_at=created_at))
     db.session.commit()
+    stored_names = load_vplan_teacher_names()
+
+    learning = load_vplan_learning(
+        VPLAN_SYNC_CONFIG.state_path,
+        VPLAN_SYNC_CONFIG.teacher_code_seeds,
+    )
+    VPLAN_SYNC_CONFIG.lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with VPLAN_SYNC_CONFIG.lock_path.open("a+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        cache_rewritten = sanitize_cached_plan(
+            VPLAN_JSON_PATH,
+            learning["teacher_codes"],
+            stored_names,
+        )
+
+    added_count = len(set(names) - existing_names)
+    cache_status = "; vorhandener Plan bereinigt" if cache_rewritten else ""
+    click.echo(
+        f"{len(names)} Namen erkannt, {added_count} neu gespeichert{cache_status}."
+    )
+
+
+@app.cli.command("export-vplan-teachers")
+@click.argument(
+    "destination",
+    required=False,
+    default="-",
+    type=click.Path(dir_okay=False, path_type=Path),
+)
+def export_vplan_teachers(destination: Path):
+    """Export the private redaction list, one name per line."""
+    names = tuple(sorted(load_vplan_teacher_names(), key=str.casefold))
+    if not names:
+        raise click.ClickException("Die private VPlan-Namensliste ist leer.")
+
+    content = "\n".join(names) + "\n"
+    if str(destination) == "-":
+        click.echo(content, nl=False)
+        return
+
+    try:
+        file_descriptor = os.open(
+            destination,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+            0o600,
+        )
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as export_file:
+            export_file.write(content)
+    except FileExistsError as exc:
+        raise click.ClickException(
+            f"Zieldatei existiert bereits: {destination}"
+        ) from exc
+    except OSError as exc:
+        raise click.ClickException(
+            f"Export konnte nicht geschrieben werden: {exc}"
+        ) from exc
+
+    click.echo(f"{len(names)} Namen nach {destination} exportiert.")
+
+
+@app.cli.command("clear-vplan-teachers")
+@click.confirmation_option(
+    prompt="Private VPlan-Lehrernamen wirklich vollstaendig loeschen?"
+)
+def clear_vplan_teachers():
+    """Delete the private teacher-name redaction list."""
+    deleted_count = VPlanTeacherName.query.delete(synchronize_session=False)
+    db.session.commit()
+    click.echo(f"{deleted_count} Namen geloescht.")
 
 # ---------- Helper functions ----------
 def canonical_json_bytes(obj: dict) -> bytes:
@@ -632,6 +751,7 @@ def vplan():
         plan = redact_teacher_data(
             plan,
             [*learning["teacher_codes"], *discover_teacher_codes(plan)],
+            load_vplan_teacher_names(),
         )
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         app.logger.error("Could not load substitution plan from %s: %s", VPLAN_JSON_PATH, exc)
