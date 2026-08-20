@@ -128,26 +128,46 @@ def redact_teacher_codes(
 ) -> str:
     """Replace explicit and contextual teacher identifiers with a neutral label."""
     redacted = str(value or "")
-    known_names = _normalized_teacher_names(known_teacher_names)
-    if known_names:
-        exact_names = re.compile(
-            rf"(?<!\w)(?:{'|'.join(re.escape(name) for name in known_names)})(?![\w-])",
-            re.IGNORECASE,
-        )
+    exact_names, standalone_codes = _teacher_redaction_patterns(
+        known_teacher_codes,
+        known_teacher_names,
+    )
+    if exact_names:
         redacted = exact_names.sub("Lehrkraft", redacted)
     # This generic rule is intentionally independent of the database. A newly hired
     # person's titled name must still be removed during the very first scrape.
     redacted = TITLED_PERSON_RE.sub("Lehrkraft", redacted)
     redacted = TEACHER_CODE_RE.sub("Lehrkraft", redacted)
     redacted = TASKS_FROM_TEACHER_RE.sub(r"\1Lehrkraft", redacted)
+    if standalone_codes:
+        redacted = standalone_codes.sub("Lehrkraft", redacted)
+    return MULTIPLE_TEACHERS_RE.sub("Lehrkräfte", redacted)
+
+
+def _teacher_redaction_patterns(
+    known_teacher_codes: Any,
+    known_teacher_names: Any,
+) -> tuple[re.Pattern[str] | None, re.Pattern[str] | None]:
+    """Compile reusable patterns for one complete redaction operation."""
+    known_names = _normalized_teacher_names(known_teacher_names)
+    exact_names = (
+        re.compile(
+            rf"(?<!\w)(?:{'|'.join(re.escape(name) for name in known_names)})(?![\w-])",
+            re.IGNORECASE,
+        )
+        if known_names
+        else None
+    )
     known_codes = _normalized_teacher_codes(known_teacher_codes)
-    if known_codes:
-        standalone_codes = re.compile(
+    standalone_codes = (
+        re.compile(
             rf"(?<![\w.])(?:{'|'.join(re.escape(code) for code in known_codes)})(?![\w-])",
             re.IGNORECASE,
         )
-        redacted = standalone_codes.sub("Lehrkraft", redacted)
-    return MULTIPLE_TEACHERS_RE.sub("Lehrkräfte", redacted)
+        if known_codes
+        else None
+    )
+    return exact_names, standalone_codes
 
 
 def redact_teacher_data(
@@ -156,19 +176,29 @@ def redact_teacher_data(
     known_teacher_names: Any = (),
 ) -> Any:
     """Recursively redact teacher identifiers before plan data is persisted."""
-    if isinstance(value, str):
-        return redact_teacher_codes(value, known_teacher_codes, known_teacher_names)
-    if isinstance(value, list):
-        return [
-            redact_teacher_data(item, known_teacher_codes, known_teacher_names)
-            for item in value
-        ]
-    if isinstance(value, dict):
-        return {
-            key: redact_teacher_data(item, known_teacher_codes, known_teacher_names)
-            for key, item in value.items()
-        }
-    return value
+    exact_names, standalone_codes = _teacher_redaction_patterns(
+        known_teacher_codes,
+        known_teacher_names,
+    )
+
+    def redact(item: Any) -> Any:
+        if isinstance(item, str):
+            redacted = item
+            if exact_names:
+                redacted = exact_names.sub("Lehrkraft", redacted)
+            redacted = TITLED_PERSON_RE.sub("Lehrkraft", redacted)
+            redacted = TEACHER_CODE_RE.sub("Lehrkraft", redacted)
+            redacted = TASKS_FROM_TEACHER_RE.sub(r"\1Lehrkraft", redacted)
+            if standalone_codes:
+                redacted = standalone_codes.sub("Lehrkraft", redacted)
+            return MULTIPLE_TEACHERS_RE.sub("Lehrkräfte", redacted)
+        if isinstance(item, list):
+            return [redact(child) for child in item]
+        if isinstance(item, dict):
+            return {key: redact(child) for key, child in item.items()}
+        return item
+
+    return redact(value)
 
 
 def discover_course_codes(plan: dict[str, Any]) -> set[str]:
@@ -521,7 +551,15 @@ class VPlanSynchronizer:
 
             state = _read_json_object(self.config.state_path)
             now_epoch = time.time()
-            last_checked_epoch = float(state.get("last_checked_epoch", 0) or 0)
+            try:
+                last_checked_epoch = max(
+                    float(state.get("last_checked_epoch", 0) or 0),
+                    0.0,
+                )
+            except (TypeError, ValueError, OverflowError):
+                LOGGER.warning("Ignoring invalid last_checked_epoch in VPlan state")
+                last_checked_epoch = 0.0
+                state.pop("last_checked_epoch", None)
             if not force and now_epoch - last_checked_epoch < self.config.check_interval_seconds:
                 return {"status": "not_due"}
 
@@ -607,12 +645,28 @@ class VPlanSynchronizer:
             "days": len(downloaded_plan["tage"]),
         }
 
-    def _request(self, client: httpx.Client, url: str) -> httpx.Response:
-        response = client.get(url)
-        response.raise_for_status()
-        if len(response.content) > self.config.max_response_bytes:
-            raise VPlanSyncError("Remote response exceeded the configured size limit")
-        return response
+    def _request(self, client: httpx.Client, url: str) -> str:
+        """Stream a response and stop before an oversized body is buffered."""
+        with client.stream("GET", url) as response:
+            response.raise_for_status()
+            content_length = response.headers.get("content-length")
+            if content_length:
+                try:
+                    if int(content_length) > self.config.max_response_bytes:
+                        raise VPlanSyncError(
+                            "Remote response exceeded the configured size limit"
+                        )
+                except ValueError:
+                    LOGGER.warning("Ignoring invalid Content-Length from VPlan source")
+            payload = bytearray()
+            for chunk in response.iter_bytes():
+                if len(payload) + len(chunk) > self.config.max_response_bytes:
+                    raise VPlanSyncError(
+                        "Remote response exceeded the configured size limit"
+                    )
+                payload.extend(chunk)
+            encoding = response.encoding or "utf-8"
+        return bytes(payload).decode(encoding, errors="replace")
 
     def _download_plan(
         self, known_teacher_codes: Any
@@ -625,10 +679,10 @@ class VPlanSynchronizer:
                 "User-Agent": "PrivateStudentVPlan/1.0 (+personal school project)",
             },
         ) as client:
-            response = self._request(client, self.config.board_url)
+            response_text = self._request(client, self.config.board_url)
         discovered_teacher_codes: set[str] = set()
         plan = parse_vplan_html(
-            response.text,
+            response_text,
             self.config.school_id,
             known_teacher_codes=known_teacher_codes,
             known_teacher_names=self._known_teacher_names(),

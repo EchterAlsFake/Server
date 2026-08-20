@@ -25,6 +25,8 @@ from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, request, jsonify, make_response, send_file, send_from_directory, Response, render_template, g, redirect, session, url_for, flash
 from fpdf import FPDF
 from werkzeug.serving import WSGIRequestHandler
@@ -84,11 +86,110 @@ VPLAN_PUBLIC_HOST = os.environ.get(
 VPLAN_PWA_TEST_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 VPLAN_FEEDBACK_MAX_LENGTH = 1500
 VPLAN_FEEDBACK_RETENTION_DAYS = 180
+VPLAN_FEEDBACK_RATE_LIMIT = 30
+VPLAN_MAINTENANCE_INTERVAL_SECONDS = 60 * 60
 VPLAN_FEEDBACK_EMAIL_RE = re.compile(
     r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE
 )
 VPLAN_FEEDBACK_URL_RE = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
 VPLAN_FEEDBACK_PHONE_CANDIDATE_RE = re.compile(r"(?:\+?\d[\d\s()./-]{5,}\d)")
+VPLAN_GERMAN_MONTHS = {
+    "januar": 1,
+    "februar": 2,
+    "märz": 3,
+    "april": 4,
+    "mai": 5,
+    "juni": 6,
+    "juli": 7,
+    "august": 8,
+    "september": 9,
+    "oktober": 10,
+    "november": 11,
+    "dezember": 12,
+}
+VPLAN_NAMED_DAY_RE = re.compile(
+    r"\b(?P<day>\d{1,2})\.\s*(?P<month>[A-Za-zÄÖÜäöü]+)\s+(?P<year>\d{4})\b"
+)
+VPLAN_NUMERIC_DAY_RE = re.compile(
+    r"\b(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4})\b"
+)
+VPLAN_ISO_DAY_RE = re.compile(
+    r"\b(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\b"
+)
+VPLAN_PUBLIC_PATHS = frozenset(
+    {
+        "/",
+        "/vplan",
+        "/vplan/translate",
+        "/vplan/privacy",
+        "/vplan/imprint",
+        "/vplan/feedback",
+        "/sw.js",
+        "/manifest.webmanifest",
+    }
+)
+VPLAN_STATIC_PREFIXES = (
+    "/static/vplan",
+    "/static/i18n/",
+)
+VPLAN_CONTENT_SECURITY_POLICY = "; ".join(
+    (
+        "default-src 'self'",
+        "base-uri 'self'",
+        "connect-src 'self'",
+        "font-src 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+        "img-src 'self' data:",
+        "manifest-src 'self'",
+        "object-src 'none'",
+        "script-src 'self'",
+        "style-src 'self'",
+        "upgrade-insecure-requests",
+    )
+)
+
+
+def _parse_vplan_day_iso(value) -> str:
+    """Convert supported source date labels to an ISO date for browser navigation."""
+    text = str(value or "").strip()
+    match = VPLAN_ISO_DAY_RE.search(text) or VPLAN_NUMERIC_DAY_RE.search(text)
+    if match:
+        year = int(match.group("year"))
+        month = int(match.group("month"))
+        day = int(match.group("day"))
+    else:
+        match = VPLAN_NAMED_DAY_RE.search(text)
+        if not match:
+            return ""
+        year = int(match.group("year"))
+        month = VPLAN_GERMAN_MONTHS.get(match.group("month").casefold(), 0)
+        day = int(match.group("day"))
+
+    try:
+        return datetime(year, month, day).date().isoformat()
+    except ValueError:
+        return ""
+
+
+def _normalized_hostname(raw_host: str) -> str:
+    """Normalize a request host while preserving IPv6 loopback support."""
+    normalized = str(raw_host or "").strip().lower()
+    if normalized.startswith("["):
+        return normalized[1:].partition("]")[0].rstrip(".")
+    return normalized.partition(":")[0].rstrip(".")
+
+
+def _is_vplan_request() -> bool:
+    """Identify requests belonging to the isolated VPlan application."""
+    hostname = _normalized_hostname(request.host)
+    if hostname == VPLAN_PUBLIC_HOST:
+        return True
+    return (
+        request.path in VPLAN_PUBLIC_PATHS - {"/"}
+        or request.path.startswith(VPLAN_STATIC_PREFIXES)
+        or request.path == "/static/manifest.webmanifest"
+    )
 
 # Strict Input Validation Schema for NOWPayments Webhook
 class NowPaymentsWebhookSchema(BaseModel):
@@ -116,6 +217,8 @@ app.jinja_env.filters["redact_teacher_codes"] = redact_teacher_codes
 @app.before_request
 def ensure_vplan_synchronizer_started():
     """Bootstrap a missing plan cache, then start after Gunicorn has forked."""
+    if not _is_vplan_request():
+        return None
     if VPLAN_SYNC_CONFIG.enabled and not VPLAN_JSON_PATH.is_file():
         result = vplan_synchronizer.sync_if_due(force=True)
         if result.get("status") == "error":
@@ -124,6 +227,9 @@ def ensure_vplan_synchronizer_started():
                 result.get("error", "unknown error"),
             )
     vplan_synchronizer.start()
+    cleanup_vplan_runtime_data()
+    start_vplan_maintenance()
+    return None
 
 # --- Privacy-preserving proxy handling ---
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -177,11 +283,27 @@ csrf = CSRFProtect(app)
 
 # --- DATABASE ORM (Security Measure) ---
 # Transitioned from raw SQLite to Flask-SQLAlchemy.
-# ORMs completely eliminate SQL Injection vulnerabilities by abstracting the query building
-# process. They automatically parameterize queries and escape inputs securely.
+# ORM/Core statements bind variable values as parameters. Input validation and authorization
+# are still required at the application boundary.
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.abspath(DB_PATH)}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+
+@app.after_request
+def apply_vplan_security_headers(response):
+    """Override broad legacy headers with a VPlan-specific browser policy."""
+    if _is_vplan_request():
+        response.headers["Content-Security-Policy"] = VPLAN_CONTENT_SECURITY_POLICY
+        response.headers["X-XSS-Protection"] = "0"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
+        )
+        if request.path in {"/manifest.webmanifest", "/static/manifest.webmanifest"}:
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+    return response
 
 # Secure HTTP Headers: Automatically inject robust security headers (e.g., CSP, HSTS, Anti-sniffing)
 talisman = Talisman(
@@ -243,6 +365,15 @@ class VPlanFeedback(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.String, nullable=False)
+
+
+class VPlanFeedbackRateWindow(db.Model):
+    """Anonymous, server-wide feedback limit shared by all Gunicorn workers."""
+
+    __tablename__ = "vplan_feedback_rate_windows"
+
+    window_start = db.Column(db.Integer, primary_key=True)
+    request_count = db.Column(db.Integer, nullable=False, default=0)
 
 
 class VPlanTeacherName(db.Model):
@@ -445,19 +576,28 @@ def log_write(file_size: int):
 
 
 def increment_stats(requests_inc: int = 0, bytes_in_inc: int = 0, bytes_out_inc: int = 0):
-    """Atomically increment stats counters in the DB."""
+    """Atomically increment stats counters without breaking normal requests."""
     if not (requests_inc or bytes_in_inc or bytes_out_inc):
         return
-    stat = Stats.query.get(1)
-    if stat:
-        stat.total_requests += requests_inc
-        stat.total_bytes_in += bytes_in_inc
-        stat.total_bytes_out += bytes_out_inc
+    try:
+        statement = (
+            db.update(Stats)
+            .where(Stats.id == 1)
+            .values(
+                total_requests=Stats.total_requests + requests_inc,
+                total_bytes_in=Stats.total_bytes_in + bytes_in_inc,
+                total_bytes_out=Stats.total_bytes_out + bytes_out_inc,
+            )
+        )
+        db.session.execute(statement)
         db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        app.logger.warning("Could not update aggregate request statistics", exc_info=True)
 
 
 def get_stats_snapshot():
-    stat = Stats.query.get(1)
+    stat = db.session.get(Stats, 1)
     if stat is None:
         started_at = datetime.now(timezone.utc).isoformat()
         stat = Stats(id=1, total_requests=0, total_bytes_in=0, total_bytes_out=0, server_started_at=started_at)
@@ -671,16 +811,23 @@ def get_update_information():
 
 @app.before_request
 def track_request():
+    if _is_vplan_request():
+        return None
     # Count every incoming request and its approximate payload size
     content_length = request.content_length
     if content_length is None:
         content_length = 0
     content_length = max(int(content_length), 0)
     increment_stats(requests_inc=1, bytes_in_inc=content_length)
+    return None
 
 
 @app.after_request
 def track_response(response):
+    if _is_vplan_request():
+        if request.endpoint == "submit_vplan_feedback":
+            response.headers["Cache-Control"] = "no-store"
+        return response
     # Count response payload size
     try:
         length = response.calculate_content_length()
@@ -692,8 +839,6 @@ def track_response(response):
 
     length = max(int(length or 0), 0)
     increment_stats(bytes_out_inc=length)
-    if request.endpoint == "submit_vplan_feedback":
-        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -719,7 +864,7 @@ def initiate_poweroff():
 @app.route("/sw.js", methods=["GET"])
 @limiter.exempt
 def vplan_service_worker():
-    """Serve the VPlan worker at the origin root so it can control the app route."""
+    """Serve the VPlan worker at the origin root with a deliberately narrow scope."""
     response = make_response(
         send_from_directory(
             app.static_folder,
@@ -728,8 +873,28 @@ def vplan_service_worker():
             conditional=True,
         )
     )
-    response.headers["Cache-Control"] = "no-cache"
-    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Service-Worker-Allowed"] = "/vplan"
+    return response
+
+
+@app.route("/manifest.webmanifest", methods=["GET"])
+@limiter.exempt
+def vplan_manifest():
+    """Always expose the current PWA metadata instead of a cached old manifest."""
+    response = make_response(
+        send_from_directory(
+            app.static_folder,
+            "manifest.webmanifest",
+            mimetype="application/manifest+json",
+            conditional=False,
+        )
+    )
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers.pop("ETag", None)
+    response.headers.pop("Last-Modified", None)
     return response
 
 
@@ -768,19 +933,26 @@ def vplan():
         response.headers["Cache-Control"] = "no-store"
         return response
 
-    raw_updated_at = plan.get("meta", {}).get("stand", "unbekannt")
+    raw_updated_at = plan.get("meta", {}).get("stand", "")
+    updated_at_iso = ""
     try:
         parsed_updated_at = datetime.fromisoformat(str(raw_updated_at))
-        updated_at = parsed_updated_at.strftime("%d.%m.%Y · %H:%M Uhr")
-    except ValueError:
-        updated_at = str(raw_updated_at)
+        updated_at = parsed_updated_at.strftime("%d.%m.%Y · %H:%M")
+        updated_at_iso = parsed_updated_at.isoformat()
+    except (TypeError, ValueError):
+        updated_at = str(raw_updated_at).strip()
 
     response = make_response(
         render_template(
             "vplan.html",
             plan=plan,
             error=False,
+            day_dates=[
+                _parse_vplan_day_iso(day.get("DATUM")) if isinstance(day, dict) else ""
+                for day in plan["tage"]
+            ],
             updated_at=updated_at,
+            updated_at_iso=updated_at_iso,
             learned_course_codes=learning["course_codes"],
             pwa_enabled=_vplan_pwa_enabled(),
         )
@@ -789,12 +961,36 @@ def vplan():
     return response
 
 
+@app.route("/vplan/translate", methods=["GET"])
+@limiter.exempt
+def vplan_translate():
+    """Provide a local-only editor for Git-tracked translation catalogs."""
+    response = make_response(render_template("vplan_translate.html"))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/vplan/privacy", methods=["GET"])
+@limiter.exempt
+def vplan_privacy():
+    """Render the privacy notice that actually describes the VPlan service."""
+    response = make_response(render_template("vplan_legal.html", page="privacy"))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/vplan/imprint", methods=["GET"])
+@limiter.exempt
+def vplan_imprint():
+    """Render VPlan-specific provider information without unrelated branding."""
+    response = make_response(render_template("vplan_legal.html", page="imprint"))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 def _request_hostname():
     """Return a normalized DNS hostname without a possible development port."""
-    raw_host = request.host.strip().lower()
-    if raw_host.startswith("["):
-        return raw_host[1:].partition("]")[0].rstrip(".")
-    return raw_host.partition(":")[0].rstrip(".")
+    return _normalized_hostname(request.host)
 
 
 def _vplan_pwa_enabled():
@@ -803,46 +999,166 @@ def _vplan_pwa_enabled():
     return hostname == VPLAN_PUBLIC_HOST or hostname in VPLAN_PWA_TEST_HOSTS
 
 
+_vplan_maintenance_lock = threading.Lock()
+_vplan_last_maintenance = 0.0
+_vplan_maintenance_start_lock = threading.Lock()
+_vplan_maintenance_stop_event = threading.Event()
+_vplan_maintenance_thread = None
+
+
+def cleanup_vplan_runtime_data(*, force: bool = False) -> bool:
+    """Periodically enforce feedback retention and remove obsolete rate windows."""
+    global _vplan_last_maintenance
+    current_monotonic = time.monotonic()
+    if (
+        not force
+        and current_monotonic - _vplan_last_maintenance
+        < VPLAN_MAINTENANCE_INTERVAL_SECONDS
+    ):
+        return False
+    if not _vplan_maintenance_lock.acquire(blocking=False):
+        return False
+    try:
+        current_monotonic = time.monotonic()
+        if (
+            not force
+            and current_monotonic - _vplan_last_maintenance
+            < VPLAN_MAINTENANCE_INTERVAL_SECONDS
+        ):
+            return False
+        now = datetime.now(timezone.utc)
+        feedback_cutoff = (
+            now - timedelta(days=VPLAN_FEEDBACK_RETENTION_DAYS)
+        ).isoformat()
+        oldest_rate_window = int(now.timestamp() // 60) - (24 * 60)
+        try:
+            db.session.execute(
+                db.delete(VPlanFeedback).where(
+                    VPlanFeedback.created_at < feedback_cutoff
+                )
+            )
+            db.session.execute(
+                db.delete(VPlanFeedbackRateWindow).where(
+                    VPlanFeedbackRateWindow.window_start < oldest_rate_window
+                )
+            )
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.warning("Could not clean up VPlan runtime data", exc_info=True)
+            return False
+        _vplan_last_maintenance = current_monotonic
+        return True
+    finally:
+        _vplan_maintenance_lock.release()
+
+
+def start_vplan_maintenance() -> bool:
+    """Start one hourly retention worker in this application process."""
+    global _vplan_maintenance_thread
+    if app.testing:
+        return False
+    with _vplan_maintenance_start_lock:
+        if (
+            _vplan_maintenance_thread is not None
+            and _vplan_maintenance_thread.is_alive()
+        ):
+            return False
+
+        def run_maintenance():
+            while not _vplan_maintenance_stop_event.wait(
+                VPLAN_MAINTENANCE_INTERVAL_SECONDS
+            ):
+                with app.app_context():
+                    cleanup_vplan_runtime_data()
+
+        _vplan_maintenance_stop_event.clear()
+        _vplan_maintenance_thread = threading.Thread(
+            target=run_maintenance,
+            name="vplan-maintenance",
+            daemon=True,
+        )
+        _vplan_maintenance_thread.start()
+        return True
+
+
+def consume_vplan_feedback_rate_limit() -> tuple[bool, int]:
+    """Consume one request from an anonymous, process-shared minute window."""
+    window_start = int(datetime.now(timezone.utc).timestamp() // 60)
+    statement = sqlite_insert(VPlanFeedbackRateWindow).values(
+        window_start=window_start,
+        request_count=1,
+    )
+    statement = statement.on_conflict_do_update(
+        index_elements=[VPlanFeedbackRateWindow.window_start],
+        set_={
+            "request_count": VPlanFeedbackRateWindow.request_count + 1,
+        },
+    )
+    try:
+        db.session.execute(statement)
+        current_count = db.session.execute(
+            db.select(VPlanFeedbackRateWindow.request_count).where(
+                VPlanFeedbackRateWindow.window_start == window_start
+            )
+        ).scalar_one()
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        app.logger.warning("Could not update VPlan feedback rate limit", exc_info=True)
+        return False, 0
+    return current_count <= VPLAN_FEEDBACK_RATE_LIMIT, current_count
+
+
 def validate_vplan_feedback(value):
-    """Return a normalized plain-text report or a user-facing validation error."""
+    """Return a normalized plain-text report or a stable validation error code."""
     if not isinstance(value, str):
-        return None, "Bitte gib eine Textnachricht ein."
+        return None, "text_required"
 
     message = value.replace("\r\n", "\n").replace("\r", "\n").strip()
     if len(message) < 10:
-        return None, "Bitte beschreibe den Fehler mit mindestens 10 Zeichen."
+        return None, "too_short"
     if len(message) > VPLAN_FEEDBACK_MAX_LENGTH:
-        return None, f"Die Nachricht darf höchstens {VPLAN_FEEDBACK_MAX_LENGTH} Zeichen enthalten."
+        return None, "too_long"
     if any(ord(character) < 32 and character not in {"\n", "\t"} for character in message):
-        return None, "Die Nachricht enthält nicht unterstützte Steuerzeichen."
+        return None, "control_characters"
     if re.search(r"<[^>\n]{1,100}>", message):
-        return None, "Bitte verwende ausschließlich normalen Text ohne HTML."
+        return None, "html"
     if VPLAN_FEEDBACK_EMAIL_RE.search(message) or VPLAN_FEEDBACK_URL_RE.search(message):
-        return None, "Bitte entferne E-Mail-Adressen und Links aus der Nachricht."
+        return None, "contact"
 
     for candidate in VPLAN_FEEDBACK_PHONE_CANDIDATE_RE.findall(message):
         digits = re.sub(r"\D", "", candidate)
         if len(digits) >= 7 and (candidate.lstrip().startswith(("+", "0")) or len(digits) >= 10):
-            return None, "Bitte entferne Telefonnummern aus der Nachricht."
+            return None, "phone"
 
     return message, None
 
 
 @app.route("/vplan/feedback", methods=["POST"])
 @csrf.exempt
-@limiter.limit("10 per minute")
+@limiter.exempt
 def submit_vplan_feedback():
     """Store a short, deliberately anonymous plain-text VPlan error report."""
     if request.headers.get("X-VPlan-Request") != "feedback" or not request.is_json:
-        return jsonify({"error": "Ungültige Anfrage."}), 400
+        return jsonify({"error": "invalid_request"}), 400
+
+    within_limit, current_count = consume_vplan_feedback_rate_limit()
+    if not within_limit and current_count == 0:
+        return jsonify({"error": "storage_unavailable"}), 503
+    if not within_limit:
+        response = jsonify({"error": "rate_limited"})
+        response.status_code = 429
+        response.headers["Retry-After"] = "60"
+        return response
 
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict) or payload.get("privacy_confirmed") is not True:
-        return jsonify({"error": "Bitte bestätige den Datenschutzhinweis."}), 400
+        return jsonify({"error": "privacy_required"}), 400
 
-    message, validation_error = validate_vplan_feedback(payload.get("message"))
-    if validation_error:
-        return jsonify({"error": validation_error}), 400
+    message, validation_error_code = validate_vplan_feedback(payload.get("message"))
+    if validation_error_code:
+        return jsonify({"error": validation_error_code}), 400
 
     now = datetime.now(timezone.utc)
     cutoff = (now - timedelta(days=VPLAN_FEEDBACK_RETENTION_DAYS)).isoformat()
@@ -860,7 +1176,7 @@ def submit_vplan_feedback():
     except Exception:
         db.session.rollback()
         app.logger.exception("Could not store an anonymous VPlan feedback report")
-        return jsonify({"error": "Die Nachricht konnte momentan nicht gespeichert werden."}), 503
+        return jsonify({"error": "storage_unavailable"}), 503
 
     response = jsonify({"ok": True})
     response.status_code = 201
@@ -880,9 +1196,12 @@ def handle_vplan_subdomain():
         return "Not Found", 404
     if request.path == "/":
         return vplan()
-    if request.path in {"/vplan", "/sw.js", "/impress", "/datenschutz"}:
+    if request.path in VPLAN_PUBLIC_PATHS - {"/", "/vplan/feedback"}:
         return None
-    if request.path.startswith("/static/"):
+    if (
+        request.path.startswith(VPLAN_STATIC_PREFIXES)
+        or request.path == "/static/manifest.webmanifest"
+    ):
         return None
     return "Not Found", 404
 

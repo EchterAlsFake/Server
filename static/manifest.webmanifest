@@ -5,12 +5,18 @@
     "description": "Der persönliche Vertretungsplan – schnell und übersichtlich.",
     "lang": "de-DE",
     "start_url": "/vplan?source=pwa",
-    "scope": "/",
+    "scope": "/vplan",
     "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
     "orientation": "any",
     "background_color": "#f5f7fb",
     "theme_color": "#4f46e5",
     "categories": ["education", "productivity"],
+    "dir": "ltr",
+    "prefer_related_applications": false,
+    "launch_handler": {
+        "client_mode": ["navigate-existing", "auto"]
+    },
     "icons": [
         {
             "src": "/static/vplan-icon-192.png",

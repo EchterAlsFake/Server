@@ -1,7 +1,9 @@
-(() => {
+(async () => {
     "use strict";
 
     const THEME_KEY = "vplan-theme";
+    const LANGUAGE_KEY = "vplan-language";
+    const DAY_ROLLOVER_HOUR = 15;
     const PREFERENCES_KEY = "vplan-preferences";
     const SUBJECT_OVERRIDES_KEY = "vplan-subject-overrides";
     const DISCLAIMER_ACCEPTED_KEY = "vplan-disclaimer-accepted-v1";
@@ -34,13 +36,196 @@
         },
     };
 
+    const fetchJson = async (url) => {
+        const response = await fetch(url, {
+            credentials: "omit",
+            referrerPolicy: "no-referrer",
+        });
+        if (!response.ok) throw new Error(`Could not load ${url}`);
+        return response.json();
+    };
+
+    const safeCatalog = (value) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+        return Object.fromEntries(
+            Object.entries(value).filter(([key, text]) => key !== "_meta" && typeof text === "string"),
+        );
+    };
+
+    const interpolate = (template, variables = {}) => String(template).replace(
+        /\{([A-Za-z][A-Za-z0-9_]*)\}/g,
+        (match, name) => Object.prototype.hasOwnProperty.call(variables, name)
+            ? String(variables[name])
+            : match,
+    );
+
+    const defaultLanguages = [
+        { code: "de", name: "Deutsch", status: "source", flag: "🇩🇪" },
+        { code: "en", name: "English", status: "beta", flag: "🇬🇧" },
+    ];
+    let languageConfig = { default: "de", languages: defaultLanguages };
+    try {
+        const loadedConfig = await fetchJson("/static/i18n/languages.json");
+        const languages = Array.isArray(loadedConfig.languages)
+            ? loadedConfig.languages.filter((item) => (
+                item && /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(item.code)
+                && typeof item.name === "string"
+                && typeof item.flag === "string"
+                && item.flag.trim().length > 0
+                && item.flag.length <= 12
+            ))
+            : [];
+        if (languages.length) {
+            languageConfig = {
+                default: languages.some((item) => item.code === loadedConfig.default)
+                    ? loadedConfig.default
+                    : "de",
+                languages,
+            };
+        }
+    } catch (error) {
+        // German HTML remains a complete fallback when static language files fail.
+    }
+
+    const supportedLanguageCodes = new Set(languageConfig.languages.map((item) => item.code));
+    const browserLanguage = String(navigator.language || "").split("-")[0].toLowerCase();
+    const storedLanguage = safeStorage.get(LANGUAGE_KEY);
+    const activeLanguage = supportedLanguageCodes.has(storedLanguage)
+        ? storedLanguage
+        : (supportedLanguageCodes.has(browserLanguage) ? browserLanguage : languageConfig.default);
+
+    let sourceCatalog = {};
+    let activeCatalog = {};
+    try {
+        const sourcePayload = await fetchJson("/static/i18n/de.json");
+        sourceCatalog = safeCatalog(sourcePayload);
+        if (activeLanguage === "de") {
+            activeCatalog = sourceCatalog;
+        } else {
+            activeCatalog = safeCatalog(await fetchJson(`/static/i18n/${encodeURIComponent(activeLanguage)}.json`));
+        }
+    } catch (error) {
+        activeCatalog = sourceCatalog;
+    }
+
+    const t = (key, variables = {}, fallback = key) => interpolate(
+        activeCatalog[key] || sourceCatalog[key] || fallback,
+        variables,
+    );
+    const tp = (key, count, variables = {}, fallback = "") => t(
+        `${key}.${Number(count) === 1 ? "one" : "other"}`,
+        { ...variables, count },
+        fallback,
+    );
+    const elementVariables = (element) => {
+        if (!element.dataset.i18nVars) return {};
+        try {
+            const parsed = JSON.parse(element.dataset.i18nVars);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    };
+    const applyTranslations = (scope = document) => {
+        scope.querySelectorAll("[data-i18n]").forEach((element) => {
+            const variables = elementVariables(element);
+            const count = Number(element.dataset.i18nCount);
+            element.textContent = element.dataset.i18nPlural
+                ? tp(element.dataset.i18n, count, variables, element.textContent.trim())
+                : t(element.dataset.i18n, variables, element.textContent.trim());
+        });
+        const translatedAttributes = {
+            "data-i18n-aria-label": "aria-label",
+            "data-i18n-title": "title",
+            "data-i18n-placeholder": "placeholder",
+            "data-i18n-content": "content",
+        };
+        Object.entries(translatedAttributes).forEach(([selector, attribute]) => {
+            scope.querySelectorAll(`[${selector}]`).forEach((element) => {
+                const key = element.getAttribute(selector);
+                element.setAttribute(attribute, t(key, elementVariables(element), element.getAttribute(attribute) || ""));
+            });
+        });
+        scope.querySelectorAll("time[data-i18n-date][datetime]").forEach((element) => {
+            const date = new Date(`${element.dateTime}T12:00:00`);
+            if (!Number.isNaN(date.valueOf())) {
+                element.textContent = new Intl.DateTimeFormat(activeLanguage, { dateStyle: "long" }).format(date);
+            }
+        });
+    };
+
+    document.documentElement.lang = activeLanguage;
+    document.documentElement.dataset.language = activeLanguage;
+    applyTranslations();
+    document.querySelectorAll("time[data-vplan-updated][datetime]").forEach((element) => {
+        const date = new Date(element.dateTime);
+        if (!Number.isNaN(date.valueOf())) {
+            element.textContent = new Intl.DateTimeFormat(activeLanguage, {
+                dateStyle: "medium",
+                timeStyle: "short",
+            }).format(date);
+        }
+    });
+    const storageNotice = document.querySelector("[data-storage-notice]");
+    const showStorageNotice = () => {
+        if (!storageNotice) return;
+        storageNotice.hidden = false;
+        window.setTimeout(() => {
+            storageNotice.hidden = true;
+        }, 6000);
+    };
+    const languageNotice = document.querySelector("[data-translation-notice]");
+    if (languageNotice) languageNotice.hidden = activeLanguage === languageConfig.default;
+    const languagePicker = document.querySelector("[data-language-picker]");
+    if (languagePicker) {
+        languagePicker.replaceChildren(...languageConfig.languages.map((language) => {
+            const button = document.createElement("button");
+            const label = language.status === "beta"
+                ? t("language.beta_name", { name: language.name }, `${language.name} (Beta)`)
+                : language.name;
+            button.type = "button";
+            button.className = "language-option";
+            button.dataset.languageOption = language.code;
+            button.setAttribute("aria-pressed", String(language.code === activeLanguage));
+            button.setAttribute("aria-label", label);
+            button.title = label;
+
+            const flag = document.createElement("span");
+            flag.className = "language-flag";
+            flag.setAttribute("aria-hidden", "true");
+            flag.textContent = language.flag;
+            button.append(flag);
+
+            button.addEventListener("click", () => {
+                if (language.code === activeLanguage) return;
+                if (!safeStorage.set(LANGUAGE_KEY, language.code)) {
+                    showStorageNotice();
+                    return;
+                }
+                window.location.reload();
+            });
+            return button;
+        }));
+    }
+    window.vplanI18n = Object.freeze({
+        language: activeLanguage,
+        languages: languageConfig.languages,
+        sourceCatalog,
+        activeCatalog,
+        t,
+        plural: tp,
+        apply: applyTranslations,
+    });
+
     const themeToggle = document.querySelector("[data-theme-toggle]");
     const themeColor = document.querySelector('meta[name="theme-color"]');
 
     const updateThemeControls = () => {
         const isDark = root.dataset.theme === "dark";
         if (themeToggle) {
-            themeToggle.setAttribute("aria-label", isDark ? "Hellmodus aktivieren" : "Dunkelmodus aktivieren");
+            themeToggle.setAttribute("aria-label", isDark
+                ? t("theme.enable_light", {}, "Hellmodus aktivieren")
+                : t("theme.enable_dark", {}, "Dunkelmodus aktivieren"));
         }
         if (themeColor) themeColor.content = isDark ? "#0c111d" : "#f5f7fb";
     };
@@ -49,7 +234,7 @@
     themeToggle?.addEventListener("click", () => {
         const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
         root.dataset.theme = nextTheme;
-        safeStorage.set(THEME_KEY, nextTheme);
+        if (!safeStorage.set(THEME_KEY, nextTheme)) showStorageNotice();
         updateThemeControls();
     });
 
@@ -63,6 +248,7 @@
             if (disclaimerDialog.open) disclaimerDialog.close();
             document.body.classList.remove("disclaimer-pending");
         } else {
+            document.body.classList.add("disclaimer-pending");
             if (disclaimerDialog.open) disclaimerDialog.close();
             disclaimerDialog.showModal();
             disclaimerDialog.addEventListener("cancel", (event) => event.preventDefault());
@@ -76,7 +262,7 @@
     disclaimerForm?.addEventListener("submit", (event) => {
         event.preventDefault();
         if (!disclaimerCheckbox?.checked) return;
-        safeStorage.set(DISCLAIMER_ACCEPTED_KEY, "true");
+        if (!safeStorage.set(DISCLAIMER_ACCEPTED_KEY, "true")) showStorageNotice();
         disclaimerDialog?.close();
         document.body.classList.remove("disclaimer-pending");
         document.querySelector("#plan-content")?.focus({ preventScroll: true });
@@ -104,6 +290,43 @@
         tab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
         if (moveFocus) tab.focus();
     };
+
+    const localDateTimestamp = (isoDate) => {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoDate || ""));
+        if (!match) return Number.NaN;
+
+        const year = Number(match[1]);
+        const monthIndex = Number(match[2]) - 1;
+        const day = Number(match[3]);
+        const date = new Date(year, monthIndex, day);
+        return date.getFullYear() === year
+            && date.getMonth() === monthIndex
+            && date.getDate() === day
+            ? date.getTime()
+            : Number.NaN;
+    };
+
+    const selectInitialDayTab = (now = new Date()) => {
+        const datedTabs = tabs.map((tab) => ({
+            tab,
+            timestamp: localDateTimestamp(tab.dataset.dayDate),
+        })).filter(({ timestamp }) => Number.isFinite(timestamp))
+            .sort((left, right) => left.timestamp - right.timestamp);
+        if (!datedTabs.length) return;
+
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const currentDay = datedTabs.find(({ timestamp }) => timestamp === today);
+        const nextDay = datedTabs.find(({ timestamp }) => timestamp > today);
+        const pastDays = datedTabs.filter(({ timestamp }) => timestamp < today);
+        const latestPastDay = pastDays[pastDays.length - 1];
+        const preferredDay = now.getHours() >= DAY_ROLLOVER_HOUR && nextDay
+            ? nextDay
+            : (currentDay || nextDay || latestPastDay);
+
+        if (preferredDay) activateTab(preferredDay.tab);
+    };
+
+    selectInitialDayTab();
 
     tabs.forEach((tab, index) => {
         tab.addEventListener("click", () => activateTab(tab));
@@ -136,7 +359,7 @@
             return {
                 enabled: saved.enabled === true,
                 grade: /^(0[5-9]|1[0-2])$/.test(saved.grade) ? saved.grade : "",
-                classLetter: /^[a-z]$/i.test(saved.classLetter) ? saved.classLetter.toLowerCase() : "",
+                classLetter: /^[abc]$/i.test(saved.classLetter) ? saved.classLetter.toLowerCase() : "",
                 courses: Array.isArray(saved.courses)
                     ? [...new Set(saved.courses.filter((course) => typeof course === "string" && course.trim()).map((course) => course.trim()))]
                     : [],
@@ -148,18 +371,11 @@
 
     let preferences = loadPreferences();
     const normalize = (value) => String(value || "").toLocaleLowerCase("de-DE").trim();
-    const SUBJECT_COLORS = Object.freeze({
-        violet: "#b388ff",
-        blue: "#40a9ff",
-        cyan: "#00e5ff",
-        green: "#39e58c",
-        lime: "#c6ff00",
-        amber: "#ffd43b",
-        orange: "#ff8a1f",
-        pink: "#ff5cad",
-    });
+    const SUBJECT_COLOR_IDS = Object.freeze([
+        "violet", "blue", "cyan", "green", "lime", "amber", "orange", "pink",
+    ]);
     const validSubjectColor = (value) => (
-        typeof value === "string" && Object.prototype.hasOwnProperty.call(SUBJECT_COLORS, value)
+        typeof value === "string" && SUBJECT_COLOR_IDS.includes(value)
             ? value
             : ""
     );
@@ -247,7 +463,7 @@
             });
 
             if (resultCount) {
-                resultCount.textContent = `${visibleCount} ${visibleCount === 1 ? "Eintrag" : "Einträge"}`;
+                resultCount.textContent = tp("plan.entry", visibleCount, {}, `${visibleCount} Einträge`);
             }
             if (noResults) noResults.hidden = visibleCount !== 0 || entries.length === 0;
         };
@@ -286,30 +502,38 @@
     const personalizationSummary = document.querySelector("[data-personalization-summary]");
 
     const subjects = [
-        { id: "frz", name: "Französisch", code: "frz", pattern: /\b(?:frz|französisch)\b/i },
-        { id: "lat", name: "Latein", code: "lat", pattern: /\b(?:lat|latein)\b/i },
-        { id: "krel", name: "Katholische Religion", code: "krel", pattern: /\b(?:krel|kath(?:olische)?\s+religion)\b/i },
-        { id: "erel", name: "Evangelische Religion", code: "erel", pattern: /\b(?:erel|ev(?:angelische)?\s+religion)\b/i },
-        { id: "mat", name: "Mathematik", code: "mat", pattern: /\b(?:ma|mat|mathe|mathematik)\b/i },
-        { id: "deu", name: "Deutsch", code: "deu", pattern: /\b(?:deu|deutsch)\b/i },
-        { id: "eng", name: "Englisch", code: "eng", pattern: /\b(?:eng|englisch)\b/i },
-        { id: "che", name: "Chemie", code: "che", pattern: /\b(?:che|chemie)\b/i },
-        { id: "phy", name: "Physik", code: "phy", pattern: /\b(?:phy|physik)\b/i },
-        { id: "bio", name: "Biologie", code: "bio", pattern: /\b(?:bio|biologie)\b/i },
-        { id: "mus", name: "Musik", code: "mus", pattern: /\b(?:mu|mus|musik)\b/i },
-        { id: "ges", name: "Geschichte", code: "ges", pattern: /\b(?:ges|gesch|geschichte)\b/i },
-        { id: "geo", name: "Geografie", code: "geo", pattern: /\b(?:geo|geografie|geographie|erdkunde)\b/i },
-        { id: "spo", name: "Sport", code: "spo", pattern: /\b(?:sp|spo|sport)\b/i },
-        { id: "kun", name: "Kunst", code: "kun", pattern: /\b(?:ku|kun|kunst)\b/i },
-        { id: "inf", name: "Informatik", code: "inf", pattern: /\b(?:inf|informatik)\b/i },
-        { id: "eth", name: "Ethik", code: "eth", pattern: /\b(?:eth|ethik)\b/i },
-        { id: "rel", name: "Religion", code: "kar", pattern: /\b(?:rel|religion)\b/i },
-        { id: "gw", name: "GW", code: "gw", pattern: /\bgw\b/i },
+        { id: "frz", name: t("course.frz", {}, "Französisch"), code: "frz", pattern: /\b(?:frz|französisch)\b/i },
+        { id: "lat", name: t("course.lat", {}, "Latein"), code: "lat", pattern: /\b(?:lat|latein)\b/i },
+        { id: "krel", name: t("course.krel", {}, "Katholische Religion"), aliases: ["krel", "katr"], pattern: /\b(?:krel|katr|kat\.?\s*r|kath(?:olische)?\s+religion)\b/i },
+        { id: "erel", name: t("course.erel", {}, "Evangelische Religion"), aliases: ["erel", "evr"], pattern: /\b(?:erel|evr|ev\.?\s*r|ev(?:angelische)?\s+religion)\b/i },
+        { id: "mat", name: t("course.mat", {}, "Mathematik"), code: "mat", pattern: /\b(?:ma|mat|mathe|mathematik)\b/i },
+        { id: "deu", name: t("course.deu", {}, "Deutsch"), code: "deu", pattern: /\b(?:deu|deutsch)\b/i },
+        { id: "eng", name: t("course.eng", {}, "Englisch"), code: "eng", pattern: /\b(?:eng|englisch)\b/i },
+        { id: "che", name: t("course.che", {}, "Chemie"), code: "che", pattern: /\b(?:che|chemie)\b/i },
+        { id: "phy", name: t("course.phy", {}, "Physik"), code: "phy", pattern: /\b(?:phy|physik)\b/i },
+        { id: "bio", name: t("course.bio", {}, "Biologie"), code: "bio", pattern: /\b(?:bio|biologie)\b/i },
+        { id: "mus", name: t("course.mus", {}, "Musik"), code: "mus", pattern: /\b(?:mu|mus|musik)\b/i },
+        { id: "ges", name: t("course.ges", {}, "Geschichte"), code: "ges", pattern: /\b(?:ges|gesch|geschichte)\b/i },
+        { id: "geo", name: t("course.geo", {}, "Geografie"), code: "geo", pattern: /\b(?:geo|geografie|geographie|erdkunde)\b/i },
+        { id: "spo", name: t("course.spo", {}, "Sport"), code: "spo", pattern: /\b(?:sp|spo|sport)\b/i },
+        { id: "kun", name: t("course.kun", {}, "Kunst"), code: "kun", pattern: /\b(?:ku|kun|kunst)\b/i },
+        { id: "inf", name: t("course.inf", {}, "Informatik"), code: "inf", pattern: /\b(?:inf|informatik)\b/i },
+        { id: "eth", name: t("course.eth", {}, "Ethik"), code: "eth", pattern: /\b(?:eth|ethik)\b/i },
+        { id: "rel", name: t("course.rel", {}, "Religion"), code: "rel", pattern: /\b(?:rel|religion)\b/i },
+        { id: "gw", name: t("course.gw", {}, "GW"), code: "gw", pattern: /\bgw\b/i },
     ];
 
+    const genericCourseName = t("course.generic", {}, "Kurs");
     const courseName = (code) => {
         const normalizedCode = normalize(code);
-        return subjects.find((subject) => normalizedCode.includes(subject.code))?.name || "Kurs";
+        const courseTokens = normalizedCode.split(/[^a-zäöüß0-9]+/).filter(Boolean);
+        return subjects.find((subject) => {
+            const aliases = subject.aliases || [subject.code];
+            return aliases.some((alias) => courseTokens.some(
+                (token) => new RegExp(`^${alias}\\d*$`, "i").test(token),
+            ));
+        })?.name
+            || genericCourseName;
     };
 
     const subjectOverrideFor = (storageKey) => {
@@ -321,7 +545,7 @@
     const subjectDisplayName = (code) => subjectOverrideFor(code)?.name || courseName(code);
     const originalSubjectName = (code) => {
         const detectedName = courseName(code);
-        return detectedName === "Kurs" ? code : detectedName;
+        return detectedName === genericCourseName ? code : detectedName;
     };
     const isEditableSubject = (code) => Boolean(String(code || "").trim());
 
@@ -337,7 +561,7 @@
         const firstSegment = withoutStatus
             .split(/\s+(?:bei|durch|in|statt|wird|entfällt)\b|[,;(]/i)[0]
             ?.trim();
-        return firstSegment || withoutStatus || "Fach";
+        return firstSegment || withoutStatus || t("subject.generic", {}, "Fach");
     };
 
     const entrySubjectDetails = (entry) => {
@@ -384,14 +608,12 @@
 
     const applySubjectColor = (element, color) => {
         if (!element) return;
-        const resolvedColor = SUBJECT_COLORS[validSubjectColor(color)];
-        if (resolvedColor) {
-            element.dataset.subjectAccent = color;
-            element.style.setProperty("--subject-color", resolvedColor);
+        const validColor = validSubjectColor(color);
+        if (validColor) {
+            element.dataset.subjectAccent = validColor;
             return;
         }
         delete element.dataset.subjectAccent;
-        element.style.removeProperty("--subject-color");
     };
 
     const selectedSubjectColor = () => validSubjectColor(
@@ -426,13 +648,19 @@
             if (name) {
                 name.textContent = override?.name || subject.code || "–";
                 name.classList.toggle("is-customized", Boolean(override?.name));
-                name.title = override?.name ? `Original: ${subject.label}` : "";
+                name.title = override?.name
+                    ? t("entry.original", { name: subject.label }, `Original: ${subject.label}`)
+                    : "";
             }
 
             if (editButton) {
                 const editable = isEditableSubject(subject.code);
                 editButton.hidden = !editable;
-                editButton.setAttribute("aria-label", `${override?.name || subject.name} anpassen`);
+                const displayName = override?.name || subject.name;
+                editButton.setAttribute(
+                    "aria-label",
+                    t("entry.adjust_named", { name: displayName }, `${displayName} anpassen`),
+                );
             }
 
             if (teacher) teacher.textContent = override?.teacher || "";
@@ -486,7 +714,7 @@
             : safeStorage.remove(SUBJECT_OVERRIDES_KEY);
         if (!stored) {
             if (subjectError) {
-                subjectError.textContent = "Die Anpassung konnte in diesem Browser nicht gespeichert werden.";
+                subjectError.textContent = t("subject.storage_error", {}, "Die Anpassung konnte in diesem Browser nicht gespeichert werden.");
                 subjectError.hidden = false;
             }
             return;
@@ -508,7 +736,7 @@
 
         if (!stored) {
             if (subjectError) {
-                subjectError.textContent = "Die eigene Bezeichnung konnte nicht gelöscht werden.";
+                subjectError.textContent = t("subject.delete_error", {}, "Die eigene Bezeichnung konnte nicht gelöscht werden.");
                 subjectError.hidden = false;
             }
             return;
@@ -563,8 +791,8 @@
         courseSettings.hidden = !grade;
         if (courseHelp) {
             courseHelp.textContent = isLowerGrade
-                ? "Wähle z. B. nur Latein oder Französisch – nicht beides."
-                : "Wähle alle Kurse, die du in der Oberstufe besuchst.";
+                ? t("settings.course_help_lower", {}, "Wähle z. B. nur Latein oder Französisch – nicht beides.")
+                : t("settings.course_help_upper", {}, "Wähle alle Kurse, die du in der Oberstufe besuchst.");
         }
         renderCourseOptions();
     };
@@ -582,17 +810,23 @@
     const updatePersonalizationSummary = () => {
         if (!personalizationSummary || !settingsOpen) return;
         if (!preferences.grade) {
-            personalizationSummary.textContent = "Klasse und Kurse auswählen";
-            settingsOpen.title = "Persönlichen Plan einrichten";
+            personalizationSummary.textContent = t("settings.summary.empty", {}, "Klasse und Kurse auswählen");
+            settingsOpen.title = t("settings.setup", {}, "Persönlichen Plan einrichten");
             return;
         }
 
         const gradeLabel = Number(preferences.grade) <= 10
-            ? `Klasse ${Number(preferences.grade)}${preferences.classLetter}`
-            : `Jahrgang ${Number(preferences.grade)}`;
-        const courseLabel = `${preferences.courses.length} ${preferences.courses.length === 1 ? "Kurs" : "Kurse"}`;
-        personalizationSummary.textContent = `${preferences.enabled ? "Aktiv" : "Pausiert"} · ${gradeLabel} · ${courseLabel}`;
-        settingsOpen.title = "Persönlichen Plan bearbeiten";
+            ? t("settings.summary.class", {
+                grade: Number(preferences.grade),
+                letter: preferences.classLetter.toUpperCase(),
+            }, `Klasse ${Number(preferences.grade)}${preferences.classLetter.toUpperCase()}`)
+            : t("settings.summary.grade", { number: Number(preferences.grade) }, `Jahrgang ${Number(preferences.grade)}`);
+        const courseLabel = tp("settings.course", preferences.courses.length, {}, `${preferences.courses.length} Kurse`);
+        const stateLabel = preferences.enabled
+            ? t("settings.summary.active", {}, "Aktiv")
+            : t("settings.summary.paused", {}, "Pausiert");
+        personalizationSummary.textContent = `${stateLabel} · ${gradeLabel} · ${courseLabel}`;
+        settingsOpen.title = t("settings.edit", {}, "Persönlichen Plan bearbeiten");
     };
 
     const applyPreferences = () => {
@@ -621,9 +855,9 @@
         const enabled = enabledInput?.checked === true;
 
         let errorMessage = "";
-        if (enabled && !grade) errorMessage = "Bitte wähle deinen Jahrgang aus.";
-        if (enabled && grade && Number(grade) <= 10 && !classLetter) errorMessage = "Bitte wähle deine Klasse aus.";
-        if (enabled && grade && Number(grade) >= 11 && courses.length === 0) errorMessage = "Bitte wähle mindestens einen Oberstufenkurs aus.";
+        if (enabled && !grade) errorMessage = t("settings.error.grade", {}, "Bitte wähle deinen Jahrgang aus.");
+        if (enabled && grade && Number(grade) <= 10 && !classLetter) errorMessage = t("settings.error.class", {}, "Bitte wähle deine Klasse aus.");
+        if (enabled && grade && Number(grade) >= 11 && courses.length === 0) errorMessage = t("settings.error.course", {}, "Bitte wähle mindestens einen Oberstufenkurs aus.");
 
         if (errorMessage) {
             settingsError.textContent = errorMessage;
@@ -631,15 +865,26 @@
             return;
         }
 
-        preferences = { enabled, grade, classLetter, courses };
-        safeStorage.set(PREFERENCES_KEY, JSON.stringify(preferences));
+        const nextPreferences = { enabled, grade, classLetter, courses };
+        if (!safeStorage.set(PREFERENCES_KEY, JSON.stringify(nextPreferences))) {
+            settingsError.textContent = t("settings.error.storage", {}, "Die Auswahl konnte in diesem Browser nicht gespeichert werden.");
+            settingsError.hidden = false;
+            showStorageNotice();
+            return;
+        }
+        preferences = nextPreferences;
         settingsDialog?.close();
         applyPreferences();
     });
 
     settingsReset?.addEventListener("click", () => {
+        if (!safeStorage.remove(PREFERENCES_KEY)) {
+            settingsError.textContent = t("settings.error.delete", {}, "Die gespeicherte Auswahl konnte nicht gelöscht werden.");
+            settingsError.hidden = false;
+            showStorageNotice();
+            return;
+        }
         preferences = defaultPreferences();
-        safeStorage.remove(PREFERENCES_KEY);
         fillSettingsForm();
         settingsDialog?.close();
         applyPreferences();
@@ -669,11 +914,11 @@
 
     const feedbackContentError = (message) => {
         if (/<[^>\n]{1,100}>/.test(message)) {
-            return "Bitte verwende ausschließlich normalen Text ohne HTML.";
+            return t("feedback.error.html", {}, "Bitte verwende ausschließlich normalen Text ohne HTML.");
         }
         if (/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(message)
             || /(?:https?:\/\/|www\.)\S+/i.test(message)) {
-            return "Bitte entferne E-Mail-Adressen und Links aus der Nachricht.";
+            return t("feedback.error.contact", {}, "Bitte entferne E-Mail-Adressen und Links aus der Nachricht.");
         }
 
         const phoneCandidates = message.match(/\+?\d[\d\s()./-]{5,}\d/g) || [];
@@ -682,7 +927,7 @@
             return digits.length >= 7
                 && (/^[+0]/.test(candidate.trim()) || digits.length >= 10);
         })) {
-            return "Bitte entferne Telefonnummern aus der Nachricht.";
+            return t("feedback.error.phone", {}, "Bitte entferne Telefonnummern aus der Nachricht.");
         }
         return "";
     };
@@ -696,7 +941,7 @@
         if (feedbackPrivacy) feedbackPrivacy.disabled = false;
         if (feedbackSubmit) {
             feedbackSubmit.disabled = false;
-            feedbackSubmit.textContent = "Nachricht senden";
+            feedbackSubmit.textContent = t("feedback.send", {}, "Nachricht senden");
         }
     };
 
@@ -721,7 +966,7 @@
 
         if (message.length < 10) {
             if (feedbackError) {
-                feedbackError.textContent = "Bitte beschreibe den Fehler mit mindestens 10 Zeichen.";
+                feedbackError.textContent = t("feedback.error.too_short", {}, "Bitte beschreibe den Fehler mit mindestens 10 Zeichen.");
                 feedbackError.hidden = false;
             }
             feedbackMessage?.focus();
@@ -738,7 +983,7 @@
         }
         if (!feedbackPrivacy?.checked) {
             if (feedbackError) {
-                feedbackError.textContent = "Bitte bestätige, dass deine Nachricht keine personenbezogenen Informationen enthält.";
+                feedbackError.textContent = t("feedback.error.confirm", {}, "Bitte bestätige, dass deine Nachricht keine personenbezogenen Informationen enthält.");
                 feedbackError.hidden = false;
             }
             feedbackPrivacy?.focus();
@@ -747,7 +992,7 @@
 
         if (feedbackSubmit) {
             feedbackSubmit.disabled = true;
-            feedbackSubmit.textContent = "Wird gesendet …";
+            feedbackSubmit.textContent = t("feedback.sending", {}, "Wird gesendet …");
         }
 
         try {
@@ -762,65 +1007,74 @@
                 body: JSON.stringify({ message, privacy_confirmed: true }),
             });
             const result = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(result.error || "Die Nachricht konnte nicht gespeichert werden.");
+            if (!response.ok) {
+                const errorMessages = {
+                    invalid_request: t("feedback.error.invalid_request", {}, "Ungültige Anfrage."),
+                    rate_limited: t("feedback.error.rate_limited", {}, "Zu viele Meldungen auf einmal. Bitte versuche es in einer Minute erneut."),
+                    privacy_required: t("feedback.error.confirm", {}, "Bitte bestätige, dass deine Nachricht keine personenbezogenen Informationen enthält."),
+                    text_required: t("feedback.error.text_required", {}, "Bitte gib eine Textnachricht ein."),
+                    too_short: t("feedback.error.too_short", {}, "Bitte beschreibe den Fehler mit mindestens 10 Zeichen."),
+                    too_long: t("feedback.error.too_long", {}, "Die Nachricht ist zu lang."),
+                    control_characters: t("feedback.error.control", {}, "Die Nachricht enthält nicht unterstützte Zeichen."),
+                    html: t("feedback.error.html", {}, "Bitte verwende ausschließlich normalen Text ohne HTML."),
+                    contact: t("feedback.error.contact", {}, "Bitte entferne E-Mail-Adressen und Links aus der Nachricht."),
+                    phone: t("feedback.error.phone", {}, "Bitte entferne Telefonnummern aus der Nachricht."),
+                    storage_unavailable: t("feedback.error.save", {}, "Die Nachricht konnte nicht gespeichert werden."),
+                };
+                throw new Error(errorMessages[result.error] || t("feedback.error.save", {}, "Die Nachricht konnte nicht gespeichert werden."));
+            }
 
             if (feedbackSuccess) feedbackSuccess.hidden = false;
             if (feedbackMessage) feedbackMessage.disabled = true;
             if (feedbackPrivacy) feedbackPrivacy.disabled = true;
-            if (feedbackSubmit) feedbackSubmit.textContent = "Gesendet";
+            if (feedbackSubmit) feedbackSubmit.textContent = t("feedback.sent", {}, "Gesendet");
         } catch (error) {
             if (feedbackError) {
                 feedbackError.textContent = error instanceof Error
                     ? error.message
-                    : "Die Nachricht konnte nicht gespeichert werden.";
+                    : t("feedback.error.save", {}, "Die Nachricht konnte nicht gespeichert werden.");
                 feedbackError.hidden = false;
             }
             if (feedbackSubmit) {
                 feedbackSubmit.disabled = false;
-                feedbackSubmit.textContent = "Erneut versuchen";
+                feedbackSubmit.textContent = t("feedback.retry", {}, "Erneut versuchen");
             }
         }
     });
 
-    const pwaEnabled = document.body.dataset.pwaEnabled === "true";
+    const pwaEnabled = window.vplanPwa?.enabled === true;
     const installButtons = document.querySelectorAll("[data-install-app], [data-install-help]");
     const installLabel = document.querySelector("[data-install-label]");
     const installDescription = document.querySelector("[data-install-description]");
     const installDialog = document.querySelector("[data-install-dialog]");
     const installIntro = document.querySelector("[data-install-intro]");
     const installSteps = document.querySelector("[data-install-steps]");
-    let installPrompt = null;
-
-    const isStandalone = () => (
-        window.matchMedia("(display-mode: standalone)").matches
-        || window.navigator.standalone === true
-    );
     const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
         || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
 
     const showInstalledState = () => {
         installButtons.forEach((button) => button.disabled = true);
-        if (installLabel) installLabel.textContent = "App installiert";
-        if (installDescription) installDescription.textContent = "Bereit im Startmenü";
+        if (installLabel) installLabel.textContent = t("install.installed", {}, "App installiert");
+        if (installDescription) installDescription.textContent = t("install.ready", {}, "Bereit im Startmenü");
     };
 
     const setInstallInstructions = () => {
         if (!installIntro || !installSteps) return;
         const instructions = isIos
             ? [
-                "Tippe in Safari auf das Teilen-Symbol.",
-                "Wähle „Zum Home-Bildschirm“.",
-                "Bestätige oben rechts mit „Hinzufügen“.",
+                t("install.ios_step_1", {}, "Tippe in Safari auf das Teilen-Symbol."),
+                t("install.ios_step_2", {}, "Wähle „Zum Home-Bildschirm“."),
+                t("install.ios_step_3", {}, "Bestätige oben rechts mit „Hinzufügen“."),
             ]
             : [
-                "Öffne das Menü deines Browsers.",
-                "Wähle „Vertretungsplan installieren“ oder „App installieren“.",
-                "Bestätige die Installation.",
+                t("install.browser_step_1", {}, "Öffne das Menü deines Browsers."),
+                t("install.browser_step_2", {}, "Wähle „Vertretungsplan installieren“ oder „App installieren“."),
+                t("install.browser_step_3", {}, "Bestätige die Installation."),
             ];
 
         installIntro.textContent = isIos
-            ? "Auf iPhone und iPad wird die App direkt über Safari hinzugefügt:"
-            : "Falls kein direkter Installationsdialog erscheint, füge die App über das Browsermenü hinzu:";
+            ? t("install.ios_intro", {}, "Auf iPhone und iPad wird die App direkt über Safari hinzugefügt:")
+            : t("install.fallback_intro", {}, "Falls kein direkter Installationsdialog erscheint, füge die App über das Browsermenü hinzu:");
         installSteps.replaceChildren(...instructions.map((instruction) => {
             const item = document.createElement("li");
             item.textContent = instruction;
@@ -829,17 +1083,16 @@
     };
 
     const requestAppInstall = async () => {
+        const installPrompt = window.vplanPwa?.takeInstallPrompt() || null;
         if (!installPrompt) {
             setInstallInstructions();
             installDialog?.showModal();
             return;
         }
 
-        const prompt = installPrompt;
-        installPrompt = null;
         try {
-            await prompt.prompt();
-            const choice = await prompt.userChoice;
+            await installPrompt.prompt();
+            const choice = await installPrompt.userChoice;
             if (choice.outcome === "accepted") showInstalledState();
         } catch (error) {
             setInstallInstructions();
@@ -854,26 +1107,12 @@
         button.addEventListener("click", () => installDialog?.close());
     });
 
-    window.addEventListener("beforeinstallprompt", (event) => {
-        if (!pwaEnabled) return;
-        event.preventDefault();
-        installPrompt = event;
-    });
-    window.addEventListener("appinstalled", () => {
-        installPrompt = null;
-        showInstalledState();
+    window.addEventListener("vplan-pwa-state-change", () => {
+        if (!window.vplanPwa?.installPrompt) showInstalledState();
     });
 
-    if (pwaEnabled && isStandalone()) {
+    if (pwaEnabled && (window.vplanPwa?.installed || window.vplanPwa?.isStandalone())) {
         showInstalledState();
-    }
-
-    if (pwaEnabled && "serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-                // Installation remains optional; the normal website still works.
-            });
-        });
     }
 
     updateSubjectEntries();

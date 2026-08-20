@@ -3,6 +3,7 @@ import os
 import tempfile
 import time
 import unittest
+import httpx
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -274,6 +275,37 @@ class SynchronizerTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "not_due")
         synchronizer._download_plan.assert_not_called()
+
+    def test_invalid_last_checked_timestamp_is_recovered(self):
+        self.config.state_path.write_text(
+            json.dumps({"last_checked_epoch": "broken"}), encoding="utf-8"
+        )
+        synchronizer = VPlanSynchronizer(self.config)
+        synchronizer._download_plan = Mock(
+            return_value=(parse_vplan_html(sample_html(), TEST_SCHOOL_ID), set())
+        )
+
+        result = synchronizer.sync_if_due(force=True)
+
+        self.assertEqual(result["status"], "updated")
+        saved_state = json.loads(self.config.state_path.read_text(encoding="utf-8"))
+        self.assertIsInstance(saved_state["last_checked_epoch"], float)
+
+    def test_streaming_request_rejects_oversized_response(self):
+        small_config = VPlanSyncConfig(
+            **{
+                **self.config.__dict__,
+                "max_response_bytes": 32,
+            }
+        )
+        synchronizer = VPlanSynchronizer(small_config)
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(200, content=b"x" * 64)
+        )
+
+        with httpx.Client(transport=transport) as client:
+            with self.assertRaisesRegex(VPlanSyncError, "size limit"):
+                synchronizer._request(client, "https://example.invalid/board")
 
     def test_teacher_and_course_learning_accumulates_during_school_year(self):
         first_plan = parse_vplan_html(

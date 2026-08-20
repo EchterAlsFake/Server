@@ -6,45 +6,51 @@
     <meta name="theme-color" content="#f5f7fb">
     <meta name="color-scheme" content="light dark">
     {% if pwa_enabled %}
-        <meta name="application-name" content="Vertretungsplan">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="default">
-        <meta name="apple-mobile-web-app-title" content="VPlan">
+        <meta name="vplan-pwa-enabled" content="true">
+        <meta name="application-name" content="Vertretungsplan" data-i18n-content="app.title">
     {% endif %}
-    <title>Vertretungsplan</title>
-    <script>
-        try {
-            const savedTheme = localStorage.getItem("vplan-theme");
-            const useDarkTheme = savedTheme === "dark" ||
-                (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
-            document.documentElement.dataset.theme = useDarkTheme ? "dark" : "light";
-        } catch (error) {
-            document.documentElement.dataset.theme = "light";
-        }
-    </script>
-    {% if pwa_enabled %}<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">{% endif %}
+    <title data-i18n="app.title">Vertretungsplan</title>
+    <script src="{{ url_for('static', filename='vplan-theme.js') }}"></script>
+    {% if pwa_enabled %}<link rel="manifest" href="{{ url_for('vplan_manifest') }}">{% endif %}
     <link rel="icon" href="{{ url_for('static', filename='vplan-icon.svg') }}" type="image/svg+xml">
     {% if pwa_enabled %}<link rel="apple-touch-icon" href="{{ url_for('static', filename='vplan-icon-192.png') }}">{% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='vplan.css') }}">
+    <script src="{{ url_for('static', filename='vplan-pwa.js') }}" defer></script>
     <script src="{{ url_for('static', filename='vplan.js') }}" defer></script>
 </head>
-<body class="disclaimer-pending" data-pwa-enabled="{{ 'true' if pwa_enabled else 'false' }}">
-    <a class="skip-link" href="#plan-content">Zum Vertretungsplan springen</a>
+<body data-pwa-enabled="{{ 'true' if pwa_enabled else 'false' }}">
+    <noscript>
+        <p class="noscript-notice" data-i18n="app.javascript_notice">JavaScript ist deaktiviert. Der vollständige Plan bleibt sichtbar, persönliche Filter und App-Funktionen stehen jedoch nicht zur Verfügung.</p>
+    </noscript>
+    <p class="storage-notice" data-storage-notice role="status" hidden data-i18n="storage.unavailable">Diese Änderung konnte nicht dauerhaft im Browser gespeichert werden.</p>
+    <a class="skip-link" href="#plan-content" data-i18n="app.skip">Zum Vertretungsplan springen</a>
 
-    <aside class="utility-header" aria-label="Informationen zum Angebot">
+    <aside class="utility-header" aria-label="Informationen zum Angebot" data-i18n-aria-label="utility.label">
         <div class="utility-header-inner">
-            <span>Inoffizielles Schülerprojekt</span>
-            <nav aria-label="Informationen zum Angebot">
-                <button type="button" data-info-open="controller-dialog">Verantwortlicher</button>
+            <span data-i18n="app.unofficial">Inoffizielles Schülerprojekt</span>
+            <nav aria-label="Informationen zum Angebot" data-i18n-aria-label="utility.label">
+                <div class="language-picker" role="group" aria-label="Sprache" data-i18n-aria-label="language.label" data-language-picker>
+                    <button class="language-option" type="button" data-language-option="de" aria-pressed="true" aria-label="Deutsch" title="Deutsch">
+                        <span class="language-flag" aria-hidden="true">🇩🇪</span>
+                    </button>
+                    <button class="language-option" type="button" data-language-option="en" aria-pressed="false" aria-label="English (Beta)" title="English (Beta)">
+                        <span class="language-flag" aria-hidden="true">🇬🇧</span>
+                    </button>
+                </div>
                 <span aria-hidden="true">·</span>
-                <button type="button" data-info-open="privacy-dialog">Datenschutz</button>
+                <button type="button" data-info-open="controller-dialog" data-i18n="utility.controller">Verantwortlicher</button>
                 <span aria-hidden="true">·</span>
-                <button type="button" data-info-open="credits-dialog">Credits</button>
+                <button type="button" data-info-open="privacy-dialog" data-i18n="utility.privacy">Datenschutz</button>
                 <span aria-hidden="true">·</span>
-                <button class="changelog-trigger" type="button" data-info-open="changelog-dialog">Änderungen</button>
+                <button type="button" data-info-open="credits-dialog" data-i18n="utility.credits">Credits</button>
+                <span aria-hidden="true">·</span>
+                <button class="changelog-trigger" type="button" data-info-open="changelog-dialog" data-i18n="utility.changelog">Änderungen</button>
+                <span aria-hidden="true">·</span>
+                <a href="{{ url_for('vplan_translate') }}" data-i18n="utility.translate">Übersetzen</a>
             </nav>
         </div>
     </aside>
+    <p class="translation-notice" data-translation-notice data-i18n="language.notice" hidden>Community-Übersetzung · Im Zweifel ist die deutsche Fassung maßgeblich.</p>
 
     <header class="app-header">
         <div class="header-inner">
@@ -56,8 +62,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="eyebrow">Schulalltag</p>
-                    <h1>Vertretungsplan</h1>
+                    <p class="eyebrow" data-i18n="app.eyebrow">Schulalltag</p>
+                    <h1 data-i18n="app.title">Vertretungsplan</h1>
                 </div>
             </div>
 
@@ -65,10 +71,15 @@
                 {% if plan %}
                     <p class="updated">
                         <span class="status-dot" aria-hidden="true"></span>
-                        Stand: <time>{{ updated_at }}</time>
+                        <span data-i18n="app.updated">Stand:</span>
+                        {% if updated_at %}
+                            <time datetime="{{ updated_at_iso }}" data-vplan-updated>{{ updated_at }}</time>
+                        {% else %}
+                            <span data-i18n="app.updated_unknown">unbekannt</span>
+                        {% endif %}
                     </p>
                 {% endif %}
-                <button class="icon-button" type="button" data-theme-toggle aria-label="Dunkelmodus aktivieren" title="Darstellung wechseln">
+                <button class="icon-button" type="button" data-theme-toggle aria-label="Dunkelmodus aktivieren" title="Darstellung wechseln" data-i18n-aria-label="theme.enable_dark" data-i18n-title="theme.switch">
                     <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"/>
                     </svg>
@@ -87,7 +98,7 @@
             {% endfor %}
         </div>
         {% if not error and plan.tage %}
-            <nav class="day-tabs" role="tablist" aria-label="Tag auswählen">
+            <nav class="day-tabs" role="tablist" aria-label="Tag auswählen" data-i18n-aria-label="navigation.choose_day">
                 {% for day in plan.tage %}
                     <button
                         class="day-tab{% if loop.first %} is-active{% endif %}"
@@ -98,16 +109,17 @@
                         aria-selected="{{ 'true' if loop.first else 'false' }}"
                         tabindex="{{ '0' if loop.first else '-1' }}"
                         data-day-target="day-panel-{{ loop.index0 }}"
+                        data-day-date="{{ day_dates[loop.index0] }}"
                     >
-                        <span class="day-tab-label">{{ day.DATUM|default('Unbekannter Tag', true) }}</span>
+                        <span class="day-tab-label">{% if day.DATUM %}{{ day.DATUM|striptags }}{% else %}<span data-i18n="plan.unknown_day">Unbekannter Tag</span>{% endif %}</span>
                         {% set tab_entry_count = day.EINTRAEGE_KLASSEN|default([], true)|length %}
-                        <span class="day-tab-count">{{ tab_entry_count }} {{ 'Änderung' if tab_entry_count == 1 else 'Änderungen' }}</span>
+                        <span class="day-tab-count" data-i18n="plan.change" data-i18n-plural data-i18n-count="{{ tab_entry_count }}">{{ tab_entry_count }} {{ 'Änderung' if tab_entry_count == 1 else 'Änderungen' }}</span>
                     </button>
                 {% endfor %}
             </nav>
         {% endif %}
 
-        <section class="quick-actions" aria-label="Schnellaktionen">
+        <section class="quick-actions" aria-label="Schnellaktionen" data-i18n-aria-label="quick.label">
             <button class="quick-action" type="button" data-personalization-open>
                 <span class="quick-action-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false">
@@ -115,8 +127,8 @@
                     </svg>
                 </span>
                 <span class="quick-action-copy">
-                    <strong>Mein Plan</strong>
-                    <small data-personalization-summary>Klasse und Kurse auswählen</small>
+                    <strong data-i18n="quick.personal.title">Mein Plan</strong>
+                    <small data-personalization-summary data-i18n="quick.personal.description">Klasse und Kurse auswählen</small>
                 </span>
             </button>
 
@@ -127,8 +139,8 @@
                     </svg>
                 </span>
                 <span class="quick-action-copy">
-                    <strong data-install-label>App installieren</strong>
-                    <small data-install-description>{{ 'Zum Startbildschirm hinzufügen' if pwa_enabled else 'Auf dieser Adresse nicht verfügbar' }}</small>
+                    <strong data-install-label data-i18n="quick.install.title">App installieren</strong>
+                    <small data-install-description data-i18n="{{ 'quick.install.description' if pwa_enabled else 'quick.install.unavailable' }}">{{ 'Zum Startbildschirm hinzufügen' if pwa_enabled else 'Auf dieser Adresse nicht verfügbar' }}</small>
                 </span>
             </button>
 
@@ -139,8 +151,8 @@
                     </svg>
                 </span>
                 <span class="quick-action-copy">
-                    <strong>Fehler melden</strong>
-                    <small>Kurze Nachricht senden</small>
+                    <strong data-i18n="quick.feedback.title">Fehler melden</strong>
+                    <small data-i18n="quick.feedback.description">Kurze Nachricht senden</small>
                 </span>
             </button>
         </section>
@@ -148,14 +160,14 @@
         {% if error %}
             <section class="empty-state error-state" role="alert">
                 <div class="empty-icon" aria-hidden="true">!</div>
-                <h2>Plan momentan nicht verfügbar</h2>
-                <p>Die Datei konnte nicht gelesen werden. Bitte versuche es später noch einmal.</p>
+                <h2 data-i18n="state.unavailable.title">Plan momentan nicht verfügbar</h2>
+                <p data-i18n="state.unavailable.description">Die Datei konnte nicht gelesen werden. Bitte versuche es später noch einmal.</p>
             </section>
         {% elif not plan.tage %}
             <section class="empty-state">
                 <div class="empty-icon" aria-hidden="true">✓</div>
-                <h2>Keine Änderungen</h2>
-                <p>Im aktuellen Plan sind keine Tage eingetragen.</p>
+                <h2 data-i18n="state.empty.title">Keine Änderungen</h2>
+                <p data-i18n="state.empty.description">Im aktuellen Plan sind keine Tage eingetragen.</p>
             </section>
         {% else %}
             {% for day in plan.tage %}
@@ -171,9 +183,12 @@
                     {% if not loop.first %}hidden{% endif %}
                 >
                     <div class="date-heading">
-                        <p class="date-kicker">Ausgewählter Tag</p>
-                        <h2>{{ day.DATUM|default('Unbekannter Tag', true) }}</h2>
-                        <p class="panel-updated">Stand: {{ updated_at }}</p>
+                        <p class="date-kicker" data-i18n="navigation.selected_day">Ausgewählter Tag</p>
+                        <h2>{% if day.DATUM %}{{ day.DATUM|striptags }}{% else %}<span data-i18n="plan.unknown_day">Unbekannter Tag</span>{% endif %}</h2>
+                        <p class="panel-updated">
+                            <span data-i18n="app.updated">Stand:</span>
+                            {% if updated_at %}<time datetime="{{ updated_at_iso }}" data-vplan-updated>{{ updated_at }}</time>{% else %}<span data-i18n="app.updated_unknown">unbekannt</span>{% endif %}
+                        </p>
                     </div>
 
                     {% if important_notices or other_notices %}
@@ -184,17 +199,17 @@
                                         <path d="M12 9v4M12 17h.01M10.3 4.5 3.4 17a2 2 0 0 0 1.8 3h13.6a2 2 0 0 0 1.8-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/>
                                     </svg>
                                 </div>
-                                <h3 id="notices-title-{{ day_index }}">Hinweise</h3>
+                                <h3 id="notices-title-{{ day_index }}" data-i18n="notices.title">Hinweise</h3>
                             </div>
 
                             <div class="notice-list">
                                 {% for notice in important_notices %}
                                     <article class="notice-card notice-important">
-                                        <span class="sr-only">Wichtiger Hinweis: </span>
+                                        <span class="sr-only" data-i18n="notices.important">Wichtiger Hinweis:</span>
                                         {% if notice is string %}
                                             <h4>{{ notice|striptags|redact_teacher_codes }}</h4>
                                         {% else %}
-                                            <h4>{{ notice[0]|default('Wichtiger Hinweis', true)|striptags|redact_teacher_codes }}</h4>
+                                            <h4>{% if notice[0] %}{{ notice[0]|striptags|redact_teacher_codes }}{% else %}<span data-i18n="notices.important_fallback">Wichtiger Hinweis</span>{% endif %}</h4>
                                             {% if notice|length > 1 and notice[1] %}<p>{{ notice[1]|striptags|redact_teacher_codes }}</p>{% endif %}
                                         {% endif %}
                                     </article>
@@ -204,7 +219,7 @@
                                         {% if notice is string %}
                                             <h4>{{ notice|striptags|redact_teacher_codes }}</h4>
                                         {% else %}
-                                            <h4>{{ notice[0]|default('Hinweis', true)|striptags|redact_teacher_codes }}</h4>
+                                            <h4>{% if notice[0] %}{{ notice[0]|striptags|redact_teacher_codes }}{% else %}<span data-i18n="notices.fallback">Hinweis</span>{% endif %}</h4>
                                             {% if notice|length > 1 and notice[1] %}<p>{{ notice[1]|striptags|redact_teacher_codes }}</p>{% endif %}
                                         {% endif %}
                                     </article>
@@ -216,15 +231,15 @@
                     <section class="changes" aria-labelledby="changes-title-{{ day_index }}">
                         <div class="changes-heading">
                             <div>
-                                <p class="section-kicker">Dein Stundenplan</p>
-                                <h3 id="changes-title-{{ day_index }}">Änderungen</h3>
+                                <p class="section-kicker" data-i18n="changes.kicker">Dein Stundenplan</p>
+                                <h3 id="changes-title-{{ day_index }}" data-i18n="changes.title">Änderungen</h3>
                             </div>
-                            <span class="result-count" data-result-count aria-live="polite">{{ entries|length }} Einträge</span>
+                            <span class="result-count" data-result-count aria-live="polite" data-i18n="plan.entry" data-i18n-plural data-i18n-count="{{ entries|length }}">{{ entries|length }} Einträge</span>
                         </div>
 
-                        <div class="controls" aria-label="Plan filtern">
+                        <div class="controls" aria-label="Plan filtern" data-i18n-aria-label="changes.filter_label">
                             <label class="search-field">
-                                <span class="sr-only">Nach Klasse, Fach oder Raum suchen</span>
+                                <span class="sr-only" data-i18n="changes.search_label">Nach Klasse, Fach oder Raum suchen</span>
                                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                     <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>
                                 </svg>
@@ -233,12 +248,13 @@
                                     inputmode="search"
                                     autocomplete="off"
                                     placeholder="Klasse, Fach oder Raum …"
+                                    data-i18n-placeholder="changes.search_placeholder"
                                     data-plan-search
                                 >
                             </label>
-                            <div class="filter-chips" role="group" aria-label="Art der Änderung">
-                                <button class="filter-chip is-active" type="button" data-filter="all" aria-pressed="true">Alle</button>
-                                <button class="filter-chip" type="button" data-filter="cancelled" aria-pressed="false">Nur Ausfälle</button>
+                            <div class="filter-chips" role="group" aria-label="Art der Änderung" data-i18n-aria-label="changes.type_label">
+                                <button class="filter-chip is-active" type="button" data-filter="all" aria-pressed="true" data-i18n="changes.all">Alle</button>
+                                <button class="filter-chip" type="button" data-filter="cancelled" aria-pressed="false" data-i18n="changes.cancelled_only">Nur Ausfälle</button>
                             </div>
                         </div>
 
@@ -265,6 +281,7 @@
                                                     data-subject-edit
                                                     aria-label="Fach anpassen"
                                                     title="Fach anpassen"
+                                                    data-i18n-title="entry.adjust_subject"
                                                     hidden
                                                 >
                                                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -273,33 +290,33 @@
                                                 </button>
                                             </div>
                                             {% if is_cancelled %}
-                                                <span class="status-badge cancelled-badge">Ausfall</span>
+                                                <span class="status-badge cancelled-badge" data-i18n="entry.cancelled">Ausfall</span>
                                             {% else %}
-                                                <span class="status-badge change-badge">Änderung</span>
+                                                <span class="status-badge change-badge" data-i18n="entry.changed">Änderung</span>
                                             {% endif %}
                                         </div>
 
-                                        <p class="entry-description">{{ entry.NEU|default('Keine Beschreibung', true)|striptags|redact_teacher_codes }}</p>
+                                        <p class="entry-description">{% if entry.NEU %}{{ entry.NEU|striptags|redact_teacher_codes }}{% else %}<span data-i18n="entry.no_description">Keine Beschreibung</span>{% endif %}</p>
 
                                         <div class="entry-meta">
                                             <span>
                                                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                                     <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
                                                 </svg>
-                                                <span class="sr-only">Uhrzeit: </span>{{ entry.STUNDE|default('Zeit unbekannt', true)|striptags }}
+                                                <span class="sr-only" data-i18n="entry.time">Uhrzeit:</span> {% if entry.STUNDE %}{{ entry.STUNDE|striptags }}{% else %}<span data-i18n="entry.time_unknown">Zeit unbekannt</span>{% endif %}
                                             </span>
                                             <span data-subject-teacher-row hidden>
                                                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                                     <circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
                                                 </svg>
-                                                <span class="sr-only">Lehrer: </span><span data-subject-teacher></span>
+                                                <span class="sr-only" data-i18n="entry.teacher">Lehrer:</span> <span data-subject-teacher></span>
                                             </span>
                                         </div>
 
                                         {% if entry.BEMERKUNGEN %}
                                             <p class="entry-note">
                                                 <span aria-hidden="true">i</span>
-                                                <span><strong>Bemerkung:</strong> {{ entry.BEMERKUNGEN|striptags|redact_teacher_codes }}</span>
+                                                <span><strong data-i18n="entry.note">Bemerkung:</strong> {{ entry.BEMERKUNGEN|striptags|redact_teacher_codes }}</span>
                                             </p>
                                         {% endif %}
                                     </div>
@@ -309,15 +326,15 @@
 
                         <div class="no-results" data-no-results hidden>
                             <div class="empty-icon" aria-hidden="true">⌕</div>
-                            <h4>Keine passenden Einträge</h4>
-                            <p>Ändere den Suchbegriff oder zeige wieder alle Änderungen an.</p>
+                            <h4 data-i18n="results.none.title">Keine passenden Einträge</h4>
+                            <p data-i18n="results.none.description">Ändere den Suchbegriff oder zeige wieder alle Änderungen an.</p>
                         </div>
 
                         {% if not entries %}
                             <div class="no-results static-empty">
                                 <div class="empty-icon" aria-hidden="true">✓</div>
-                                <h4>Keine Änderungen für diesen Tag</h4>
-                                <p>Der reguläre Stundenplan gilt.</p>
+                                <h4 data-i18n="results.day_empty.title">Keine Änderungen für diesen Tag</h4>
+                                <p data-i18n="results.day_empty.description">Der reguläre Stundenplan gilt.</p>
                             </div>
                         {% endif %}
                     </section>
@@ -330,43 +347,43 @@
         <form class="dialog-card subject-card" data-subject-form>
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Nur für dich</p>
-                    <h2 id="subject-dialog-title">Fach anpassen</h2>
+                    <p class="dialog-kicker" data-i18n="subject.kicker">Nur für dich</p>
+                    <h2 id="subject-dialog-title" data-i18n="subject.title">Fach anpassen</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-subject-close aria-label="Dialog schließen">
+                <button class="icon-button dialog-close" type="button" data-subject-close aria-label="Dialog schließen" data-i18n-aria-label="common.dialog_close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
-            <div class="subject-original" data-subject-color-preview aria-label="Vorschau für das ausgewählte Fach">
+            <div class="subject-original" data-subject-color-preview aria-label="Vorschau für das ausgewählte Fach" data-i18n-aria-label="subject.preview">
                 <span class="subject-original-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>
                 </span>
                 <span>
-                    <small>Original</small>
-                    <strong data-subject-original-name>Fach</strong>
+                    <small data-i18n="subject.original">Original</small>
+                    <strong data-subject-original-name data-i18n="subject.generic">Fach</strong>
                     <code data-subject-original-code></code>
                 </span>
             </div>
 
-            <p class="dialog-intro">Name, Lehrkraft und Farbe gelten nur für dieses Fach beziehungsweise diesen Kurs und bleiben ausschließlich in diesem Browser.</p>
+            <p class="dialog-intro" data-i18n="subject.intro">Name, Lehrkraft und Farbe gelten nur für dieses Fach beziehungsweise diesen Kurs und bleiben ausschließlich in diesem Browser.</p>
 
             <div class="subject-form-fields">
                 <label class="field-label">
-                    <span>Neuer Name <small>(optional)</small></span>
-                    <input type="text" data-subject-new-name maxlength="60" autocomplete="off" placeholder="z. B. Mathe LK">
-                    <small>Wird anstelle der ursprünglichen Kennung angezeigt.</small>
+                    <span><span data-i18n="subject.new_name">Neuer Name</span> <small data-i18n="common.optional">(optional)</small></span>
+                    <input type="text" data-subject-new-name maxlength="60" autocomplete="off" placeholder="z. B. Mathe LK" data-i18n-placeholder="subject.name_placeholder">
+                    <small data-i18n="subject.name_help">Wird anstelle der ursprünglichen Kennung angezeigt.</small>
                 </label>
 
                 <label class="field-label">
-                    <span>Lehrer <small>(optional)</small></span>
-                    <input type="text" data-subject-new-teacher maxlength="60" autocomplete="off" placeholder="z. B. Frau Müller">
-                    <small>Erscheint direkt beim Fach im Vertretungsplan.</small>
+                    <span><span data-i18n="subject.teacher">Lehrer</span> <small data-i18n="common.optional">(optional)</small></span>
+                    <input type="text" data-subject-new-teacher maxlength="60" autocomplete="off" placeholder="z. B. Frau Müller" data-i18n-placeholder="subject.teacher_placeholder">
+                    <small data-i18n="subject.teacher_help">Erscheint direkt beim Fach im Vertretungsplan.</small>
                 </label>
 
                 <fieldset class="subject-color-picker">
-                    <legend>Akzentfarbe <small>(optional)</small></legend>
-                    <p>Eine dezente Farbtönung hilft dir, Fächer schneller wiederzufinden.</p>
+                    <legend><span data-i18n="subject.color">Akzentfarbe</span> <small data-i18n="common.optional">(optional)</small></legend>
+                    <p data-i18n="subject.color_help">Eine kräftige Farbtönung hilft dir, Fächer schneller wiederzufinden.</p>
                     <div class="subject-color-options">
                         {% for color_id, color_label in [
                             ('', 'Standard'),
@@ -382,7 +399,7 @@
                             <label class="subject-color-choice" data-color-swatch="{{ color_id or 'default' }}">
                                 <input type="radio" name="subject-color" value="{{ color_id }}" data-subject-color-choice{% if not color_id %} checked{% endif %}>
                                 <span class="subject-color-swatch" aria-hidden="true"></span>
-                                <small>{{ color_label }}</small>
+                                <small data-i18n="subject.color.{{ color_id or 'standard' }}">{{ color_label }}</small>
                             </label>
                         {% endfor %}
                     </div>
@@ -392,10 +409,10 @@
             <p class="form-error" data-subject-error role="alert" hidden></p>
 
             <div class="dialog-actions subject-actions">
-                <button class="text-button danger-text" type="button" data-subject-reset>Anpassungen löschen</button>
+                <button class="text-button danger-text" type="button" data-subject-reset data-i18n="subject.reset">Anpassungen löschen</button>
                 <div>
-                    <button class="text-button" type="button" data-subject-close>Abbrechen</button>
-                    <button class="primary-button" type="submit">Speichern</button>
+                    <button class="text-button" type="button" data-subject-close data-i18n="common.cancel">Abbrechen</button>
+                    <button class="primary-button" type="submit" data-i18n="common.save">Speichern</button>
                 </div>
             </div>
         </form>
@@ -405,40 +422,40 @@
         <form class="dialog-card feedback-card" data-feedback-form>
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Hilf uns beim Verbessern</p>
-                    <h2 id="feedback-dialog-title">Fehler melden</h2>
+                    <p class="dialog-kicker" data-i18n="feedback.kicker">Hilf uns beim Verbessern</p>
+                    <h2 id="feedback-dialog-title" data-i18n="feedback.title">Fehler melden</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-feedback-close aria-label="Dialog schließen">
+                <button class="icon-button dialog-close" type="button" data-feedback-close aria-label="Dialog schließen" data-i18n-aria-label="common.dialog_close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
-            <p class="dialog-intro">Beschreibe kurz, was nicht funktioniert oder falsch dargestellt wird. Gespeichert werden nur deine Nachricht und der Zeitpunkt des Eingangs.</p>
+            <p class="dialog-intro" data-i18n="feedback.intro">Beschreibe kurz, was nicht funktioniert oder falsch dargestellt wird. Gespeichert werden nur deine Nachricht und der Zeitpunkt des Eingangs.</p>
 
             <div class="privacy-guard" role="note">
                 <span aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 5 6v5c0 4.6 2.9 8.8 7 10 4.1-1.2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/></svg>
                 </span>
-                <p><strong>Bitte anonym bleiben:</strong> Keine Namen, E-Mail-Adressen, Telefonnummern, Links oder andere personenbezogene Informationen eingeben.</p>
+                <p><strong data-i18n="feedback.privacy_title">Bitte anonym bleiben:</strong> <span data-i18n="feedback.privacy_text">Keine Namen, E-Mail-Adressen, Telefonnummern, Links oder andere personenbezogene Informationen eingeben.</span></p>
             </div>
 
             <label class="field-label feedback-message-field">
-                <span>Nachricht</span>
-                <textarea data-feedback-message minlength="10" maxlength="1500" rows="6" placeholder="z. B. Beim Wechsel auf Donnerstag wird noch der Mittwoch angezeigt …" required></textarea>
-                <small><span data-feedback-count>0</span>/1500 Zeichen · Nur normaler Text</small>
+                <span data-i18n="feedback.message">Nachricht</span>
+                <textarea data-feedback-message minlength="10" maxlength="1500" rows="6" placeholder="z. B. Beim Wechsel auf Donnerstag wird noch der Mittwoch angezeigt …" data-i18n-placeholder="feedback.placeholder" required></textarea>
+                <small><span data-feedback-count>0</span>/1500 <span data-i18n="feedback.characters">Zeichen · Nur normaler Text</span></small>
             </label>
 
             <label class="confirm-checkbox feedback-confirm">
                 <input type="checkbox" data-feedback-privacy required>
-                <span>Meine Nachricht enthält keine personenbezogenen Informationen.</span>
+                <span data-i18n="feedback.confirm">Meine Nachricht enthält keine personenbezogenen Informationen.</span>
             </label>
 
             <p class="form-error" data-feedback-error role="alert" hidden></p>
-            <p class="form-success" data-feedback-success role="status" hidden>Danke! Deine Fehlermeldung wurde gespeichert.</p>
+            <p class="form-success" data-feedback-success role="status" hidden data-i18n="feedback.success">Danke! Deine Fehlermeldung wurde gespeichert.</p>
 
             <div class="dialog-actions">
-                <button class="text-button" type="button" data-feedback-close>Abbrechen</button>
-                <button class="primary-button" type="submit" data-feedback-submit>Nachricht senden</button>
+                <button class="text-button" type="button" data-feedback-close data-i18n="common.cancel">Abbrechen</button>
+                <button class="primary-button" type="submit" data-feedback-submit data-i18n="feedback.send">Nachricht senden</button>
             </div>
         </form>
     </dialog>
@@ -447,58 +464,58 @@
         <article class="dialog-card info-card">
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Schneller Zugriff</p>
-                    <h2 id="install-dialog-title">Vertretungsplan installieren</h2>
+                    <p class="dialog-kicker" data-i18n="install.kicker">Schneller Zugriff</p>
+                    <h2 id="install-dialog-title" data-i18n="install.title">Vertretungsplan installieren</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-install-close aria-label="Dialog schließen">
+                <button class="icon-button dialog-close" type="button" data-install-close aria-label="Dialog schließen" data-i18n-aria-label="common.dialog_close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
             <div class="info-content install-instructions">
-                <p data-install-intro>Falls dein Browser keinen direkten Installationsdialog anbietet, kannst du die App über das Browsermenü hinzufügen:</p>
+                <p data-install-intro data-i18n="install.fallback_intro">Falls dein Browser keinen direkten Installationsdialog anbietet, kannst du die App über das Browsermenü hinzufügen:</p>
                 <ol data-install-steps>
-                    <li>Öffne das Menü deines Browsers.</li>
-                    <li>Wähle <strong>„Vertretungsplan installieren“</strong> oder <strong>„App installieren“</strong>.</li>
-                    <li>Bestätige die Installation. Danach findest du den Vertretungsplan im Startmenü beziehungsweise auf dem Startbildschirm.</li>
+                    <li data-i18n="install.browser_step_1">Öffne das Menü deines Browsers.</li>
+                    <li data-i18n="install.browser_step_2">Wähle „Vertretungsplan installieren“ oder „App installieren“.</li>
+                    <li data-i18n="install.browser_step_3">Bestätige die Installation.</li>
                 </ol>
-                <p class="info-small">Dabei wird keine native App aus einem Store geladen. Die Webseite öffnet sich in einem eigenen App-Fenster und deine Einstellungen bleiben weiterhin lokal in diesem Browserprofil.</p>
+                <p class="info-small" data-i18n="install.info">Dabei wird keine native App aus einem Store geladen. Die Webseite öffnet sich in einem eigenen App-Fenster und deine Einstellungen bleiben weiterhin lokal in diesem Browserprofil.</p>
+                <p class="info-small" data-i18n="install.android_refresh">Falls Android bereits eine ältere Version installiert hat, deinstalliere den bisherigen Startbildschirm-Eintrag einmal und installiere ihn anschließend neu. Android erzeugt den Browser-App-Wrapper dabei neu.</p>
             </div>
 
             <div class="dialog-actions info-actions">
-                <button class="primary-button" type="button" data-install-close>Verstanden</button>
+                <button class="primary-button" type="button" data-install-close data-i18n="install.understood">Verstanden</button>
             </div>
         </article>
     </dialog>{% endif %}
 
     <footer class="app-footer">
-        <p>Inoffizielle private Ansicht · Alle Angaben ohne Gewähr · Einstellungen bleiben lokal auf diesem Gerät.</p>
+        <p data-i18n="app.footer">Inoffizielle private Ansicht · Alle Angaben ohne Gewähr · Einstellungen bleiben lokal auf diesem Gerät.</p>
     </footer>
 
     <dialog class="settings-dialog" data-settings-dialog aria-labelledby="settings-title">
         <form class="dialog-card settings-card" data-settings-form>
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Optional</p>
-                    <h2 id="settings-title">Meinen Plan einrichten</h2>
+                    <p class="dialog-kicker" data-i18n="settings.kicker">Optional</p>
+                    <h2 id="settings-title" data-i18n="settings.title">Meinen Plan einrichten</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-settings-close aria-label="Einstellungen schließen">
+                <button class="icon-button dialog-close" type="button" data-settings-close aria-label="Einstellungen schließen" data-i18n-aria-label="settings.close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
-            <p class="dialog-intro">Wähle einmalig deine Klasse und Kurse. Die Auswahl wird nur in diesem Browser gespeichert und kann jederzeit geändert oder deaktiviert werden.</p>
+            <p class="dialog-intro" data-i18n="settings.intro">Wähle einmalig deine Klasse und Kurse. Die Auswahl wird nur in diesem Browser gespeichert und kann jederzeit geändert oder deaktiviert werden.</p>
 
             <div class="beta-notice" role="note" aria-label="Hinweis zur Testphase">
                 <span aria-hidden="true">!</span>
-                <p><strong>Noch in der Testphase:</strong> Diese Funktion ist noch nicht vollständig entwickelt. Einträge können falsch oder unvollständig gefiltert werden. Prüfe deshalb immer auch den vollständigen und den offiziellen Vertretungsplan.
-                Das Programm lernt automatisch im Hintergrund die neuen Kurse, bitte warte ein paar Wochen bis alle Kurse vollständig angezeigt werden.</p>
+                <p><strong data-i18n="settings.beta_title">Noch in der Testphase:</strong> <span data-i18n="settings.beta_text">Diese Funktion ist noch nicht vollständig entwickelt. Einträge können falsch oder unvollständig gefiltert werden. Prüfe deshalb immer auch den vollständigen und den offiziellen Vertretungsplan. Das Programm lernt automatisch im Hintergrund neue Kurse; bitte warte einige Wochen, bis alle Kurse vollständig angezeigt werden.</span></p>
             </div>
 
             <label class="switch-row">
                 <span>
-                    <strong>Persönlichen Filter verwenden</strong>
-                    <small>Nur passende Einträge anzeigen</small>
+                    <strong data-i18n="settings.use_filter">Persönlichen Filter verwenden</strong>
+                    <small data-i18n="settings.filter_help">Nur passende Einträge anzeigen</small>
                 </span>
                 <input type="checkbox" data-preference-enabled>
                 <span class="switch" aria-hidden="true"></span>
@@ -506,21 +523,21 @@
 
             <div class="form-grid">
                 <label class="field-label">
-                    <span>Jahrgang</span>
+                    <span data-i18n="settings.grade">Jahrgang</span>
                     <select data-grade-select>
-                        <option value="">Bitte auswählen</option>
+                        <option value="" data-i18n="common.select">Bitte auswählen</option>
                         {% for grade in range(5, 13) %}
-                            <option value="{{ '%02d'|format(grade) }}">Klasse {{ grade }}</option>
+                            <option value="{{ '%02d'|format(grade) }}" data-i18n="settings.class_number" data-i18n-vars='{"number":"{{ grade }}"}'>Klasse {{ grade }}</option>
                         {% endfor %}
                     </select>
                 </label>
 
                 <label class="field-label" data-class-field hidden>
-                    <span>Klasse</span>
+                    <span data-i18n="settings.class">Klasse</span>
                     <select data-class-letter>
-                        <option value="">Bitte auswählen</option>
-                        {% for letter in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] %}
-                            <option value="{{ letter }}">Klasse {{ letter }}</option>
+                        <option value="" data-i18n="common.select">Bitte auswählen</option>
+                        {% for letter in ['a', 'b', 'c'] %}
+                            <option value="{{ letter }}" data-i18n="settings.class_letter" data-i18n-vars='{"letter":"{{ letter|upper }}"}'>Klasse {{ letter|upper }}</option>
                         {% endfor %}
                     </select>
                 </label>
@@ -528,26 +545,26 @@
 
             <section class="course-settings" data-course-settings hidden aria-labelledby="course-settings-title">
                 <div class="settings-section-heading">
-                    <h3 id="course-settings-title">Kurse</h3>
-                    <p data-course-help>Wähle nur die Kurse, die du besuchst.</p>
+                    <h3 id="course-settings-title" data-i18n="settings.courses">Kurse</h3>
+                    <p data-course-help data-i18n="settings.course_help">Wähle nur die Kurse, die du besuchst.</p>
                 </div>
                 <div class="course-options" data-course-options></div>
-                <p class="course-empty" data-course-empty hidden>In diesem Schuljahr wurden für diesen Jahrgang noch keine Kurskennungen gefunden.</p>
+                <p class="course-empty" data-course-empty hidden data-i18n="settings.course_empty">In diesem Schuljahr wurden für diesen Jahrgang noch keine Kurskennungen gefunden.</p>
 
                 <label class="field-label custom-courses">
-                    <span>Weitere Kurskennungen <small>(optional)</small></span>
-                    <input type="text" data-custom-courses autocomplete="off" placeholder="z. B. 11_phy2, 11_eng1">
-                    <small>Mehrere Kennungen mit Komma trennen. Neu erkannte Kurse werden künftig automatisch ergänzt.</small>
+                    <span><span data-i18n="settings.custom_courses">Weitere Kurskennungen</span> <small data-i18n="common.optional">(optional)</small></span>
+                    <input type="text" data-custom-courses autocomplete="off" placeholder="z. B. 11_phy2, 11_eng1" data-i18n-placeholder="settings.custom_placeholder">
+                    <small data-i18n="settings.custom_help">Mehrere Kennungen mit Komma trennen. Neu erkannte Kurse werden künftig automatisch ergänzt.</small>
                 </label>
             </section>
 
             <p class="form-error" data-settings-error role="alert" hidden></p>
 
             <div class="dialog-actions settings-actions">
-                <button class="text-button danger-text" type="button" data-settings-reset>Auswahl löschen</button>
+                <button class="text-button danger-text" type="button" data-settings-reset data-i18n="settings.reset">Auswahl löschen</button>
                 <div>
-                    <button class="text-button" type="button" data-settings-close>Abbrechen</button>
-                    <button class="primary-button" type="submit">Speichern</button>
+                    <button class="text-button" type="button" data-settings-close data-i18n="common.cancel">Abbrechen</button>
+                    <button class="primary-button" type="submit" data-i18n="common.save">Speichern</button>
                 </div>
             </div>
         </form>
@@ -557,10 +574,10 @@
         <article class="dialog-card info-card">
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Angaben gemäß § 5 DDG</p>
-                    <h2 id="controller-title">Verantwortlicher</h2>
+                    <p class="dialog-kicker" data-i18n="info.controller.kicker">Angaben gemäß § 5 DDG</p>
+                    <h2 id="controller-title" data-i18n="info.controller.title">Verantwortlicher</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Dialog schließen">
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Dialog schließen" data-i18n-aria-label="common.dialog_close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
@@ -575,17 +592,18 @@
                     </address>
                 </section>
                 <section>
-                    <h3>Kontakt</h3>
+                    <h3 data-i18n="info.controller.contact">Kontakt</h3>
                     <p>
-                        E-Mail: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>
-                        Telefon: <a href="tel:+491744646064">+49 174 4646064</a>
+                        <span data-i18n="info.controller.email">E-Mail:</span> <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>
+                        <span data-i18n="info.controller.phone">Telefon:</span> <a href="tel:+491744646064">+49 174 4646064</a>
                     </p>
                 </section>
-                <p class="info-small">Dieses private Schülerprojekt steht in keiner Verbindung zur Schule oder zur Edith-Stein-Schulstiftung.</p>
+                <p class="info-small" data-i18n="info.controller.disclaimer">Dieses private Schülerprojekt steht in keiner Verbindung zur Schule oder zur Edith-Stein-Schulstiftung.</p>
             </div>
 
-            <div class="dialog-actions info-actions">
-                <button class="primary-button" type="button" data-info-close>Schließen</button>
+            <div class="dialog-actions info-actions info-actions-wrap">
+                <a class="text-button" href="{{ url_for('vplan_imprint') }}" data-i18n="info.controller.full_link">Vollständiges Impressum</a>
+                <button class="primary-button" type="button" data-info-close data-i18n="common.close">Schließen</button>
             </div>
         </article>
     </dialog>
@@ -594,46 +612,47 @@
         <article class="dialog-card info-card">
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Kurzinformation</p>
-                    <h2 id="privacy-title">Datenschutz</h2>
+                    <p class="dialog-kicker" data-i18n="privacy.kicker">Kurzinformation</p>
+                    <h2 id="privacy-title" data-i18n="privacy.title">Datenschutz</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Dialog schließen">
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Dialog schließen" data-i18n-aria-label="common.dialog_close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
             <div class="info-content privacy-content">
                 <section>
-                    <h3>Keine automatische Besucherspeicherung</h3>
-                    <p>Der Betreiber speichert auf dem eigenen Ursprungsserver keine Besucher-IP-Adressen, Browserkennungen oder Kontodaten. Es gibt keine Nutzerkonten, keine Reichweitenanalyse und kein Profiling. Lediglich nicht personenbezogene Gesamtzähler für Anfragen und Datenvolumen werden geführt.</p>
+                    <h3 data-i18n="privacy.no_tracking.title">Keine automatische Besucherspeicherung</h3>
+                    <p data-i18n="privacy.no_tracking.text">Der Betreiber speichert für den Vertretungsplan auf dem eigenen Ursprungsserver keine Besucher-IP-Adressen, Browserkennungen oder Kontodaten. Es gibt keine Nutzerkonten, Reichweitenanalyse oder Profilbildung.</p>
                 </section>
                 <section>
-                    <h3>Lokale Einstellungen</h3>
-                    <p>Die gewählte Klasse, Kurse, eigene Fachnamen, Lehrernamen, Darstellung, Filtereinstellungen und die Bestätigung des Nutzungshinweises werden ausschließlich im lokalen Speicher deines Browsers gespeichert. Sie werden nicht an den Server übertragen.</p>
+                    <h3 data-i18n="privacy.local.title">Lokale Einstellungen</h3>
+                    <p data-i18n="privacy.local.text">Die gewählte Klasse, Kurse, eigene Fachnamen, Lehrernamen, Darstellung, Filtereinstellungen, Sprachauswahl und die Bestätigung des Nutzungshinweises werden ausschließlich im lokalen Speicher deines Browsers gespeichert. Sie werden nicht an den Server übertragen.</p>
                 </section>
                 <section>
-                    <h3>Anonymisierung des Quellplans</h3>
-                    <p>Eine private serverseitige Namensliste wird nur verwendet, um Namen von Lehrkräften bereits vor dem Speichern des Vertretungsplans durch „Lehrkraft“ zu ersetzen. Die Liste wird nicht an den Browser ausgeliefert und nicht mit Besucherdaten verknüpft.</p>
+                    <h3 data-i18n="privacy.redaction.title">Anonymisierung des Quellplans</h3>
+                    <p data-i18n="privacy.redaction.text">Eine private serverseitige Namensliste wird nur verwendet, um Namen von Lehrkräften bereits vor dem Speichern des Vertretungsplans durch „Lehrkraft“ zu ersetzen. Die Liste wird nicht an den Browser ausgeliefert und nicht mit Besucherdaten verknüpft.</p>
                 </section>
                 <section>
-                    <h3>Freiwillige Fehlermeldungen</h3>
-                    <p>Wenn du „Fehler melden“ verwendest, werden ausschließlich der eingegebene Nachrichtentext und der Eingangszeitpunkt auf dem Ursprungsserver gespeichert. Die Nachricht wird nicht mit einer IP-Adresse, Browserkennung, Klasse oder deinen lokalen Einstellungen verknüpft; ältere Meldungen werden beim Eingang neuer Meldungen automatisch bereinigt. Bitte gib dort keine Namen, Kontaktdaten oder anderen personenbezogenen Informationen ein.</p>
+                    <h3 data-i18n="privacy.feedback.title">Freiwillige Fehlermeldungen</h3>
+                    <p data-i18n="privacy.feedback.text">Wenn du „Fehler melden“ verwendest, werden ausschließlich der eingegebene Nachrichtentext und der Eingangszeitpunkt auf dem Ursprungsserver gespeichert. Die Nachricht wird nicht mit einer IP-Adresse, Browserkennung, Klasse oder deinen lokalen Einstellungen verknüpft und nach 180 Tagen durch eine stündliche Bereinigung automatisch gelöscht. Ein anonymer, minutenbasierter Gesamtzähler begrenzt Missbrauch und wird innerhalb eines Tages entfernt. Bitte gib dort keine personenbezogenen Informationen ein.</p>
                 </section>
                 <section>
-                    <h3>Cloudflare</h3>
-                    <p>Für die öffentliche Erreichbarkeit, TLS-Verschlüsselung sowie den Schutz vor Angriffen wird Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA eingesetzt. Cloudflare erhält technisch bedingt insbesondere deine IP-Adresse und HTTP-Verbindungsdaten und kann notwendige Sicherheits-Cookies setzen. Die Verarbeitung dient der sicheren und zuverlässigen Bereitstellung dieser Webseite.</p>
-                    <p>Eine Verarbeitung außerhalb des EWR kann nicht ausgeschlossen werden. Cloudflare verwendet hierfür nach eigenen Angaben unter anderem geeignete Garantien wie die EU-Standardvertragsklauseln.</p>
+                    <h3 data-i18n="privacy.cloudflare.title">Cloudflare</h3>
+                    <p data-i18n="privacy.cloudflare.text">Für die öffentliche Erreichbarkeit, TLS-Verschlüsselung sowie den Schutz vor Angriffen wird Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA eingesetzt. Cloudflare erhält technisch bedingt insbesondere deine IP-Adresse und HTTP-Verbindungsdaten und kann notwendige Sicherheits-Cookies setzen. Die Verarbeitung dient der sicheren und zuverlässigen Bereitstellung dieser Webseite.</p>
+                    <p data-i18n="privacy.cloudflare.transfer">Eine Verarbeitung außerhalb des EWR kann nicht ausgeschlossen werden. Cloudflare verwendet hierfür nach eigenen Angaben unter anderem geeignete Garantien wie die EU-Standardvertragsklauseln.</p>
                 </section>
                 <section>
-                    <h3>Rechtsgrundlage und Rechte</h3>
-                    <p>Soweit personenbezogene Daten für den sicheren Betrieb verarbeitet werden, erfolgt dies auf Grundlage des berechtigten Interesses an Sicherheit und Verfügbarkeit gemäß Art. 6 Abs. 1 lit. f DSGVO. Dir stehen insbesondere die gesetzlichen Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung und Widerspruch sowie ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde zu.</p>
+                    <h3 data-i18n="privacy.rights.title">Rechtsgrundlage und Rechte</h3>
+                    <p data-i18n="privacy.rights.text">Soweit personenbezogene Daten für den sicheren Betrieb verarbeitet werden, erfolgt dies auf Grundlage des berechtigten Interesses an Sicherheit und Verfügbarkeit gemäß Art. 6 Abs. 1 lit. f DSGVO. Dir stehen insbesondere die gesetzlichen Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung und Widerspruch sowie ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde zu.</p>
                 </section>
-                <p class="info-small">Verantwortlicher und Kontaktmöglichkeiten findest du über den Button „Verantwortlicher“. Weitere Einzelheiten enthalten die ausführliche Datenschutzerklärung und die Datenschutzhinweise von Cloudflare.</p>
+                <p class="info-small" data-i18n="privacy.more">Verantwortlicher und Kontaktmöglichkeiten findest du über den Button „Verantwortlicher“. Weitere Einzelheiten enthält die VPlan-Datenschutzerklärung.</p>
             </div>
 
             <div class="dialog-actions info-actions info-actions-wrap">
-                <a class="text-button" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare-Datenschutz</a>
-                <button class="primary-button" type="button" data-info-close>Schließen</button>
+                <a class="text-button" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer" data-i18n="privacy.cloudflare_link">Cloudflare-Datenschutz</a>
+                <a class="text-button" href="{{ url_for('vplan_privacy') }}" data-i18n="privacy.full_link">Ausführliche Datenschutzerklärung</a>
+                <button class="primary-button" type="button" data-info-close data-i18n="common.close">Schließen</button>
             </div>
         </article>
     </dialog>
@@ -642,10 +661,10 @@
         <article class="dialog-card credits-card">
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Mitwirkende &amp; Technik</p>
+                    <p class="dialog-kicker" data-i18n="credits.kicker">Mitwirkende &amp; Technik</p>
                     <h2 id="credits-title">Credits</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Credits schließen">
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Credits schließen" data-i18n-aria-label="common.dialog_close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
@@ -655,12 +674,12 @@
                     <div class="credits-section-heading">
                         <span aria-hidden="true">01</span>
                         <div>
-                            <p>Technik</p>
-                            <h3 id="credits-stack-title">Stack</h3>
+                            <p data-i18n="credits.tech">Technik</p>
+                            <h3 id="credits-stack-title" data-i18n="credits.stack">Stack</h3>
                         </div>
                     </div>
 
-                    <ul class="tech-stack" aria-label="Verwendete Sprachen und Frameworks">
+                    <ul class="tech-stack" aria-label="Verwendete Sprachen und Frameworks" data-i18n-aria-label="credits.stack_label">
                         <li><span class="tech-icon tech-python" aria-hidden="true">Py</span><strong>Python</strong></li>
                         <li><span class="tech-icon tech-html" aria-hidden="true">5</span><strong>HTML</strong></li>
                         <li><span class="tech-icon tech-css" aria-hidden="true">3</span><strong>CSS</strong></li>
@@ -674,10 +693,10 @@
                     </ul>
 
                     <dl class="credit-details">
-                        <div><dt>Programmierung</dt><dd>Codex 5.6 SOL <span>(high)</span></dd></div>
-                        <div><dt>Hosting</dt><dd>Cloudflare · Google Pixel 7 Pro</dd></div>
+                        <div><dt data-i18n="credits.programming">Programmierung</dt><dd>Codex 5.6 SOL <span>(high)</span></dd></div>
+                        <div><dt data-i18n="credits.hosting">Hosting</dt><dd>Cloudflare · Google Pixel 7 Pro</dd></div>
                         <div><dt>IDE</dt><dd>PyCharm</dd></div>
-                        <div><dt>Code</dt><dd>GitHub</dd></div>
+                        <div><dt data-i18n="credits.code">Code</dt><dd>GitHub</dd></div>
                     </dl>
                 </section>
 
@@ -685,26 +704,26 @@
                     <div class="credits-section-heading">
                         <span aria-hidden="true">02</span>
                         <div>
-                            <p>Danke</p>
-                            <h3 id="credits-ideas-title">Features &amp; Ideen</h3>
+                            <p data-i18n="credits.thanks">Danke</p>
+                            <h3 id="credits-ideas-title" data-i18n="credits.ideas">Features &amp; Ideen</h3>
                         </div>
                     </div>
 
                     <ul class="idea-credits">
                         <li>
                             <span aria-hidden="true">→</span>
-                            <div><strong>Umbenennung der Fächer / Lehrer</strong><small>Anonym (Starke Frau btw 🔥)</small></div>
+                            <div><strong data-i18n="credits.rename">Umbenennung der Fächer / Lehrer</strong><small>Anonym (Starke Frau btw 🔥)</small></div>
                         </li>
                         <li>
                             <span aria-hidden="true">→</span>
-                            <div><strong>Installation der App</strong><small>Richard Lewerenz</small></div>
+                            <div><strong data-i18n="credits.install">Installation der App</strong><small>Richard Lewerenz</small></div>
                         </li>
                     </ul>
                 </section>
             </div>
 
             <div class="dialog-actions info-actions">
-                <button class="primary-button" type="button" data-info-close>Schließen</button>
+                <button class="primary-button" type="button" data-info-close data-i18n="common.close">Schließen</button>
             </div>
         </article>
     </dialog>
@@ -713,35 +732,62 @@
         <article class="dialog-card changelog-card">
             <div class="dialog-heading">
                 <div>
-                    <p class="dialog-kicker">Was ist neu?</p>
-                    <h2 id="changelog-title">Änderungsprotokoll</h2>
+                    <p class="dialog-kicker" data-i18n="changelog.kicker">Was ist neu?</p>
+                    <h2 id="changelog-title" data-i18n="changelog.title">Änderungsprotokoll</h2>
                 </div>
-                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Änderungsprotokoll schließen">
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Änderungsprotokoll schließen" data-i18n-aria-label="changelog.close">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
                 </button>
             </div>
 
-            <p class="dialog-intro">Die wichtigsten Änderungen am Vertretungsplan – direkt aus der Git-Historie zusammengefasst.</p>
+            <p class="dialog-intro" data-i18n="changelog.intro">Die wichtigsten Änderungen am Vertretungsplan – direkt aus der Git-Historie zusammengefasst.</p>
 
             <div class="changelog-list">
                 <section class="changelog-day" aria-labelledby="changelog-2026-08-20">
                     <div class="changelog-date">
-                        <time id="changelog-2026-08-20" datetime="2026-08-20">20. August 2026</time>
+                        <time id="changelog-2026-08-20" datetime="2026-08-20" data-i18n-date>20. August 2026</time>
                     </div>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" data-i18n="changelog.current">Aktuell</span>
+                        <div>
+                            <h3 data-i18n="changelog.quality.title">Zuverlässigkeit und App-Installation verbessert</h3>
+                            <ul>
+                                <li data-i18n="changelog.quality.item_1">Android und andere Browser erhalten immer das aktuelle App-Manifest.</li>
+                                <li data-i18n="changelog.quality.item_2">Datenschutz, Synchronisierung, lokale Speicherung und Fehlermeldungen wurden robuster umgesetzt.</li>
+                                <li data-i18n="changelog.quality.item_3">Die Klassenauswahl wurde auf die tatsächlich vorhandenen Klassen A bis C begrenzt.</li>
+                                <li data-i18n="changelog.quality.item_4">Die Oberfläche kann jetzt übersetzt und im Header direkt über Flaggen zwischen Sprachen gewechselt werden.</li>
+                                <li data-i18n="changelog.quality.item_5">Ab 15 Uhr öffnet sich automatisch der nächste verfügbare Plantag; alle Tage bleiben manuell auswählbar.</li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit c6375f0">c6375f0</span>
+                        <div>
+                            <h3 data-i18n="changelog.names.title">Lehrernamen besser geschützt</h3>
+                            <p data-i18n="changelog.names.text">Ausgeschriebene Namen werden automatisch entfernt; die private Namensliste kann sicher importiert und exportiert werden.</p>
+                        </div>
+                    </article>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit 431d281">431d281</span>
+                        <div>
+                            <h3 data-i18n="changelog.colors.title">Kräftige Fachfarben ergänzt</h3>
+                            <p data-i18n="changelog.colors.text">Fächer und Kurse lassen sich lokal mit kontrastreichen Akzentfarben hervorheben.</p>
+                        </div>
+                    </article>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit 791ce5a">791ce5a</span>
                         <div>
-                            <h3>Änderungsprotokoll ergänzt</h3>
-                            <p>Die wichtigsten Neuerungen lassen sich jetzt direkt auf der Seite nachlesen.</p>
+                            <h3 data-i18n="changelog.log.title">Änderungsprotokoll ergänzt</h3>
+                            <p data-i18n="changelog.log.text">Die wichtigsten Neuerungen lassen sich jetzt direkt auf der Seite nachlesen.</p>
                         </div>
                     </article>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit b8b865f">b8b865f</span>
                         <div>
-                            <h3>Mehr Datenschutz und bessere Kursauswahl</h3>
+                            <h3 data-i18n="changelog.privacy.title">Mehr Datenschutz und bessere Kursauswahl</h3>
                             <ul>
-                                <li>Lehrerkennungen werden zuverlässiger erkannt und vor der Speicherung entfernt.</li>
-                                <li>Bereits erkannte Kurse bleiben innerhalb des Schuljahres für „Mein Plan“ verfügbar.</li>
+                                <li data-i18n="changelog.privacy.item_1">Lehrerkennungen werden zuverlässiger erkannt und vor der Speicherung entfernt.</li>
+                                <li data-i18n="changelog.privacy.item_2">Bereits erkannte Kurse bleiben innerhalb des Schuljahres für „Mein Plan“ verfügbar.</li>
                             </ul>
                         </div>
                     </article>
@@ -749,79 +795,79 @@
 
                 <section class="changelog-day" aria-labelledby="changelog-2026-08-19">
                     <div class="changelog-date">
-                        <time id="changelog-2026-08-19" datetime="2026-08-19">19. August 2026</time>
+                        <time id="changelog-2026-08-19" datetime="2026-08-19" data-i18n-date>19. August 2026</time>
                     </div>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit 6f60944">6f60944</span>
                         <div>
-                            <h3>Personalisierung und App-Funktionen</h3>
+                            <h3 data-i18n="changelog.personal.title">Personalisierung und App-Funktionen</h3>
                             <ul>
-                                <li>Fächer und optionale Lehrernamen können lokal umbenannt werden.</li>
-                                <li>Installierbare App, Fehlermeldungen, Credits und neue Schnellaktionen ergänzt.</li>
-                                <li>Der bestätigte Nutzungshinweis wird im Browser gespeichert.</li>
+                                <li data-i18n="changelog.personal.item_1">Fächer und optionale Lehrernamen können lokal umbenannt werden.</li>
+                                <li data-i18n="changelog.personal.item_2">Installierbare App, Fehlermeldungen, Credits und neue Schnellaktionen ergänzt.</li>
+                                <li data-i18n="changelog.personal.item_3">Der bestätigte Nutzungshinweis wird im Browser gespeichert.</li>
                             </ul>
                         </div>
                     </article>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit c6dc4bd">c6dc4bd</span>
                         <div>
-                            <h3>Zuverlässiger Erststart</h3>
-                            <p>Fehlt die lokale Plandatei, wird sie vor der ersten Anzeige automatisch geladen.</p>
+                            <h3 data-i18n="changelog.start.title">Zuverlässiger Erststart</h3>
+                            <p data-i18n="changelog.start.text">Fehlt die lokale Plandatei, wird sie vor der ersten Anzeige automatisch geladen.</p>
                         </div>
                     </article>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit 276b94a">276b94a</span>
                         <div>
-                            <h3>Aktualisierung verbessert</h3>
-                            <p>Der Plan wird anhand seines tatsächlichen Inhalts verglichen und nur bei Änderungen ersetzt.</p>
+                            <h3 data-i18n="changelog.sync.title">Aktualisierung verbessert</h3>
+                            <p data-i18n="changelog.sync.text">Der Plan wird anhand seines tatsächlichen Inhalts verglichen und nur bei Änderungen ersetzt.</p>
                         </div>
                     </article>
                 </section>
 
                 <section class="changelog-day" aria-labelledby="changelog-2026-08-18">
                     <div class="changelog-date">
-                        <time id="changelog-2026-08-18" datetime="2026-08-18">18. August 2026</time>
+                        <time id="changelog-2026-08-18" datetime="2026-08-18" data-i18n-date>18. August 2026</time>
                     </div>
                     <article class="changelog-commit">
                         <span class="commit-ref" title="Git-Commit d2b2cc4">d2b2cc4</span>
                         <div>
-                            <h3>Neuer Vertretungsplan</h3>
-                            <p>Mobile Oberfläche, Suche, Ausfallfilter, persönlicher Plan und automatische Synchronisation eingeführt.</p>
+                            <h3 data-i18n="changelog.launch.title">Neuer Vertretungsplan</h3>
+                            <p data-i18n="changelog.launch.text">Mobile Oberfläche, Suche, Ausfallfilter, persönlicher Plan und automatische Synchronisation eingeführt.</p>
                         </div>
                     </article>
                 </section>
             </div>
 
             <div class="dialog-actions info-actions">
-                <button class="primary-button" type="button" data-info-close>Schließen</button>
+                <button class="primary-button" type="button" data-info-close data-i18n="common.close">Schließen</button>
             </div>
         </article>
     </dialog>
 
-    <dialog class="disclaimer-dialog" data-disclaimer-dialog aria-labelledby="disclaimer-title" aria-describedby="disclaimer-description" open>
+    <dialog class="disclaimer-dialog" data-disclaimer-dialog aria-labelledby="disclaimer-title" aria-describedby="disclaimer-description">
         <form class="dialog-card disclaimer-card" data-disclaimer-form>
             <div class="disclaimer-symbol" aria-hidden="true">
                 <svg viewBox="0 0 24 24" focusable="false">
                     <path d="M12 9v4M12 17h.01M10.3 4.5 3.4 17a2 2 0 0 0 1.8 3h13.6a2 2 0 0 0 1.8-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/>
                 </svg>
             </div>
-            <p class="dialog-kicker">Bitte aufmerksam lesen</p>
-            <h2 id="disclaimer-title">Wichtiger Hinweis vor der Nutzung</h2>
+            <p class="dialog-kicker" data-i18n="disclaimer.kicker">Bitte aufmerksam lesen</p>
+            <h2 id="disclaimer-title" data-i18n="disclaimer.title">Wichtiger Hinweis vor der Nutzung</h2>
 
             <div class="disclaimer-content" id="disclaimer-description">
-                <p>Diese Webseite ist ein rein privates Schülerprojekt und dient ausschließlich der übersichtlicheren Darstellung für den persönlichen Gebrauch.</p>
-                <p><strong>Keine offizielle Vertretung:</strong> Dieses Angebot steht in keinerlei Verbindung zur Schule oder der Edith-Stein-Schulstiftung.</p>
-                <p><strong>Keine Gewähr:</strong> Alle Angaben erfolgen ohne Gewähr auf Richtigkeit, Vollständigkeit oder Aktualität. Es können Verzögerungen oder Fehler bei der Synchronisation auftreten.</p>
-                <p><strong>Rechtliche Verbindlichkeit:</strong> Verbindlich ist stets ausschließlich der offizielle Vertretungsplan der Schule. Für verpasste Stunden, Ausfälle oder Fehlzeiten wird keinerlei Haftung übernommen.</p>
-                <p class="privacy-note"><strong>Datenschutz:</strong> Auf dem privaten Ursprungsserver werden keine Besucher-IP-Adressen oder automatischen persönlichen Nutzungsdaten gespeichert. Deine Klasse, Kurse, eigenen Fach- und Lehrernamen sowie Darstellungseinstellungen verbleiben ausschließlich lokal auf deinem Gerät. Nur freiwillig abgesendete, nicht mit Nutzungsdaten verknüpfte Fehlermeldungen werden gespeichert. Cloudflare verarbeitet für die öffentliche Bereitstellung und den Schutz der Seite technisch notwendige Verbindungsdaten, insbesondere die IP-Adresse.</p>
+                <p data-i18n="disclaimer.private">Diese Webseite ist ein rein privates Schülerprojekt und dient ausschließlich der übersichtlicheren Darstellung für den persönlichen Gebrauch.</p>
+                <p><strong data-i18n="disclaimer.unofficial.title">Keine offizielle Vertretung:</strong> <span data-i18n="disclaimer.unofficial.text">Dieses Angebot steht in keinerlei Verbindung zur Schule oder der Edith-Stein-Schulstiftung.</span></p>
+                <p><strong data-i18n="disclaimer.warranty.title">Keine Gewähr:</strong> <span data-i18n="disclaimer.warranty.text">Alle Angaben erfolgen ohne Gewähr auf Richtigkeit, Vollständigkeit oder Aktualität. Es können Verzögerungen oder Fehler bei der Synchronisation auftreten.</span></p>
+                <p><strong data-i18n="disclaimer.binding.title">Rechtliche Verbindlichkeit:</strong> <span data-i18n="disclaimer.binding.text">Verbindlich ist stets ausschließlich der offizielle Vertretungsplan der Schule. Für verpasste Stunden, Ausfälle oder Fehlzeiten wird keinerlei Haftung übernommen.</span></p>
+                <p class="privacy-note"><strong data-i18n="disclaimer.privacy.title">Datenschutz:</strong> <span data-i18n="disclaimer.privacy.text">Auf dem privaten Ursprungsserver werden keine Besucher-IP-Adressen oder automatischen persönlichen Nutzungsdaten gespeichert. Deine Klasse, Kurse, eigenen Fach- und Lehrernamen sowie Darstellungs- und Spracheinstellungen verbleiben ausschließlich lokal auf deinem Gerät. Nur freiwillig abgesendete, nicht mit Nutzungsdaten verknüpfte Fehlermeldungen werden gespeichert. Cloudflare verarbeitet für die öffentliche Bereitstellung und den Schutz der Seite technisch notwendige Verbindungsdaten, insbesondere die IP-Adresse.</span></p>
             </div>
 
             <label class="confirm-checkbox">
                 <input type="checkbox" data-disclaimer-checkbox>
-                <span>Ich habe verstanden, dass dies eine inoffizielle Ansicht ist und nutze die Seite eigenverantwortlich.</span>
+                <span data-i18n="disclaimer.confirm">Ich habe verstanden, dass dies eine inoffizielle Ansicht ist und nutze die Seite eigenverantwortlich.</span>
             </label>
 
-            <button class="primary-button disclaimer-submit" type="submit" data-disclaimer-submit disabled>Verstanden und fortfahren</button>
+            <button class="primary-button disclaimer-submit" type="submit" data-disclaimer-submit disabled data-i18n="disclaimer.continue">Verstanden und fortfahren</button>
         </form>
     </dialog>
 </body>

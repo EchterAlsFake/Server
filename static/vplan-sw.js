@@ -1,15 +1,22 @@
 "use strict";
 
-const CACHE_NAME = "vplan-shell-v3";
+const CACHE_NAME = "vplan-shell-v6";
 const APP_SHELL = [
     "/static/vplan.css",
+    "/static/vplan-theme.js",
+    "/static/vplan-pwa.js",
     "/static/vplan.js",
-    "/static/manifest.webmanifest",
+    "/static/vplan-translate.css",
+    "/static/vplan-translate.js",
+    "/static/i18n/languages.json",
+    "/static/i18n/de.json",
+    "/static/i18n/en.json",
     "/static/vplan-icon.svg",
     "/static/vplan-icon-192.png",
     "/static/vplan-icon-512.png",
     "/static/vplan-icon-maskable-512.png",
 ];
+const CACHEABLE_PATHS = new Set(APP_SHELL);
 
 self.addEventListener("install", (event) => {
     event.waitUntil(
@@ -43,13 +50,18 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    if (!requestUrl.pathname.startsWith("/static/")) return;
+    if (!CACHEABLE_PATHS.has(requestUrl.pathname)) return;
     event.respondWith(
         fetch(event.request)
-            .then((networkResponse) => {
+            .then(async (networkResponse) => {
                 if (networkResponse.ok) {
                     const responseCopy = networkResponse.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
+                    try {
+                        const cache = await caches.open(CACHE_NAME);
+                        await cache.put(event.request, responseCopy);
+                    } catch (error) {
+                        // A cache write failure must never hide a valid network response.
+                    }
                 }
                 return networkResponse;
             })

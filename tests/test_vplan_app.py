@@ -14,10 +14,16 @@ os.environ["CHECKLIST_AUTH"] = "test-only-very-strong-password"
 
 import main  # noqa: E402
 
+main.app.config["TESTING"] = True
+
 
 class VPlanSubdomainTests(unittest.TestCase):
     def setUp(self):
         self.client = main.app.test_client()
+
+    def tearDown(self):
+        with main.app.app_context():
+            main.db.session.remove()
 
     def test_subdomain_root_renders_plan(self):
         response = self.client.get("/", headers={"Host": "vplan.echteralsfake.me"})
@@ -25,6 +31,26 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Vertretungsplan", response.get_data(as_text=True))
         self.assertNotIn("LiGyDe.", response.get_data(as_text=True))
+
+    def test_vplan_request_detection_does_not_capture_other_site_roots(self):
+        with main.app.test_request_context("/", base_url="https://localhost"):
+            self.assertFalse(main._is_vplan_request())
+        with main.app.test_request_context(
+            "/", base_url="https://vplan.echteralsfake.me"
+        ):
+            self.assertTrue(main._is_vplan_request())
+        with main.app.test_request_context("/vplan", base_url="http://localhost"):
+            self.assertTrue(main._is_vplan_request())
+
+    def test_plan_day_dates_are_normalized_for_local_browser_selection(self):
+        self.assertEqual(
+            main._parse_vplan_day_iso("Donnerstag, 20. August 2026"),
+            "2026-08-20",
+        )
+        self.assertEqual(main._parse_vplan_day_iso("21.08.2026"), "2026-08-21")
+        self.assertEqual(main._parse_vplan_day_iso("2026-08-22"), "2026-08-22")
+        self.assertEqual(main._parse_vplan_day_iso("31. Februar 2026"), "")
+        self.assertEqual(main._parse_vplan_day_iso("Unbekannter Tag"), "")
 
     def test_plan_renders_local_subject_rename_controls(self):
         plan = {
@@ -57,8 +83,8 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn('data-plan-code="12_mat1"', html)
         self.assertIn("data-subject-edit", html)
         self.assertIn("Neuer Name", html)
-        self.assertIn("Lehrer <small>(optional)</small>", html)
-        self.assertIn("Akzentfarbe <small>(optional)</small>", html)
+        self.assertIn('data-i18n="subject.teacher"', html)
+        self.assertIn('data-i18n="subject.color"', html)
         self.assertEqual(html.count("data-subject-color-choice"), 9)
         self.assertIn('rel="manifest"', html)
         self.assertIn("data-install-app", html)
@@ -66,6 +92,7 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertLess(html.index("Mein Plan"), html.index("App installieren"))
         self.assertLess(html.index("App installieren"), html.index("Fehler melden"))
         self.assertIn('class="utility-header"', html)
+        self.assertIn('data-day-date="2026-08-19"', html)
 
     def test_learned_courses_are_available_even_when_not_in_current_plan(self):
         with patch.object(
@@ -117,8 +144,11 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn('data-info-open="changelog-dialog"', html)
         self.assertIn('id="changelog-dialog"', html)
         self.assertIn("Änderungsprotokoll", html)
-        for commit in ("791ce5a", "b8b865f", "6f60944", "c6dc4bd", "276b94a", "d2b2cc4"):
+        for commit in ("c6375f0", "431d281", "791ce5a", "b8b865f", "6f60944", "c6dc4bd", "276b94a", "d2b2cc4"):
             self.assertIn(commit, html)
+        self.assertIn("Zuverlässigkeit und App-Installation verbessert", html)
+        self.assertIn("Die Oberfläche kann jetzt übersetzt", html)
+        self.assertIn("Ab 15 Uhr öffnet sich automatisch", html)
         self.assertIn("Codex 5.6 SOL", html)
         self.assertIn("Anonym", html)
         self.assertIn("Richard Lewerenz", html)
@@ -288,6 +318,35 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertEqual(missing_confirmation.headers["Cache-Control"], "no-store")
         self.assertEqual(missing_marker.headers["Cache-Control"], "no-store")
 
+    def test_feedback_endpoint_returns_stable_error_codes_and_shared_limit(self):
+        with patch.object(
+            main,
+            "consume_vplan_feedback_rate_limit",
+            return_value=(False, main.VPLAN_FEEDBACK_RATE_LIMIT + 1),
+        ):
+            response = self.client.post(
+                "/vplan/feedback",
+                headers={
+                    "Host": "vplan.echteralsfake.me",
+                    "X-VPlan-Request": "feedback",
+                },
+                json={
+                    "message": "Der Donnerstag wird nicht richtig angezeigt.",
+                    "privacy_confirmed": True,
+                },
+            )
+
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.get_json(), {"error": "rate_limited"})
+        self.assertEqual(response.headers["Retry-After"], "60")
+
+    def test_sql_control_characters_are_plain_feedback_text_not_sql(self):
+        message = "Anzeige falsch'); DROP TABLE vplan_feedback; --"
+        validated, error = main.validate_vplan_feedback(message)
+
+        self.assertEqual(validated, message)
+        self.assertIsNone(error)
+
     def test_regular_class_codes_can_be_customized_too(self):
         response = self.client.get(
             "/static/vplan.js", headers={"Host": "vplan.echteralsfake.me"}
@@ -299,13 +358,103 @@ class VPlanSubdomainTests(unittest.TestCase):
             'const isEditableSubject = (code) => Boolean(String(code || "").trim());',
             javascript,
         )
-        self.assertIn('id: "eng", name: "Englisch"', javascript)
-        self.assertIn('id: "ges", name: "Geschichte"', javascript)
+        self.assertIn('id: "eng", name: t("course.eng", {}, "Englisch")', javascript)
+        self.assertIn('id: "ges", name: t("course.ges", {}, "Geschichte")', javascript)
         self.assertIn('key: `${normalize(code)}::${subjectId}`', javascript)
-        self.assertIn('violet: "#b388ff"', javascript)
+        self.assertIn('"violet", "blue", "cyan", "green"', javascript)
         self.assertIn("color: validSubjectColor(value.color)", javascript)
-        self.assertIn('element.style.setProperty("--subject-color", resolvedColor)', javascript)
+        self.assertIn("element.dataset.subjectAccent = validColor", javascript)
+        self.assertNotIn("element.style.setProperty", javascript)
         response.close()
+
+    def test_translation_catalogs_match_and_preserve_placeholders(self):
+        source_path = Path(main.app.static_folder) / "i18n" / "de.json"
+        english_path = Path(main.app.static_folder) / "i18n" / "en.json"
+        source = json.loads(source_path.read_text(encoding="utf-8"))
+        english = json.loads(english_path.read_text(encoding="utf-8"))
+        source_keys = set(source) - {"_meta"}
+        english_keys = set(english) - {"_meta"}
+
+        self.assertEqual(source_keys, english_keys)
+        self.assertGreater(len(source_keys), 200)
+        self.assertTrue(source["_meta"]["source"])
+        self.assertFalse(english["_meta"]["reviewed"])
+        for key in source_keys:
+            with self.subTest(key=key):
+                self.assertIsInstance(source[key], str)
+                self.assertIsInstance(english[key], str)
+                self.assertEqual(
+                    sorted(re.findall(r"\{[A-Za-z][A-Za-z0-9_]*\}", source[key])),
+                    sorted(re.findall(r"\{[A-Za-z][A-Za-z0-9_]*\}", english[key])),
+                )
+                self.assertIsNone(re.search(r"<[^>\n]{1,200}>", english[key]))
+
+    def test_translation_editor_is_local_only_and_available_on_vplan_host(self):
+        response = self.client.get(
+            "/vplan/translate", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        javascript_response = self.client.get(
+            "/static/vplan-translate.js",
+            headers={"Host": "vplan.echteralsfake.me"},
+        )
+
+        html = response.get_data(as_text=True)
+        javascript = javascript_response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Cache-Control"], "no-store")
+        self.assertIn("Vertretungsplan übersetzen", html)
+        self.assertIn("data-translation-list", html)
+        self.assertIn("data-download", html)
+        self.assertIn("Alles bleibt in deinem Browser", html)
+        self.assertIn('data-i18n="translator.title"', html)
+        self.assertIn('data-i18n="translator.download"', html)
+        self.assertIn("https://github.com/EchterAlsFake/Server", html)
+        self.assertIn("new Blob", javascript)
+        self.assertIn("URL.createObjectURL", javascript)
+        self.assertIn("textContent", javascript)
+        self.assertIn('if (code === "de")', javascript)
+        self.assertIn('t("translator.status.source_error"', javascript)
+        self.assertNotIn('method: "POST"', javascript)
+        response.close()
+        javascript_response.close()
+
+    def test_language_choice_and_static_catalogs_are_wired_into_the_plan(self):
+        response = self.client.get(
+            "/", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        javascript_response = self.client.get(
+            "/static/vplan.js", headers={"Host": "vplan.echteralsfake.me"}
+        )
+
+        html = response.get_data(as_text=True)
+        javascript = javascript_response.get_data(as_text=True)
+        self.assertIn("data-language-picker", html)
+        self.assertIn('data-language-option="de"', html)
+        self.assertIn('data-language-option="en"', html)
+        self.assertIn("🇩🇪", html)
+        self.assertIn("🇬🇧", html)
+        self.assertIn('href="/vplan/translate"', html)
+        self.assertIn('data-i18n="privacy.local.text"', html)
+        self.assertIn('LANGUAGE_KEY = "vplan-language"', javascript)
+        self.assertIn("safeStorage.set(LANGUAGE_KEY", javascript)
+        self.assertIn('button.setAttribute("aria-pressed"', javascript)
+        self.assertIn("flag.textContent = language.flag", javascript)
+        self.assertIn("const DAY_ROLLOVER_HOUR = 15", javascript)
+        self.assertIn("now.getHours() >= DAY_ROLLOVER_HOUR", javascript)
+        self.assertIn("timestamp > today", javascript)
+        self.assertIn("selectInitialDayTab();", javascript)
+        self.assertIn("element.textContent =", javascript)
+        self.assertNotIn("element.innerHTML", javascript)
+
+        language_config = json.loads(
+            (Path(main.app.static_folder) / "i18n" / "languages.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            [(language["code"], language["flag"]) for language in language_config["languages"]],
+            [("de", "🇩🇪"), ("en", "🇬🇧")],
+        )
+        response.close()
+        javascript_response.close()
 
     def test_disclaimer_confirmation_is_remembered_locally(self):
         response = self.client.get(
@@ -339,7 +488,7 @@ class VPlanSubdomainTests(unittest.TestCase):
 
     def test_pwa_manifest_and_root_service_worker_are_available(self):
         manifest_response = self.client.get(
-            "/static/manifest.webmanifest",
+            "/manifest.webmanifest",
             headers={"Host": "vplan.echteralsfake.me"},
         )
         worker_response = self.client.get(
@@ -350,12 +499,86 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertEqual(manifest_response.status_code, 200)
         self.assertEqual(manifest["display"], "standalone")
         self.assertEqual(manifest["start_url"], "/vplan?source=pwa")
+        self.assertEqual(manifest["scope"], "/vplan")
+        self.assertEqual(manifest["id"], "/vplan")
+        self.assertFalse(manifest["prefer_related_applications"])
+        self.assertIn("no-store", manifest_response.headers["Cache-Control"])
         self.assertTrue(any("maskable" in icon["purpose"] for icon in manifest["icons"]))
         self.assertEqual(worker_response.status_code, 200)
-        self.assertEqual(worker_response.headers["Service-Worker-Allowed"], "/")
-        self.assertIn("Planseiten bleiben immer netzwerkaktuell", worker_response.get_data(as_text=True))
+        self.assertEqual(worker_response.headers["Service-Worker-Allowed"], "/vplan")
+        worker = worker_response.get_data(as_text=True)
+        self.assertIn("Planseiten bleiben immer netzwerkaktuell", worker)
+        self.assertIn("CACHEABLE_PATHS", worker)
+        self.assertIn("event.waitUntil", worker)
+        self.assertIn("await cache.put", worker)
         manifest_response.close()
         worker_response.close()
+
+    def test_install_events_are_captured_before_async_translations(self):
+        response = self.client.get(
+            "/static/vplan-pwa.js", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        javascript = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('window.addEventListener("beforeinstallprompt"', javascript)
+        self.assertIn('navigator.serviceWorker.register("/sw.js", { scope: "/vplan" })', javascript)
+        self.assertIn('document.readyState === "complete"', javascript)
+        response.close()
+
+    def test_class_selector_contains_only_a_to_c(self):
+        response = self.client.get(
+            "/", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        html = response.get_data(as_text=True)
+
+        for letter in "abc":
+            self.assertIn(f'<option value="{letter}"', html)
+        for letter in "defgh":
+            self.assertNotIn(f'<option value="{letter}"', html)
+        response.close()
+
+    def test_vplan_host_uses_isolated_legal_pages_and_static_assets(self):
+        privacy = self.client.get(
+            "/vplan/privacy", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        imprint = self.client.get(
+            "/vplan/imprint", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        old_privacy = self.client.get(
+            "/datenschutz", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        unrelated_static = self.client.get(
+            "/static/index.css", headers={"Host": "vplan.echteralsfake.me"}
+        )
+
+        privacy_html = privacy.get_data(as_text=True)
+        imprint_html = imprint.get_data(as_text=True)
+        self.assertEqual(privacy.status_code, 200)
+        self.assertEqual(imprint.status_code, 200)
+        self.assertIn("nach 180 Tagen durch eine stündliche Bereinigung", privacy_html)
+        self.assertNotIn("Porn Fetch", privacy_html)
+        self.assertNotIn("Porn Fetch", imprint_html)
+        self.assertEqual(old_privacy.status_code, 404)
+        self.assertEqual(unrelated_static.status_code, 404)
+        privacy.close()
+        imprint.close()
+        old_privacy.close()
+        unrelated_static.close()
+
+    def test_vplan_responses_use_the_restricted_security_policy(self):
+        response = self.client.get(
+            "/", headers={"Host": "vplan.echteralsfake.me"}
+        )
+        policy = response.headers["Content-Security-Policy"]
+
+        self.assertIn("script-src 'self'", policy)
+        self.assertNotIn("cdn.tailwindcss.com", policy)
+        self.assertNotIn("nowpayments.io", policy)
+        self.assertNotIn("'unsafe-inline'", policy.split("script-src", 1)[1].split(";", 1)[0])
+        self.assertNotIn("'unsafe-inline'", policy.split("style-src", 1)[1].split(";", 1)[0])
+        self.assertEqual(response.headers["X-XSS-Protection"], "0")
+        response.close()
 
     def test_missing_plan_file_is_downloaded_before_rendering(self):
         plan = {
