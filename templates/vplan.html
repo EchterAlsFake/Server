@@ -34,12 +34,14 @@
     <aside class="utility-header" aria-label="Informationen zum Angebot">
         <div class="utility-header-inner">
             <span>Inoffizielles Schülerprojekt</span>
-            <nav aria-label="Rechtliche Informationen und Credits">
+            <nav aria-label="Informationen zum Angebot">
                 <button type="button" data-info-open="controller-dialog">Verantwortlicher</button>
                 <span aria-hidden="true">·</span>
                 <button type="button" data-info-open="privacy-dialog">Datenschutz</button>
                 <span aria-hidden="true">·</span>
                 <button type="button" data-info-open="credits-dialog">Credits</button>
+                <span aria-hidden="true">·</span>
+                <button class="changelog-trigger" type="button" data-info-open="changelog-dialog">Änderungen</button>
             </nav>
         </div>
     </aside>
@@ -663,13 +665,95 @@
                     <ul class="idea-credits">
                         <li>
                             <span aria-hidden="true">→</span>
-                            <div><strong>Umbenennung der Fächer / Lehrer</strong><small>Mara Rosenberg</small></div>
+                            <div><strong>Umbenennung der Fächer / Lehrer</strong><small>Anonym</small></div>
                         </li>
                         <li>
                             <span aria-hidden="true">→</span>
                             <div><strong>Installation der App</strong><small>Richard Lewerenz</small></div>
                         </li>
                     </ul>
+                </section>
+            </div>
+
+            <div class="dialog-actions info-actions">
+                <button class="primary-button" type="button" data-info-close>Schließen</button>
+            </div>
+        </article>
+    </dialog>
+
+    <dialog class="info-dialog changelog-dialog" id="changelog-dialog" data-info-dialog aria-labelledby="changelog-title">
+        <article class="dialog-card changelog-card">
+            <div class="dialog-heading">
+                <div>
+                    <p class="dialog-kicker">Was ist neu?</p>
+                    <h2 id="changelog-title">Änderungsprotokoll</h2>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-info-close aria-label="Änderungsprotokoll schließen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <p class="dialog-intro">Die wichtigsten Änderungen am Vertretungsplan – direkt aus der Git-Historie zusammengefasst.</p>
+
+            <div class="changelog-list">
+                <section class="changelog-day" aria-labelledby="changelog-2026-08-20">
+                    <div class="changelog-date">
+                        <time id="changelog-2026-08-20" datetime="2026-08-20">20. August 2026</time>
+                    </div>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit b8b865f">b8b865f</span>
+                        <div>
+                            <h3>Mehr Datenschutz und bessere Kursauswahl</h3>
+                            <ul>
+                                <li>Lehrerkennungen werden zuverlässiger erkannt und vor der Speicherung entfernt.</li>
+                                <li>Bereits erkannte Kurse bleiben innerhalb des Schuljahres für „Mein Plan“ verfügbar.</li>
+                            </ul>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="changelog-day" aria-labelledby="changelog-2026-08-19">
+                    <div class="changelog-date">
+                        <time id="changelog-2026-08-19" datetime="2026-08-19">19. August 2026</time>
+                    </div>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit 6f60944">6f60944</span>
+                        <div>
+                            <h3>Personalisierung und App-Funktionen</h3>
+                            <ul>
+                                <li>Fächer und optionale Lehrernamen können lokal umbenannt werden.</li>
+                                <li>Installierbare App, Fehlermeldungen, Credits und neue Schnellaktionen ergänzt.</li>
+                                <li>Der bestätigte Nutzungshinweis wird im Browser gespeichert.</li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit c6dc4bd">c6dc4bd</span>
+                        <div>
+                            <h3>Zuverlässiger Erststart</h3>
+                            <p>Fehlt die lokale Plandatei, wird sie vor der ersten Anzeige automatisch geladen.</p>
+                        </div>
+                    </article>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit 276b94a">276b94a</span>
+                        <div>
+                            <h3>Aktualisierung verbessert</h3>
+                            <p>Der Plan wird anhand seines tatsächlichen Inhalts verglichen und nur bei Änderungen ersetzt.</p>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="changelog-day" aria-labelledby="changelog-2026-08-18">
+                    <div class="changelog-date">
+                        <time id="changelog-2026-08-18" datetime="2026-08-18">18. August 2026</time>
+                    </div>
+                    <article class="changelog-commit">
+                        <span class="commit-ref" title="Git-Commit d2b2cc4">d2b2cc4</span>
+                        <div>
+                            <h3>Neuer Vertretungsplan</h3>
+                            <p>Mobile Oberfläche, Suche, Ausfallfilter, persönlicher Plan und automatische Synchronisation eingeführt.</p>
+                        </div>
+                    </article>
                 </section>
             </div>
 

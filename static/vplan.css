@@ -167,6 +167,21 @@ button {
     text-decoration-color: currentColor;
 }
 
+.utility-header .changelog-trigger {
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.utility-header .changelog-trigger:hover,
+.utility-header .changelog-trigger:focus-visible {
+    background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+    color: var(--brand-dark);
+}
+
 .app-header {
     padding: 17px max(18px, env(safe-area-inset-right)) 18px max(18px, env(safe-area-inset-left));
     background: var(--header-bg);
@@ -1407,6 +1422,93 @@ dialog::backdrop {
     font-weight: 650;
 }
 
+.changelog-dialog {
+    width: min(calc(100% - 24px), 700px);
+}
+
+.changelog-card {
+    display: grid;
+    gap: 18px;
+}
+
+.changelog-card > .dialog-intro {
+    margin: 0;
+}
+
+.changelog-list {
+    display: grid;
+    gap: 23px;
+}
+
+.changelog-day {
+    display: grid;
+    gap: 10px;
+}
+
+.changelog-date {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.changelog-date::after {
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+    content: "";
+}
+
+.changelog-commit {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 11px;
+    padding: 12px 13px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--surface-soft);
+}
+
+.commit-ref {
+    display: inline-flex;
+    padding: 3px 7px;
+    border-radius: 8px;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+.changelog-commit h3,
+.changelog-commit p,
+.changelog-commit ul {
+    margin: 0;
+}
+
+.changelog-commit h3 {
+    font-size: 0.88rem;
+}
+
+.changelog-commit p,
+.changelog-commit ul {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.76rem;
+    line-height: 1.55;
+}
+
+.changelog-commit ul {
+    display: grid;
+    gap: 3px;
+    padding-left: 1.1rem;
+}
+
 .info-actions {
     align-items: center;
 }
@@ -1846,6 +1948,11 @@ html[data-theme="dark"] .error-state {
     .utility-header nav {
         width: 100%;
         justify-content: center;
+        gap: 8px;
+    }
+
+    .utility-header nav > span {
+        display: none;
     }
 
     .header-inner {
@@ -1905,6 +2012,10 @@ html[data-theme="dark"] .error-state {
     }
 
     .credit-details {
+        grid-template-columns: 1fr;
+    }
+
+    .changelog-commit {
         grid-template-columns: 1fr;
     }
 }

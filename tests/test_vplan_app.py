@@ -112,8 +112,13 @@ class VPlanSubdomainTests(unittest.TestCase):
         self.assertIn('data-info-open="controller-dialog"', html)
         self.assertIn('data-info-open="privacy-dialog"', html)
         self.assertIn('data-info-open="credits-dialog"', html)
+        self.assertIn('data-info-open="changelog-dialog"', html)
+        self.assertIn('id="changelog-dialog"', html)
+        self.assertIn("Änderungsprotokoll", html)
+        for commit in ("b8b865f", "6f60944", "c6dc4bd", "276b94a", "d2b2cc4"):
+            self.assertIn(commit, html)
         self.assertIn("Codex 5.6 SOL", html)
-        self.assertIn("Mara Rosenberg", html)
+        self.assertIn("Anonym", html)
         self.assertIn("Richard Lewerenz", html)
 
     def test_feedback_validation_accepts_plain_text_and_rejects_contact_data(self):

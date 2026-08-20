@@ -159,7 +159,7 @@ Schema des vorgeschalteten Proxys, ausdrücklich aber keiner weitergeleiteten Be
 
 Die Seite besitzt aktuell:
 
-- eine dezente obere Leiste mit „Verantwortlicher“, „Datenschutz“ und „Credits“;
+- eine dezente obere Leiste mit „Verantwortlicher“, „Datenschutz“, „Credits“ und „Änderungen“;
 - einen App-Header mit Aktualisierungszeit und Hell-/Dunkelmodus;
 - Tastatur-bedienbare Tag-Tabs;
 - drei immer sichtbare Schnellaktionen in einer Reihe:
@@ -172,6 +172,11 @@ Die Seite besitzt aktuell:
 - Bearbeitung jedes Eintrags über „Neuer Name“ und „Lehrer (optional)“;
 - Informationsdialoge, Installationshilfe, Feedbackdialog und einmaligen Nutzungshinweis;
 - Credits mit Stack und bisherigen Danksagungen.
+
+Der Dialog „Änderungsprotokoll“ enthält eine kurze, nutzerfreundliche Zusammenfassung relevanter
+VPlan-Commits, gruppiert nach Datum. Die Einträge werden nicht zur Laufzeit aus `.git` geladen,
+sondern nach Prüfung mit `git log` und `git show` bewusst im Template gepflegt. So funktioniert
+die Ansicht auch in Deployments ohne Git-Metadaten und veröffentlicht keine internen Committexte.
 
 Die Schnellaktionen bleiben auch bei leerem oder vorübergehend nicht verfügbarem Plan sichtbar.
 Dialoge verwenden das native `<dialog>`-Element. Neue Interaktionen sollen die vorhandenen
@@ -283,7 +288,7 @@ Die Credits-Ansicht enthält aktuell:
 - Hosting: Cloudflare und Google Pixel 7 Pro;
 - IDE: PyCharm;
 - Code: GitHub;
-- Umbenennung der Fächer/Lehrer: Mara Rosenberg;
+- Umbenennung der Fächer/Lehrer: Anonym;
 - Installation der App: Richard Lewerenz.
 
 Die Liste soll unkompliziert erweiterbar bleiben. Bestehende Nennungen nicht ohne ausdrücklichen
@@ -381,3 +386,5 @@ Wichtige Testverträge:
 10. Die Tests proportional zur Änderung ergänzen und die vollständige Suite ausführen.
 11. Diese Datei aktualisieren, wenn sich Architektur, Speicherung, Routen oder zentrale
     Produktentscheidungen des Vertretungsplans ändern.
+12. Bei einer sichtbaren VPlan-Veröffentlichung den Änderungsdialog anhand des tatsächlichen
+    Git-Diffs ergänzen; technische Details knapp und aus Nutzersicht formulieren.
