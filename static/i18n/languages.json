@@ -1,0 +1,17 @@
+{
+  "default": "de",
+  "languages": [
+    {
+      "code": "de",
+      "name": "Deutsch",
+      "status": "source",
+      "flag": "🇩🇪"
+    },
+    {
+      "code": "en",
+      "name": "English",
+      "status": "beta",
+      "flag": "🇬🇧"
+    }
+  ]
+}
