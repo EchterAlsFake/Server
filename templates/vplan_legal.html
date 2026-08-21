@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <title data-i18n="{{ 'legal.privacy_title' if page == 'privacy' else 'legal.imprint_title' }}">{{ 'Datenschutzerklärung – Vertretungsplan' if page == 'privacy' else 'Impressum – Vertretungsplan' }}</title>
+    <script src="{{ url_for('static', filename='vplan-theme.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='vplan-icon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vplan.css') }}">
+    <script src="{{ url_for('static', filename='vplan.js') }}" defer></script>
+</head>
+<body class="vplan-legal-page">
+    <main class="legal-shell">
+        <a class="legal-back" href="{{ url_for('vplan') }}" data-i18n="legal.back">← Zum Vertretungsplan</a>
+        <article class="legal-card">
+            {% if page == 'privacy' %}
+                <p class="eyebrow" data-i18n="app.unofficial">Inoffizielles Schülerprojekt</p>
+                <h1 data-i18n="legal.privacy_heading">Datenschutzerklärung für den Vertretungsplan</h1>
+                <p class="legal-updated" data-i18n="legal.updated">Stand: 20. August 2026</p>
+
+                <section>
+                    <h2 data-i18n="info.controller.title">Verantwortlicher</h2>
+                    <address>
+                        <strong>Johannes Habel</strong><br>
+                        Bahnstr. 21<br>
+                        06886 Lutherstadt Wittenberg<br>
+                        Deutschland<br>
+                        <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>
+                    </address>
+                </section>
+                <section>
+                    <h2 data-i18n="privacy.no_tracking.title">Keine automatische Besucherspeicherung</h2>
+                    <p data-i18n="privacy.no_tracking.text">Der Betreiber speichert für den Vertretungsplan auf dem eigenen Ursprungsserver keine Besucher-IP-Adressen, Browserkennungen oder Kontodaten. Es gibt keine Nutzerkonten, Reichweitenanalyse oder Profilbildung.</p>
+                </section>
+                <section>
+                    <h2 data-i18n="privacy.local.title">Lokale Einstellungen</h2>
+                    <p data-i18n="privacy.local.text">Die gewählte Klasse, Kurse, eigene Fachnamen, Lehrernamen, Darstellung, Filtereinstellungen, Sprachauswahl und die Bestätigung des Nutzungshinweises werden ausschließlich im lokalen Speicher deines Browsers gespeichert. Sie werden nicht an den Server übertragen.</p>
+                </section>
+                <section>
+                    <h2 data-i18n="privacy.redaction.title">Anonymisierung des Quellplans</h2>
+                    <p data-i18n="privacy.redaction.text">Eine private serverseitige Namensliste wird nur verwendet, um Namen von Lehrkräften bereits vor dem Speichern des Vertretungsplans durch „Lehrkraft“ zu ersetzen. Die Liste wird nicht an den Browser ausgeliefert und nicht mit Besucherdaten verknüpft.</p>
+                </section>
+                <section>
+                    <h2 data-i18n="privacy.feedback.title">Freiwillige Fehlermeldungen</h2>
+                    <p data-i18n="privacy.feedback.text">Wenn du „Fehler melden“ verwendest, werden ausschließlich der eingegebene Nachrichtentext und der Eingangszeitpunkt auf dem Ursprungsserver gespeichert. Die Nachricht wird nicht mit einer IP-Adresse, Browserkennung, Klasse oder deinen lokalen Einstellungen verknüpft und nach 180 Tagen durch eine stündliche Bereinigung automatisch gelöscht. Ein anonymer, minutenbasierter Gesamtzähler begrenzt Missbrauch und wird innerhalb eines Tages entfernt. Bitte gib dort keine personenbezogenen Informationen ein.</p>
+                </section>
+                <section>
+                    <h2 data-i18n="privacy.cloudflare.title">Cloudflare</h2>
+                    <p data-i18n="privacy.cloudflare.text">Für die öffentliche Erreichbarkeit, TLS-Verschlüsselung sowie den Schutz vor Angriffen wird Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA eingesetzt. Cloudflare erhält technisch bedingt insbesondere deine IP-Adresse und HTTP-Verbindungsdaten und kann notwendige Sicherheits-Cookies setzen. Die Verarbeitung dient der sicheren und zuverlässigen Bereitstellung dieser Webseite.</p>
+                    <p data-i18n="privacy.cloudflare.transfer">Eine Verarbeitung außerhalb des EWR kann nicht ausgeschlossen werden. Cloudflare verwendet hierfür nach eigenen Angaben unter anderem geeignete Garantien wie die EU-Standardvertragsklauseln.</p>
+                    <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer" data-i18n="privacy.cloudflare_link">Cloudflare-Datenschutz</a>
+                </section>
+                <section>
+                    <h2 data-i18n="privacy.rights.title">Rechtsgrundlage und Rechte</h2>
+                    <p data-i18n="privacy.rights.text">Soweit personenbezogene Daten für den sicheren Betrieb verarbeitet werden, erfolgt dies auf Grundlage des berechtigten Interesses an Sicherheit und Verfügbarkeit gemäß Art. 6 Abs. 1 lit. f DSGVO. Dir stehen insbesondere die gesetzlichen Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung und Widerspruch sowie ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde zu.</p>
+                    <p data-i18n="legal.privacy_contact">Zur Ausübung deiner Rechte oder zur vorzeitigen Löschung einer freiwilligen Meldung kannst du dich an den Verantwortlichen wenden. Ohne Kontaktdaten oder Nutzerkennung kann eine einzelne anonyme Meldung möglicherweise nicht eindeutig zugeordnet werden.</p>
+                </section>
+            {% else %}
+                <p class="eyebrow" data-i18n="info.controller.kicker">Angaben gemäß § 5 DDG</p>
+                <h1 data-i18n="legal.imprint_heading">Impressum für den Vertretungsplan</h1>
+                <section>
+                    <h2 data-i18n="info.controller.title">Verantwortlicher</h2>
+                    <address>
+                        <strong>Johannes Habel</strong><br>
+                        Bahnstr. 21<br>
+                        06886 Lutherstadt Wittenberg<br>
+                        Deutschland
+                    </address>
+                </section>
+                <section>
+                    <h2 data-i18n="info.controller.contact">Kontakt</h2>
+                    <p><span data-i18n="info.controller.email">E-Mail:</span> <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>
+                    <span data-i18n="info.controller.phone">Telefon:</span> <a href="tel:+491744646064">+49 174 4646064</a></p>
+                </section>
+                <section>
+                    <h2 data-i18n="legal.disclaimer_title">Hinweis zum Angebot</h2>
+                    <p data-i18n="info.controller.disclaimer">Dieses private Schülerprojekt steht in keiner Verbindung zur Schule oder zur Edith-Stein-Schulstiftung.</p>
+                    <p data-i18n="legal.disclaimer_text">Verbindlich ist ausschließlich der offizielle Vertretungsplan. Trotz sorgfältiger Aufbereitung wird keine Gewähr für Richtigkeit, Vollständigkeit oder Aktualität übernommen.</p>
+                </section>
+            {% endif %}
+        </article>
+    </main>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title data-i18n="translator.title">Vertretungsplan übersetzen</title>
+    <link rel="icon" href="{{ url_for('static', filename='vplan-icon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vplan-translate.css') }}">
+    <script src="{{ url_for('static', filename='vplan-translate.js') }}" defer></script>
+</head>
+<body>
+    <header class="translator-header">
+        <div>
+            <a class="back-link" href="{{ url_for('vplan') }}" data-i18n="legal.back">← Zum Vertretungsplan</a>
+            <p class="eyebrow" data-i18n="translator.eyebrow">Community-Übersetzung</p>
+            <h1 data-i18n="translator.title">Vertretungsplan übersetzen</h1>
+            <p data-i18n="translator.intro">Du brauchst keine Programmierkenntnisse. Übersetze die deutschen Ausgangstexte und lade anschließend eine fertige JSON-Datei herunter.</p>
+        </div>
+    </header>
+
+    <main class="translator-shell">
+        <noscript><p class="notice error" data-i18n="translator.javascript">Der Übersetzungseditor benötigt JavaScript.</p></noscript>
+
+        <section class="notice privacy-note" aria-labelledby="privacy-note-title">
+            <div aria-hidden="true">✓</div>
+            <div>
+                <h2 id="privacy-note-title" data-i18n="translator.privacy_title">Alles bleibt in deinem Browser</h2>
+                <p data-i18n="translator.privacy_text">Texte und importierte Dateien werden nicht an den Server gesendet. Der Download wird direkt auf deinem Gerät erzeugt. Bitte trage keine Namen oder anderen personenbezogenen Angaben ein.</p>
+            </div>
+        </section>
+
+        <section class="setup-card" aria-labelledby="setup-title">
+            <div class="section-heading">
+                <div>
+                    <p data-i18n="translator.step_1">Schritt 1</p>
+                    <h2 id="setup-title" data-i18n="translator.setup_title">Sprache vorbereiten</h2>
+                </div>
+                <button class="secondary-button" type="button" data-new-language data-i18n="translator.new_language">Neue Sprache</button>
+            </div>
+
+            <div class="setup-grid">
+                <label>
+                    <span data-i18n="translator.existing">Vorhandene Übersetzung</span>
+                    <select data-existing-language>
+                        <option value="en">English (Beta)</option>
+                    </select>
+                </label>
+                <button class="secondary-button align-end" type="button" data-load-language data-i18n="translator.load">Laden</button>
+                <label>
+                    <span data-i18n="translator.language_code">Sprachcode</span>
+                    <input type="text" inputmode="text" maxlength="20" value="en" placeholder="z. B. en oder uk" data-language-code data-i18n-placeholder="translator.language_code_placeholder">
+                    <small data-i18n="translator.language_code_help">Kurzer BCP-47-Code ohne Leerzeichen.</small>
+                </label>
+                <label>
+                    <span data-i18n="translator.language_name">Name der Sprache</span>
+                    <input type="text" maxlength="60" value="English" placeholder="z. B. English" data-language-name data-i18n-placeholder="translator.language_name_placeholder">
+                    <small data-i18n="translator.language_name_help">Am besten in der Sprache selbst.</small>
+                </label>
+                <label class="file-field">
+                    <span data-i18n="translator.import">Vorhandene JSON-Datei importieren</span>
+                    <input type="file" accept="application/json,.json" data-import-file>
+                    <small data-i18n="translator.import_help">Optional: Du kannst eine begonnene Datei weiterbearbeiten.</small>
+                </label>
+            </div>
+        </section>
+
+        <section class="translation-card" aria-labelledby="translation-title">
+            <div class="section-heading translation-heading">
+                <div>
+                    <p data-i18n="translator.step_2">Schritt 2</p>
+                    <h2 id="translation-title" data-i18n="translator.translate_title">Texte übersetzen</h2>
+                </div>
+                <p class="progress" data-progress aria-live="polite" data-i18n="translator.loading">Katalog wird geladen …</p>
+            </div>
+
+            <div class="translation-tools">
+                <label class="search-field">
+                    <span class="sr-only" data-i18n="translator.search_label">Texte durchsuchen</span>
+                    <input type="search" placeholder="Schlüssel oder deutschen Text suchen …" data-translation-search data-i18n-placeholder="translator.search_placeholder">
+                </label>
+                <label class="missing-toggle">
+                    <input type="checkbox" data-missing-only>
+                    <span data-i18n="translator.missing_only">Nur fehlende</span>
+                </label>
+            </div>
+
+            <div class="editor-status" data-editor-status role="status" aria-live="polite"></div>
+            <div class="translation-list" data-translation-list></div>
+            <div class="empty-result" data-empty-result hidden data-i18n="translator.no_results">Keine passenden Texte gefunden.</div>
+        </section>
+
+        <section class="download-card" aria-labelledby="download-title">
+            <div>
+                <p data-i18n="translator.step_3">Schritt 3</p>
+                <h2 id="download-title" data-i18n="translator.download_title">Prüfen und herunterladen</h2>
+                <p data-i18n="translator.download_help">Platzhalter wie {count} müssen unverändert bleiben. HTML ist nicht erlaubt. Fehlende Texte verwenden später automatisch den deutschen Ausgangstext.</p>
+                <p class="contribution-hint"><span data-i18n="translator.contribute_before">Fertig? Schicke die JSON-Datei an den Betreiber oder reiche sie im</span> <a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer" data-i18n="translator.github">GitHub-Projekt</a> <span data-i18n="translator.contribute_after">ein. Veröffentlicht wird sie erst nach einer Prüfung.</span></p>
+            </div>
+            <div class="download-actions">
+                <button class="secondary-button" type="button" data-validate data-i18n="translator.validate">Prüfen</button>
+                <button class="primary-button" type="button" data-download data-i18n="translator.download">JSON herunterladen</button>
+            </div>
+        </section>
+    </main>
+
+    <template data-translation-row-template>
+        <article class="translation-row">
+            <div class="source-copy">
+                <code data-key></code>
+                <p data-source></p>
+                <small data-placeholders hidden></small>
+            </div>
+            <label>
+                <span class="sr-only" data-i18n="translator.translation_label">Übersetzung</span>
+                <textarea rows="3" maxlength="4000" data-translation-input></textarea>
+            </label>
+            <p class="row-error" data-row-error hidden></p>
+        </article>
+    </template>
+</body>
+</html>
