@@ -10,18 +10,19 @@ import hmac
 import hashlib
 import base64
 import secrets
+import math
 import markdown
 import threading
 import subprocess
 import smtplib
 import ssl
+from dataclasses import dataclass, field
 from io import BytesIO
 from email.message import EmailMessage
 from email.utils import format_datetime, make_msgid
 from urllib.parse import urlsplit
 from flask_limiter import Limiter
 from flask_talisman import Talisman
-from pydantic import BaseModel, Field, ConfigDict
 from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -88,50 +89,163 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 DB_PATH = os.environ.get("PF_SERVER_DB", os.path.join(SAVE_DIR, "server.db"))
 
 
-# Strict Input Validation Schema for NOWPayments Webhook
-class NowPaymentsWebhookSchema(BaseModel):
-    model_config = ConfigDict(extra='ignore')
-    
-    payment_id: int | None = Field(None, description="NOWPayments internal ID")
-    payment_status: str | None = Field(None, max_length=50)
-    status: str | None = Field(None, max_length=50)
-    order_id: str = Field(..., min_length=1, max_length=255)
+def require_json_object(value, field_name: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{field_name} must be an object")
+    return value
+
+
+def optional_json_string(data: dict, field_name: str, max_length: int) -> str | None:
+    value = data.get(field_name)
+    if value is None:
+        return None
+    if not isinstance(value, str) or len(value) > max_length:
+        raise ValueError(f"{field_name} must be a string of at most {max_length} characters")
+    return value
+
+
+def required_json_string(
+    data: dict,
+    field_name: str,
+    max_length: int,
+    pattern: str | None = None,
+) -> str:
+    value = optional_json_string(data, field_name, max_length)
+    if not value or (pattern is not None and re.fullmatch(pattern, value) is None):
+        raise ValueError(f"{field_name} is invalid")
+    return value
+
+
+def optional_json_integer(data: dict, field_name: str, minimum: int | None = None) -> int | None:
+    value = data.get(field_name)
+    if value is None:
+        return None
+    if type(value) is not int or (minimum is not None and value < minimum):
+        raise ValueError(f"{field_name} must be an integer")
+    return value
+
+
+def optional_json_number(data: dict, field_name: str, minimum: float | None = None) -> float | None:
+    value = data.get(field_name)
+    if value is None:
+        return None
+    if type(value) not in (int, float):
+        raise ValueError(f"{field_name} must be a number")
+    number = float(value)
+    if not math.isfinite(number) or (minimum is not None and number < minimum):
+        raise ValueError(f"{field_name} must be a finite number")
+    return number
+
+
+def optional_json_boolean(data: dict, field_name: str) -> bool | None:
+    value = data.get(field_name)
+    if value is None:
+        return None
+    if type(value) is not bool:
+        raise ValueError(f"{field_name} must be a boolean")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class NowPaymentsWebhook:
+    order_id: str
+    payment_id: int | None = None
+    payment_status: str | None = None
+    status: str | None = None
     parent_payment_id: int | None = None
-    pay_currency: str | None = Field(None, max_length=20)
-    actually_paid: float | None = Field(None, ge=0)
-    pay_amount: float | None = Field(None, ge=0)
-    price_amount: float | None = Field(None, ge=0)
-    payin_hash: str | None = Field(None, max_length=255)
-    hash: str | None = Field(None, max_length=255)
+    pay_currency: str | None = None
+    actually_paid: float | None = None
+    pay_amount: float | None = None
+    price_amount: float | None = None
+    payin_hash: str | None = None
+    hash: str | None = None
+
+    @classmethod
+    def from_mapping(cls, raw_payload: object) -> "NowPaymentsWebhook":
+        data = require_json_object(raw_payload, "payload")
+        return cls(
+            order_id=required_json_string(data, "order_id", 255),
+            payment_id=optional_json_integer(data, "payment_id"),
+            payment_status=optional_json_string(data, "payment_status", 50),
+            status=optional_json_string(data, "status", 50),
+            parent_payment_id=optional_json_integer(data, "parent_payment_id"),
+            pay_currency=optional_json_string(data, "pay_currency", 20),
+            actually_paid=optional_json_number(data, "actually_paid", 0),
+            pay_amount=optional_json_number(data, "pay_amount", 0),
+            price_amount=optional_json_number(data, "price_amount", 0),
+            payin_hash=optional_json_string(data, "payin_hash", 255),
+            hash=optional_json_string(data, "hash", 255),
+        )
 
 
-class PatreonMemberAttributesSchema(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-
-    email: str | None = Field(None, max_length=254)
-    patron_status: str | None = Field(None, max_length=50)
-    last_charge_status: str | None = Field(None, max_length=50)
-    currently_entitled_amount_cents: int | None = Field(None, ge=0)
-    campaign_lifetime_support_cents: int | None = Field(None, ge=0)
-    lifetime_support_cents: int | None = Field(None, ge=0)
+@dataclass(frozen=True, slots=True)
+class PatreonMemberAttributes:
+    email: str | None = None
+    patron_status: str | None = None
+    last_charge_status: str | None = None
+    currently_entitled_amount_cents: int | None = None
+    campaign_lifetime_support_cents: int | None = None
+    lifetime_support_cents: int | None = None
     is_free_trial: bool | None = None
     is_gifted: bool | None = None
 
+    @classmethod
+    def from_mapping(cls, raw_attributes: object) -> "PatreonMemberAttributes":
+        data = require_json_object(raw_attributes, "data.attributes")
+        return cls(
+            email=optional_json_string(data, "email", 254),
+            patron_status=optional_json_string(data, "patron_status", 50),
+            last_charge_status=optional_json_string(data, "last_charge_status", 50),
+            currently_entitled_amount_cents=optional_json_integer(
+                data, "currently_entitled_amount_cents", 0
+            ),
+            campaign_lifetime_support_cents=optional_json_integer(
+                data, "campaign_lifetime_support_cents", 0
+            ),
+            lifetime_support_cents=optional_json_integer(data, "lifetime_support_cents", 0),
+            is_free_trial=optional_json_boolean(data, "is_free_trial"),
+            is_gifted=optional_json_boolean(data, "is_gifted"),
+        )
 
-class PatreonMemberSchema(BaseModel):
-    model_config = ConfigDict(extra="ignore")
 
-    type: str = Field(..., pattern=r"^member$")
-    id: str = Field(..., min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
-    attributes: PatreonMemberAttributesSchema
-    relationships: dict = Field(default_factory=dict)
+@dataclass(frozen=True, slots=True)
+class PatreonMember:
+    type: str
+    id: str
+    attributes: PatreonMemberAttributes
+    relationships: dict = field(default_factory=dict)
+
+    @classmethod
+    def from_mapping(cls, raw_member: object) -> "PatreonMember":
+        data = require_json_object(raw_member, "data")
+        relationships = require_json_object(data.get("relationships", {}), "data.relationships")
+        return cls(
+            type=required_json_string(data, "type", 6, r"member"),
+            id=required_json_string(data, "id", 128, r"[A-Za-z0-9_-]+"),
+            attributes=PatreonMemberAttributes.from_mapping(data.get("attributes")),
+            relationships=dict(relationships),
+        )
 
 
-class PatreonWebhookSchema(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+@dataclass(frozen=True, slots=True)
+class PatreonWebhook:
+    data: PatreonMember
+    included: list[dict] = field(default_factory=list)
 
-    data: PatreonMemberSchema
-    included: list[dict] = Field(default_factory=list, max_length=100)
+    @classmethod
+    def from_mapping(cls, raw_payload: object) -> "PatreonWebhook":
+        data = require_json_object(raw_payload, "payload")
+        included = data.get("included", [])
+        if (
+            not isinstance(included, list)
+            or len(included) > 100
+            or any(not isinstance(resource, dict) for resource in included)
+        ):
+            raise ValueError("included must be a list of at most 100 objects")
+        return cls(
+            data=PatreonMember.from_mapping(data.get("data")),
+            included=list(included),
+        )
 
 
 # Flask setup
@@ -408,7 +522,7 @@ def normalize_recipient_email(value: str | None) -> str | None:
     return f"{local_part}@{ascii_domain}"
 
 
-def extract_patreon_email(payload: PatreonWebhookSchema) -> str | None:
+def extract_patreon_email(payload: PatreonWebhook) -> str | None:
     """Prefer the v2 Member email and tolerate Patreon's included User shape."""
     direct_email = normalize_recipient_email(payload.data.attributes.email)
     if direct_email:
@@ -430,7 +544,7 @@ def extract_patreon_email(payload: PatreonWebhookSchema) -> str | None:
     return None
 
 
-def patreon_member_has_license_tier(member: PatreonMemberSchema) -> bool:
+def patreon_member_has_license_tier(member: PatreonMember) -> bool:
     """Apply an optional allow-list while defaulting to any entitled paid tier."""
     if not PATREON_LICENSE_TIER_IDS:
         return True
@@ -446,7 +560,7 @@ def patreon_member_has_license_tier(member: PatreonMemberSchema) -> bool:
     return bool(entitled_ids & PATREON_LICENSE_TIER_IDS)
 
 
-def patreon_member_is_paid_and_entitled(member: PatreonMemberSchema) -> bool:
+def patreon_member_is_paid_and_entitled(member: PatreonMember) -> bool:
     """Never grant a license from a pledge event alone without paid entitlement data."""
     attributes = member.attributes
     return (
@@ -1484,9 +1598,9 @@ def nowpayments_ipn():
     except (json.JSONDecodeError, UnicodeDecodeError):
         return "Invalid JSON", 400
         
-    # 2. Strict Input Validation using Pydantic
+    # 2. Strict input validation
     try:
-        validated_data = NowPaymentsWebhookSchema(**data_dict)
+        validated_data = NowPaymentsWebhook.from_mapping(data_dict)
     except (ValueError, TypeError):
         app.logger.warning("NOWPayments webhook schema validation failed")
         return jsonify({"error": "Invalid payload schema"}), 400
@@ -1591,7 +1705,7 @@ def patreon_webhook():
 
     try:
         raw_payload = json.loads(request_body)
-        payload = PatreonWebhookSchema.model_validate(raw_payload)
+        payload = PatreonWebhook.from_mapping(raw_payload)
     except (json.JSONDecodeError, ValueError, TypeError):
         return jsonify({"error": "invalid_payload"}), 400
 

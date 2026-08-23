@@ -205,6 +205,31 @@ class PaymentWebhookTests(unittest.TestCase):
         with main.app.app_context():
             self.assertEqual(main.License.query.count(), 0)
 
+    def test_patreon_payload_types_are_validated_without_coercion(self):
+        malformed_payloads = []
+        for field_name, invalid_value in (
+            ("currently_entitled_amount_cents", True),
+            ("is_free_trial", "false"),
+        ):
+            payload = self.eligible_payload()
+            payload["data"]["attributes"][field_name] = invalid_value
+            malformed_payloads.append(payload)
+
+        invalid_relationships = self.eligible_payload()
+        invalid_relationships["data"]["relationships"] = []
+        malformed_payloads.append(invalid_relationships)
+
+        too_many_included_resources = self.eligible_payload()
+        too_many_included_resources["included"] = [{} for _ in range(101)]
+        malformed_payloads.append(too_many_included_resources)
+
+        responses = [self.post_patreon(payload) for payload in malformed_payloads]
+
+        self.assertTrue(all(response.status_code == 400 for response in responses))
+        self.assertTrue(
+            all(response.get_json() == {"error": "invalid_payload"} for response in responses)
+        )
+
     def test_payment_webhooks_are_available_only_on_api_subdomain(self):
         payload = self.eligible_payload()
         raw_body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
@@ -248,6 +273,34 @@ class PaymentWebhookTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_data(as_text=True), "OK")
+
+    def test_nowpayments_payload_types_and_ranges_are_validated_without_coercion(self):
+        for payload in (
+            {"payment_status": "waiting"},
+            {"order_id": 123, "payment_status": "waiting"},
+            {"order_id": "NP-test", "payment_id": True},
+            {"order_id": "NP-test", "actually_paid": -1},
+        ):
+            raw_body = json.dumps(payload).encode("utf-8")
+            canonical_body = json.dumps(
+                payload, sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")
+            signature = hmac.new(
+                main.NOWPAYMENTS_IPN_SECRET.encode("utf-8"),
+                canonical_body,
+                hashlib.sha512,
+            ).hexdigest()
+
+            with self.subTest(payload=payload):
+                response = self.client.post(
+                    "/nowpayments-ipn",
+                    data=raw_body,
+                    headers={"x-nowpayments-sig": signature},
+                    base_url="https://api.echteralsfake.me",
+                )
+
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.get_json(), {"error": "Invalid payload schema"})
 
     def test_new_crypto_invoices_receive_the_api_subdomain_callback(self):
         class FakeNowPaymentsResponse:
