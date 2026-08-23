@@ -1,8 +1,6 @@
 import os
 import re
 import fcntl
-import click
-from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 import json
@@ -15,9 +13,13 @@ import secrets
 import markdown
 import threading
 import subprocess
+import smtplib
+import ssl
 from io import BytesIO
+from email.message import EmailMessage
+from email.utils import format_datetime, make_msgid
+from urllib.parse import urlsplit
 from flask_limiter import Limiter
-from email.utils import format_datetime
 from flask_talisman import Talisman
 from pydantic import BaseModel, Field, ConfigDict
 from flask_limiter.util import get_remote_address
@@ -25,22 +27,12 @@ from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert
-from sqlalchemy.exc import SQLAlchemyError
-from flask import Flask, request, jsonify, make_response, send_file, send_from_directory, Response, render_template, g, redirect, session, url_for, flash
+from sqlalchemy import and_, or_
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from flask import Flask, request, jsonify, make_response, send_file, Response, render_template, g, redirect, session, url_for, flash, abort
 from fpdf import FPDF
 from werkzeug.serving import WSGIRequestHandler
 from werkzeug.security import generate_password_hash, check_password_hash
-from vplan_sync import (
-    VPlanSyncConfig,
-    VPlanSynchronizer,
-    discover_teacher_codes,
-    extract_teacher_names,
-    load_vplan_learning,
-    redact_teacher_codes,
-    redact_teacher_data,
-    sanitize_cached_plan,
-)
 
 
 # Configuration
@@ -54,6 +46,27 @@ KILL_TOKEN = os.environ.get("KILL_TOKEN")  # Token for /killswitch endpoint
 APP_DOMAIN = os.environ.get("APP_DOMAIN", "http://localhost:5000") # used in success/cancel URLs
 LICENSE_PRIVATE_KEY_B64 = os.environ.get("LICENSE_PRIVATE_KEY_B64", "")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "") # Used for update checking for my repos (long story)
+API_DOMAIN = os.environ.get("API_DOMAIN", "https://api.echteralsfake.me").strip().rstrip("/")
+API_DOMAIN_PARTS = urlsplit(API_DOMAIN)
+if API_DOMAIN_PARTS.scheme not in {"http", "https"} or not API_DOMAIN_PARTS.hostname:
+    raise ValueError("API_DOMAIN must be an absolute HTTP(S) URL")
+API_PUBLIC_HOST = API_DOMAIN_PARTS.hostname.lower().rstrip(".")
+PATREON_SECRET = os.environ.get("PATREON_SECRET", "")
+PATREON_LICENSE_TIER_IDS = frozenset(
+    tier_id.strip()
+    for tier_id in os.environ.get("PATREON_LICENSE_TIER_IDS", "").split(",")
+    if tier_id.strip()
+)
+LICENSE_SMTP_HOST = os.environ.get("LICENSE_SMTP_HOST", "").strip()
+LICENSE_SMTP_PORT = int(os.environ.get("LICENSE_SMTP_PORT", "587"))
+if not 1 <= LICENSE_SMTP_PORT <= 65535:
+    raise ValueError("LICENSE_SMTP_PORT must be between 1 and 65535")
+LICENSE_SMTP_USERNAME = os.environ.get("LICENSE_SMTP_USERNAME", "").strip()
+LICENSE_SMTP_PASSWORD = os.environ.get("LICENSE_SMTP_PASSWORD", "")
+LICENSE_EMAIL_FROM = os.environ.get("LICENSE_EMAIL_FROM", LICENSE_SMTP_USERNAME).strip()
+LICENSE_SMTP_STARTTLS = os.environ.get("LICENSE_SMTP_STARTTLS", "true").lower() in ("true", "1", "yes")
+LICENSE_SMTP_SSL = os.environ.get("LICENSE_SMTP_SSL", "false").lower() in ("true", "1", "yes")
+LICENSE_SMTP_TIMEOUT_SECONDS = 15
 # Environment Safety: Securely ingest sensitive API keys via environment variables.
 # Using a 'fail-fast' approach to ensure critical credentials are not silently missing.
 NOWPAYMENTS_API_KEY = os.environ.get("NOWPAYMENTS_API_KEY")
@@ -74,122 +87,6 @@ update_cache = {
 os.makedirs(SAVE_DIR, exist_ok=True)
 DB_PATH = os.environ.get("PF_SERVER_DB", os.path.join(SAVE_DIR, "server.db"))
 
-# Local substitution-plan synchronization. The complete HTML board is checked every
-# two minutes and the local JSON is replaced only when its canonical content hash changes.
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-VPLAN_SYNC_CONFIG = VPlanSyncConfig.from_environment(BASE_DIR)
-VPLAN_JSON_PATH = VPLAN_SYNC_CONFIG.plan_path
-vplan_synchronizer = VPlanSynchronizer(VPLAN_SYNC_CONFIG)
-VPLAN_PUBLIC_HOST = os.environ.get(
-    "VPLAN_PUBLIC_HOST", "vplan.echteralsfake.me"
-).strip().lower().rstrip(".")
-VPLAN_PWA_TEST_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
-VPLAN_FEEDBACK_MAX_LENGTH = 1500
-VPLAN_FEEDBACK_RETENTION_DAYS = 180
-VPLAN_FEEDBACK_RATE_LIMIT = 30
-VPLAN_MAINTENANCE_INTERVAL_SECONDS = 60 * 60
-VPLAN_FEEDBACK_EMAIL_RE = re.compile(
-    r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE
-)
-VPLAN_FEEDBACK_URL_RE = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
-VPLAN_FEEDBACK_PHONE_CANDIDATE_RE = re.compile(r"(?:\+?\d[\d\s()./-]{5,}\d)")
-VPLAN_GERMAN_MONTHS = {
-    "januar": 1,
-    "februar": 2,
-    "märz": 3,
-    "april": 4,
-    "mai": 5,
-    "juni": 6,
-    "juli": 7,
-    "august": 8,
-    "september": 9,
-    "oktober": 10,
-    "november": 11,
-    "dezember": 12,
-}
-VPLAN_NAMED_DAY_RE = re.compile(
-    r"\b(?P<day>\d{1,2})\.\s*(?P<month>[A-Za-zÄÖÜäöü]+)\s+(?P<year>\d{4})\b"
-)
-VPLAN_NUMERIC_DAY_RE = re.compile(
-    r"\b(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4})\b"
-)
-VPLAN_ISO_DAY_RE = re.compile(
-    r"\b(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\b"
-)
-VPLAN_PUBLIC_PATHS = frozenset(
-    {
-        "/",
-        "/vplan",
-        "/vplan/translate",
-        "/vplan/privacy",
-        "/vplan/imprint",
-        "/vplan/feedback",
-        "/sw.js",
-        "/manifest.webmanifest",
-    }
-)
-VPLAN_STATIC_PREFIXES = (
-    "/static/vplan",
-    "/static/i18n/",
-)
-VPLAN_CONTENT_SECURITY_POLICY = "; ".join(
-    (
-        "default-src 'self'",
-        "base-uri 'self'",
-        "connect-src 'self'",
-        "font-src 'self'",
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-        "img-src 'self' data:",
-        "manifest-src 'self'",
-        "object-src 'none'",
-        "script-src 'self'",
-        "style-src 'self'",
-        "upgrade-insecure-requests",
-    )
-)
-
-
-def _parse_vplan_day_iso(value) -> str:
-    """Convert supported source date labels to an ISO date for browser navigation."""
-    text = str(value or "").strip()
-    match = VPLAN_ISO_DAY_RE.search(text) or VPLAN_NUMERIC_DAY_RE.search(text)
-    if match:
-        year = int(match.group("year"))
-        month = int(match.group("month"))
-        day = int(match.group("day"))
-    else:
-        match = VPLAN_NAMED_DAY_RE.search(text)
-        if not match:
-            return ""
-        year = int(match.group("year"))
-        month = VPLAN_GERMAN_MONTHS.get(match.group("month").casefold(), 0)
-        day = int(match.group("day"))
-
-    try:
-        return datetime(year, month, day).date().isoformat()
-    except ValueError:
-        return ""
-
-
-def _normalized_hostname(raw_host: str) -> str:
-    """Normalize a request host while preserving IPv6 loopback support."""
-    normalized = str(raw_host or "").strip().lower()
-    if normalized.startswith("["):
-        return normalized[1:].partition("]")[0].rstrip(".")
-    return normalized.partition(":")[0].rstrip(".")
-
-
-def _is_vplan_request() -> bool:
-    """Identify requests belonging to the isolated VPlan application."""
-    hostname = _normalized_hostname(request.host)
-    if hostname == VPLAN_PUBLIC_HOST:
-        return True
-    return (
-        request.path in VPLAN_PUBLIC_PATHS - {"/"}
-        or request.path.startswith(VPLAN_STATIC_PREFIXES)
-        or request.path == "/static/manifest.webmanifest"
-    )
 
 # Strict Input Validation Schema for NOWPayments Webhook
 class NowPaymentsWebhookSchema(BaseModel):
@@ -208,28 +105,38 @@ class NowPaymentsWebhookSchema(BaseModel):
     hash: str | None = Field(None, max_length=255)
 
 
+class PatreonMemberAttributesSchema(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    email: str | None = Field(None, max_length=254)
+    patron_status: str | None = Field(None, max_length=50)
+    last_charge_status: str | None = Field(None, max_length=50)
+    currently_entitled_amount_cents: int | None = Field(None, ge=0)
+    campaign_lifetime_support_cents: int | None = Field(None, ge=0)
+    lifetime_support_cents: int | None = Field(None, ge=0)
+    is_free_trial: bool | None = None
+    is_gifted: bool | None = None
+
+
+class PatreonMemberSchema(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    type: str = Field(..., pattern=r"^member$")
+    id: str = Field(..., min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+    attributes: PatreonMemberAttributesSchema
+    relationships: dict = Field(default_factory=dict)
+
+
+class PatreonWebhookSchema(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    data: PatreonMemberSchema
+    included: list[dict] = Field(default_factory=list, max_length=100)
+
+
 # Flask setup
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_REQUEST_SIZE
-app.jinja_env.filters["redact_teacher_codes"] = redact_teacher_codes
-
-
-@app.before_request
-def ensure_vplan_synchronizer_started():
-    """Bootstrap a missing plan cache, then start after Gunicorn has forked."""
-    if not _is_vplan_request():
-        return None
-    if VPLAN_SYNC_CONFIG.enabled and not VPLAN_JSON_PATH.is_file():
-        result = vplan_synchronizer.sync_if_due(force=True)
-        if result.get("status") == "error":
-            app.logger.warning(
-                "Initial substitution-plan download failed: %s",
-                result.get("error", "unknown error"),
-            )
-    vplan_synchronizer.start()
-    cleanup_vplan_runtime_data()
-    start_vplan_maintenance()
-    return None
 
 # --- Privacy-preserving proxy handling ---
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -290,21 +197,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-@app.after_request
-def apply_vplan_security_headers(response):
-    """Override broad legacy headers with a VPlan-specific browser policy."""
-    if _is_vplan_request():
-        response.headers["Content-Security-Policy"] = VPLAN_CONTENT_SECURITY_POLICY
-        response.headers["X-XSS-Protection"] = "0"
-        response.headers["Permissions-Policy"] = (
-            "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
-        )
-        if request.path in {"/manifest.webmanifest", "/static/manifest.webmanifest"}:
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
-    return response
-
 # Secure HTTP Headers: Automatically inject robust security headers (e.g., CSP, HSTS, Anti-sniffing)
 talisman = Talisman(
     app,
@@ -359,32 +251,6 @@ class Report(db.Model):
     created_at = db.Column(db.String, nullable=False)
 
 
-class VPlanFeedback(db.Model):
-    __tablename__ = "vplan_feedback"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.String, nullable=False)
-
-
-class VPlanFeedbackRateWindow(db.Model):
-    """Anonymous, server-wide feedback limit shared by all Gunicorn workers."""
-
-    __tablename__ = "vplan_feedback_rate_windows"
-
-    window_start = db.Column(db.Integer, primary_key=True)
-    request_count = db.Column(db.Integer, nullable=False, default=0)
-
-
-class VPlanTeacherName(db.Model):
-    """Private list used as a second layer for teacher-name redaction."""
-
-    __tablename__ = "vplan_teacher_names"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(160), unique=True, nullable=False, index=True)
-    created_at = db.Column(db.String, nullable=False)
-
 class WriteLog(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     bytes_written = db.Column(db.Integer, nullable=False)
@@ -410,6 +276,20 @@ class License(db.Model):
     transaction_id = db.Column(db.String, nullable=True)
     created_at = db.Column(db.String, nullable=False)
 
+
+class PatreonLicenseDelivery(db.Model):
+    """Minimal delivery record used to make Patreon webhook retries idempotent."""
+
+    __tablename__ = "patreon_license_deliveries"
+
+    member_id = db.Column(db.String(128), primary_key=True)
+    license_key = db.Column(db.String(64), db.ForeignKey("license.license_key"), unique=True, nullable=True)
+    status = db.Column(db.String(16), nullable=False, default="pending")
+    created_at = db.Column(db.String(40), nullable=False)
+    updated_at = db.Column(db.String(40), nullable=False)
+    sent_at = db.Column(db.String(40), nullable=True)
+    lease_expires_at = db.Column(db.String(40), nullable=True)
+
 schema_lock_path = f"{os.path.abspath(DB_PATH)}-schema.lock"
 with open(schema_lock_path, "a+", encoding="utf-8") as schema_lock:
     # Gunicorn workers import this module concurrently. Serialize create_all so a
@@ -429,104 +309,6 @@ with open(schema_lock_path, "a+", encoding="utf-8") as schema_lock:
             stat.server_started_at = started_at
         db.session.commit()
 
-
-def load_vplan_teacher_names() -> tuple[str, ...]:
-    """Load the private teacher-name list without exposing it to templates."""
-    with app.app_context():
-        statement = db.select(VPlanTeacherName.name).order_by(VPlanTeacherName.name)
-        return tuple(db.session.execute(statement).scalars().all())
-
-
-vplan_synchronizer.set_teacher_names_provider(load_vplan_teacher_names)
-
-
-@app.cli.command("import-vplan-teachers")
-@click.argument("source", type=click.File("r", encoding="utf-8"))
-def import_vplan_teachers(source):
-    """Import titled names from a private, copied staff table."""
-    names = extract_teacher_names(source.read())
-    if not names:
-        raise click.ClickException(
-            "Keine gueltigen Namen in der Form 'Frau/Herr Nachname' gefunden."
-        )
-
-    existing_names = set(
-        db.session.execute(db.select(VPlanTeacherName.name)).scalars().all()
-    )
-    created_at = datetime.now(timezone.utc).isoformat()
-    for name in names:
-        if name not in existing_names:
-            db.session.add(VPlanTeacherName(name=name, created_at=created_at))
-    db.session.commit()
-    stored_names = load_vplan_teacher_names()
-
-    learning = load_vplan_learning(
-        VPLAN_SYNC_CONFIG.state_path,
-        VPLAN_SYNC_CONFIG.teacher_code_seeds,
-    )
-    VPLAN_SYNC_CONFIG.lock_path.parent.mkdir(parents=True, exist_ok=True)
-    with VPLAN_SYNC_CONFIG.lock_path.open("a+", encoding="utf-8") as lock_file:
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-        cache_rewritten = sanitize_cached_plan(
-            VPLAN_JSON_PATH,
-            learning["teacher_codes"],
-            stored_names,
-        )
-
-    added_count = len(set(names) - existing_names)
-    cache_status = "; vorhandener Plan bereinigt" if cache_rewritten else ""
-    click.echo(
-        f"{len(names)} Namen erkannt, {added_count} neu gespeichert{cache_status}."
-    )
-
-
-@app.cli.command("export-vplan-teachers")
-@click.argument(
-    "destination",
-    required=False,
-    default="-",
-    type=click.Path(dir_okay=False, path_type=Path),
-)
-def export_vplan_teachers(destination: Path):
-    """Export the private redaction list, one name per line."""
-    names = tuple(sorted(load_vplan_teacher_names(), key=str.casefold))
-    if not names:
-        raise click.ClickException("Die private VPlan-Namensliste ist leer.")
-
-    content = "\n".join(names) + "\n"
-    if str(destination) == "-":
-        click.echo(content, nl=False)
-        return
-
-    try:
-        file_descriptor = os.open(
-            destination,
-            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
-            0o600,
-        )
-        with os.fdopen(file_descriptor, "w", encoding="utf-8") as export_file:
-            export_file.write(content)
-    except FileExistsError as exc:
-        raise click.ClickException(
-            f"Zieldatei existiert bereits: {destination}"
-        ) from exc
-    except OSError as exc:
-        raise click.ClickException(
-            f"Export konnte nicht geschrieben werden: {exc}"
-        ) from exc
-
-    click.echo(f"{len(names)} Namen nach {destination} exportiert.")
-
-
-@app.cli.command("clear-vplan-teachers")
-@click.confirmation_option(
-    prompt="Private VPlan-Lehrernamen wirklich vollstaendig loeschen?"
-)
-def clear_vplan_teachers():
-    """Delete the private teacher-name redaction list."""
-    deleted_count = VPlanTeacherName.query.delete(synchronize_session=False)
-    db.session.commit()
-    click.echo(f"{deleted_count} Namen geloescht.")
 
 # ---------- Helper functions ----------
 def canonical_json_bytes(obj: dict) -> bytes:
@@ -549,6 +331,323 @@ def sign_license(payload: dict) -> str:
     msg = canonical_json_bytes(payload)
     sig = priv.sign(msg)
     return base64.b64encode(sig).decode("ascii")
+
+
+def build_license_file(license_key: str, purchase_reference: str, created_at: str) -> bytes:
+    """Create the same signed license document for downloads and email delivery."""
+    license_payload = {
+        "schema": 1,
+        "product": "porn-fetch",
+        "kid": "v1",
+        "alg": "ed25519",
+        "license_key": license_key,
+        # Kept for compatibility with released Porn Fetch clients.
+        "stripe_session_id": purchase_reference,
+        "created_at": created_at,
+        "features": ["full_unlock"],
+    }
+    license_payload["sig"] = sign_license(license_payload)
+    return (json.dumps(license_payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+def normalized_hostname(raw_host: str) -> str:
+    """Normalize a Host value, including bracketed IPv6 hosts and optional ports."""
+    normalized = str(raw_host or "").strip().lower()
+    if normalized.startswith("["):
+        return normalized[1:].partition("]")[0].rstrip(".")
+    return normalized.partition(":")[0].rstrip(".")
+
+
+def require_api_subdomain() -> None:
+    """Keep payment webhooks isolated to the configured API hostname."""
+    if normalized_hostname(request.host) != API_PUBLIC_HOST:
+        abort(404)
+
+
+def calculate_patreon_signature(secret: str, request_body: bytes) -> str:
+    """Implement Patreon's protocol-mandated HMAC-MD5 signature exactly."""
+    # MD5 is not used as a standalone hash here. Patreon currently mandates it as
+    # the digest inside HMAC; usedforsecurity=False also permits this legacy
+    # interoperability use on Python builds with a restrictive OpenSSL policy.
+    def digest_factory(data=b""):
+        return hashlib.md5(data, usedforsecurity=False)
+
+    return hmac.new(secret.encode("utf-8"), request_body, digest_factory).hexdigest()
+
+
+def normalize_recipient_email(value: str | None) -> str | None:
+    """Validate a conservative SMTP mailbox without retaining it locally."""
+    candidate = str(value or "").strip()
+    if not candidate or len(candidate) > 254 or "\r" in candidate or "\n" in candidate:
+        return None
+
+    local_part, separator, domain = candidate.rpartition("@")
+    if not separator or not local_part or len(local_part) > 64 or not domain:
+        return None
+    if local_part.startswith(".") or local_part.endswith(".") or ".." in local_part:
+        return None
+    if not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+", local_part):
+        return None
+
+    try:
+        ascii_domain = domain.encode("idna").decode("ascii").lower().rstrip(".")
+    except UnicodeError:
+        return None
+    if len(ascii_domain) > 253 or "." not in ascii_domain:
+        return None
+    labels = ascii_domain.split(".")
+    if any(
+        not label
+        or len(label) > 63
+        or label.startswith("-")
+        or label.endswith("-")
+        or not re.fullmatch(r"[a-z0-9-]+", label)
+        for label in labels
+    ):
+        return None
+    return f"{local_part}@{ascii_domain}"
+
+
+def extract_patreon_email(payload: PatreonWebhookSchema) -> str | None:
+    """Prefer the v2 Member email and tolerate Patreon's included User shape."""
+    direct_email = normalize_recipient_email(payload.data.attributes.email)
+    if direct_email:
+        return direct_email
+
+    user_relationship = payload.data.relationships.get("user", {})
+    related_user = user_relationship.get("data", {}) if isinstance(user_relationship, dict) else {}
+    related_user_id = related_user.get("id") if isinstance(related_user, dict) else None
+    for resource in payload.included:
+        if not isinstance(resource, dict) or resource.get("type") != "user":
+            continue
+        if related_user_id and resource.get("id") != related_user_id:
+            continue
+        attributes = resource.get("attributes", {})
+        if isinstance(attributes, dict):
+            included_email = normalize_recipient_email(attributes.get("email"))
+            if included_email:
+                return included_email
+    return None
+
+
+def patreon_member_has_license_tier(member: PatreonMemberSchema) -> bool:
+    """Apply an optional allow-list while defaulting to any entitled paid tier."""
+    if not PATREON_LICENSE_TIER_IDS:
+        return True
+    tiers_relationship = member.relationships.get("currently_entitled_tiers", {})
+    tier_data = tiers_relationship.get("data", []) if isinstance(tiers_relationship, dict) else []
+    if not isinstance(tier_data, list):
+        return False
+    entitled_ids = {
+        str(resource.get("id"))
+        for resource in tier_data[:100]
+        if isinstance(resource, dict) and resource.get("type") == "tier" and resource.get("id")
+    }
+    return bool(entitled_ids & PATREON_LICENSE_TIER_IDS)
+
+
+def patreon_member_is_paid_and_entitled(member: PatreonMemberSchema) -> bool:
+    """Never grant a license from a pledge event alone without paid entitlement data."""
+    attributes = member.attributes
+    return (
+        attributes.patron_status == "active_patron"
+        and (attributes.last_charge_status or "").casefold() == "paid"
+        and (attributes.currently_entitled_amount_cents or 0) > 0
+        and not attributes.is_free_trial
+        and not attributes.is_gifted
+        and patreon_member_has_license_tier(member)
+    )
+
+
+def load_license_email_catalog(language: str) -> dict[str, str]:
+    catalog_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "i18n",
+        f"license_email_{language}.json",
+    )
+    with open(catalog_path, "r", encoding="utf-8") as catalog_file:
+        catalog = json.load(catalog_file)
+    messages = catalog.get("messages") if isinstance(catalog, dict) else None
+    if (
+        not isinstance(catalog, dict)
+        or not isinstance(catalog.get("reviewed"), bool)
+        or not isinstance(messages, dict)
+        or not all(isinstance(value, str) for value in messages.values())
+    ):
+        raise RuntimeError(f"Invalid license email catalog: {language}")
+    return messages
+
+
+def send_license_email(recipient: str, license_file: bytes) -> None:
+    """Send a bilingual, plain-text email with the signed license attached."""
+    if not LICENSE_SMTP_HOST or not LICENSE_EMAIL_FROM:
+        raise RuntimeError("License email SMTP configuration is incomplete")
+    if LICENSE_SMTP_SSL and LICENSE_SMTP_STARTTLS:
+        raise RuntimeError("LICENSE_SMTP_SSL and LICENSE_SMTP_STARTTLS cannot both be enabled")
+    if LICENSE_SMTP_USERNAME and not LICENSE_SMTP_PASSWORD:
+        raise RuntimeError("LICENSE_SMTP_PASSWORD is required with LICENSE_SMTP_USERNAME")
+
+    filename = "porn_fetch.license"
+    german = load_license_email_catalog("de")
+    english = load_license_email_catalog("en")
+    message = EmailMessage()
+    message["From"] = LICENSE_EMAIL_FROM
+    message["To"] = recipient
+    message["Subject"] = f"{german['subject']} / {english['subject']}"
+    message["Date"] = format_datetime(datetime.now(timezone.utc))
+    sender_domain = LICENSE_EMAIL_FROM.rpartition("@")[2] or None
+    message["Message-ID"] = make_msgid(domain=sender_domain)
+    message.set_content(
+        "Deutsch\n--------\n"
+        + german["body"].format(filename=filename)
+        + "\n\nEnglish\n-------\n"
+        + english["body"].format(filename=filename)
+    )
+    message.add_attachment(
+        license_file,
+        maintype="application",
+        subtype="json",
+        filename=filename,
+    )
+
+    tls_context = ssl.create_default_context()
+    if LICENSE_SMTP_SSL:
+        smtp_client = smtplib.SMTP_SSL(
+            LICENSE_SMTP_HOST,
+            LICENSE_SMTP_PORT,
+            timeout=LICENSE_SMTP_TIMEOUT_SECONDS,
+            context=tls_context,
+        )
+    else:
+        smtp_client = smtplib.SMTP(
+            LICENSE_SMTP_HOST,
+            LICENSE_SMTP_PORT,
+            timeout=LICENSE_SMTP_TIMEOUT_SECONDS,
+        )
+
+    with smtp_client:
+        smtp_client.ehlo()
+        if LICENSE_SMTP_STARTTLS:
+            smtp_client.starttls(context=tls_context)
+            smtp_client.ehlo()
+        if LICENSE_SMTP_USERNAME:
+            smtp_client.login(LICENSE_SMTP_USERNAME, LICENSE_SMTP_PASSWORD)
+        smtp_client.send_message(message)
+
+
+def ensure_patreon_delivery(member_id: str) -> PatreonLicenseDelivery:
+    """Create the minimal idempotency record, tolerating a concurrent insert."""
+    delivery = db.session.get(PatreonLicenseDelivery, member_id)
+    if delivery is not None:
+        return delivery
+
+    timestamp = datetime.now(timezone.utc).isoformat()
+    delivery = PatreonLicenseDelivery(
+        member_id=member_id,
+        status="pending",
+        created_at=timestamp,
+        updated_at=timestamp,
+    )
+    db.session.add(delivery)
+    try:
+        db.session.commit()
+        return delivery
+    except IntegrityError:
+        db.session.rollback()
+        concurrent_delivery = db.session.get(PatreonLicenseDelivery, member_id)
+        if concurrent_delivery is None:
+            raise
+        return concurrent_delivery
+
+
+def claim_patreon_delivery(member_id: str) -> str:
+    """Claim a retryable delivery for one worker using a short database lease."""
+    now = datetime.now(timezone.utc)
+    now_text = now.isoformat()
+    lease_expires_at = (now + timedelta(minutes=10)).isoformat()
+    statement = (
+        db.update(PatreonLicenseDelivery)
+        .where(
+            PatreonLicenseDelivery.member_id == member_id,
+            or_(
+                PatreonLicenseDelivery.status.in_(("pending", "failed")),
+                and_(
+                    PatreonLicenseDelivery.status == "sending",
+                    PatreonLicenseDelivery.lease_expires_at < now_text,
+                ),
+            ),
+        )
+        .values(status="sending", updated_at=now_text, lease_expires_at=lease_expires_at)
+    )
+    result = db.session.execute(statement)
+    db.session.commit()
+    if result.rowcount == 1:
+        return "claimed"
+    delivery = db.session.get(PatreonLicenseDelivery, member_id)
+    return "sent" if delivery and delivery.status == "sent" else "busy"
+
+
+def mark_patreon_delivery_failed(member_id: str) -> None:
+    timestamp = datetime.now(timezone.utc).isoformat()
+    db.session.execute(
+        db.update(PatreonLicenseDelivery)
+        .where(PatreonLicenseDelivery.member_id == member_id)
+        .values(status="failed", updated_at=timestamp, lease_expires_at=None)
+    )
+    db.session.commit()
+
+
+def deliver_patreon_license(member_id: str, recipient: str) -> str:
+    """Create at most one license per Patreon member and send it with retry support."""
+    ensure_patreon_delivery(member_id)
+    claim_status = claim_patreon_delivery(member_id)
+    if claim_status != "claimed":
+        return claim_status
+
+    try:
+        delivery = db.session.get(PatreonLicenseDelivery, member_id)
+        if delivery is None:
+            raise RuntimeError("Patreon delivery record disappeared")
+
+        license_record = db.session.get(License, delivery.license_key) if delivery.license_key else None
+        if license_record is None:
+            created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+            purchase_reference = "PT-" + secrets.token_urlsafe(16)
+            license_record = License(
+                license_key=make_license_key(),
+                state="valid",
+                transaction_id=purchase_reference,
+                created_at=created_at,
+            )
+            db.session.add(license_record)
+            delivery.license_key = license_record.license_key
+            delivery.updated_at = datetime.now(timezone.utc).isoformat()
+            db.session.commit()
+
+        license_file = build_license_file(
+            license_record.license_key,
+            license_record.transaction_id,
+            license_record.created_at,
+        )
+        send_license_email(recipient, license_file)
+    except Exception:
+        db.session.rollback()
+        try:
+            mark_patreon_delivery_failed(member_id)
+        except SQLAlchemyError:
+            db.session.rollback()
+        # Do not log the recipient, raw payload, SMTP response or member identifier.
+        app.logger.error("Patreon license delivery failed")
+        raise
+
+    sent_at = datetime.now(timezone.utc).isoformat()
+    db.session.execute(
+        db.update(PatreonLicenseDelivery)
+        .where(PatreonLicenseDelivery.member_id == member_id)
+        .values(status="sent", updated_at=sent_at, sent_at=sent_at, lease_expires_at=None)
+    )
+    db.session.commit()
+    return "sent"
 
 
 def shutdown_server():
@@ -811,8 +910,6 @@ def get_update_information():
 
 @app.before_request
 def track_request():
-    if _is_vplan_request():
-        return None
     # Count every incoming request and its approximate payload size
     content_length = request.content_length
     if content_length is None:
@@ -824,10 +921,6 @@ def track_request():
 
 @app.after_request
 def track_response(response):
-    if _is_vplan_request():
-        if request.endpoint == "submit_vplan_feedback":
-            response.headers["Cache-Control"] = "no-store"
-        return response
     # Count response payload size
     try:
         length = response.calculate_content_length()
@@ -861,351 +954,6 @@ def initiate_poweroff():
 
 
 # ---------- Routes ----------
-@app.route("/sw.js", methods=["GET"])
-@limiter.exempt
-def vplan_service_worker():
-    """Serve the VPlan worker at the origin root with a deliberately narrow scope."""
-    response = make_response(
-        send_from_directory(
-            app.static_folder,
-            "vplan-sw.js",
-            mimetype="application/javascript",
-            conditional=True,
-        )
-    )
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Service-Worker-Allowed"] = "/vplan"
-    return response
-
-
-@app.route("/manifest.webmanifest", methods=["GET"])
-@limiter.exempt
-def vplan_manifest():
-    """Always expose the current PWA metadata instead of a cached old manifest."""
-    response = make_response(
-        send_from_directory(
-            app.static_folder,
-            "manifest.webmanifest",
-            mimetype="application/manifest+json",
-            conditional=False,
-        )
-    )
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    response.headers.pop("ETag", None)
-    response.headers.pop("Last-Modified", None)
-    return response
-
-
-@app.route("/vplan", methods=["GET"])
-@limiter.exempt
-def vplan():
-    """Render the current substitution plan without authentication."""
-    try:
-        with open(VPLAN_JSON_PATH, "r", encoding="utf-8") as vplan_file:
-            plan = json.load(vplan_file)
-
-        if not isinstance(plan, dict) or not isinstance(plan.get("tage"), list):
-            raise ValueError("Expected a JSON object containing a 'tage' list.")
-
-        learning = load_vplan_learning(
-            VPLAN_SYNC_CONFIG.state_path,
-            VPLAN_SYNC_CONFIG.teacher_code_seeds,
-        )
-        plan = redact_teacher_data(
-            plan,
-            [*learning["teacher_codes"], *discover_teacher_codes(plan)],
-            load_vplan_teacher_names(),
-        )
-    except (OSError, json.JSONDecodeError, ValueError) as exc:
-        app.logger.error("Could not load substitution plan from %s: %s", VPLAN_JSON_PATH, exc)
-        response = make_response(
-            render_template(
-                "vplan.html",
-                plan=None,
-                error=True,
-                learned_course_codes=[],
-                pwa_enabled=_vplan_pwa_enabled(),
-            ),
-            503,
-        )
-        response.headers["Cache-Control"] = "no-store"
-        return response
-
-    raw_updated_at = plan.get("meta", {}).get("stand", "")
-    updated_at_iso = ""
-    try:
-        parsed_updated_at = datetime.fromisoformat(str(raw_updated_at))
-        updated_at = parsed_updated_at.strftime("%d.%m.%Y · %H:%M")
-        updated_at_iso = parsed_updated_at.isoformat()
-    except (TypeError, ValueError):
-        updated_at = str(raw_updated_at).strip()
-
-    response = make_response(
-        render_template(
-            "vplan.html",
-            plan=plan,
-            error=False,
-            day_dates=[
-                _parse_vplan_day_iso(day.get("DATUM")) if isinstance(day, dict) else ""
-                for day in plan["tage"]
-            ],
-            updated_at=updated_at,
-            updated_at_iso=updated_at_iso,
-            learned_course_codes=learning["course_codes"],
-            pwa_enabled=_vplan_pwa_enabled(),
-        )
-    )
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-@app.route("/vplan/translate", methods=["GET"])
-@limiter.exempt
-def vplan_translate():
-    """Provide a local-only editor for Git-tracked translation catalogs."""
-    response = make_response(render_template("vplan_translate.html"))
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-@app.route("/vplan/privacy", methods=["GET"])
-@limiter.exempt
-def vplan_privacy():
-    """Render the privacy notice that actually describes the VPlan service."""
-    response = make_response(render_template("vplan_legal.html", page="privacy"))
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-@app.route("/vplan/imprint", methods=["GET"])
-@limiter.exempt
-def vplan_imprint():
-    """Render VPlan-specific provider information without unrelated branding."""
-    response = make_response(render_template("vplan_legal.html", page="imprint"))
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-def _request_hostname():
-    """Return a normalized DNS hostname without a possible development port."""
-    return _normalized_hostname(request.host)
-
-
-def _vplan_pwa_enabled():
-    """Enable installation on the public VPlan host and secure local test hosts."""
-    hostname = _request_hostname()
-    return hostname == VPLAN_PUBLIC_HOST or hostname in VPLAN_PWA_TEST_HOSTS
-
-
-_vplan_maintenance_lock = threading.Lock()
-_vplan_last_maintenance = 0.0
-_vplan_maintenance_start_lock = threading.Lock()
-_vplan_maintenance_stop_event = threading.Event()
-_vplan_maintenance_thread = None
-
-
-def cleanup_vplan_runtime_data(*, force: bool = False) -> bool:
-    """Periodically enforce feedback retention and remove obsolete rate windows."""
-    global _vplan_last_maintenance
-    current_monotonic = time.monotonic()
-    if (
-        not force
-        and current_monotonic - _vplan_last_maintenance
-        < VPLAN_MAINTENANCE_INTERVAL_SECONDS
-    ):
-        return False
-    if not _vplan_maintenance_lock.acquire(blocking=False):
-        return False
-    try:
-        current_monotonic = time.monotonic()
-        if (
-            not force
-            and current_monotonic - _vplan_last_maintenance
-            < VPLAN_MAINTENANCE_INTERVAL_SECONDS
-        ):
-            return False
-        now = datetime.now(timezone.utc)
-        feedback_cutoff = (
-            now - timedelta(days=VPLAN_FEEDBACK_RETENTION_DAYS)
-        ).isoformat()
-        oldest_rate_window = int(now.timestamp() // 60) - (24 * 60)
-        try:
-            db.session.execute(
-                db.delete(VPlanFeedback).where(
-                    VPlanFeedback.created_at < feedback_cutoff
-                )
-            )
-            db.session.execute(
-                db.delete(VPlanFeedbackRateWindow).where(
-                    VPlanFeedbackRateWindow.window_start < oldest_rate_window
-                )
-            )
-            db.session.commit()
-        except SQLAlchemyError:
-            db.session.rollback()
-            app.logger.warning("Could not clean up VPlan runtime data", exc_info=True)
-            return False
-        _vplan_last_maintenance = current_monotonic
-        return True
-    finally:
-        _vplan_maintenance_lock.release()
-
-
-def start_vplan_maintenance() -> bool:
-    """Start one hourly retention worker in this application process."""
-    global _vplan_maintenance_thread
-    if app.testing:
-        return False
-    with _vplan_maintenance_start_lock:
-        if (
-            _vplan_maintenance_thread is not None
-            and _vplan_maintenance_thread.is_alive()
-        ):
-            return False
-
-        def run_maintenance():
-            while not _vplan_maintenance_stop_event.wait(
-                VPLAN_MAINTENANCE_INTERVAL_SECONDS
-            ):
-                with app.app_context():
-                    cleanup_vplan_runtime_data()
-
-        _vplan_maintenance_stop_event.clear()
-        _vplan_maintenance_thread = threading.Thread(
-            target=run_maintenance,
-            name="vplan-maintenance",
-            daemon=True,
-        )
-        _vplan_maintenance_thread.start()
-        return True
-
-
-def consume_vplan_feedback_rate_limit() -> tuple[bool, int]:
-    """Consume one request from an anonymous, process-shared minute window."""
-    window_start = int(datetime.now(timezone.utc).timestamp() // 60)
-    statement = sqlite_insert(VPlanFeedbackRateWindow).values(
-        window_start=window_start,
-        request_count=1,
-    )
-    statement = statement.on_conflict_do_update(
-        index_elements=[VPlanFeedbackRateWindow.window_start],
-        set_={
-            "request_count": VPlanFeedbackRateWindow.request_count + 1,
-        },
-    )
-    try:
-        db.session.execute(statement)
-        current_count = db.session.execute(
-            db.select(VPlanFeedbackRateWindow.request_count).where(
-                VPlanFeedbackRateWindow.window_start == window_start
-            )
-        ).scalar_one()
-        db.session.commit()
-    except SQLAlchemyError:
-        db.session.rollback()
-        app.logger.warning("Could not update VPlan feedback rate limit", exc_info=True)
-        return False, 0
-    return current_count <= VPLAN_FEEDBACK_RATE_LIMIT, current_count
-
-
-def validate_vplan_feedback(value):
-    """Return a normalized plain-text report or a stable validation error code."""
-    if not isinstance(value, str):
-        return None, "text_required"
-
-    message = value.replace("\r\n", "\n").replace("\r", "\n").strip()
-    if len(message) < 10:
-        return None, "too_short"
-    if len(message) > VPLAN_FEEDBACK_MAX_LENGTH:
-        return None, "too_long"
-    if any(ord(character) < 32 and character not in {"\n", "\t"} for character in message):
-        return None, "control_characters"
-    if re.search(r"<[^>\n]{1,100}>", message):
-        return None, "html"
-    if VPLAN_FEEDBACK_EMAIL_RE.search(message) or VPLAN_FEEDBACK_URL_RE.search(message):
-        return None, "contact"
-
-    for candidate in VPLAN_FEEDBACK_PHONE_CANDIDATE_RE.findall(message):
-        digits = re.sub(r"\D", "", candidate)
-        if len(digits) >= 7 and (candidate.lstrip().startswith(("+", "0")) or len(digits) >= 10):
-            return None, "phone"
-
-    return message, None
-
-
-@app.route("/vplan/feedback", methods=["POST"])
-@csrf.exempt
-@limiter.exempt
-def submit_vplan_feedback():
-    """Store a short, deliberately anonymous plain-text VPlan error report."""
-    if request.headers.get("X-VPlan-Request") != "feedback" or not request.is_json:
-        return jsonify({"error": "invalid_request"}), 400
-
-    within_limit, current_count = consume_vplan_feedback_rate_limit()
-    if not within_limit and current_count == 0:
-        return jsonify({"error": "storage_unavailable"}), 503
-    if not within_limit:
-        response = jsonify({"error": "rate_limited"})
-        response.status_code = 429
-        response.headers["Retry-After"] = "60"
-        return response
-
-    payload = request.get_json(silent=True)
-    if not isinstance(payload, dict) or payload.get("privacy_confirmed") is not True:
-        return jsonify({"error": "privacy_required"}), 400
-
-    message, validation_error_code = validate_vplan_feedback(payload.get("message"))
-    if validation_error_code:
-        return jsonify({"error": validation_error_code}), 400
-
-    now = datetime.now(timezone.utc)
-    cutoff = (now - timedelta(days=VPLAN_FEEDBACK_RETENTION_DAYS)).isoformat()
-    report = VPlanFeedback(
-        message=message,
-        created_at=now.isoformat(),
-    )
-
-    try:
-        VPlanFeedback.query.filter(VPlanFeedback.created_at < cutoff).delete(
-            synchronize_session=False
-        )
-        db.session.add(report)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        app.logger.exception("Could not store an anonymous VPlan feedback report")
-        return jsonify({"error": "storage_unavailable"}), 503
-
-    response = jsonify({"ok": True})
-    response.status_code = 201
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-@app.before_request
-def handle_vplan_subdomain():
-    """Serve only the plan and its required public pages on the VPlan hostname."""
-    if _request_hostname() != VPLAN_PUBLIC_HOST:
-        return None
-
-    if request.path == "/vplan/feedback" and request.method == "POST":
-        return None
-    if request.method not in {"GET", "HEAD"}:
-        return "Not Found", 404
-    if request.path == "/":
-        return vplan()
-    if request.path in VPLAN_PUBLIC_PATHS - {"/", "/vplan/feedback"}:
-        return None
-    if (
-        request.path.startswith(VPLAN_STATIC_PREFIXES)
-        or request.path == "/static/manifest.webmanifest"
-    ):
-        return None
-    return "Not Found", 404
-
-
 @app.route("/impress", methods=["GET"])
 def impress():
     # Renders a modern-looking page with a (hopefully) legal impress (required by german law)
@@ -1267,18 +1015,7 @@ def download_license():
     nowpayments_id = row["purchase_id"] or session_id
     created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     license_key_str = make_license_key()
-    license_payload = {
-        "schema": 1,
-        "product": "porn-fetch",
-        "kid": "v1",
-        "alg": "ed25519",
-        "license_key": license_key_str,
-        "stripe_session_id": nowpayments_id,
-        "created_at": created_at,
-        "features": ["full_unlock"],
-    }
-
-    license_payload["sig"] = sign_license(license_payload)
+    file_bytes = build_license_file(license_key_str, nowpayments_id, created_at)
 
     # Save the license to the database
     new_license = License(
@@ -1290,7 +1027,6 @@ def download_license():
     db.session.add(new_license)
     db.session.commit()
 
-    file_bytes = (json.dumps(license_payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
     return send_file(
         BytesIO(file_bytes),
         as_attachment=True,
@@ -1634,7 +1370,7 @@ def create_fiat_payment():
         "price_amount": 30,
         "price_currency": "eur",
         "pay_currency": "ltc",
-        "ipn_callback_url": f"{APP_DOMAIN}/nowpayments_ipn",
+        "ipn_callback_url": f"{API_DOMAIN}/nowpayments-ipn",
         "order_id": session_id,
         "order_description": "Porn Fetch License Key (Fiat)",
     }
@@ -1685,7 +1421,7 @@ def create_crypto_payment():
     payload = {
         "price_amount": 19.99,
         "price_currency": "eur",
-        "ipn_callback_url": f"{APP_DOMAIN}/nowpayments_ipn",
+        "ipn_callback_url": f"{API_DOMAIN}/nowpayments-ipn",
         "order_id": session_id,
         "order_description": "Porn Fetch License Key",
         "success_url": f"{request.host_url.rstrip('/')}/buy_success?session_id={session_id}",
@@ -1727,13 +1463,15 @@ def create_crypto_payment():
 
 
 
-@app.route("/nowpayments_ipn", methods=["POST"])
+@app.route("/nowpayments-ipn", methods=["POST"])
 @csrf.exempt  # Webhooks cannot send CSRF tokens, so we exempt them and rely on HMAC signature validation.
 @limiter.limit("20 per second")  # Accommodating high load of legitimate payment webhooks
 def nowpayments_ipn():
     """
     Webhook handler for NOWPayments IPN callbacks.
     """
+    require_api_subdomain()
+
     # 1. Verify NOWPayments callback signature
     received_sig = request.headers.get("x-nowpayments-sig")
     if not received_sig or not NOWPAYMENTS_IPN_SECRET:
@@ -1743,14 +1481,14 @@ def nowpayments_ipn():
 
     try:
         data_dict = json.loads(request_data)
-    except:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return "Invalid JSON", 400
         
     # 2. Strict Input Validation using Pydantic
     try:
         validated_data = NowPaymentsWebhookSchema(**data_dict)
-    except Exception as e:
-        app.logger.warning(f"Webhook schema validation failed: {e}")
+    except (ValueError, TypeError):
+        app.logger.warning("NOWPayments webhook schema validation failed")
         return jsonify({"error": "Invalid payload schema"}), 400
 
     # Sort JSON keys to construct signature check payload matching NOWPayments standard
@@ -1827,6 +1565,56 @@ def nowpayments_ipn():
             return "Database Error", 500
 
     return "OK", 200
+
+
+@app.route("/patreon-webhook", methods=["POST"])
+@csrf.exempt
+@limiter.limit("20 per second")
+def patreon_webhook():
+    """Verify Patreon v2 member events and email one license per paid member."""
+    require_api_subdomain()
+
+    received_signature = request.headers.get("X-Patreon-Signature", "").strip()
+    if not PATREON_SECRET:
+        return jsonify({"error": "secret_not_configured"}), 503
+    if not re.fullmatch(r"[0-9A-Fa-f]{32}", received_signature):
+        return jsonify({"error": "invalid_signature"}), 403
+
+    request_body = request.get_data(cache=False)
+    calculated_signature = calculate_patreon_signature(PATREON_SECRET, request_body)
+    if not hmac.compare_digest(received_signature.lower(), calculated_signature):
+        return jsonify({"error": "invalid_signature"}), 403
+
+    event_type = request.headers.get("X-Patreon-Event", "").strip()
+    if event_type not in {"members:create", "members:pledge:create", "members:update"}:
+        return jsonify({"status": "ignored_event"}), 200
+
+    try:
+        raw_payload = json.loads(request_body)
+        payload = PatreonWebhookSchema.model_validate(raw_payload)
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return jsonify({"error": "invalid_payload"}), 400
+
+    if not patreon_member_is_paid_and_entitled(payload.data):
+        return jsonify({"status": "not_eligible"}), 200
+
+    recipient = extract_patreon_email(payload)
+    if recipient is None:
+        # Email may legitimately be absent because the v2 email scope is missing or
+        # because the member has disabled sharing. Retrying cannot repair either case.
+        app.logger.warning("Eligible Patreon member has no deliverable email address")
+        return jsonify({"status": "email_unavailable"}), 200
+
+    try:
+        delivery_status = deliver_patreon_license(payload.data.id, recipient)
+    except Exception:
+        return jsonify({"error": "delivery_failed"}), 503
+
+    if delivery_status == "busy":
+        response = jsonify({"error": "delivery_in_progress"})
+        response.headers["Retry-After"] = "30"
+        return response, 503
+    return jsonify({"status": "ok"}), 200
 
 
 @app.route("/ping", methods=["GET"])
@@ -2265,5 +2053,4 @@ class NoIPLoggingHandler(WSGIRequestHandler):
 if __name__ == '__main__':
     # Environment Safety: Bind the app to localhost (127.0.0.1) to prevent external access
     # before passing through the reverse proxy/tunnel.
-    vplan_synchronizer.start()
     app.run(host="127.0.0.1", port=8000, request_handler=NoIPLoggingHandler)

@@ -5,7 +5,7 @@
 {% block content %}
 <div class="card" style="margin-top: 40px;">
     <h1>Privacy Policy</h1>
-    <p style="color: var(--color-text-muted);">Last Updated: July 2026</p>
+    <p style="color: var(--color-text-muted);">Last Updated: August 2026</p>
 
     <div style="margin-top: 25px; line-height: 1.8;">
 
@@ -19,8 +19,8 @@
             Email: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>
         </p>
 
-        <h3>2. Data I Do Not Collect</h3>
-        <p>Your privacy is my utmost concern. I do <strong>not</strong> collect, store, or transmit any of your personal data, browsing history, or downloaded video records. The Porn Fetch application runs entirely on your local machine. My server does <strong>not</strong> log your IP address, nor does it store any personal identifiers. I only maintain basic anonymized telemetry counters (total number of requests, total transfer volume) in memory and SQLite for server protection purposes (e.g., DDoS mitigation). These counters cannot be traced back to individual users.</p>
+        <h3>2. Data Not Collected by the Porn Fetch Application</h3>
+        <p>The Porn Fetch application runs locally and does <strong>not</strong> transmit browsing history or records of downloaded videos to my server. My application server does <strong>not</strong> log visitor IP addresses. It maintains only aggregate telemetry counters (total requests and transfer volume) for availability and abuse protection. Purchase and license-fulfilment data are processed separately as described below.</p>
 
         <h3>3. Self-Hosted Server &amp; Internet Service Provider</h3>
         <p>This website is self-hosted on my own hardware. My internet connection is provided by <strong>Vodafone GmbH</strong> (Edmund-Rumpler-Straße 2, 51149 Köln, Germany) as the Internet Service Provider (ISP). As a telecommunications provider, Vodafone may be legally required to retain certain connection data (such as IP addresses and port numbers) for a limited period under applicable German telecommunications law (TKG) and potential future data retention legislation (<em>Vorratsdatenspeicherung</em>). This data retention is performed by Vodafone in its capacity as an ISP and is <strong>outside of my control</strong>. I have no access to and do not request any of Vodafone's retained data. For more information, please refer to <a href="https://www.vodafone.de/de/datenschutz/privatsphaere" target="_blank" rel="noopener noreferrer">Vodafone's privacy policy</a>.</p>
@@ -46,21 +46,26 @@
             <li>IP addresses and browser/device information</li>
             <li>In certain cases, KYC/AML verification data (identity documents) if required by applicable regulations</li>
         </ul>
-        <p>NowPayments acts as an independent data controller for payment processing. I do <strong>not</strong> store any of your payment or cryptocurrency wallet data. No email address or name is collected during the purchase process. The generated license key contains only a cryptographic signature for offline verification — no personal data.</p>
+        <p>NowPayments acts as an independent controller for its payment processing. My server stores the order and provider identifiers, payment status, invoice details, amount, currency and transaction hash needed to verify and document a purchase. It does not store cryptocurrency wallet addresses. The cryptocurrency checkout does not require a name or email address; if an email address is supplied for the optional card-assisted flow, it is stored with that transaction for delivery and support. The generated license file contains an opaque purchase reference and a cryptographic signature, but no name or email address.</p>
         <p>Please note that blockchain transactions are <strong>public by nature</strong> and can be viewed by anyone on the respective blockchain network. For more information about how NowPayments handles your data, please refer to <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">NowPayments' Privacy Policy</a>. For data-related inquiries to NowPayments, contact: <a href="mailto:support@nowpayments.io">support@nowpayments.io</a>.</p>
 
-        <h3>7. External Links</h3>
+        <h3>7. Patreon Membership and License Delivery</h3>
+        <p>If a paid Patreon membership includes a Porn Fetch license, Patreon sends a signed webhook to my server. Depending on the member's sharing preference and the API permissions, this contains a Patreon member identifier, email address, membership and entitlement status, tier identifiers, and charge status. The data are used only to verify eligibility, prevent duplicate issuance and deliver the contractual license benefit. Free, gifted, trial, unpaid or declined memberships do not receive a license through this process.</p>
+        <p>The email address is validated in memory and passed to the configured outgoing mail server with the bilingual delivery message and signed license attachment; it is not stored in the Patreon delivery table and the raw webhook is not retained. The server stores the Patreon member identifier, issued license key, delivery status and timestamps so retries cannot issue multiple keys. Patreon members may restrict email sharing; automatic email delivery is then unavailable. Patreon provides member data under its Creator Privacy Promise. For more information, see <a href="https://privacy.patreon.com/policies" target="_blank" rel="noopener noreferrer">Patreon's Privacy Policy</a> and <a href="https://support.patreon.com/hc/en-us/articles/360026912432-Data-Processing-Agreement-Creator-Privacy-Promise" target="_blank" rel="noopener noreferrer">Creator Privacy Promise</a>.</p>
+
+        <h3>8. External Links</h3>
         <p>This website may contain links to external third-party websites. I have <strong>no control</strong> over the content, privacy practices, or data processing of these external sites. Following any external link is entirely at your own risk. I assume <strong>no liability or responsibility</strong> for the privacy practices or content of any linked third-party websites. I encourage you to review the privacy policies of any website you visit via links from my site.</p>
 
-        <h3>8. Legal Basis for Data Processing</h3>
-        <p>To the extent that any personal data is processed (primarily through Cloudflare and NowPayments), the legal bases are:</p>
+        <h3>9. Legal Basis for Data Processing</h3>
+        <p>Where personal data are processed through Cloudflare, payment handling or Patreon license fulfilment, the legal bases are:</p>
         <ul>
-            <li><strong>Art. 6(1)(b) GDPR</strong> — Contractual necessity: Processing required to fulfill a license purchase contract.</li>
-            <li><strong>Art. 6(1)(f) GDPR</strong> — Legitimate interests: Protection of my website against attacks (DDoS mitigation via Cloudflare) and ensuring website security and availability. My legitimate interest is the secure and reliable operation of this website.</li>
+            <li><strong>Art. 6(1)(b) GDPR</strong> — Contractual necessity: verifying a purchase or paid membership and issuing and delivering the license.</li>
+            <li><strong>Art. 6(1)(f) GDPR</strong> — Legitimate interests: website and webhook security, abuse prevention, reliable retry handling and prevention of duplicate license issuance.</li>
+            <li><strong>Art. 6(1)(c) GDPR</strong> — Legal obligation: retention of invoice and accounting information where required by law.</li>
         </ul>
 
-        <h3>9. Your Rights Under EU Law (GDPR)</h3>
-        <p>Under the General Data Protection Regulation (GDPR), you have the following rights regarding your personal data. Since I do not collect or store personal data, these rights primarily apply to data processed by Cloudflare and NowPayments on my behalf or as independent controllers:</p>
+        <h3>10. Your Rights Under EU Law (GDPR)</h3>
+        <p>Under the General Data Protection Regulation (GDPR), you have the following rights regarding personal data processed for website operation, purchases and license delivery:</p>
         <ul>
             <li><strong>Right of Access</strong> (Art. 15 GDPR) — You have the right to request confirmation as to whether personal data concerning you is being processed and, if so, to obtain a copy of that data.</li>
             <li><strong>Right to Rectification</strong> (Art. 16 GDPR) — You have the right to request correction of inaccurate personal data.</li>
@@ -71,7 +76,7 @@
         </ul>
         <p>To exercise any of these rights, please contact me at <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>. I will respond to your request without undue delay and in any event within one month of receipt (Art. 12(3) GDPR).</p>
 
-        <h3>10. Right to Lodge a Complaint</h3>
+        <h3>11. Right to Lodge a Complaint</h3>
         <p>You have the right to lodge a complaint with a supervisory authority (Art. 77 GDPR). The competent supervisory authority for my location is:</p>
         <p>
             Landesbeauftragter für den Datenschutz Sachsen-Anhalt<br>
@@ -81,13 +86,13 @@
             Website: <a href="https://datenschutz.sachsen-anhalt.de" target="_blank" rel="noopener noreferrer">https://datenschutz.sachsen-anhalt.de</a>
         </p>
 
-        <h3>11. Data Retention</h3>
-        <p>Since I do not collect personal data, there are no retention periods to disclose on my part. Cloudflare retains traffic data in accordance with its own privacy policy. NowPayments retains transaction data for the minimum period necessary to fulfill its legal obligations. Vodafone, as my ISP, may retain connection data as required by German telecommunications law.</p>
+        <h3>12. Data Retention</h3>
+        <p>Patreon webhook bodies and member email addresses are not retained by my server. The member identifier, license mapping and delivery timestamps are kept while the issued license remains valid so it can be verified and duplicate delivery can be prevented; they are deleted on a valid erasure request unless contractual or legal obligations require continued retention. Transaction and invoice records are retained for the applicable statutory accounting period and otherwise only as long as needed for contractual claims and support. Cloudflare, Patreon, NowPayments, the configured mail service and Vodafone retain data according to their own applicable policies and legal obligations.</p>
 
-        <h3>12. Changes to This Privacy Policy</h3>
+        <h3>13. Changes to This Privacy Policy</h3>
         <p>I reserve the right to update this privacy policy at any time to reflect changes in legal requirements, technical changes, or business practices. The date at the top of this page indicates when this policy was last updated. I encourage you to review this policy periodically.</p>
 
-        <h3>13. Contact</h3>
+        <h3>14. Contact</h3>
         <p>If you have any questions regarding this privacy policy or wish to exercise your data subject rights, please contact me at:<br>
         <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a></p>
     </div>

@@ -25,6 +25,7 @@ Clearnet: **https://echteralsfake.me**
 
 # Subdomains
 - docs.echteralsfake.me/ -> Serves the documentation for my projects
+- api.echteralsfake.me/ -> Receives authenticated payment and membership webhooks
 
 ### Endpoints
 - / → Landing page
@@ -35,7 +36,7 @@ Clearnet: **https://echteralsfake.me**
 - /buy_license → You can buy a license for Porn Fetch here
 - /impress → Impress (legal requirement in Germany)
 - /transparency → AI transparency notice
-- /refund_policy → Refund Policy
+- /refund_policy → Ricy
 - /terms → Terms of Service of the site (legal requirement)
 - /buy_sucess → If the payment succeeds, shows a success page
 - /buy_cancel → If user canceled the payments
@@ -47,7 +48,8 @@ Clearnet: **https://echteralsfake.me**
 - /porn_fetch → Shows the Porn Fetch page
 - /donation → Allows you to do a crypto donation
 - /create-crypto-payment → creates the actual crypto payment on nowpayments
-- /nowpayments_ipn → Webhook for incoming payments
+- https://api.echteralsfake.me/nowpayments-ipn → Webhook for incoming NOWPayments payments
+- https://api.echteralsfake.me/patreon-webhook → Webhook for Patreon member events and license delivery
 - /ping → You can ping the server :)
 - /datenschutz → German translated privacy policy
 - /privacy_policy → English Privacy Policy
@@ -57,48 +59,12 @@ Clearnet: **https://echteralsfake.me**
 - /checklist/progress.svg → Shows the progress for the next Porn Fetch version
 - /chat → Private messaging interface! (NOT FOR THE PUBLIC)
 
-# Substitution plan synchronization
+# Independent substitution plan
 
-The public `/vplan` view is backed by a local `vplan.json`. Every two minutes a background
-task downloads and parses the complete HTML board. A canonical SHA-256 hash of its source
-timestamp and plan days is compared with the local version, so the JSON file is replaced
-only when the actual content changes. A malformed or failed download never replaces the
-last valid local plan.
-
-The defaults can be changed through environment variables:
-
-- `VPLAN_SYNC_ENABLED`: set to `false` to disable automatic updates
-- `VPLAN_SCHOOL_ID`: required school identifier, loaded from the local `.env` file
-- `VPLAN_TEACHER_CODE_SEEDS`: optional comma-separated teacher-code seeds kept in `.env`
-- `VPLAN_JSON_PATH`: local output path for the extracted JSON
-- `VPLAN_CHECK_INTERVAL_SECONDS`: complete HTML checks, defaults to `120` (minimum `60`)
-- `VPLAN_REQUEST_TIMEOUT_SECONDS`: upstream request timeout, defaults to `20`
-
-The JSON file, synchronization state, lock file, and SQLite database are local runtime
-files and are excluded from Git.
-
-The private synchronization state learns teacher codes from explicit `LiGyDe.*` values,
-standard task remarks, and strongly structured notice contexts. It also accumulates every
-observed course identifier for the personal-plan picker. Learned values are scoped to an
-August-to-July school year and reset automatically on August 1. Teacher codes remain
-server-side; only learned course identifiers are rendered as picker options.
-
-## VPlan subdomain and proxy privacy
-
-Requests to `https://vplan.echteralsfake.me/` render the plan directly. On that hostname,
-the Flask application exposes only the plan, static assets, imprint, and German privacy
-policy. The hostname can be changed with `VPLAN_PUBLIC_HOST`.
-
-The application deliberately does not trust `X-Forwarded-For` and removes common visitor-IP
-headers before Flask or Flask-Limiter can inspect them. HTTPS and host forwarding remain
-enabled. Gunicorn access logging should stay disabled; if it is explicitly enabled elsewhere,
-its format must not contain request headers or remote addresses.
-
-Publish `vplan.echteralsfake.me` through the same Cloudflare Tunnel as the main site, mapping it
-to `http://localhost:8000`. If the existing main Worker does not already use a wildcard route
-covering all subdomains, add `vplan.echteralsfake.me/*` as another route on that same Worker.
-No separate Worker is required. The tunnel preserves the public hostname, allowing Flask to
-select the VPlan view while serving the same local process and port.
+The substitution plan now lives entirely in [`VPlan/`](VPlan/README.md). It uses a separate
+Svelte/FastAPI stack, database and process on `127.0.0.1:8001`; the commercial Flask server on
+port 8000 does not expose VPlan routes or data. The Cloudflare route for
+`vplan.echteralsfake.me` must therefore target port 8001.
 
 ## Main landing-page access gate
 
@@ -107,6 +73,23 @@ password. If the variable is missing, the page fails closed with HTTP 503. A suc
 creates a separate `site_auth` session and does not grant checklist editing rights. Changing
 `CHECKLIST_AUTH` invalidates existing landing-page sessions. The VPlan and documentation
 subdomains are unaffected.
+
+## Payment webhook configuration
+
+Both webhook handlers are restricted to the hostname from `API_DOMAIN` (default:
+`https://api.echteralsfake.me`). The Cloudflare Tunnel/DNS route for that hostname must point to
+the commercial Flask service on `127.0.0.1:8000`. Configure NOWPayments to use
+`https://api.echteralsfake.me/nowpayments-ipn` and Patreon to use
+`https://api.echteralsfake.me/patreon-webhook`.
+
+Patreon signs the exact request body with the secret in `PATREON_SECRET`. License delivery also
+requires an SMTP relay; Patreon does not send the attachment itself. See `.env.example` for the
+required mail settings. `PATREON_LICENSE_TIER_IDS` can optionally contain a comma-separated
+allow-list of Patreon tier IDs; if it is empty, every paid and currently entitled tier is eligible.
+Subscribe the Patreon webhook to `members:create`, `members:pledge:create` and `members:update`.
+The update event is needed to deliver after a pending or declined first charge later becomes paid.
+Before enabling a third-party SMTP relay, name that provider in both privacy-policy templates and
+verify that its handling of Patreon member data satisfies Patreon's Creator Privacy Promise.
 
 # Chat Feature
 > [!CAUTION]

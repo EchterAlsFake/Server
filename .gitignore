@@ -158,6 +158,7 @@ server.db
 server.db-*
 private-personalliste*.txt
 vplan-teachers*.txt
+example.json
 .flask_secret
 # Spyder project settings
 .spyderproject
