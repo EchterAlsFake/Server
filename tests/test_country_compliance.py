@@ -32,12 +32,11 @@ class CountryComplianceTests(ServerTestCase):
             return [b"OK"]
 
         middleware = CheckoutCountryMiddleware(
-            application, resolver, "CF-Connecting-IP"
+            application, resolver, "X-Forwarded-For"
         )
         environ = {
             "REQUEST_METHOD": "POST",
             "PATH_INFO": "/create-crypto-payment",
-            "HTTP_CF_CONNECTING_IP": "203.0.113.10",
             "HTTP_X_FORWARDED_FOR": "203.0.113.10",
             "REMOTE_ADDR": "127.0.0.1",
         }
@@ -46,7 +45,6 @@ class CountryComplianceTests(ServerTestCase):
 
         self.assertEqual(response, [b"OK"])
         resolver.lookup.assert_called_once_with("203.0.113.10")
-        self.assertNotIn("HTTP_CF_CONNECTING_IP", captured_environ)
         self.assertNotIn("HTTP_X_FORWARDED_FOR", captured_environ)
         self.assertNotIn("REMOTE_ADDR", captured_environ)
         self.assertEqual(captured_environ["PF_COUNTRY_CODE"], "DE")
@@ -173,7 +171,7 @@ class CountryComplianceTests(ServerTestCase):
             response = self.client.post(
                 "/create-crypto-payment",
                 json={"country": "DE"},
-                headers={"CF-Connecting-IP": "203.0.113.10"},
+                headers={"X-Forwarded-For": "203.0.113.10"},
             )
 
         self.assertEqual(response.status_code, 200)

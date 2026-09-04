@@ -92,12 +92,20 @@ class ConfigurationTests(unittest.TestCase):
             self.assertEqual(config["GEOIP_DATABASE_LABEL"], "fixture release")
             self.assertEqual(config["CHECKOUT_IP_HEADER"], "")
 
+            default_config = load_environment_config(
+                directory,
+                {"SECRET_KEY": "secret"},
+            )
+            self.assertEqual(
+                default_config["CHECKOUT_IP_HEADER"], "X-Forwarded-For"
+            )
+
             with self.assertRaisesRegex(ValueError, "CHECKOUT_IP_HEADER"):
                 load_environment_config(
                     directory,
                     {
                         "SECRET_KEY": "secret",
-                        "CHECKOUT_IP_HEADER": "X-Forwarded-For",
+                        "CHECKOUT_IP_HEADER": "Forwarded",
                     },
                 )
 

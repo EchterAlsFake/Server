@@ -375,8 +375,6 @@ country with a local DB-IP database, retains only the country-level result, and
 then removes the address fields before Flask and Flask-Limiter inspect the
 request. On every other request it removes them without performing a lookup:
 
-- `CF-Connecting-IP`
-- `CF-Connecting-IPv6`
 - `True-Client-IP`
 - `X-Forwarded-For`
 - `X-Real-IP`
@@ -400,9 +398,9 @@ tracebacks where useful, while common email/IP/query/credential patterns are
 redacted from the final rendered log. Raw user and webhook data must still
 never be intentionally passed to a logger.
 
-These application changes cannot prevent a reverse proxy, Cloudflare, Gunicorn,
-the operating system, or an ISP from logging independently. Their logging must
-still be configured separately.
+These application changes cannot prevent the Privex VPS, WireGuard endpoints,
+the reverse proxy, Gunicorn, the operating system, or an ISP from logging
+independently. Their logging must still be configured separately.
 
 ## 13. Documentation serving
 

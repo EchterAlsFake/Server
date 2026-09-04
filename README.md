@@ -16,7 +16,7 @@ Production addresses:
 - Payment webhooks: <https://api.echteralsfake.me>
 - Onion service: <http://i3vtbgg6dufszjzbccyzd3wk4v2on3k6ljzjpg2ppzapgqmjmsxlvkid.onion/>
 
-For payment creation only, middleware temporarily uses the trusted Cloudflare client address for a local country check. It then removes that address, `REMOTE_ADDR`, and common forwarding headers before Flask and its extensions see the request. Other requests are stripped without a lookup. Keep reverse-proxy and process-manager access logs disabled if the deployment must retain this no-IP-log property.
+For payment creation only, middleware temporarily uses the client address supplied by the trusted, local TLS-terminating reverse proxy for a local country check. It then removes that address, `REMOTE_ADDR`, and common forwarding headers before Flask and its extensions see the request. Other requests are stripped without a lookup. Keep VPS, reverse-proxy, and process-manager access logs disabled if the deployment must retain this no-IP-log property.
 
 ## Quick start
 
@@ -125,7 +125,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `KILL_TOKEN` | Authorizes the local poweroff endpoint | Unset; endpoint is unavailable |
 | `RATELIMIT_STORAGE_URI` | Flask-Limiter storage backend | `memory://` (per process) |
 | `LOG_LEVEL` | Application warning/error verbosity | `INFO` |
-| `CHECKOUT_IP_HEADER` | Trusted checkout client-address header; only `CF-Connecting-IP` or empty is accepted | `CF-Connecting-IP` |
+| `CHECKOUT_IP_HEADER` | Trusted checkout client-address header; only `X-Forwarded-For` or empty is accepted | `X-Forwarded-For` |
 | `GEOIP_DATABASE_PATH` | Local DB-IP City Lite MMDB path | `$PF_SERVER_DATA_DIR/geoip/dbip-city-lite.mmdb` |
 | `GEOIP_DATABASE_LABEL` | Optional retained release/source label | Derived from MMDB build date |
 | `GITHUB_TOKEN` | Raises the GitHub release API rate limit | Unset |
@@ -189,7 +189,7 @@ uv run flask --app main db upgrade
 uv run flask --app main init-runtime
 ```
 
-The intended topology is a TLS-terminating Cloudflare Tunnel/reverse proxy in front of that loopback listener. `ProxyFix` trusts one forwarded scheme/host/prefix hop but intentionally trusts no forwarded client address. Do not enable Gunicorn access logging or proxy logging that records visitor IPs if operating under the stated zero-log policy.
+The intended topology is **Privex VPS (Sweden) → WireGuard tunnel → Acer Swift 3 or Google Pixel 7 Pro (Germany) → TLS-terminating reverse proxy → this loopback listener**. The VPS forwards the still-encrypted connection through WireGuard; TLS is terminated only on the German endpoint after the tunnel. The transport must preserve the original visitor address, using routed forwarding or an authenticated PROXY-protocol hop inside WireGuard. The local reverse proxy must discard any inbound `X-Forwarded-For` value and set exactly one value from that trusted source address. `ProxyFix` trusts one forwarded scheme/host/prefix hop but intentionally trusts no forwarded client address; checkout middleware reads and then removes the separate address header. Keep Gunicorn reachable only from the trusted local proxy, and do not enable VPS, WireGuard, reverse-proxy, or Gunicorn logging that records visitor IPs if operating under the stated zero-log policy.
 
 Before enabling payments:
 

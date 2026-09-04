@@ -41,8 +41,9 @@ Your macOS update endpoint (`/appcast.xml`) relies on a locally stored signature
 - [ ] On a suitable non-metered connection, run `uv run python scripts/update_geoip_database.py --accept-license`.
 - [ ] Record the printed release, size, and SHA-256 in private operational notes.
 - [ ] Confirm `GEOIP_DATABASE_PATH` and the trusted `CHECKOUT_IP_HEADER` match the deployment.
+- [ ] Confirm the VPS/tunnel preserves the visitor source address and the local TLS proxy replaces inbound `X-Forwarded-For` with exactly one trusted value.
 - [ ] Review `docs/CHECKOUT_COUNTRY_COMPLIANCE.md`, including the intentionally conservative Ukraine-region and Syria policies.
-- [ ] Confirm Cloudflare, the tunnel, Gunicorn, the process manager, and platform logs do not retain IP addresses or query strings.
+- [ ] Confirm the Privex VPS, WireGuard endpoints, reverse proxy, Gunicorn, process manager, and platform logs do not retain IP addresses or query strings.
 
 Do not enable payment creation without the local MMDB file. Missing or unreadable country evidence intentionally returns HTTP 503 before contacting NOWPayments.
 

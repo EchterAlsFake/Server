@@ -229,9 +229,9 @@ SMTP credentials.
 
 The application cannot control logs produced before a request reaches it.
 Gunicorn access logs are disabled by default and should remain disabled. The
-reverse proxy, Cloudflare Tunnel, operating system, and hosting platform must
-also be configured not to retain visitor IPs or query strings. Their settings
-must be reviewed separately.
+Privex VPS, WireGuard endpoints, reverse proxy, operating system, and hosting
+platform must also be configured not to retain visitor IPs or query strings.
+Their settings must be reviewed separately.
 
 ## 8. Tests added for this work
 

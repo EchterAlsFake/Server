@@ -135,10 +135,10 @@ def load_environment_config(
     if log_level not in LOG_LEVELS:
         raise ValueError(f"LOG_LEVEL must be one of: {', '.join(sorted(LOG_LEVELS))}")
     checkout_ip_header = source.get(
-        "CHECKOUT_IP_HEADER", "CF-Connecting-IP"
+        "CHECKOUT_IP_HEADER", "X-Forwarded-For"
     ).strip()
-    if checkout_ip_header not in {"", "CF-Connecting-IP"}:
-        raise ValueError("CHECKOUT_IP_HEADER must be CF-Connecting-IP or empty")
+    if checkout_ip_header not in {"", "X-Forwarded-For"}:
+        raise ValueError("CHECKOUT_IP_HEADER must be X-Forwarded-For or empty")
     geoip_database_path = os.path.abspath(
         source.get(
             "GEOIP_DATABASE_PATH",

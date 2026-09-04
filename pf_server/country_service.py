@@ -13,8 +13,6 @@ from .countries import country_name
 
 CHECKOUT_PATHS = frozenset({"/create-crypto-payment", "/create-fiat-payment"})
 IP_HEADER_ENVIRONMENT_KEYS = (
-    "HTTP_CF_CONNECTING_IP",
-    "HTTP_CF_CONNECTING_IPV6",
     "HTTP_TRUE_CLIENT_IP",
     "HTTP_X_FORWARDED_FOR",
     "HTTP_X_REAL_IP",

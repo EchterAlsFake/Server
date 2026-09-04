@@ -16,7 +16,7 @@ country with a local DB-IP City Lite lookup of the connecting address.
 Customer selects country
         |
         v
-Cloudflare supplies CF-Connecting-IP
+Local TLS proxy supplies X-Forwarded-For
         |
         v
 Local MMDB lookup (no API request)
@@ -171,15 +171,20 @@ Official DB source and format documentation:
 Before enabling checkout:
 
 1. Install the MMDB file over a non-metered connection and restart workers.
-2. Keep Gunicorn bound to loopback and allow only the trusted Cloudflare route
-   to reach it. A public direct route could forge `CF-Connecting-IP`.
-3. Disable IP/query logging in Cloudflare, the tunnel, reverse proxy, process
+2. Keep Gunicorn bound to loopback and allow only the trusted local reverse
+   proxy to reach it. A public direct route could forge `X-Forwarded-For`.
+3. Confirm the production path is Privex VPS (Sweden), WireGuard, and then the
+   Acer Swift 3 or Google Pixel 7 Pro (Germany), with TLS termination only on
+   the German endpoint after the tunnel. Preserve the visitor source address
+   through the transport, and configure the local reverse proxy to discard any
+   inbound `X-Forwarded-For` value and set one value from that source address.
+4. Disable IP/query logging on the VPS, WireGuard path, reverse proxy, process
    manager, hosting platform, and operating-system services as applicable.
-4. Confirm `/buy_license` explains the check and links to the privacy policy.
-5. Run the complete tests and a sandbox checkout from an allowed country.
-6. Test mismatch, database-unavailable, and restricted-location responses.
-7. Arrange monthly database updates and retain the displayed release/checksum
+5. Confirm `/buy_license` explains the check and links to the privacy policy.
+6. Run the complete tests and a sandbox checkout from an allowed country.
+7. Test mismatch, database-unavailable, and restricted-location responses.
+8. Arrange monthly database updates and retain the displayed release/checksum
    in private operational records; do not add the MMDB file to Git.
-8. Obtain tax and sanctions advice and decide whether the conservative region
+9. Obtain tax and sanctions advice and decide whether the conservative region
    policy should be replaced by a specialist compliance product or manual
    review before accepting real payments.

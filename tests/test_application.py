@@ -38,9 +38,13 @@ class ApplicationTests(ServerTestCase):
         self.assertEqual(english.status_code, 200)
         self.assertEqual(german.status_code, 200)
         self.assertIn(b"Patreon Membership and License Delivery", english.data)
+        self.assertIn(b"Privex VPS &amp; WireGuard Transport", english.data)
+        self.assertIn(b"Google Pixel 7 Pro", english.data)
         self.assertIn(
             "Patreon-Mitgliedschaft und Lizenzzustellung".encode(), german.data
         )
+        self.assertIn("Privex-VPS &amp; WireGuard-Transport".encode(), german.data)
+        self.assertIn("Acer Swift 3".encode(), german.data)
 
     def test_documentation_paths_cannot_escape_the_generated_site(self):
         target, status = serve_docs_file("assets/../../main.py")
