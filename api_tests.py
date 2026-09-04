@@ -5,15 +5,15 @@ Clones repositories, injects the local eaf_base_api into pyproject.toml,
 runs tests, and hard fails if anything goes wrong.
 """
 
-import os
-import sys
-import shutil
-import tempfile
 import argparse
-import subprocess
 import json
-import urllib.request
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
 import urllib.error
+import urllib.request
 
 REPOS = [
     "https://github.com/EchterAlsFake/unofficial-api-for-xvideos",
@@ -52,18 +52,18 @@ def ci_post(test_name: str, status: str, token: str):
     req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=10):
             print(f"[CI] Updated '{test_name}' -> {status}")
     except urllib.error.HTTPError as e:
         # Read the body of the error response to see what Flask complained about
         error_body = e.read().decode("utf-8", errors="ignore")
         print(
             f"[CI] WARNING: Failed to update status for '{test_name}' -> HTTP {e.code}: {e.reason} | Response: {error_body.strip()}")
-    except Exception as e:
+    except (OSError, urllib.error.URLError) as e:
         print(f"[CI] WARNING: Failed to update status for '{test_name}' -> {e}")
 
 
-def run_cmd(cmd: list, cwd: str, token: str, repo_name: str = None):
+def run_cmd(cmd: list[str], cwd: str, token: str, repo_name: str | None = None):
     """Run a subprocess. Hard fail the entire script on any error."""
     print(f"\n>> Executing: {' '.join(cmd)}")
 
@@ -71,7 +71,7 @@ def run_cmd(cmd: list, cwd: str, token: str, repo_name: str = None):
     env = os.environ.copy()
     env.pop("VIRTUAL_ENV", None)
 
-    result = subprocess.run(cmd, cwd=cwd, env=env)
+    result = subprocess.run(cmd, cwd=cwd, env=env, check=False)
 
     if result.returncode != 0:
         print(f"\n[FATAL ERROR] Command failed with exit code {result.returncode}")

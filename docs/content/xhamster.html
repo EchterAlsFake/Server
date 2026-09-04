@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = xHamster API -->
 <!-- SLOT:HERO_TITLE = xHamster API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for xHamster. Fetch video details, shorts, channel information, pornstar metadata, or log into user accounts. Stream downloads via HLS. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.5 -->
+<!-- SLOT:VERSION = 2.6 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xhamster -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xhamster -->
 
@@ -121,7 +121,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.5 uses <code>eaf_base_api ≥ 4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.6 uses <code>eaf_base_api ≥ 4.0.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -831,6 +831,8 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <table>
             <thead><tr><th>Date</th><th>Commit</th><th>Changes</th></tr></thead>
             <tbody>
+                <tr><td>2026-08-24</td><td><code>c640d89</code> / <code>b7c302e</code></td><td>Adapted listing extraction to the site's new per-video <code>data-video-id</code> layout, searched all candidate result containers, deduplicated overlapping results, and mapped listing duration into the current <code>duration</code> field.</td></tr>
+                <tr><td>2026-08-14</td><td><code>79224f5</code></td><td>Released 2.6 with expanded <code>Video</code> metadata: hash, description, duration/views/comments, timestamps, VR/HD flags, maximum resolution, orientation, and preview thumbnail.</td></tr>
                 <tr><td>2026-08-11</td><td><code>d9714c3</code></td><td>Released 2.5 with complete typing and <code>py.typed</code>; repaired selectors and fallbacks; implemented <code>get_shorts()</code> on <code>Pornstar</code> and <code>Creator</code> (not the shared base or Channel); and aligned retry defaults with <code>RuntimeConfig</code>.</td></tr>
                 <tr><td>2026-08-08</td><td><code>5ce0a28</code></td><td>Centralized concurrent scraping on <code>IteratorConfig</code> and forwarded package source/retry defaults.</td></tr>
                 <tr><td>2026-08-07</td><td><code>706fd4f</code></td><td>Migrated source-aware media, explicit loading, bounded retries, and structured scrape results to eaf v4.</td></tr>

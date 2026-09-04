@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = XNXX API -->
 <!-- SLOT:HERO_TITLE = XNXX API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XNXX. Fetch videos, metadata, search with complex filters, and iterate over user uploads — all powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.4 -->
+<!-- SLOT:VERSION = 2.4.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xnxx -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xnxx -->
 
@@ -297,6 +297,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>length</code></td><td><code>str | None</code></td><td>Duration string (e.g. <code>PT15M42S</code>)</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Master HLS stream playlist URL</td></tr>
                 <tr><td><code>views</code></td><td><code>str | None</code></td><td>Total view count</td></tr>
+                <tr><td><code>author</code></td><td><code>str | None</code></td><td>Uploader name shown on the video page</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Keyword tags linked from the video page</td></tr>
                 <tr style="border-top: 1px solid var(--border-color);"><td colspan="3" style="font-weight: 600; padding-top: 12px;">Scraper Iterator Fallback Attributes</td></tr>
                 <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Numeric video identifier</td></tr>
                 <tr><td><code>video_eid</code></td><td><code>str | None</code></td><td>External unique string ID</td></tr>
@@ -648,6 +650,11 @@ xnxx_api --file file_list.txt --quality best --output ./downloads --no-title Fal
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.4.1 — 2026-08-14</h3>
+    <ul>
+        <li><code>af53c16</code> — Added HTML-backed <code>Video.author</code> and <code>Video.tags</code> fields.</li>
+    </ul>
 
     <h3>2.4 — 2026-08-11</h3>
     <ul>

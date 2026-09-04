@@ -5,7 +5,7 @@
 {% block content %}
 <div class="card" style="margin-top: 40px;">
     <h1>Privacy Policy</h1>
-    <p style="color: var(--color-text-muted);">Last Updated: August 2026</p>
+    <p style="color: var(--color-text-muted);">Last Updated: September 2026</p>
 
     <div style="margin-top: 25px; line-height: 1.8;">
 
@@ -46,7 +46,8 @@
             <li>IP addresses and browser/device information</li>
             <li>In certain cases, KYC/AML verification data (identity documents) if required by applicable regulations</li>
         </ul>
-        <p>NowPayments acts as an independent controller for its payment processing. My server stores the order and provider identifiers, payment status, invoice details, amount, currency and transaction hash needed to verify and document a purchase. It does not store cryptocurrency wallet addresses. The cryptocurrency checkout does not require a name or email address; if an email address is supplied for the optional card-assisted flow, it is stored with that transaction for delivery and support. The generated license file contains an opaque purchase reference and a cryptographic signature, but no name or email address.</p>
+        <p>At checkout, you are asked to select your country so that the place of supply can be documented for tax purposes and geographic restrictions can be applied. When you submit the checkout form, my server temporarily processes the connection IP address in memory and compares its country with your selection using a locally installed DB-IP City Lite database. No geolocation API request is made. The IP address and any subdivision result are discarded before the application handles or logs the request. Only the selected country name, the fact that customer declaration and local IP geolocation agreed, and the database release label are retained with the transaction. No street, billing, or other address is requested or stored for this check. DB-IP City Lite is provided by <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP.com</a> under CC BY 4.0.</p>
+        <p>NowPayments acts as an independent controller for its payment processing. My server stores the order and provider identifiers, payment status, invoice details, amount, currency, transaction hash, selected country and country-evidence metadata needed to verify and document a purchase. It does not store cryptocurrency wallet addresses. The cryptocurrency checkout does not require a name or email address; an email address supplied for the optional card-assisted flow is passed to the payment provider but is not retained by my server. The generated license file contains an opaque issuance reference and a cryptographic signature, but no name or email address.</p>
         <p>Please note that blockchain transactions are <strong>public by nature</strong> and can be viewed by anyone on the respective blockchain network. For more information about how NowPayments handles your data, please refer to <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">NowPayments' Privacy Policy</a>. For data-related inquiries to NowPayments, contact: <a href="mailto:support@nowpayments.io">support@nowpayments.io</a>.</p>
 
         <h3>7. Patreon Membership and License Delivery</h3>
@@ -60,8 +61,8 @@
         <p>Where personal data are processed through Cloudflare, payment handling or Patreon license fulfilment, the legal bases are:</p>
         <ul>
             <li><strong>Art. 6(1)(b) GDPR</strong> — Contractual necessity: verifying a purchase or paid membership and issuing and delivering the license.</li>
-            <li><strong>Art. 6(1)(f) GDPR</strong> — Legitimate interests: website and webhook security, abuse prevention, reliable retry handling and prevention of duplicate license issuance.</li>
-            <li><strong>Art. 6(1)(c) GDPR</strong> — Legal obligation: retention of invoice and accounting information where required by law.</li>
+            <li><strong>Art. 6(1)(f) GDPR</strong> — Legitimate interests: website and webhook security, abuse prevention, reliable retry handling, prevention of duplicate license issuance, and the conservative geographic store policy.</li>
+            <li><strong>Art. 6(1)(c) GDPR</strong> — Legal obligation: determining and documenting the applicable tax treatment, complying with geographic restrictions where legally required, and retaining invoice and accounting information where required by law.</li>
         </ul>
 
         <h3>10. Your Rights Under EU Law (GDPR)</h3>
@@ -87,7 +88,7 @@
         </p>
 
         <h3>12. Data Retention</h3>
-        <p>Patreon webhook bodies and member email addresses are not retained by my server. The member identifier, license mapping and delivery timestamps are kept while the issued license remains valid so it can be verified and duplicate delivery can be prevented; they are deleted on a valid erasure request unless contractual or legal obligations require continued retention. Transaction and invoice records are retained for the applicable statutory accounting period and otherwise only as long as needed for contractual claims and support. Cloudflare, Patreon, NowPayments, the configured mail service and Vodafone retain data according to their own applicable policies and legal obligations.</p>
+        <p>Patreon webhook bodies and member email addresses are not retained by my server. The member identifier, license mapping and delivery timestamps are kept while the issued license remains valid so it can be verified and duplicate delivery can be prevented; they are deleted on a valid erasure request unless contractual or legal obligations require continued retention. Transaction, invoice, selected-country and country-evidence records are retained for the applicable statutory accounting period; records covered by EU One-Stop-Shop requirements may need to be retained for ten years. They are otherwise kept only as long as needed for contractual claims and support. Checkout IP addresses and subdivision results are not retained by my application. Cloudflare, Patreon, NowPayments, the configured mail service and Vodafone retain data according to their own applicable policies and legal obligations.</p>
 
         <h3>13. Changes to This Privacy Policy</h3>
         <p>I reserve the right to update this privacy policy at any time to reflect changes in legal requirements, technical changes, or business practices. The date at the top of this page indicates when this policy was last updated. I encourage you to review this policy periodically.</p>

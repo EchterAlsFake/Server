@@ -1,91 +1,32 @@
-import os
+import html
 import re
 import shutil
 from pathlib import Path
 
-# Custom styling definitions for each library (logo letter, custom brand gradient)
-BRAND_DATA = {
-    "eaf_base_api": {
-        "logo_text": "EAF",
-        "gradient": "linear-gradient(135deg, #8b5cf6, #c4b5fd, #fbbf24)",
-        "display_name": "Base API Engine"
-    },
-    "beeg": {
-        "logo_text": "B",
-        "gradient": "linear-gradient(135deg, #fbbf24, #d97706)",
-        "display_name": "Beeg API"
-    },
-    "eporner": {
-        "logo_text": "E",
-        "gradient": "linear-gradient(135deg, #0ea5e9, #0284c7)",
-        "display_name": "EPorner API"
-    },
-    "hqporner": {
-        "logo_text": "H",
-        "gradient": "linear-gradient(135deg, #6366f1, #ec4899)",
-        "display_name": "HQPorner API"
-    },
-    "missav": {
-        "logo_text": "M",
-        "gradient": "linear-gradient(135deg, #ec4899, #f43f5e)",
-        "display_name": "MissAV API"
-    },
-    "pornhub": {
-        "logo_text": "P",
-        "gradient": "linear-gradient(135deg, #f59e0b, #000000)",
-        "display_name": "Pornhub API"
-    },
-    "porntrex": {
-        "logo_text": "P",
-        "gradient": "linear-gradient(135deg, #10b981, #047857)",
-        "display_name": "Porntrex API"
-    },
-    "redtube": {
-        "logo_text": "R",
-        "gradient": "linear-gradient(135deg, #ef4444, #000000)",
-        "display_name": "Redtube API"
-    },
-    "spankbang": {
-        "logo_text": "S",
-        "gradient": "linear-gradient(135deg, #f43f5e, #be123c)",
-        "display_name": "Spankbang API"
-    },
-    "thumbzilla": {
-        "logo_text": "T",
-        "gradient": "linear-gradient(135deg, #eab308, #854d0e)",
-        "display_name": "Thumbzilla API"
-    },
-    "tube8": {
-        "logo_text": "T",
-        "gradient": "linear-gradient(135deg, #fbbf24, #d97706)",
-        "display_name": "Tube8 API"
-    },
-    "xfreehd": {
-        "logo_text": "X",
-        "gradient": "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-        "display_name": "XFreeHD API"
-    },
-    "xhamster": {
-        "logo_text": "X",
-        "gradient": "linear-gradient(135deg, #f97316, #c2410c)",
-        "display_name": "XHamster API"
-    },
-    "xnxx": {
-        "logo_text": "X",
-        "gradient": "linear-gradient(135deg, #2563eb, #dc2626)",
-        "display_name": "XNXX API"
-    },
-    "xvideos": {
-        "logo_text": "X",
-        "gradient": "linear-gradient(135deg, #dc2626, #fbbf24)",
-        "display_name": "XVideos API"
-    },
-    "youporn": {
-        "logo_text": "Y",
-        "gradient": "linear-gradient(135deg, #ec4899, #be185d)",
-        "display_name": "YouPorn API"
-    }
+BRAND_MARKS = {
+    "eaf_base_api": "EAF",
+    "beeg": "B",
+    "eporner": "E",
+    "hqporner": "H",
+    "missav": "M",
+    "pornhub": "P",
+    "porntrex": "P",
+    "redtube": "R",
+    "spankbang": "S",
+    "thumbzilla": "T",
+    "tube8": "T",
+    "xfreehd": "X",
+    "xhamster": "X",
+    "xnxx": "X",
+    "xvideos": "X",
+    "youporn": "Y",
 }
+
+
+def clean_html_document(content: str) -> str:
+    """Keep generated pages deterministic and free of trailing whitespace."""
+    return "\n".join(line.rstrip() for line in content.splitlines()) + "\n"
+
 
 def build_docs():
     base_dir = Path(__file__).parent
@@ -178,7 +119,7 @@ def build_docs():
         out_path = api_dist_dir / "index.html"
         
         with open(out_path, "w", encoding="utf-8") as f:
-            f.write(final_html)
+            f.write(clean_html_document(final_html))
             
         print(f"✓ Created {out_path.relative_to(base_dir)}")
 
@@ -209,74 +150,39 @@ def build_docs():
     # Function to generate card HTML
     def make_card_html(api, is_featured=False):
         api_name = api["api_name"]
-        brand = BRAND_DATA.get(api_name, {
-            "logo_text": api_name[0].upper() if api_name else "A",
-            "gradient": "linear-gradient(135deg, #8b5cf6, #a78bfa)",
-            "display_name": api["title"]
-        })
-        
-        logo_text = brand["logo_text"]
-        gradient = brand["gradient"]
-        title = api["title"]
-        version = api["version"]
-        subtitle = api["subtitle"]
-        pypi_package = api["pypi_package"]
-        github_url = api["github_url"]
-        
-        # Escape string values for safety in data attributes
-        clean_title = title.replace('"', '&quot;')
-        clean_package = pypi_package.replace('"', '&quot;')
-        clean_desc = subtitle.replace('"', '&quot;')
+        logo_text = html.escape(BRAND_MARKS.get(api_name, api_name[:1].upper() or "A"))
+        title = html.escape(api["title"])
+        version = html.escape(api["version"])
+        subtitle = html.escape(api["subtitle"])
+        pypi_package = html.escape(api["pypi_package"])
+        github_url = html.escape(api["github_url"], quote=True)
+        clean_title = html.escape(api["title"], quote=True)
+        clean_package = html.escape(api["pypi_package"], quote=True)
+        clean_desc = html.escape(api["subtitle"], quote=True)
         card_type = "core" if api_name == "eaf_base_api" else "scraper"
-        
-        if is_featured:
-            return f"""
-                    <div class="api-card featured-card" data-title="{clean_title}" data-package="{clean_package}" data-desc="{clean_desc}" data-type="{card_type}">
-                        <div class="card-header" style="margin-bottom: 0;">
-                            <div class="card-logo" style="background: {gradient}; width: 64px; height: 64px; font-size: 28px;">{logo_text}</div>
+        featured_class = " featured-card" if is_featured else ""
+        return f"""
+                    <article class="api-card{featured_class}" data-title="{clean_title}" data-package="{clean_package}" data-desc="{clean_desc}" data-type="{card_type}">
+                        <header class="card-header">
+                            <span class="card-logo" aria-hidden="true">{logo_text}</span>
                             <div class="card-title-group">
-                                <span class="card-title" style="font-size: 26px;">{title}</span>
+                                <h3 class="card-title"><a href="./{api_name}/">{title}</a></h3>
                                 <span class="card-version">v{version}</span>
                             </div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; gap: 16px;">
-                            <p class="card-desc" style="margin-bottom: 0; font-size: 17px;">{subtitle}</p>
-                            <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 8px;">
-                                <div class="card-install" onclick="copyInstall(this)" title="Click to copy" style="margin-bottom: 0; flex-grow: 1; max-width: 400px;">
-                                    <span class="prefix">$</span> pip install {pypi_package}
-                                    <span class="copy-icon">📋</span>
-                                </div>
-                                <div class="card-actions" style="flex-shrink: 0;">
-                                    <a href="./{api_name}/" class="card-btn card-btn-primary" style="padding: 10px 24px;">Open Documentation</a>
-                                    <a href="{github_url}" class="card-btn card-btn-secondary" target="_blank" rel="noopener" style="padding: 10px 20px;">GitHub</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>"""
-        else:
-            return f"""
-                    <div class="api-card" data-title="{clean_title}" data-package="{clean_package}" data-desc="{clean_desc}" data-type="{card_type}">
-                        <div>
-                            <div class="card-header">
-                                <div class="card-logo" style="background: {gradient}">{logo_text}</div>
-                                <div class="card-title-group">
-                                    <span class="card-title">{title}</span>
-                                    <span class="card-version">v{version}</span>
-                                </div>
-                            </div>
-                            <p class="card-desc">{subtitle}</p>
-                        </div>
-                        <div>
-                            <div class="card-install" onclick="copyInstall(this)" title="Click to copy">
-                                <span class="prefix">$</span> pip install {pypi_package}
-                                <span class="copy-icon">📋</span>
-                            </div>
+                        </header>
+                        <p class="card-desc">{subtitle}</p>
+                        <footer class="card-footer">
+                            <button class="card-install" type="button" onclick="copyInstall(this)" title="Copy install command">
+                                <span class="prefix" aria-hidden="true">$</span>
+                                <code>pip install {pypi_package}</code>
+                                <span class="copy-icon" aria-hidden="true">Copy</span>
+                            </button>
                             <div class="card-actions">
-                                <a href="./{api_name}/" class="card-btn card-btn-primary">Open Documentation</a>
-                                <a href="{github_url}" class="card-btn card-btn-secondary" target="_blank" rel="noopener">GitHub</a>
+                                <a href="./{api_name}/" class="card-btn card-btn-primary">Read docs</a>
+                                <a href="{github_url}" class="card-btn card-btn-secondary" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
                             </div>
-                        </div>
-                    </div>"""
+                        </footer>
+                    </article>"""
 
     # Generate the cards HTML blocks
     core_card_html = ""
@@ -292,7 +198,7 @@ def build_docs():
     # Save the index to dist/index.html
     index_out_path = dist_dir / "index.html"
     with open(index_out_path, "w", encoding="utf-8") as f:
-        f.write(index_html)
+        f.write(clean_html_document(index_html))
         
     print(f"✓ Created central index portal at {index_out_path.relative_to(base_dir)}")
 

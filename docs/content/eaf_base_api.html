@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Base API -->
 <!-- SLOT:HERO_TITLE = eaf_base_api -->
 <!-- SLOT:HERO_SUBTITLE = The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads. -->
-<!-- SLOT:VERSION = 4.0.0 -->
+<!-- SLOT:VERSION = 4.1.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/eaf_base_api -->
 <!-- SLOT:PYPI_PACKAGE = eaf_base_api -->
 
@@ -424,7 +424,10 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
     <h2><span class="section-icon">⬇️</span> Download Configurations</h2>
 
     <h3>Shared fields</h3>
-    <p><code>DownloadConfigHLS</code> and <code>DownloadConfigRAW</code> share <code>quality</code>, <code>path</code>, <code>callback</code>, <code>no_title</code>, and <code>stop_event</code>. Quality accepts a supported integer height or <code>"best"</code>, <code>"half"</code>, <code>"worst"</code>, and common <code>"720p"</code>-style values.</p>
+    <p><code>DownloadConfigHLS</code> and <code>DownloadConfigRAW</code> share <code>quality</code>, <code>path</code>, <code>callback</code>, <code>no_title</code>, and <code>stop_event</code>. Quality accepts a supported integer height or <code>"best"</code>, <code>"half"</code>, <code>"worst"</code>, and common <code>"720p"</code>-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.</p>
+
+    <h3>HLS inspection</h3>
+    <p><code>await core.list_available_qualities(m3u8_url)</code> returns sorted, unique integer tiers from a master playlist. <code>await core.get_m3u8_by_quality(m3u8_url, quality)</code> returns the selected media-playlist URL. Both methods accept a playlist URL, inline master text, or a callable/awaitable resolving to either form. Relative variant paths can be resolved only when the master was fetched from a URL; an inline master must contain absolute variant URLs.</p>
 
     <h3>DownloadConfigHLS</h3>
     <div class="table-wrapper">
@@ -434,7 +437,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
                 <tr><td><code>m3u8_base_url</code></td><td><code>None</code></td><td>Master playlist URL, awaitable, or callable used by <code>BaseCore.download</code></td></tr>
                 <tr><td><code>remux</code></td><td><code>False</code></td><td>Remux concatenated transport stream to MP4</td></tr>
                 <tr><td><code>start_segment</code></td><td><code>0</code></td><td>First segment index</td></tr>
-                <tr><td><code>segment_state_path</code></td><td><code>None</code></td><td>JSON resume-state file</td></tr>
+                <tr><td><code>segment_state_path</code></td><td><code>None</code></td><td>JSON resume-state file; <code>Path</code> values are serialized safely in 4.1+</td></tr>
                 <tr><td><code>segment_dir</code></td><td><code>None</code></td><td>Directory for downloaded segments</td></tr>
                 <tr><td><code>return_report</code></td><td><code>False</code></td><td>Return a <code>DownloadReport</code> instead of only a boolean</td></tr>
                 <tr><td><code>cleanup_on_stop</code></td><td><code>True</code></td><td>Remove temporary state when cancelled</td></tr>
@@ -444,7 +447,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </tbody>
         </table>
     </div>
-    <p><code>BaseCore.download()</code> reads <code>RuntimeConfig.timeout</code> and <code>RuntimeConfig.max_workers_download</code> from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout and worker settings isolated from the process-wide default configuration.</p>
+    <p><code>BaseCore.download()</code> reads <code>RuntimeConfig.timeout</code> and <code>RuntimeConfig.max_workers_download</code> from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout and worker settings isolated from the process-wide default configuration. HLS cancellation uses an <code>asyncio.Event</code>: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads. Version 4.1.1 also normalizes discontinuous packet timestamps while remuxing so valid HLS discontinuities do not abort MP4 output.</p>
 
     <h3>DownloadConfigRAW</h3>
     <p>Direct-file downloads add <code>allow_multipart=True</code>, <code>max_workers=5</code>, <code>read_timeout=120.0</code>, <code>chunk_size=1024</code>, and <code>max_retries=5</code>. These downloader retries are separate from <code>RuntimeConfig.request_attempts</code>.</p>
@@ -529,6 +532,9 @@ core.enable_logging(
         <table>
             <thead><tr><th>Date / Version</th><th>Changes since 3.3.3</th></tr></thead>
             <tbody>
+                <tr><td><strong>2026-08-19 — 4.1.1</strong></td><td>Synchronized download/remux progress callbacks across worker threads, normalized discontinuous HLS packet timestamps during remuxing, and added regressions for stage-specific error handlers and per-core runtime settings. Commit <code>a062695</code>.</td></tr>
+                <tr><td><strong>2026-08-16 — 4.1.0</strong></td><td>Made HLS cancellation stop pending segment work promptly and corrected JSON resume-state serialization, including configured <code>Path</code> values. Commit <code>acdb967</code>.</td></tr>
+                <tr><td><strong>2026-08-14 — 4.0.1</strong></td><td>Reworked HLS quality discovery/selection for canonical landscape and portrait tiers, inline/callable playlists, and bandwidth fallbacks; fixed independent item error handlers, idempotent session initialization, configured session cookies and retry multipliers, and removed hard-coded transport headers. Commits <code>2fd3a55</code>–<code>1eb9105</code>.</td></tr>
                 <tr><td><strong>2026-08-11 — 4.0.0</strong></td><td>Added the <code>py.typed</code> marker; finalized runtime-resolved <code>IteratorConfig</code> values; expanded typed exports; improved page/item exception logging and terminal error context. Commits <code>13b4105</code>–<code>184df57</code>.</td></tr>
                 <tr><td><strong>2026-08-08 — 4.0.0</strong></td><td>Centralized page/item concurrency, ordering, loading, retry policies, and handlers in <code>IteratorConfig</code>; resolved omitted policies from <code>RuntimeConfig</code>; expanded inline API documentation. Commits <code>2705faa</code>–<code>baccdfd</code>.</td></tr>
                 <tr><td><strong>2026-08-07 — 4.0.0</strong></td><td>Breaking v4 redesign: explicit request methods and cache policies; byte-bounded TTL caches and single-flight text fetches; source-aware atomic media loading; bounded dynamic Helper scheduling; immutable <code>ScrapeResult</code>; owned <code>ScrapeStream</code>; structured retry/error policies. Commits <code>37176cb</code>, <code>7294115</code>.</td></tr>

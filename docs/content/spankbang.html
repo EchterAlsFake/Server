@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = SpankBang API -->
 <!-- SLOT:HERO_TITLE = SpankBang API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for SpankBang. Fetch videos, metadata, search, and iterate over channels, creators, or pornstars. Download content using HLS or direct RAW MP4 downloads. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.3 -->
+<!-- SLOT:VERSION = 2.4.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-spankbang -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-spankbang -->
 
@@ -145,6 +145,7 @@ asyncio.run(main())</code></pre>
 
     <p>The API uses <code>eaf_base_api ≥ 4.0.0</code>. Configure its singular proxy, bounded request attempts, timeouts, and other runtime behavior through the <code>BaseCore</code> passed to <code>Client</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
+    <p>The current client sets <code>RuntimeConfig.http_version</code> to <code>"v3"</code> before initializing its session and installs SpankBang's required Origin/Referer headers. Pass a core whose session has not already been initialized so the HTTP/3 setting takes effect.</p>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
@@ -690,6 +691,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.4.1 — 2026-08-14</h3>
+    <ul>
+        <li><code>18a8f15</code> / <code>5871e80</code> — Updated request headers and forced HTTP/3 for newly initialized client sessions to restore access after upstream 403 responses.</li>
+    </ul>
 
     <h3>2.3 — 2026-08-11</h3>
     <ul>

@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = XFreeHD API -->
 <!-- SLOT:HERO_TITLE = XFreeHD API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.7 -->
+<!-- SLOT:VERSION = 1.7.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xfreehd -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xfreehd -->
 
@@ -30,6 +30,7 @@
 <div class="nav-collapsible">
     <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
+        <a href="#video-video_qualities" class="nav-link nav-link-sub">video_qualities()</a>
         <a href="#video-download" class="nav-link nav-link-sub">download()</a>
     </div>
 </div>
@@ -327,6 +328,18 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
 
     <h3>Methods</h3>
 
+    <!-- video_qualities -->
+    <span class="section-anchor" id="video-video_qualities"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Video Qualities <code>video_qualities()</code></h3>
+        </div>
+        <div class="method-desc">Returns the quality tiers inferred from the number of CDN URLs: one URL maps to 480p and two map to 480p/720p. Other counts currently return an empty list.</div>
+        <div class="method-signature">video.video_qualities() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">int</span>]</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ list[int]</span>
+    </div>
+
     <!-- download -->
     <span class="section-anchor" id="video-download"></span>
     <div class="method-card">
@@ -521,6 +534,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.7.1 — 2026-08-14 <code>264b618</code></h3>
+    <ul>
+        <li>Added <code>Video.video_qualities()</code> for consumers that need numeric quality tiers for the current one- or two-CDN layouts.</li>
+    </ul>
 
     <h3>1.7 — 2026-08-11 <code>d41c536</code></h3>
     <ul>

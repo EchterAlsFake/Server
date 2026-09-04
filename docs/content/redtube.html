@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Redtube API -->
 <!-- SLOT:HERO_TITLE = Redtube API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Redtube. Fetch video details, custom playlists, publishers channels, users, and pornstars. Stream downloads via HLS. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.4 -->
+<!-- SLOT:VERSION = 1.4.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-redtube -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-redtube -->
 
@@ -412,6 +412,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>action_tags</code></td><td><code>dict | None</code></td><td>Decoded action tags mapped by keyword and timestamp</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Constructed HLS master playlist string</td></tr>
                 <tr><td><code>author_name</code></td><td><code>str | None</code></td><td>Name of the video author</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Date-added text shown on the video page</td></tr>
                 <tr><td><code>uploader_id</code></td><td><code>str | None</code></td><td>Uploader identifier</td></tr>
                 <tr><td><code>uploader_type</code></td><td><code>str | None</code></td><td>Uploader type</td></tr>
                 <tr><td><code>preview_video_url</code></td><td><code>str | None</code></td><td>Preview clip path</td></tr>
@@ -830,6 +831,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.4.1 — 2026-08-14</h3>
+    <ul>
+        <li><code>647f2db</code> — Added the HTML-backed <code>Video.publish_date</code> field.</li>
+    </ul>
 
     <h3>1.4 — 2026-08-11</h3>
     <ul>

@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = MissAV API -->
 <!-- SLOT:HERO_TITLE = MissAV API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for MissAV. Fetch JAV video metadata and download streams via HLS. Features Recombee-powered search with HMAC-signed API requests. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.5 -->
+<!-- SLOT:VERSION = 2.6 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-missav -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-missav -->
 
@@ -90,7 +90,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.5 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.6 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -124,6 +124,7 @@ asyncio.run(main())</code></pre>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
     <p>Proxy/interface, timeout, request-attempt/delay, cache, and concurrency settings are handled via <code>RuntimeConfig</code> passed to <code>BaseCore</code>.</p>
+    <p><code>Client</code> sets the core's impersonation profile to <code>"safari17_2_ios"</code> before creating its session and installs the headers required by MissAV's current media endpoints. Pass a core whose session has not already been initialized so that profile takes effect.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for details.</p>
 
     <div class="code-window">
@@ -390,6 +391,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.6 — 2026-08-14</h3>
+    <ul>
+        <li><code>5cce2e3</code> / <code>562b69c</code> — Updated cross-site request headers and switched the client to the required <code>safari17_2_ios</code> impersonation profile to restore access after upstream 403 responses.</li>
+    </ul>
 
     <h3>2.5 — 2026-08-11 <code>b291d71</code></h3>
     <ul>

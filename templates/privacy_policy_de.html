@@ -5,7 +5,7 @@
 {% block content %}
 <div class="card" style="margin-top: 40px;">
     <h1>Datenschutzerklärung</h1>
-    <p style="color: var(--color-text-muted);">Stand: August 2026</p>
+    <p style="color: var(--color-text-muted);">Stand: September 2026</p>
 
     <div style="margin-top: 25px; line-height: 1.8;">
 
@@ -46,7 +46,8 @@
             <li>IP-Adressen und Browser-/Geräteinformationen</li>
             <li>In bestimmten Fällen KYC-/AML-Verifizierungsdaten (Identitätsdokumente), sofern gesetzlich vorgeschrieben</li>
         </ul>
-        <p>NowPayments agiert für die eigene Zahlungsabwicklung als eigenständiger Verantwortlicher. Mein Server speichert die zur Prüfung und Dokumentation eines Kaufs erforderlichen Bestell- und Anbieterkennungen, den Zahlungsstatus, Rechnungsangaben, Betrag, Währung und Transaktionshash. Kryptowährungs-Wallet-Adressen werden nicht gespeichert. Der Kryptowährungs-Checkout erfordert weder Namen noch E-Mail-Adresse; wird für den optionalen kartengestützten Ablauf eine E-Mail-Adresse angegeben, wird sie für Zustellung und Support zusammen mit der Transaktion gespeichert. Die erzeugte Lizenzdatei enthält eine nicht personenbezogene Kaufreferenz und eine kryptografische Signatur, jedoch weder Namen noch E-Mail-Adresse.</p>
+        <p>Beim Checkout werden Sie gebeten, Ihr Land auszuwählen, damit der Leistungsort für Steuerzwecke dokumentiert und geografische Beschränkungen angewendet werden können. Beim Absenden verarbeitet mein Server die Verbindungs-IP-Adresse kurzzeitig im Arbeitsspeicher und vergleicht deren Land anhand einer lokal installierten DB-IP-City-Lite-Datenbank mit Ihrer Auswahl. Es erfolgt keine Anfrage an eine Geolokalisierungs-API. Die IP-Adresse und ein etwaiges Ergebnis zur Region werden verworfen, bevor die Anwendung die Anfrage verarbeitet oder protokolliert. Mit der Transaktion werden nur der ausgewählte Ländername, die Tatsache der Übereinstimmung von Kundenerklärung und lokaler IP-Geolokalisierung sowie die Versionsbezeichnung der Datenbank gespeichert. Für diese Prüfung werden weder Straße noch Rechnungsanschrift oder eine sonstige Adresse abgefragt oder gespeichert. DB-IP City Lite wird von <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP.com</a> unter CC BY 4.0 bereitgestellt.</p>
+        <p>NowPayments agiert für die eigene Zahlungsabwicklung als eigenständiger Verantwortlicher. Mein Server speichert die zur Prüfung und Dokumentation eines Kaufs erforderlichen Bestell- und Anbieterkennungen, den Zahlungsstatus, Rechnungsangaben, Betrag, Währung, Transaktionshash, das ausgewählte Land und die Metadaten des Ländernachweises. Kryptowährungs-Wallet-Adressen werden nicht gespeichert. Der Kryptowährungs-Checkout erfordert weder Namen noch E-Mail-Adresse; eine für den optionalen kartengestützten Ablauf angegebene E-Mail-Adresse wird an den Zahlungsanbieter übermittelt, aber von meinem Server nicht gespeichert. Die erzeugte Lizenzdatei enthält eine nicht personenbezogene Ausgabereferenz und eine kryptografische Signatur, jedoch weder Namen noch E-Mail-Adresse.</p>
         <p>Bitte beachten Sie, dass Blockchain-Transaktionen <strong>von Natur aus öffentlich</strong> sind und von jedem im jeweiligen Blockchain-Netzwerk eingesehen werden können. Weitere Informationen zur Datenverarbeitung durch NowPayments finden Sie in der <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von NowPayments</a>. Für datenschutzbezogene Anfragen an NowPayments: <a href="mailto:support@nowpayments.io">support@nowpayments.io</a>.</p>
 
         <h3>7. Patreon-Mitgliedschaft und Lizenzzustellung</h3>
@@ -60,8 +61,8 @@
         <p>Soweit personenbezogene Daten beim Webseitenbetrieb, bei der Zahlungsabwicklung oder bei der Patreon-Lizenzzustellung verarbeitet werden, geschieht dies auf folgenden Rechtsgrundlagen:</p>
         <ul>
             <li><strong>Art. 6 Abs. 1 lit. b DSGVO</strong> — Vertragserfüllung: Prüfung eines Kaufs oder einer bezahlten Mitgliedschaft sowie Ausgabe und Zustellung der Lizenz.</li>
-            <li><strong>Art. 6 Abs. 1 lit. f DSGVO</strong> — Berechtigte Interessen: Sicherheit von Webseite und Webhooks, Missbrauchsschutz, zuverlässige Wiederholungsverarbeitung und Verhinderung mehrfacher Lizenzausgabe.</li>
-            <li><strong>Art. 6 Abs. 1 lit. c DSGVO</strong> — Rechtliche Verpflichtung: Aufbewahrung von Rechnungs- und Buchhaltungsangaben, soweit gesetzlich erforderlich.</li>
+            <li><strong>Art. 6 Abs. 1 lit. f DSGVO</strong> — Berechtigte Interessen: Sicherheit von Webseite und Webhooks, Missbrauchsschutz, zuverlässige Wiederholungsverarbeitung, Verhinderung mehrfacher Lizenzausgabe und die vorsorgliche geografische Shop-Richtlinie.</li>
+            <li><strong>Art. 6 Abs. 1 lit. c DSGVO</strong> — Rechtliche Verpflichtung: Ermittlung und Dokumentation der zutreffenden steuerlichen Behandlung, Einhaltung geografischer Beschränkungen, soweit diese gesetzlich vorgeschrieben sind, sowie Aufbewahrung von Rechnungs- und Buchhaltungsangaben.</li>
         </ul>
 
         <h3>10. Ihre Rechte nach EU-Recht (DSGVO)</h3>
@@ -87,7 +88,7 @@
         </p>
 
         <h3>12. Speicherdauer</h3>
-        <p>Patreon-Webhook-Inhalte und E-Mail-Adressen der Mitglieder werden von meinem Server nicht aufbewahrt. Mitgliedskennung, Lizenzzuordnung und Zustellzeitstempel werden gespeichert, solange die ausgegebene Lizenz gültig ist, damit sie geprüft und eine doppelte Zustellung verhindert werden kann; sie werden auf einen berechtigten Löschantrag hin gelöscht, sofern keine vertraglichen oder gesetzlichen Pflichten eine weitere Aufbewahrung erfordern. Transaktions- und Rechnungsdaten werden während der jeweils geltenden gesetzlichen Buchhaltungsfrist und im Übrigen nur so lange gespeichert, wie sie für vertragliche Ansprüche und Support erforderlich sind. Cloudflare, Patreon, NowPayments, der konfigurierte Maildienst und Vodafone speichern Daten nach ihren jeweils geltenden Richtlinien und gesetzlichen Pflichten.</p>
+        <p>Patreon-Webhook-Inhalte und E-Mail-Adressen der Mitglieder werden von meinem Server nicht aufbewahrt. Mitgliedskennung, Lizenzzuordnung und Zustellzeitstempel werden gespeichert, solange die ausgegebene Lizenz gültig ist, damit sie geprüft und eine doppelte Zustellung verhindert werden kann; sie werden auf einen berechtigten Löschantrag hin gelöscht, sofern keine vertraglichen oder gesetzlichen Pflichten eine weitere Aufbewahrung erfordern. Transaktions-, Rechnungs-, Länder- und Ländernachweisdaten werden während der jeweils geltenden gesetzlichen Buchhaltungsfrist gespeichert; für vom EU-One-Stop-Shop erfasste Aufzeichnungen kann eine Aufbewahrung von zehn Jahren erforderlich sein. Im Übrigen werden sie nur so lange gespeichert, wie sie für vertragliche Ansprüche und Support erforderlich sind. Checkout-IP-Adressen und Regionsergebnisse werden von meiner Anwendung nicht gespeichert. Cloudflare, Patreon, NowPayments, der konfigurierte Maildienst und Vodafone speichern Daten nach ihren jeweils geltenden Richtlinien und gesetzlichen Pflichten.</p>
 
         <h3>13. Änderungen dieser Datenschutzerklärung</h3>
         <p>Ich behalte mir vor, diese Datenschutzerklärung jederzeit anzupassen, um Änderungen der Rechtslage, technische Änderungen oder Änderungen der Geschäftspraktiken abzubilden. Das Datum am Anfang dieser Seite gibt an, wann diese Erklärung zuletzt aktualisiert wurde. Ich empfehle Ihnen, diese Erklärung regelmäßig zu überprüfen.</p>

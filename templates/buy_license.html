@@ -5,7 +5,7 @@
 {% block content %}
 <div class="hero" style="padding-bottom: 20px;">
     <h1>Crypto Checkout</h1>
-    <p>Complete your payment using your preferred cryptocurrency. Safe, fast, and anonymous.</p>
+    <p>Complete your payment using your preferred cryptocurrency. Safe, fast, and privacy-conscious.</p>
 </div>
 
 <!-- NOWPayments Hosted Checkout Card -->
@@ -53,6 +53,23 @@
             <span class="nowpayments-label">Amount to Pay</span>
             <div class="nowpayments-amount">19,99 EUR</div>
         </div>
+
+        <div style="margin-top: 10px; margin-bottom: 25px;">
+            <label for="checkout-country" class="nowpayments-label">Country for tax purposes</label>
+            <select id="checkout-country" required style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #1e293b; background: #0f172a; color: #f8fafc;">
+                <option value="">Select your country</option>
+                {% for code, name in countries %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            <p style="font-size: 0.85rem; line-height: 1.5; color: #94a3b8; margin: 10px 0 0;">
+                Tax rules require us to determine the customer's country. When you submit checkout,
+                your IP address is checked once against a database stored on this server. No lookup API
+                is contacted, and the IP address is neither saved nor logged. Only the selected country
+                name and the fact/source of verification are retained with the transaction.
+                <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" style="color: #60a5fa;">IP geolocation by DB-IP</a>.
+            </p>
+        </div>
         
         <!-- Legal Checkboxes -->
         <div style="margin-top: 10px; margin-bottom: 25px;">
@@ -61,11 +78,6 @@
             <label class="checkbox-container">
                 <input type="checkbox" id="chk-age">
                 <span class="checkbox-text">I confirm that I am at least 18 years of age.</span>
-            </label>
-            
-            <label class="checkbox-container">
-                <input type="checkbox" id="chk-country">
-                <span class="checkbox-text">I confirm that I do not reside in or access this service from Iran, North Korea, Myanmar, Syria, Cuba, Russia, or Belarus.</span>
             </label>
             
             <label class="checkbox-container">
@@ -117,8 +129,8 @@
     function initCheckout() {
         const payBtn = document.getElementById("pay-btn");
         const chkAge = document.getElementById("chk-age");
-        const chkCountry = document.getElementById("chk-country");
         const chkWithdrawal = document.getElementById("chk-withdrawal");
+        const checkoutCountry = document.getElementById("checkout-country");
 
         const checkoutForm = document.getElementById("checkout-form-container");
         const txScreen = document.getElementById("tx-screen-container");
@@ -132,7 +144,7 @@
 
         // Enable or disable the pay button based on checkboxes
         function updateButtonState() {
-            const checked = chkAge.checked && chkCountry.checked && chkWithdrawal.checked;
+            const checked = chkAge.checked && chkWithdrawal.checked && checkoutCountry.value;
             payBtn.disabled = !checked;
             
             // Fiat also requires email
@@ -141,8 +153,8 @@
         }
 
         chkAge.addEventListener("change", updateButtonState);
-        chkCountry.addEventListener("change", updateButtonState);
         chkWithdrawal.addEventListener("change", updateButtonState);
+        checkoutCountry.addEventListener("change", updateButtonState);
         fiatEmail.addEventListener("input", updateButtonState);
 
         // Handle checkout progression
@@ -157,7 +169,8 @@
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRFToken": csrfToken
-                    }
+                    },
+                    body: JSON.stringify({ country: checkoutCountry.value })
                 });
 
                 if (response.ok) {
@@ -199,7 +212,10 @@
                         "Content-Type": "application/json",
                         "X-CSRFToken": csrfToken
                     },
-                    body: JSON.stringify({ email: fiatEmail.value })
+                    body: JSON.stringify({
+                        email: fiatEmail.value,
+                        country: checkoutCountry.value
+                    })
                 });
 
                 if (response.ok) {

@@ -149,6 +149,9 @@ env.bak/
 venv.bak/
 
 invoices/
+geoip/*.mmdb
+geoip/*.mmdb.gz
+geoip/.dbip-city-lite-*.tmp
 
 # Local server state and substitution-plan data
 vplan.json

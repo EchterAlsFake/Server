@@ -3,16 +3,17 @@
 ## Project Overview
 This is a plug-and-play documentation website system for **EchterAlsFake's Porn API** ecosystem.
 The author (Johannes Habel) maintains **15 Python API wrappers/scrapers**, all sharing:
-- A common base dependency: **eaf_base_api** (v4.0.0; wrappers require `eaf-base-api>=4.0.0`)
+- A common base dependency: **eaf_base_api** (v4.1.1; wrappers require `eaf-base-api>=4.0.0`)
 - A consistent architecture: `Client → Video / Pornstar / Channel` objects
 - Async-first design using `asyncio` + `curl_cffi`
 
 ## Architecture Decisions
 
 ### Template System
-- `template.html` — The master layout with all CSS/JS/fonts baked in. Uses `<!-- SLOT:xxx -->` comment markers that each API doc replaces.
+- `template.html` — The semantic three-column documentation shell. It uses `<!-- SLOT:xxx -->` comment markers that each API doc replaces.
 - Each API gets its own `{api_name}.html` file that defines content blocks that get injected into template slots.
 - Since the final deployment is static HTML on `https://echteralsfake.me/docs/{api_name}`, we use a simple Python build script (`build.py`) that reads the template and each API's content file, replaces the slots, and writes final HTML.
+- Shared presentation and behavior live in `assets/docs.css` and `assets/docs.js`; portal-only and transparency-only rules live in their named asset files. Keep templates free of duplicated inline design systems.
 
 ### Shared Content & Generalization
 - **eaf_base_api** has been stripped into its own dedicated documentation (`eaf_base_api.html`).
@@ -21,22 +22,16 @@ The author (Johannes Habel) maintains **15 Python API wrappers/scrapers**, all s
 - **Local Assets**: All external resources (like fonts or donation buttons) are downloaded to an `assets/` directory and copied to `dist/assets/` during build to ensure the website is completely self-contained.
 
 ### Design Philosophy
-- Modern dark-themed documentation with a premium feel
-- Collapsible sidebar navigation for Core Objects (e.g. `Client`, `Video`), automatically expanding the current section when scrolling or toggling on click.
-- High-readability typography layout scaled for larger monitors:
-  - Base body font size is `21px`.
-  - H2 headers are `52px` (with `48px` custom icons).
-  - H3 headers are `38px` and H4 headers are `30px`.
-  - `.method-title` is `34px` and `.method-section-title` is `22px`.
-  - `.method-signature` text is `16px`.
+- Dark zinc surfaces (`#09090b`, `#18181b`) with crisp one-pixel borders and one cyan accent. No decorative gradients, blur blobs, glass effects, or heavy shadows.
+- Standard three-column layout: collapsible module tree on the left, an approximately 75-character reading column in the center, and a generated sticky "On this page" rail on the right. The TOC hides at narrower desktop widths and the navigation becomes an accessible mobile drawer.
+- Compact typography and spacing optimized for reference reading rather than marketing presentation.
 - Method Cards structured for rapid scanning:
   - Header & tag (e.g., `Fetch Video get_video()` + `async`) at the top.
   - Descriptive summary/what it does immediately below the header.
-  - Formatted multi-line syntax highlighted signature block (styled using `token-` classes and `white-space: pre-wrap;` preserving indents with one parameter per line).
+  - Formatted multi-line syntax highlighted signature block using `token-` classes, `white-space: pre`, and horizontal overflow so Python signatures never wrap awkwardly.
   - Parameters and returns detailed at the bottom.
-- Roboto font (embedded locally via woff2 files to avoid external requests)
-- Glassmorphism cards, smooth transitions, accent gradients
-- Adjusted text accent colors to Sky Blue (`#38bdf8`) for better readability against the dark background, while keeping violet for accents/borders.
+- Noto Sans is bundled locally for prose and interface text; Source Code Pro is bundled locally for signatures, types, navigation children, and controls. Both are served as WOFF2 assets without third-party font requests.
+- `assets/docs.js` owns sidebar collapsing, mobile navigation, clipboard fallback, self-linking headings, active navigation, and right-rail scroll tracking.
 
 ### Key Slots in Template
 - `SLOT:TITLE` — The API name
@@ -79,7 +74,7 @@ There are no pending wrapper pages. Each source file builds to `dist/{api_name}/
 ├── index_template.html       # Central API portal template
 ├── build.py                  # Build script: template + content → final HTML
 ├── transparency.html         # Source for the AI transparency page
-├── assets/                   # Local fonts and donation artwork
+├── assets/                   # Shared CSS/JS, local fonts, and donation artwork
 ├── content/                  # eaf_base_api.html + all 15 wrapper sources
 └── dist/                     # Generated output; never hand-edit
     ├── index.html
@@ -88,7 +83,7 @@ There are no pending wrapper pages. Each source file builds to `dist/{api_name}/
     └── {api_name}/index.html
 ```
 
-## eaf_base_api v4 Summary (Key for All Docs)
+## eaf_base_api v4.1.1 Summary (Key for All Docs)
 
 - **RuntimeConfig**: 26 configuration attributes. These cover separate byte-bounded response/segment cache sizes and TTLs; bounded request retries (`request_attempts`, initial/max delay, multiplier, and jitter); delay/timeout/bandwidth; singular `proxy`; HTTP version, DoH, impersonation/JA3, proxy auth, TLS/environment/cookies/locale; download workers; iterator page/item concurrency; and interface binding. `request_multiplier` is both the exponential base for `BaseCore` request backoff and the multiplier used when `IteratorConfig.resolve()` derives Helper stage policies.
 - **CachePolicy and caches**: requests use explicit cache policy with separate byte-bounded TTL caches for text responses and media segments. The old item-count/FIFO description is obsolete.
@@ -97,7 +92,7 @@ There are no pending wrapper pages. Each source file builds to `dist/{api_name}/
 - **Helper / iteration**: `Helper.iterator(..., iterator_config=IteratorConfig(...))` returns a `ScrapeStream` async context manager. Wrapper methods accept one `IteratorConfig` and yield immutable `ScrapeResult[T]` values with `stage`, `url`, `page_index`, `item_index`, `attempts`, `item`, `error`, `succeeded`, and `unwrap()`.
 - **Iterator policy**: `IteratorConfig` centralizes page/item concurrency, pending-item limits, extraction threading, `ResultOrder`, `ErrorMode`, `RetryPolicy`, page/item handlers, and specific source/field loading. A wrapper-supplied default is replaced—not merged—when callers pass their own config, so preserve required sources such as `("html",)` and error behavior. Every current wrapper iterator default uses `page_error_mode=ErrorMode.SKIP`; a bare caller-created `IteratorConfig` uses `ErrorMode.YIELD`.
 - **Retry and custom errors**: `RetryPolicy.max_attempts` includes the first call and provides bounded exponential delay, jitter, and exception filtering. Independent page/item handlers receive `ScrapeErrorContext` only for their own stage and return `ErrorAction.RETRY`, `RAISE`, `YIELD`, or `SKIP`; either handler can be omitted without affecting the other stage.
-- **DownloadConfigHLS / DownloadConfigRAW**: HLS supports quality/path, remux, resume state, stop/callbacks, cleanup, segment persistence, and reports. `BaseCore.download()` uses that core's current `RuntimeConfig.timeout` and `max_workers_download` when dispatching HLS work. RAW supports direct/multipart downloads, workers, timeouts, chunks, and retries.
+- **DownloadConfigHLS / DownloadConfigRAW**: HLS supports quality/path, remux, resume state, stop/callbacks, cleanup, segment persistence, and reports. Version 4.1.x canonicalizes portrait/landscape quality tiers, selects the closest explicit tier, supports inline/callable masters, cancels pending segment tasks via `asyncio.Event`, serializes path-based resume state, synchronizes worker progress, and normalizes HLS timestamp discontinuities during remuxing. `BaseCore.download()` uses that core's current `RuntimeConfig.timeout` and `max_workers_download` when dispatching HLS work. RAW supports direct/multipart downloads, workers, timeouts, chunks, and retries.
 - **Errors**: expanded typed networking, HTTP/proxy/bot, media-load, scrape-operation, cache/download, and configuration error hierarchy.
 
 ## XVideos API Summary

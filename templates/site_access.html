@@ -83,7 +83,7 @@
         {% else %}
             <p>Diese private Seite ist nicht öffentlich zugänglich.</p>
             {% if error %}<p class="message" role="alert">{{ error }}</p>{% endif %}
-            <form method="post" action="{{ url_for('site_access') }}">
+            <form method="post" action="{{ url_for('pages.site_access') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="next" value="{{ next_url }}">
                 <label for="access-password">Passwort</label>

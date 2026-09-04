@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = PornHub API -->
 <!-- SLOT:HERO_TITLE = PornHub API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 5.4 -->
+<!-- SLOT:VERSION = 5.4.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-pornhub -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-pornhub -->
 
@@ -33,6 +33,7 @@
         <a href="#client-search_videos" class="nav-link nav-link-sub">search_videos()</a>
         <a href="#client-search_gifs" class="nav-link nav-link-sub">search_gifs()</a>
         <a href="#client-search_hubtraffic" class="nav-link nav-link-sub">search_hubtraffic()</a>
+        <a href="#client-create" class="nav-link nav-link-sub">create()</a>
         <a href="#client-login" class="nav-link nav-link-sub">login()</a>
     </div>
 </div>
@@ -256,16 +257,21 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <span class="token-comment"># Basic initialization</span>
 client = <span class="token-class">Client</span>()
 
-<span class="token-comment"># With custom core and login credentials</span>
+<span class="token-comment"># Construct without logging in</span>
 client = <span class="token-class">Client</span>(
     core=<span class="token-class">BaseCore</span>(),
     email=<span class="token-string">"user@example.com"</span>,
     password=<span class="token-string">"password"</span>,
-    login=<span class="token-keyword">False</span>,
 )
+<span class="token-keyword">await</span> client.login()
 
-<span class="token-comment"># Run inside an async function so login can be awaited.</span>
-<span class="token-keyword">await</span> client.login()</code></pre>
+<span class="token-comment"># Or await the factory for construction plus completed login</span>
+client = <span class="token-keyword">await</span> <span class="token-class">Client</span>.create(
+    core=<span class="token-class">BaseCore</span>(),
+    email=<span class="token-string">"user@example.com"</span>,
+    password=<span class="token-string">"password"</span>,
+    login=<span class="token-keyword">True</span>,
+)</code></pre>
     </div>
 
     <h3>Constructor Parameters</h3>
@@ -273,7 +279,6 @@ client = <span class="token-class">Client</span>(
         <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Networking core instance. The source default is one module-created <code>BaseCore()</code> shared by callers that omit this argument; pass an explicit core for independent configuration and lifecycle.</span></li>
         <li class="param-item"><span class="param-name">email</span> <span class="param-type">str | None</span> <span class="param-desc">— Account email for login</span></li>
         <li class="param-item"><span class="param-name">password</span> <span class="param-type">str | None</span> <span class="param-desc">— Account password for login</span></li>
-        <li class="param-item"><span class="param-name">login</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, schedules login with <code>asyncio.create_task()</code> and therefore requires a running event loop. Prefer <code>login=False</code> followed by <code>await client.login()</code> when completion must be observed.</span></li>
     </ul>
 
     <h3>Methods</h3>
@@ -604,6 +609,24 @@ client = <span class="token-class">Client</span>(
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
 
+    <!-- create -->
+    <span class="section-anchor" id="client-create"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Create Client <code>create()</code></h3>
+            <div class="method-tags"><span class="tag tag-async">async</span></div>
+        </div>
+        <div class="method-desc">Constructs a client and, when requested with credentials, waits for login to complete before returning it. Use this factory when initialization must include authentication.</div>
+        <div class="method-signature">client = <span class="token-keyword">await</span> Client.create(
+    core: BaseCore = BaseCore(),
+    email: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    password: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    login: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
+) -&gt; Client</div>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Client</span>
+    </div>
+
     <!-- login -->
     <span class="section-anchor" id="client-login"></span>
     <div class="method-card">
@@ -740,6 +763,7 @@ client = <span class="token-class">Client</span>(
             </thead>
             <tbody>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The pornstar profile URL</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Profile display name</td></tr>
                 <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Short bio / tagline text</td></tr>
                 <tr><td><code>about</code></td><td><code>str | None</code></td><td>Extended about section text</td></tr>
                 <tr><td><code>info</code></td><td><code>dict | None</code></td><td>Structured info fields (e.g., gender, age, location)</td></tr>
@@ -834,7 +858,7 @@ client = <span class="token-class">Client</span>(
     <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>UserHelper</code> → <code>BaseMedia</code>. Represents a model profile and inherits <code>get_videos()</code> from <code>UserHelper</code>.</p>
 
     <h3>Attributes</h3>
-    <p>Same as <a href="#pornstar">Pornstar</a>: <code>url</code>, <code>bio</code>, <code>about</code>, <code>info</code>.</p>
+    <p>Same as <a href="#pornstar">Pornstar</a>: <code>url</code>, <code>name</code>, <code>bio</code>, <code>about</code>, <code>info</code>.</p>
 
     <h3>Methods</h3>
 
@@ -871,7 +895,7 @@ client = <span class="token-class">Client</span>(
     <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>UserHelper</code> → <code>BaseMedia</code>. Represents a regular user profile and inherits <code>get_videos()</code> from <code>UserHelper</code>.</p>
 
     <h3>Attributes</h3>
-    <p>Same as <a href="#pornstar">Pornstar</a>: <code>url</code>, <code>bio</code>, <code>about</code>, <code>info</code>.</p>
+    <p>Same as <a href="#pornstar">Pornstar</a>: <code>url</code>, <code>name</code>, <code>bio</code>, <code>about</code>, <code>info</code>.</p>
 
     <h3>Methods</h3>
 
@@ -1752,6 +1776,21 @@ phub --download "https://www.pornhub.com/view_video.php?viewkey=..." --quality b
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>5.4.2 follow-up — 2026-09-01</h3>
+    <ul>
+        <li><code>5553a68</code> / <code>56578f3</code> — Removed the wrapper's hard-coded User-Agent and replaced constructor-triggered background login with the awaited <code>Client.create(..., login=True)</code> factory.</li>
+    </ul>
+
+    <h3>5.4.2 — 2026-08-16</h3>
+    <ul>
+        <li><code>50f41e3</code> / <code>8cfac95</code> — Corrected fallback width calculation for HLS variants that provide height without width.</li>
+    </ul>
+
+    <h3>5.4.1 — 2026-08-13</h3>
+    <ul>
+        <li><code>fe1d38f</code> — Added the HTML-backed <code>UserHelper.name</code> field with selectors for both supported profile layouts.</li>
+    </ul>
 
     <h3>5.4 — 2026-08-11</h3>
     <ul>

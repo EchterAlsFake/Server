@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Eporner API -->
 <!-- SLOT:HERO_TITLE = Eporner API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.4 -->
+<!-- SLOT:VERSION = 2.4.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-eporner -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-eporner -->
 
@@ -31,7 +31,7 @@
 <div class="nav-collapsible">
     <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
-        <a href="#video-get_available_qualities" class="nav-link nav-link-sub">get_available_qualities()</a>
+        <a href="#video-video_qualities" class="nav-link nav-link-sub">video_qualities()</a>
         <a href="#video-get_url_by_quality" class="nav-link nav-link-sub">get_url_by_quality()</a>
         <a href="#video-download" class="nav-link nav-link-sub">download()</a>
         <a href="#video-get_authors" class="nav-link nav-link-sub">get_authors()</a>
@@ -105,7 +105,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.4 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.4.1 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -364,20 +364,23 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>best_rating</code></td><td><code>str | None</code></td><td>Upper rating limits</td></tr>
                 <tr><td><code>worst_rating</code></td><td><code>str | None</code></td><td>Lower rating limits</td></tr>
                 <tr><td><code>authors_urls</code></td><td><code>list[str] | None</code></td><td>List of actor URLs starring in this video</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Tag labels parsed from the HTML page</td></tr>
+                <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>Category labels parsed from the HTML page</td></tr>
+                <tr><td><code>uploader</code></td><td><code>str | None</code></td><td>Uploader name parsed from the HTML page</td></tr>
             </tbody>
         </table>
     </div>
 
     <h3>Methods</h3>
 
-    <!-- video-get_available_qualities -->
-    <span class="section-anchor" id="video-get_available_qualities"></span>
+    <!-- video-video_qualities -->
+    <span class="section-anchor" id="video-video_qualities"></span>
     <div class="method-card">
         <div class="method-header-row">
-            <h3 class="method-title">Get Available Qualities <code>get_available_qualities()</code></h3>
+            <h3 class="method-title">Video Qualities <code>video_qualities()</code></h3>
         </div>
         <div class="method-desc">Returns a list of resolutions available for download.</div>
-        <div class="method-signature">video.get_available_qualities() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+        <div class="method-signature">video.video_qualities() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ list[str]</span>
@@ -596,8 +599,9 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📜</span> Changelog</h2>
-    <h3>2.4 (current)</h3>
+    <h3>2.4.1 (current)</h3>
     <ul class="param-list">
+        <li class="param-item"><span class="param-name">2026-08-14 · <code>7f1bbac</code></span> <span class="param-desc">— Added HTML-backed <code>tags</code>, <code>categories</code>, and <code>uploader</code> fields; renamed <code>get_available_qualities()</code> to <code>video_qualities()</code>; and made optional pornstar biography fields tolerant of missing page elements.</span></li>
         <li class="param-item"><span class="param-name">2026-08-11 · <code>c8f2974</code></span> <span class="param-desc">— Added typed <code>ScrapeResult[Video]</code> annotations and <code>py.typed</code>; fixed the Eporner v2 API URL/list response handling and treated package <code>NotFound</code> as a terminal resource error. Default iterator error handling now uses the structured <code>ScrapeErrorContext</code>/<code>ErrorAction</code> handler.</span></li>
         <li class="param-item"><span class="param-name">2026-08-08 · <code>f862f1c</code></span> <span class="param-desc">— Replaced all per-method concurrency, loading, ordering, retry, and callback arguments with <code>IteratorConfig</code> while preserving eager <code>("api", "html")</code> loading.</span></li>
         <li class="param-item"><span class="param-name">2026-08-07 · <code>e3c682a</code></span> <span class="param-desc">— Migrated to <code>eaf-base-api&gt;=4.0.0</code>: explicit request methods, source-aware media loaders, bounded scheduling, deterministic stream cleanup, structured scrape results, and validated extractors.</span></li>
