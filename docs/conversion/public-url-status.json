@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-09-04T05:25:00+02:00",
+  "method": "HTTP GET with redirects followed",
+  "base_url": "https://docs.echteralsfake.me/",
+  "results": [
+    {"url": "https://docs.echteralsfake.me/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/beeg/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/eaf_base_api/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/eporner/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/hqporner/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/missav/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/pornhub/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/porntrex/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/redtube/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/spankbang/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/thumbzilla/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/tube8/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/xfreehd/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/xhamster/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/xnxx/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/xvideos/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/youporn/", "status": 200},
+    {"url": "https://docs.echteralsfake.me/transparency/", "status": 200}
+  ]
+}

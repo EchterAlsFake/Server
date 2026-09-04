@@ -1,0 +1,202 @@
+[
+  {
+    "query": "EAF async Python API wrappers shared base engine",
+    "expected_markdown_path": "overview.md",
+    "expected_heading": "EAF Python API documentation overview",
+    "expected_important_terms": ["async", "eaf_base_api", "API wrappers"]
+  },
+  {
+    "query": "how do I install and start using Beeg API",
+    "expected_markdown_path": "beeg/getting-started.md",
+    "expected_heading": "Beeg API getting started",
+    "expected_important_terms": ["pip install", "asyncio", "Client"]
+  },
+  {
+    "query": "configure proxy timeout request attempts",
+    "expected_markdown_path": "eaf-base-api/configuration/runtime-config.md",
+    "expected_heading": "RuntimeConfig — eaf_base_api",
+    "expected_important_terms": ["proxy", "timeout", "request_attempts"],
+    "expected_symbol": "RuntimeConfig"
+  },
+  {
+    "query": "request_attempts",
+    "expected_markdown_path": "eaf-base-api/configuration/runtime-config.md",
+    "expected_heading": "request_attempts",
+    "expected_important_terms": ["Total request attempts", "including the first call"],
+    "expected_symbol": "request_attempts"
+  },
+  {
+    "query": "fetch_text CachePolicy REFRESH BYPASS",
+    "expected_markdown_path": "eaf-base-api/reference/request-api.md",
+    "expected_heading": "fetch_text",
+    "expected_important_terms": ["CachePolicy", "REFRESH", "BYPASS"],
+    "expected_symbol": "fetch_text"
+  },
+  {
+    "query": "lazy media field was not loaded DataNotLoadedError",
+    "expected_markdown_path": "eaf-base-api/troubleshooting/errors.md",
+    "expected_heading": "DataNotLoadedError",
+    "expected_important_terms": ["Media fields", "DataNotLoadedError"],
+    "expected_symbol": "DataNotLoadedError"
+  },
+  {
+    "query": "load only selected BaseMedia sources and fields",
+    "expected_markdown_path": "eaf-base-api/reference/base-media.md",
+    "expected_heading": "BaseMedia — eaf_base_api",
+    "expected_important_terms": ["load_sources", "load_fields", "get_field"],
+    "expected_symbol": "BaseMedia"
+  },
+  {
+    "query": "page item retry custom error handler ErrorAction",
+    "expected_markdown_path": "eaf-base-api/guides/retry-and-error-handling.md",
+    "expected_heading": "RetryPolicy and custom error handling — eaf_base_api",
+    "expected_important_terms": ["page_error_handler", "item_error_handler", "ErrorAction"]
+  },
+  {
+    "query": "ScrapeResult succeeded unwrap attempts",
+    "expected_markdown_path": "eaf-base-api/reference/scrape-stream-and-result.md",
+    "expected_heading": "ScrapeResult",
+    "expected_important_terms": ["succeeded", "unwrap", "attempts"],
+    "expected_symbol": "ScrapeResult"
+  },
+  {
+    "query": "max_pending_items IteratorConfig backpressure",
+    "expected_markdown_path": "eaf-base-api/configuration/iterator-config.md",
+    "expected_heading": "max_pending_items",
+    "expected_important_terms": ["max_pending_items", "Backpressure limit"],
+    "expected_symbol": "max_pending_items"
+  },
+  {
+    "query": "HLS resume remux DownloadConfigHLS",
+    "expected_markdown_path": "eaf-base-api/configuration/downloads.md",
+    "expected_heading": "DownloadConfigHLS",
+    "expected_important_terms": ["HLS", "resume", "remux"],
+    "expected_symbol": "DownloadConfigHLS"
+  },
+  {
+    "query": "get_video Beeg load_api",
+    "expected_markdown_path": "beeg/reference/client.md",
+    "expected_heading": "get_video",
+    "expected_important_terms": ["load_api", "Video", "api"],
+    "expected_symbol": "get_video"
+  },
+  {
+    "query": "PornHub search_videos iterator configuration",
+    "expected_markdown_path": "pornhub/reference/client.md",
+    "expected_heading": "search_videos",
+    "expected_important_terms": ["search_videos", "iterator_config", "ScrapeResult"],
+    "expected_symbol": "search_videos"
+  },
+  {
+    "query": "get_watch_later_videos XVideos account",
+    "expected_markdown_path": "xvideos/reference/account.md",
+    "expected_heading": "get_watch_later_videos",
+    "expected_important_terms": ["watch later", "Account", "ScrapeResult"],
+    "expected_symbol": "get_watch_later_videos"
+  },
+  {
+    "query": "MissAV JAV search Recombee HMAC signed requests",
+    "expected_markdown_path": "missav/guides/searching-and-filtering.md",
+    "expected_heading": "Search and iteration — MissAV API",
+    "expected_important_terms": ["Recombee", "HMAC", "search"]
+  },
+  {
+    "query": "hqporner_api command line download quality",
+    "expected_markdown_path": "hqporner/reference/cli.md",
+    "expected_heading": "hqporner_api",
+    "expected_important_terms": ["--download", "--quality", "--output"],
+    "expected_symbol": "hqporner_api"
+  },
+  {
+    "query": "Video does not exist",
+    "expected_markdown_path": "hqporner/troubleshooting/errors.md",
+    "expected_heading": "Example diagnostic messages",
+    "expected_important_terms": ["Video does not exist", "NotFound", "MediaLoadError"]
+  },
+  {
+    "query": "This video is blocked in your location!",
+    "expected_markdown_path": "xnxx/troubleshooting/errors.md",
+    "expected_heading": "Example diagnostic messages",
+    "expected_important_terms": ["RegionBlocked", "original_error"],
+    "expected_symbol": "RegionBlocked"
+  },
+  {
+    "query": "Login failed. Please verify credentials.",
+    "expected_markdown_path": "xhamster/troubleshooting/errors.md",
+    "expected_heading": "Example diagnostic messages",
+    "expected_important_terms": ["LoginFailed", "credentials"],
+    "expected_symbol": "LoginFailed"
+  },
+  {
+    "query": "YouPorn video unavailable in my country geo blocked",
+    "expected_markdown_path": "youporn/troubleshooting/errors.md",
+    "expected_heading": "RegionBlocked",
+    "expected_important_terms": ["geographic region", "RegionBlocked", "proxy"],
+    "expected_symbol": "RegionBlocked"
+  },
+  {
+    "query": "how can I download a SpankBang video as HLS or raw MP4",
+    "expected_markdown_path": "spankbang/guides/downloading.md",
+    "expected_heading": "Downloading — SpankBang API",
+    "expected_important_terms": ["HLS", "RAW", "DownloadConfig"]
+  },
+  {
+    "query": "HQPorner search by actress category top videos",
+    "expected_markdown_path": "hqporner/reference/client.md",
+    "expected_heading": "get_videos_by_actress",
+    "expected_important_terms": ["actress", "category", "top"],
+    "expected_symbol": "get_videos_by_actress"
+  },
+  {
+    "query": "worked_for_with XVideos related channels studios",
+    "expected_markdown_path": "xvideos/reference/channel.md",
+    "expected_heading": "worked_for_with",
+    "expected_important_terms": ["related", "Channel", "Pornstar"],
+    "expected_symbol": "worked_for_with"
+  },
+  {
+    "query": "get_all_images XFreeHD album pages",
+    "expected_markdown_path": "xfreehd/reference/album.md",
+    "expected_heading": "get_all_images",
+    "expected_important_terms": ["Album", "images", "pages"],
+    "expected_symbol": "get_all_images"
+  },
+  {
+    "query": "NoLoginCookies XVideos account",
+    "expected_markdown_path": "xvideos/troubleshooting/errors.md",
+    "expected_heading": "NoLoginCookies",
+    "expected_important_terms": ["Account", "cookies"],
+    "expected_symbol": "NoLoginCookies"
+  },
+  {
+    "query": "load_specific_sources iterator config html api",
+    "expected_markdown_path": "eaf-base-api/configuration/iterator-config.md",
+    "expected_heading": "load_specific_sources",
+    "expected_important_terms": ["Sources", "IteratorConfig"],
+    "expected_symbol": "load_specific_sources"
+  },
+  {
+    "query": "migrate old proxies mapping BaseCore fetch version 3",
+    "expected_markdown_path": "eaf-base-api/migration/from-3x.md",
+    "expected_heading": "Migration from 3.x — eaf_base_api",
+    "expected_important_terms": ["proxy", "fetch", "3.x", "4.0"]
+  },
+  {
+    "query": "which Python versions and operating systems support XVideos API",
+    "expected_markdown_path": "xvideos/supported-platforms.md",
+    "expected_heading": "Supported platforms — XVideos API",
+    "expected_important_terms": ["Python", "Linux", "Windows", "macOS"]
+  },
+  {
+    "query": "is this project affiliated with the target websites",
+    "expected_markdown_path": "legal/disclaimer.md",
+    "expected_heading": "Legal disclaimer for EAF API wrappers",
+    "expected_important_terms": ["unofficial", "not affiliated", "Terms of Service"]
+  },
+  {
+    "query": "where does EAF use AI assistance",
+    "expected_markdown_path": "project/ai-transparency.md",
+    "expected_heading": "AI transparency statement",
+    "expected_important_terms": ["Documentation", "Core networking", "Engineering principles"]
+  }
+]
