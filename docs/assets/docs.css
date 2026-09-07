@@ -1196,6 +1196,189 @@ tbody tr:hover {
     }
 }
 
+/* ==========================================================================
+   Official MCP Server Banner & Showcase
+   ========================================================================== */
+
+.mcp-banner {
+    margin: 0 0 28px 0;
+    padding: 18px 20px;
+    border: 1px solid var(--accent-border);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, rgba(15, 15, 18, 0.95) 100%);
+}
+
+.mcp-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.mcp-banner-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: #09090b;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mcp-banner-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mcp-banner-title code {
+    color: var(--accent-strong);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--accent-border);
+    font-size: 13px;
+}
+
+.mcp-banner-desc {
+    margin: 0 0 12px 0;
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.mcp-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mcp-banner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.mcp-banner-btn.primary {
+    background: var(--accent);
+    color: #09090b;
+    border: 1px solid var(--accent);
+}
+
+.mcp-banner-btn.primary:hover {
+    background: var(--accent-strong);
+    color: #09090b;
+}
+
+.mcp-banner-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    font-family: var(--mono);
+}
+
+.mcp-banner-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-border);
+    color: var(--accent-strong);
+}
+
+/* MCP Portal Hero Card & Highlights */
+.mcp-hero-card {
+    padding: 24px;
+    border: 1px solid var(--accent-border);
+    border-radius: 6px;
+    background: linear-gradient(180deg, rgba(34, 211, 238, 0.05) 0%, var(--surface-1) 100%);
+    margin-bottom: 24px;
+}
+
+.mcp-endpoint-box {
+    margin: 20px 0;
+    padding: 14px 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: #0b0b0e;
+}
+
+.mcp-endpoint-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mcp-endpoint-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mcp-endpoint-url {
+    font-size: 16px !important;
+    color: var(--accent-strong) !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    word-break: break-all;
+}
+
+.mcp-highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin: 22px 0;
+}
+
+.mcp-highlight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface-2);
+}
+
+.mcp-highlight-icon {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.mcp-highlight-item strong {
+    display: block;
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 3px;
+}
+
+.mcp-highlight-item p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;

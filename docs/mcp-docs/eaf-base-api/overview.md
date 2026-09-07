@@ -14,6 +14,10 @@ keywords:
 
 Documents Overview behavior, signatures, fields, constraints, and examples for the eaf_base_api API.
 
+> **⚡ Official MCP Server:**
+> Connect your AI coding assistant (Cursor, VS Code, Claude, Windsurf, Zed) to our official, free MCP server at `https://mcp.echteralsfake.me/mcp` (No auth, no strict rate limits, completely anonymous, covers all 16 APIs). Using MCP + AI in your workflow is absolutely the recommended way to work on the projects. See the [Official MCP Server Guide](../official-mcp-server.md).
+
+
 **Version 4 is intentionally breaking**
 The legacy multi-mode `BaseCore.fetch()`, `BaseMedia.load(api=..., html=...)`, mutable `ScrapeResult.video`/`is_success` contract, and boolean retry callbacks were removed. Use the explicit request, media, iterator, and download interface references in this corpus.
 

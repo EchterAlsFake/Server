@@ -17,6 +17,22 @@ keywords:
 
 Introduces the EAF asynchronous Python API ecosystem, its shared base engine, wrapper packages, and common capabilities.
 
+## Official Model Context Protocol (MCP) Server
+
+**⚡ Recommended AI Workflow:** Using our official MCP server with your AI coding assistant (Cursor, VS Code / GitHub Copilot, Claude Desktop, Windsurf, Zed, Antigravity) will greatly improve how you can work with these APIs and is **absolutely the recommended way to work on the projects**.
+
+### Server Endpoint
+`https://mcp.echteralsfake.me/mcp`
+
+### Key Highlights
+- **No authentication required** — Plug-and-play without API keys or accounts
+- **No strict rate limits** — Fluid pair programming and rapid iteration
+- **Covers all 16 APIs + eaf_base_api** — Complete real-time documentation for the entire ecosystem
+- **Always up to date** — Automatically synchronized with upstream code changes and releases
+- **Completely anonymous** — Zero IP logs, zero user tracking, zero profiling
+
+See the [Official MCP Server Setup Guide](official-mcp-server.md) for complete copy-paste configurations for Cursor, VS Code, Claude Desktop, Windsurf, Zed, and Antigravity.
+
 ## Core engine
 
 The shared request, media-loading, iteration, caching, and download runtime used by every wrapper.

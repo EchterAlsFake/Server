@@ -17,6 +17,10 @@ keywords:
 
 Explains how to install, configure, and make a first asynchronous request with the XVideos API.
 
+> **⚡ Official MCP Server:**
+> Connect your AI coding assistant (Cursor, VS Code, Claude, Windsurf, Zed) to our official, free MCP server at `https://mcp.echteralsfake.me/mcp` (No auth, no strict rate limits, completely anonymous, covers all 16 APIs). Using MCP + AI in your workflow is absolutely the recommended way to work on the projects. See the [Official MCP Server Guide](../official-mcp-server.md).
+
+
 ## Installation
 
 Install from PyPI using pip:

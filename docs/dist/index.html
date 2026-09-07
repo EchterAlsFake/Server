@@ -38,6 +38,7 @@
             <nav class="sidebar-nav" id="sidebarNav">
                 <div class="nav-section-title">Documentation</div>
                 <a href="#welcome" class="nav-link active">Overview</a>
+                <a href="#mcp" class="nav-link">Official MCP server</a>
                 <a href="#core-networking" class="nav-link">Core engine</a>
                 <a href="#scrapers" class="nav-link">API wrappers</a>
 
@@ -84,6 +85,166 @@
                     </header>
 
                     <article class="content-area">
+                        <section class="section" id="mcp-section">
+                            <span class="section-anchor" id="mcp"></span>
+                            <div class="mcp-hero-card">
+                                <div class="mcp-banner-header">
+                                    <span class="mcp-banner-badge">⚡ Recommended AI Workflow</span>
+                                    <span class="mcp-banner-title">Official Model Context Protocol (MCP) Server</span>
+                                </div>
+                                <p class="mcp-lead">
+                                    Accelerate and improve your development by integrating our official, real-time MCP server directly into your AI coding assistant.
+                                    Working with scrapers and media download engines requires exact knowledge of dynamic parameters, sorting enums, source-loading mechanisms (e.g. <code>load_sources("html")</code>), and typed exception hierarchies. <strong>Connecting this MCP server to your AI assistant is absolutely the recommended way to work on and build projects with these APIs.</strong>
+                                </p>
+
+                                <div class="mcp-endpoint-box">
+                                    <span class="mcp-endpoint-label">Server Endpoint (SSE / HTTP)</span>
+                                    <div class="mcp-endpoint-row">
+                                        <code class="mcp-endpoint-url">https://mcp.echteralsfake.me/mcp</code>
+                                        <button class="mcp-banner-btn primary" type="button" onclick="navigator.clipboard.writeText('https://mcp.echteralsfake.me/mcp');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy URL',2000)">Copy URL</button>
+                                    </div>
+                                </div>
+
+                                <div class="mcp-highlights-grid">
+                                    <div class="mcp-highlight-item">
+                                        <span class="mcp-highlight-icon">🔓</span>
+                                        <div>
+                                            <strong>No Authentication</strong>
+                                            <p>No API keys, accounts, or tokens needed. Connect and use immediately.</p>
+                                        </div>
+                                    </div>
+                                    <div class="mcp-highlight-item">
+                                        <span class="mcp-highlight-icon">⚡</span>
+                                        <div>
+                                            <strong>No Strict Rate Limits</strong>
+                                            <p>Unrestricted access designed for fluid AI pair programming and fast iteration.</p>
+                                        </div>
+                                    </div>
+                                    <div class="mcp-highlight-item">
+                                        <span class="mcp-highlight-icon">🌐</span>
+                                        <div>
+                                            <strong>Covers All 16 APIs</strong>
+                                            <p>Complete context for <code>eaf_base_api</code> plus all 15 site scraper wrappers.</p>
+                                        </div>
+                                    </div>
+                                    <div class="mcp-highlight-item">
+                                        <span class="mcp-highlight-icon">🔄</span>
+                                        <div>
+                                            <strong>Always Up To Date</strong>
+                                            <p>Continuously synchronized with upstream codebase changes and new releases.</p>
+                                        </div>
+                                    </div>
+                                    <div class="mcp-highlight-item">
+                                        <span class="mcp-highlight-icon">🛡️</span>
+                                        <div>
+                                            <strong>Completely Anonymous</strong>
+                                            <p>Zero IP logging, zero request tracking, zero profiling. Complete privacy.</p>
+                                        </div>
+                                    </div>
+                                    <div class="mcp-highlight-item">
+                                        <span class="mcp-highlight-icon">🤖</span>
+                                        <div>
+                                            <strong>Hallucination-Free Code</strong>
+                                            <p>Your agent inspects real signatures and models instead of guessing obsolete APIs.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="info-box tip">
+                                    <div class="info-box-title">Why use MCP + AI?</div>
+                                    AI models without MCP frequently hallucinate outdated v3 methods (e.g. <code>fetch()</code>, <code>result.video</code>, <code>proxies</code>). When connected to this MCP server, your AI receives live, accurate tool specifications, method signatures, parameter tables, and typed models. <strong>Using the MCP server in your workflow will transform your productivity and is the recommended way to build with this ecosystem.</strong>
+                                </div>
+
+                                <h3>Setup Guides for Popular Coding Tools</h3>
+                                <p>Copy and paste the configuration snippet for your editor or AI agent:</p>
+
+                                <h4>Cursor</h4>
+                                <p>Add to <code>.cursor/mcp.json</code> in your project root or configure in <strong>Cursor Settings &gt; Features &gt; MCP</strong>:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>.cursor/mcp.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "mcpServers": {
+    "eaf-apis": {
+      "url": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}</code></pre>
+                                </div>
+
+                                <h4>VS Code (GitHub Copilot / Cline / Roo Code / Continue)</h4>
+                                <p>Add to <code>.vscode/mcp.json</code> or your MCP extension configuration:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>.vscode/mcp.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "servers": {
+    "eaf-apis": {
+      "url": "https://mcp.echteralsfake.me/mcp",
+      "type": "sse"
+    }
+  }
+}</code></pre>
+                                </div>
+
+                                <h4>Claude Desktop</h4>
+                                <p>Add to <code>claude_desktop_config.json</code> (macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>, Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code>):</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>claude_desktop_config.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "mcpServers": {
+    "eaf-apis": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.echteralsfake.me/mcp"]
+    }
+  }
+}</code></pre>
+                                </div>
+
+                                <h4>Windsurf (Codeium)</h4>
+                                <p>Add to <code>~/.codeium/windsurf/mcp_config.json</code>:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>mcp_config.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "mcpServers": {
+    "eaf-apis": {
+      "serverUrl": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}</code></pre>
+                                </div>
+
+                                <h4>Zed</h4>
+                                <p>Add to <code>~/.config/zed/settings.json</code>:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>settings.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "context_servers": {
+    "eaf-apis": {
+      "url": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}</code></pre>
+                                </div>
+
+                                <h4>Antigravity / Gemini CLI</h4>
+                                <p>Add via CLI command:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>agy mcp add eaf-apis --url https://mcp.echteralsfake.me/mcp</code></pre>
+                                </div>
+                                <p>Or add directly to your workspace configuration:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "mcp_servers": {
+    "eaf-apis": {
+      "url": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                        </section>
+
                         <section class="section" id="core-networking-section">
                             <span class="section-anchor" id="core-networking"></span>
                             <h2>Core engine</h2>
