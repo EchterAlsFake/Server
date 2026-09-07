@@ -16,7 +16,7 @@ Documents the command-line interface, arguments, and examples for the PornHub AP
 
 ## phub
 
-`phub` uses the shared behavior documented in this reference.
+`phub` can be invoked directly as `phub`, as `pornhub_api`, or via `python -m pornhub_api`.
 
 The PornHub API package includes a built-in CLI accessible via the `phub` command:
 

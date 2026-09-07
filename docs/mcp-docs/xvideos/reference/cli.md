@@ -16,7 +16,7 @@ Documents the command-line interface, arguments, and examples for the XVideos AP
 
 ## xvideos_api
 
-`xvideos_api` uses the shared behavior documented in this reference.
+`xvideos_api` can be invoked directly or via `python -m xvideos_api`.
 
 XVideos API includes a command-line interface:
 

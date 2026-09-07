@@ -24,6 +24,7 @@ keywords:
   - "proxy"
   - "proxy_auth"
   - "interface"
+  - "ip_resolve"
   - "http_version"
   - "dns_over_https"
 ---
@@ -93,6 +94,10 @@ Type: str | None; Default: None; Description: Proxy credentials as "username:pas
 ## interface
 
 Type: str | None; Default: None; Description: Local interface IP address to bind
+
+## ip_resolve
+
+Type: int | None; Default: None; Description: Optional IP address resolution mode: None for dual-stack default, 1 for IPv4 only, or 2 for IPv6 only. Also respects the CURL_IPRESOLVE environment variable (e.g. CURL_IPRESOLVE=1 or 4 for IPv4, 2 or 6 for IPv6).
 
 ## http_version
 

@@ -32,6 +32,7 @@
 
 <div class="nav-section-title">Downloads & Reference</div>
 <a href="#downloads" class="nav-link">Download Configs</a>
+<a href="#utilities" class="nav-link">Shared Utilities</a>
 <a href="#logging" class="nav-link">Logging & Cleanup</a>
 <a href="#migration" class="nav-link">3.x → 4.0 Migration</a>
 <a href="#base-errors" class="nav-link">Error Reference</a>
@@ -99,6 +100,7 @@ pip install "eaf_base_api[hls]"</code></pre>
                 <tr><td><code>proxy</code></td><td><code>str | None</code></td><td><code>None</code></td><td>One HTTP, HTTPS, or SOCKS proxy URL</td></tr>
                 <tr><td><code>proxy_auth</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Proxy credentials as <code>"username:password"</code></td></tr>
                 <tr><td><code>interface</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Local interface IP address to bind</td></tr>
+                <tr><td><code>ip_resolve</code></td><td><code>int | None</code></td><td><code>None</code></td><td>Optional IP resolution: <code>None</code> (dual-stack default), <code>1</code> (IPv4 only), or <code>2</code> (IPv6 only). Also respects <code>CURL_IPRESOLVE</code> environment variable.</td></tr>
                 <tr><td><code>http_version</code></td><td><code>str</code></td><td><code>"v2"</code></td><td><code>"v1"</code>, <code>"v2"</code>, or <code>"v3"</code></td></tr>
                 <tr><td><code>dns_over_https</code></td><td><code>str | None</code></td><td><code>None</code></td><td>DNS-over-HTTPS endpoint</td></tr>
                 <tr><td><code>impersonation</code></td><td><code>str</code></td><td><code>"chrome"</code></td><td><code>curl_cffi</code> browser impersonation profile</td></tr>
@@ -114,7 +116,7 @@ pip install "eaf_base_api[hls]"</code></pre>
         </table>
     </div>
     <h3>When changes take effect</h3>
-    <p>Cache limits/TTLs and the initial locale header are captured when <code>BaseCore</code> is constructed. Proxy, interface, TLS, HTTP, DoH, impersonation, cookies, and bandwidth options are captured whenever its session is created. Request budgets, retry delays/multiplier, and request delay are read for each request; HLS timeout/workers are read when a download begins; and omitted <code>IteratorConfig</code> values are resolved whenever a new stream is created.</p>
+    <p>Cache limits/TTLs and the initial locale header are captured when <code>BaseCore</code> is constructed. Proxy, interface, ip_resolve, TLS, HTTP, DoH, impersonation, cookies, and bandwidth options are captured whenever its session is created. Request budgets, retry delays/multiplier, and request delay are read for each request; HLS timeout/workers are read when a download begins; and omitted <code>IteratorConfig</code> values are resolved whenever a new stream is created.</p>
     <div class="info-box note">
         <div class="info-box-title">Applying changed session settings</div>
         <code>initialize_session()</code> is idempotent: it creates a session only while <code>core.session</code> is <code>None</code>. To apply changed session-bound settings such as proxy, cookies, TLS, or interface, call <code>await core.close()</code>; the next request, context-manager entry, or explicit <code>initialize_session()</code> creates a fresh session from the current configuration.
@@ -207,7 +209,7 @@ client = <span class="token-class">Client</span>(core=core)
 
 <div class="section" id="proxies-section">
     <span class="section-anchor" id="proxies"></span>
-    <h2><span class="section-icon">🔒</span> Proxy & Interface Binding</h2>
+    <h2><span class="section-icon">🔒</span> Proxy, Interface & IP Resolution</h2>
 
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
@@ -217,11 +219,12 @@ runtime = <span class="token-class">RuntimeConfig</span>()
 runtime.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
 runtime.proxy_auth = <span class="token-string">"username:password"</span>
 runtime.interface = <span class="token-string">"192.0.2.10"</span>
+runtime.ip_resolve = <span class="token-number">1</span>  <span class="token-comment"># 1 for IPv4, 2 for IPv6, None for dual-stack</span>
 
 <span class="token-comment"># Only disable verification for a proxy you control and trust.</span>
 runtime.verify_ssl = <span class="token-keyword">False</span></code></pre>
     </div>
-    <p>The old <code>proxies</code> mapping was replaced by the singular <code>proxy</code> URL. <code>interface</code> is passed to <code>curl_cffi.AsyncSession</code> and must be a local interface IP address.</p>
+    <p>The old <code>proxies</code> mapping was replaced by the singular <code>proxy</code> URL. <code>interface</code> is passed to <code>curl_cffi.AsyncSession</code> and must be a local interface IP address. <code>ip_resolve</code> allows restricting DNS resolution to IPv4 (<code>1</code>) or IPv6 (<code>2</code>) when dual-stack connectivity issues arise; it also respects the <code>CURL_IPRESOLVE</code> environment variable (e.g. <code>CURL_IPRESOLVE=1</code> or <code>4</code> for IPv4, <code>2</code> or <code>6</code> for IPv6).</p>
 </div>
 
 <div class="section" id="caching-section">
@@ -385,10 +388,25 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
     <span class="section-anchor" id="scrape-results"></span>
     <h2><span class="section-icon">🌊</span> ScrapeStream & ScrapeResult</h2>
 
-    <p><code>Helper.iterator()</code> returns a lazily started <code>ScrapeStream</code>. Exhausting it cleans up normally; use it as an async context manager whenever the consumer may stop early.</p>
+    <p><code>Helper.iterator()</code> returns a lazily started <code>ScrapeStream</code> async context manager. For convenient direct iteration without manually managing context lifecycles, <code>scrape_stream()</code> provides an <code>AsyncGenerator[ScrapeResult[T], None]</code> that handles internal stream lifecycle automatically.</p>
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>stream = helper.iterator(
+<pre><code><span class="token-comment"># Direct iteration via scrape_stream() async generator</span>
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> scrape_stream
+
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> scrape_stream(
+    target_page_urls=page_urls,
+    item_extractor=extractor,
+    iterator_config=iterator_config,
+    core=core,
+):
+    <span class="token-keyword">if not</span> result.succeeded:
+        <span class="token-builtin">print</span>(result.stage, result.url, result.error)
+        <span class="token-keyword">continue</span>
+    media = result.unwrap()  <span class="token-comment"># Returns T or raises result.error</span>
+
+<span class="token-comment"># Alternatively, using Helper.iterator() with an async context manager</span>
+stream = helper.iterator(
     target_page_urls=page_urls,
     item_extractor=extractor,
     iterator_config=iterator_config,
@@ -399,7 +417,12 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <span class="token-keyword">if not</span> result.succeeded:
             <span class="token-builtin">print</span>(result.stage, result.url, result.error)
             <span class="token-keyword">continue</span>
-        media = result.unwrap()  <span class="token-comment"># Same object as result.item after the check</span></code></pre>
+        media = result.unwrap()</code></pre>
+    </div>
+
+    <div class="info-box tip">
+        <div class="info-box-title">Generator vs Context Manager</div>
+        <code>scrape_stream()</code> is an async generator: use <code>async for result in scrape_stream(...):</code> directly without an <code>async with</code> block. In contrast, <code>Helper.iterator()</code> returns a <code>ScrapeStream</code> context manager which supports <code>async with stream:</code> to guarantee background worker cancellation if the loop exits early.
     </div>
 
     <div class="table-wrapper">
@@ -448,9 +471,36 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         </table>
     </div>
     <p><code>BaseCore.download()</code> reads <code>RuntimeConfig.timeout</code> and <code>RuntimeConfig.max_workers_download</code> from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout and worker settings isolated from the process-wide default configuration. HLS cancellation uses an <code>asyncio.Event</code>: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads. Version 4.1.1 also normalizes discontinuous packet timestamps while remuxing so valid HLS discontinuities do not abort MP4 output.</p>
+    <div class="info-box note">
+        <div class="info-box-title">PyAV Remuxing Dependency</div>
+        Remuxing concatenated transport streams to MP4 (<code>remux=True</code>) requires the PyAV library. Install it with <code>pip install "eaf_base_api[hls]"</code> or <code>pip install av</code>.
+    </div>
 
     <h3>DownloadConfigRAW</h3>
     <p>Direct-file downloads add <code>allow_multipart=True</code>, <code>max_workers=5</code>, <code>read_timeout=120.0</code>, <code>chunk_size=1024</code>, and <code>max_retries=5</code>. These downloader retries are separate from <code>RuntimeConfig.request_attempts</code>.</p>
+</div>
+
+<div class="section" id="utilities-section">
+    <span class="section-anchor" id="utilities"></span>
+    <h2><span class="section-icon">🛠️</span> Shared Utilities</h2>
+
+    <p><code>base_api</code> exports standardized parsing, sanitization, and helper functions used across scrapers:</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Function</th><th>Signature</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>get_text_safe</code></td><td><code>(node: Any, selector: str | None = None) -&gt; str | None</code></td><td>Safely extracts stripped text from a node or CSS selector match, returning <code>None</code> if missing or empty.</td></tr>
+                <tr><td><code>get_attr_safe</code></td><td><code>(node: Any, attr: str, selector: str | None = None) -&gt; str | None</code></td><td>Safely extracts an HTML attribute string from a node or CSS selector match.</td></tr>
+                <tr><td><code>parse_duration</code></td><td><code>(text: str | None) -&gt; int | None</code></td><td>Parses duration strings (e.g. <code>"12:34"</code>, <code>"1:23:45"</code>, <code>"45s"</code>, <code>"12m"</code>) into integer seconds.</td></tr>
+                <tr><td><code>parse_count</code></td><td><code>(text: str | int | float | None) -&gt; int | None</code></td><td>Parses view and like counts with human-readable suffixes (e.g. <code>"1.5M"</code>, <code>"300K"</code>, <code>"12,450"</code>) into integers.</td></tr>
+                <tr><td><code>build_m3u8_master</code></td><td><code>(streams: list[dict[str, Any]] | dict[str, str]) -&gt; str</code></td><td>Constructs a standard HLS master playlist (<code>#EXTM3U</code>) with resolution and bandwidth headers from a list or dictionary of stream variants.</td></tr>
+                <tr><td><code>str_to_bool</code></td><td><code>(value: Any) -&gt; bool</code></td><td>Coerces common string boolean representations (<code>"true"</code>, <code>"1"</code>, <code>"yes"</code>) to boolean.</td></tr>
+                <tr><td><code>is_resource_gone</code></td><td><code>(exc: BaseException) -&gt; bool</code></td><td>Checks if an exception or nested cause represents an HTTP 404, 410, or <code>ResourceGone</code> error.</td></tr>
+                <tr><td><code>contains_resource_gone</code></td><td><code>(exc: BaseException) -&gt; bool</code></td><td>Recursively inspects aggregate exceptions (e.g. <code>MediaLoadErrors</code>) to check if any nested failure represents a gone resource.</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="section" id="logging-section">
@@ -532,6 +582,7 @@ core.enable_logging(
         <table>
             <thead><tr><th>Date / Version</th><th>Changes since 3.3.3</th></tr></thead>
             <tbody>
+                <tr><td><strong>2026-09-07 — 4.1.2</strong></td><td>Added <code>scrape_stream()</code> async generator helper, optional dual-stack/IPv4/IPv6 address resolution via <code>RuntimeConfig.ip_resolve</code> and <code>CURL_IPRESOLVE</code> environment variable, standardized scraper utilities (<code>get_text_safe</code>, <code>get_attr_safe</code>, <code>parse_duration</code>, <code>parse_count</code>, <code>build_m3u8_master</code>, <code>str_to_bool</code>), and PyAV remuxing dependencies.</td></tr>
                 <tr><td><strong>2026-08-19 — 4.1.1</strong></td><td>Synchronized download/remux progress callbacks across worker threads, normalized discontinuous HLS packet timestamps during remuxing, and added regressions for stage-specific error handlers and per-core runtime settings. Commit <code>a062695</code>.</td></tr>
                 <tr><td><strong>2026-08-16 — 4.1.0</strong></td><td>Made HLS cancellation stop pending segment work promptly and corrected JSON resume-state serialization, including configured <code>Path</code> values. Commit <code>acdb967</code>.</td></tr>
                 <tr><td><strong>2026-08-14 — 4.0.1</strong></td><td>Reworked HLS quality discovery/selection for canonical landscape and portrait tiers, inline/callable playlists, and bandwidth fallbacks; fixed independent item error handlers, idempotent session initialization, configured session cookies and retry multipliers, and removed hard-coded transport headers. Commits <code>2fd3a55</code>–<code>1eb9105</code>.</td></tr>

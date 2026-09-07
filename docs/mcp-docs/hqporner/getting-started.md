@@ -109,8 +109,23 @@ iterator_config = IteratorConfig(
 )
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `hqporner_api` or `python -m hqporner_api`:
+
+```bash
+# Download a video
+hqporner_api --download "https://hqporner.com/hd/sample-video" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m hqporner_api --download "https://hqporner.com/hd/sample-video" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — HQPorner API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — HQPorner API](troubleshooting/errors.md)

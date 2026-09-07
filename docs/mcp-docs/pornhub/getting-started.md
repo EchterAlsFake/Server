@@ -80,8 +80,23 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `pornhub_api` or `python -m pornhub_api`:
+
+```bash
+# Download a video
+pornhub_api --download "https://www.pornhub.com/view_video.php?viewkey=ph1234567" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m pornhub_api --download "https://www.pornhub.com/view_video.php?viewkey=ph1234567" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — PornHub API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — PornHub API](troubleshooting/errors.md)

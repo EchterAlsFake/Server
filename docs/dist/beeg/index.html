@@ -59,6 +59,7 @@
 <a href="#error-handling" class="nav-link">Error Handling</a>
 
 <div class="nav-section-title">Extras</div>
+<a href="#cli" class="nav-link">CLI Usage</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <a href="#changelog" class="nav-link">Changelog</a>
             </nav>
@@ -380,6 +381,42 @@ report = <span class="token-keyword">await</span> video.download(configuration=c
 <!-- ================================================================
      PLATFORMS
      ================================================================ -->
+<!-- ================================================================
+     CLI USAGE
+     ================================================================ -->
+<div class="section" id="cli-section">
+    <span class="section-anchor" id="cli"></span>
+    <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>Beeg API includes a command-line interface accessible via <code>beeg_api</code> or <code>python -m beeg_api</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Download a single video</span>
+beeg_api --download "https://beeg.com/1234567" --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Or invoke via python -m</span>
+python -m beeg_api --download "https://beeg.com/1234567" --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Download from a line-separated file of URLs</span>
+beeg_api --file urls.txt --quality best --output ./downloads --no-title False</code></pre>
+    </div>
+
+    <h3>CLI Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>--download URL</code></td><td>Video URL to download</td></tr>
+                <tr><td><code>--file FILE</code></td><td>Text file with URLs (separated by newlines)</td></tr>
+                <tr><td><code>--quality QUALITY</code></td><td>Video quality: <code>best</code>, <code>half</code>, <code>worst</code></td></tr>
+                <tr><td><code>--output DIR</code></td><td>Destination directory or output file path</td></tr>
+                <tr><td><code>--no-title True/False</code></td><td>Skip auto-appending video title to output filename (default: <code>False</code>)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <div class="section" id="platforms-section">
     <span class="section-anchor" id="platforms"></span>
     <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>

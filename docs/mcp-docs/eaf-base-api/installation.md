@@ -19,9 +19,12 @@ pip install eaf_base_api
 
 # Install optional HLS parsing/remux dependencies as well
 pip install "eaf_base_api[hls]"
+
+# Or install av (PyAV) directly for remuxing
+pip install av
 ```
 
-Version 4 requires **Python 3.12 or newer**. The package ships a `py.typed` marker, so type checkers can consume its inline annotations.
+Version 4 requires **Python 3.12 or newer**. The package ships a `py.typed` marker, so type checkers can consume its inline annotations. Remuxing downloaded HLS streams into MP4 requires PyAV.
 
 ## Related MCP documents
 

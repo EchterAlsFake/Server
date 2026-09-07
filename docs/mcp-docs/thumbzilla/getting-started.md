@@ -77,8 +77,23 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `thumbzilla_api` or `python -m thumbzilla_api`:
+
+```bash
+# Download a video
+thumbzilla_api --download "https://www.thumbzilla.com/video/ph123456789/sample-title" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m thumbzilla_api --download "https://www.thumbzilla.com/video/ph123456789/sample-title" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — Thumbzilla API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — Thumbzilla API](troubleshooting/errors.md)

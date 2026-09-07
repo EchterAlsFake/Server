@@ -82,8 +82,23 @@ client = Client(core=core)
 **eaf_base_api 4**
 Version 1.7 uses the v4 request and source-aware media contracts. `RuntimeConfig.proxy` is a single proxy URL (the old `proxies` mapping was removed), and request retries are configured with `request_attempts` plus the `request_retry_*` settings.
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `beeg_api` or `python -m beeg_api`:
+
+```bash
+# Download a video
+beeg_api --download "https://beeg.com/1234567" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m beeg_api --download "https://beeg.com/1234567" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — Beeg API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — Beeg API](troubleshooting/errors.md)

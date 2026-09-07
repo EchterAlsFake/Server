@@ -17,6 +17,7 @@ Records the versions and documented changes for the eaf_base_api API.
 
 Date / Version| Changes since 3.3.3
 ---|---
+**2026-09-07 — 4.1.2**|  Added `scrape_stream()` async generator helper, optional dual-stack/IPv4/IPv6 address resolution via `RuntimeConfig.ip_resolve` and `CURL_IPRESOLVE` environment variable, standardized scraper utilities (`get_text_safe`, `get_attr_safe`, `parse_duration`, `parse_count`, `build_m3u8_master`, `str_to_bool`), and PyAV remuxing dependencies.
 **2026-08-19 — 4.1.1**|  Synchronized download/remux progress callbacks across worker threads, normalized discontinuous HLS packet timestamps during remuxing, and added regressions for stage-specific error handlers and per-core runtime settings. Commit `a062695`.
 **2026-08-16 — 4.1.0**|  Made HLS cancellation stop pending segment work promptly and corrected JSON resume-state serialization, including configured `Path` values. Commit `acdb967`.
 **2026-08-14 — 4.0.1**|  Reworked HLS quality discovery/selection for canonical landscape and portrait tiers, inline/callable playlists, and bandwidth fallbacks; fixed independent item error handlers, idempotent session initialization, configured session cookies and retry multipliers, and removed hard-coded transport headers. Commits `2fd3a55`–`1eb9105`.

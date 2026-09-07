@@ -77,8 +77,23 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `tube8_api` or `python -m tube8_api`:
+
+```bash
+# Download a video
+tube8_api --download "https://www.tube8.com/video/12345/sample" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m tube8_api --download "https://www.tube8.com/video/12345/sample" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — Tube8 API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — Tube8 API](troubleshooting/errors.md)

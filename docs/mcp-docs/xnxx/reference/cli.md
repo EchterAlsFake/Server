@@ -16,7 +16,7 @@ Documents the command-line interface, arguments, and examples for the XNXX API.
 
 ## xnxx_api
 
-`xnxx_api` uses the shared behavior documented in this reference.
+`xnxx_api` can be invoked directly or via `python -m xnxx_api`.
 
 The XNXX API package includes a CLI tool executable directly from the terminal:
 

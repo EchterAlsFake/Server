@@ -40,6 +40,7 @@
 
 <div class="nav-section-title">Extras</div>
 <a href="#changelog" class="nav-link">Changelog</a>
+<a href="#cli" class="nav-link">CLI Usage</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <!-- END:SIDEBAR_NAV -->
 
@@ -414,6 +415,42 @@ success = <span class="token-keyword">await</span> video.download(configuration=
         <li>Migrated to the eaf-base-api 4.x runtime and result model.</li>
         <li>Adopted policy-driven retries, structured scrape errors, and current iterator error handling.</li>
     </ul>
+</div>
+
+<!-- ================================================================
+     CLI USAGE
+     ================================================================ -->
+<div class="section" id="cli-section">
+    <span class="section-anchor" id="cli"></span>
+    <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>MissAV API includes a command-line interface accessible via <code>missav_api</code> or <code>python -m missav_api</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Download a single video</span>
+missav_api --download "https://missav.ai/dm132/en/sample-123" --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Or invoke via python -m</span>
+python -m missav_api --download "https://missav.ai/dm132/en/sample-123" --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Download from a line-separated file of URLs</span>
+missav_api --file urls.txt --quality best --output ./downloads --no-title False</code></pre>
+    </div>
+
+    <h3>CLI Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>--download URL</code></td><td>Video URL to download</td></tr>
+                <tr><td><code>--file FILE</code></td><td>Text file with URLs (separated by newlines)</td></tr>
+                <tr><td><code>--quality QUALITY</code></td><td>Video quality: <code>best</code>, <code>half</code>, <code>worst</code></td></tr>
+                <tr><td><code>--output DIR</code></td><td>Destination directory or output file path</td></tr>
+                <tr><td><code>--no-title True/False</code></td><td>Skip auto-appending video title to output filename (default: <code>False</code>)</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="section" id="platforms-section">

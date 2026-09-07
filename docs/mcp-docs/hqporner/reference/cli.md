@@ -16,7 +16,7 @@ Documents the command-line interface, arguments, and examples for the HQPorner A
 
 ## hqporner_api
 
-`hqporner_api` uses the shared behavior documented in this reference.
+`hqporner_api` can be invoked directly or via `python -m hqporner_api`.
 
 The HQPorner API package includes a rich CLI:
 

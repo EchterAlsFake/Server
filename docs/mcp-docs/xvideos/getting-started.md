@@ -80,8 +80,23 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `xvideos_api` or `python -m xvideos_api`:
+
+```bash
+# Download a video
+xvideos_api --download "https://www.xvideos.com/video12345/sample_video" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m xvideos_api --download "https://www.xvideos.com/video12345/sample_video" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — XVideos API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — XVideos API](troubleshooting/errors.md)

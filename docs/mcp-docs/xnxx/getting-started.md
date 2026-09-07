@@ -80,8 +80,23 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `xnxx_api` or `python -m xnxx_api`:
+
+```bash
+# Download a video
+xnxx_api --download "https://www.xnxx.com/video-12345/sample_video" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m xnxx_api --download "https://www.xnxx.com/video-12345/sample_video" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — XNXX API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — XNXX API](troubleshooting/errors.md)

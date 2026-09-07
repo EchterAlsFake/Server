@@ -106,8 +106,23 @@ iterator_config = IteratorConfig(
 )
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `eporner_api` or `python -m eporner_api`:
+
+```bash
+# Download a video
+eporner_api --download "https://www.eporner.com/video-12345/sample-video/" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m eporner_api --download "https://www.eporner.com/video-12345/sample-video/" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — Eporner API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — Eporner API](troubleshooting/errors.md)

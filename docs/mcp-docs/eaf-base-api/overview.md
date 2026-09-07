@@ -26,6 +26,7 @@ The legacy multi-mode `BaseCore.fetch()`, `BaseMedia.load(api=..., html=...)`, m
 
 ## Related MCP documents
 
+- [Scraper Utilities — eaf_base_api](reference/scraper-utils.md)
 - [Error reference — eaf_base_api](troubleshooting/errors.md)
 - [EAF Python API documentation overview](../overview.md)
 

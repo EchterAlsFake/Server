@@ -43,7 +43,7 @@ Default: None; Description: Master playlist URL, awaitable, or callable used by 
 
 ## remux
 
-Default: False; Description: Remux concatenated transport stream to MP4
+Default: False; Description: Remux concatenated transport stream to MP4. Requires PyAV (pip install av or pip install "eaf_base_api[hls]").
 
 ## start_segment
 

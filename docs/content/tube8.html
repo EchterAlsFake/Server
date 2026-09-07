@@ -56,6 +56,7 @@
 <a href="#error-handling" class="nav-link">Error Handling</a>
 
 <div class="nav-section-title">Extras</div>
+<a href="#cli" class="nav-link">CLI Usage</a>
 <a href="#platforms" class="nav-link">Platforms</a>
 <a href="#changelog" class="nav-link">Changelog</a>
 <!-- END:SIDEBAR_NAV -->
@@ -570,6 +571,42 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)
     <span class="token-keyword">else</span>:
         <span class="token-keyword">raise</span></code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     CLI USAGE
+     ================================================================ -->
+<div class="section" id="cli-section">
+    <span class="section-anchor" id="cli"></span>
+    <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>Tube8 API includes a command-line interface accessible via <code>tube8_api</code> or <code>python -m tube8_api</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-comment"># Download a single video</span>
+tube8_api --download "https://www.tube8.com/video/12345/sample" --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Or invoke via python -m</span>
+python -m tube8_api --download "https://www.tube8.com/video/12345/sample" --quality best --output ./downloads --no-title False
+
+<span class="token-comment"># Download from a line-separated file of URLs</span>
+tube8_api --file urls.txt --quality best --output ./downloads --no-title False</code></pre>
+    </div>
+
+    <h3>CLI Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>--download URL</code></td><td>Video URL to download</td></tr>
+                <tr><td><code>--file FILE</code></td><td>Text file with URLs (separated by newlines)</td></tr>
+                <tr><td><code>--quality QUALITY</code></td><td>Video quality: <code>best</code>, <code>half</code>, <code>worst</code></td></tr>
+                <tr><td><code>--output DIR</code></td><td>Destination directory or output file path</td></tr>
+                <tr><td><code>--no-title True/False</code></td><td>Skip auto-appending video title to output filename (default: <code>False</code>)</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 

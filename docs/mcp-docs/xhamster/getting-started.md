@@ -79,8 +79,23 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `xhamster_api` or `python -m xhamster_api`:
+
+```bash
+# Download a video
+xhamster_api --download "https://xhamster.com/videos/sample-title-12345" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m xhamster_api --download "https://xhamster.com/videos/sample-title-12345" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — xHamster API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — xHamster API](troubleshooting/errors.md)

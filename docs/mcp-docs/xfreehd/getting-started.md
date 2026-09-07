@@ -110,8 +110,23 @@ async for result in client.search("beach", iterator_config=iterator_config):
     print(result.unwrap().title if result.succeeded else result.error)
 ```
 
+## Command-Line Interface (CLI)
+
+The package includes a command-line interface executable via `xfreehd_api` or `python -m xfreehd_api`:
+
+```bash
+# Download a video
+xfreehd_api --download "https://www.xfreehd.com/video/12345/sample" --quality best --output ./downloads
+
+# Or invoke as a Python module
+python -m xfreehd_api --download "https://www.xfreehd.com/video/12345/sample" --quality best --output ./downloads
+```
+
+See the [CLI Reference](reference/cli.md) for full options.
+
 ## Related MCP documents
 
+- [CLI reference — XFreeHD API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — XFreeHD API](troubleshooting/errors.md)
