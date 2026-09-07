@@ -48,6 +48,9 @@ class License(db.Model):
     issuance_reference = db.Column(db.String, unique=True, nullable=False)
     created_at = db.Column(db.String, nullable=False)
 
+    keygen_id = db.Column(db.String(36), unique=True, nullable=True)
+    signed_key = db.Column(db.Text, nullable=True)
+
 
 class PatreonLicenseDelivery(db.Model):
     """Minimal delivery record used to make Patreon webhook retries idempotent."""

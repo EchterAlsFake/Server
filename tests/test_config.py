@@ -158,21 +158,10 @@ class ConfigurationTests(unittest.TestCase):
                             {"SECRET_KEY": "secret", **settings},
                         )
 
-    def test_invalid_license_signing_keys_fail_fast(self):
+    def test_remote_keygen_requires_https(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
-            for encoded_key, message in (
-                ("not-base64", "valid base64"),
-                ("c2hvcnQ=", "exactly 32 bytes"),
-            ):
-                with self.subTest(encoded_key=encoded_key):
-                    with self.assertRaisesRegex(ValueError, message):
-                        load_environment_config(
-                            directory,
-                            {
-                                "SECRET_KEY": "secret",
-                                "LICENSE_PRIVATE_KEY_B64": encoded_key,
-                            },
-                        )
+            with self.assertRaisesRegex(ValueError, "require HTTPS"):
+                load_environment_config(directory, {"SECRET_KEY": "secret", "KEYGEN_INTERNAL_URL": "http://remote.example"})
 
     def test_generated_secret_is_private_and_stable(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:

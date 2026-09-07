@@ -61,7 +61,7 @@ Type: str | None; Source: API / HTML; Description: View count
 
 ## likes
 
-Type: str | None; Source: API / HTML; Description: Like / rating count
+Type: int | str | None; Source: API / HTML; Description: Like / rating count
 
 ## publish_date
 

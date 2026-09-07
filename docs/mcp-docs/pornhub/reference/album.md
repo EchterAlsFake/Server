@@ -59,16 +59,16 @@ Type: str | None; Description: Album author's profile URL
 
 ## get_photos
 
-Iterates over all photos in the album. Each result is a dictionary containing `url`, `download_url`, `rating`, and `views`. Uses `ProcessPoolExecutor` for parallel HTML parsing across pages.
+Iterates over photos in the album. Each result is a dictionary containing `url`, `download_url`, `rating`, and `views`.
 
 ```python
 async for photo in album.get_photos(
-    pages: int
+    pages: int = 1
 ) -> dict
 ```
 
 ### Parameters
-- pages int — **Required.** Number of album pages to fetch
+- pages int — Number of album pages to fetch (default: `1`)
 
 ### Returns
 

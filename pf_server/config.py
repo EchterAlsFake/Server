@@ -1,7 +1,5 @@
 """Validated environment configuration for the Flask application."""
 
-import base64
-import binascii
 import fcntl
 import os
 import secrets
@@ -102,14 +100,9 @@ def load_environment_config(
     if smtp_username and not smtp_password:
         raise ValueError("LICENSE_SMTP_PASSWORD is required with LICENSE_SMTP_USERNAME")
 
-    encoded_private_key = source.get("LICENSE_PRIVATE_KEY_B64", "")
-    if encoded_private_key:
-        try:
-            private_key = base64.b64decode(encoded_private_key, validate=True)
-        except (binascii.Error, ValueError) as error:
-            raise ValueError("LICENSE_PRIVATE_KEY_B64 must be valid base64") from error
-        if len(private_key) != 32:
-            raise ValueError("LICENSE_PRIVATE_KEY_B64 must encode exactly 32 bytes")
+    keygen_url, keygen_host = _origin(source, "KEYGEN_INTERNAL_URL", "http://127.0.0.1:8004")
+    if keygen_host != "127.0.0.1" and not keygen_url.startswith("https://"):
+        raise ValueError("Remote Keygen connections require HTTPS")
 
     nowpayments_sandbox = _boolean(source, "NOWPAYMENTS_SANDBOX", True)
     nowpayments_api_key = source.get("NOWPAYMENTS_API_KEY")
@@ -163,7 +156,9 @@ def load_environment_config(
         "CHECKLIST_AUTH": source.get("CHECKLIST_AUTH"),
         "PATREON_SECRET": source.get("PATREON_SECRET", ""),
         "PATREON_LICENSE_TIER_IDS": tier_ids,
-        "LICENSE_PRIVATE_KEY_B64": encoded_private_key,
+        "KEYGEN_INTERNAL_URL": keygen_url,
+        "KEYGEN_PRODUCT_TOKEN": source.get("KEYGEN_PRODUCT_TOKEN", ""),
+        "KEYGEN_POLICY_ID": source.get("KEYGEN_POLICY_ID", ""),
         "LICENSE_SMTP_HOST": source.get("LICENSE_SMTP_HOST", "").strip(),
         "LICENSE_SMTP_PORT": smtp_port,
         "LICENSE_SMTP_USERNAME": smtp_username,

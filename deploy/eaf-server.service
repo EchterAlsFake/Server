@@ -1,0 +1,41 @@
+[Unit]
+Description=EchterAlsFake commercial website
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/srv/server/.env
+
+[Service]
+Type=exec
+User=eaf-server
+Group=eaf-server
+WorkingDirectory=/srv/server
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+Environment=PF_SERVER_DATA_DIR=/srv/server/data
+Environment=PF_SERVER_DB=/srv/server/data/server.db
+Environment=GEOIP_DATABASE_PATH=/srv/server/data/geoip/dbip-city-lite.mmdb
+ExecStart=/srv/server/.venv/bin/python -m gunicorn --bind 127.0.0.1:8000 --workers 1 --threads 4 --timeout 90 --error-logfile - main:app
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=100
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/server/data
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

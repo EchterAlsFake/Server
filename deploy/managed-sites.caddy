@@ -1,0 +1,75 @@
+# Global ECH, DNS and PROXY protocol settings remain in /etc/caddy/Caddyfile.
+(application_defaults) {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+}
+
+echteralsfake.me, docs.echteralsfake.me, api.echteralsfake.me {
+    import application_defaults
+    @killswitch path /killswitch /killswitch/*
+    respond @killswitch 404
+    reverse_proxy 127.0.0.1:8000 {
+        header_up -Forwarded
+        header_up -X-Real-IP
+        header_up -True-Client-IP
+        header_up -CF-Connecting-IP
+        header_up -X-Forwarded-Prefix
+        header_up -X-Forwarded-Port
+        header_up X-Forwarded-For {client_ip}
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto https
+    }
+}
+
+www.echteralsfake.me {
+    import application_defaults
+    redir https://echteralsfake.me{uri} 308
+}
+
+vplan.echteralsfake.me {
+    import application_defaults
+    reverse_proxy 127.0.0.1:8001 {
+        header_up -Forwarded
+        header_up -X-Real-IP
+        header_up -True-Client-IP
+        header_up -X-Forwarded-Prefix
+        header_up -X-Forwarded-Port
+        header_up X-Forwarded-For {client_ip}
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto https
+        header_up CF-Connecting-IP {client_ip}
+    }
+}
+
+mcp.echteralsfake.me {
+    import application_defaults
+    header {
+        Referrer-Policy "no-referrer"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    }
+    @mcp path /mcp /mcp/*
+    handle @mcp {
+        request_body {
+            max_size 256KB
+        }
+        reverse_proxy 127.0.0.1:8002 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up -X-Forwarded-Prefix
+            header_up -X-Forwarded-Port
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+    handle {
+        respond 404
+    }
+}

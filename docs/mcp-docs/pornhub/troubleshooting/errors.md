@@ -7,6 +7,7 @@ aliases:
 keywords:
   - "PornHub"
   - "Errors and troubleshooting"
+  - "PornhubAPIError"
   - "NotFound"
   - "NetworkError"
   - "BotDetection"
@@ -19,13 +20,18 @@ keywords:
   - "GifPendingReview"
   - "Video does not exist"
   - "Bypassing bot protection failed"
+  - "PornHub API error occurred"
 ---
 
 # Errors and troubleshooting — PornHub API
 
 Identifies documented PornHub API errors, their meanings, and the safe handling behavior.
 
-Source loaders translate request failures into exceptions from `pornhub_api.modules.errors`. Calls that load media expose ordinary loader failures through `base_api.MediaLoadError` (or `MediaLoadErrors` for several sources); inspect `original_error`/`errors` as shown. Operations outside media loading, such as login, may still raise package or core exceptions directly.
+All custom exceptions inherit from `PornhubAPIError`, which inherits from Python's built-in `Exception`. Source loaders translate request failures into these library exceptions. Calls that load media expose ordinary loader failures through `base_api.MediaLoadError` (or `MediaLoadErrors` for several sources); inspect `original_error`/`errors` as shown. Operations outside media loading, such as login, raise package or core exceptions directly.
+
+## PornhubAPIError
+
+When Raised: Base exception class for all PornHub API errors (inherits from Exception )
 
 ## NotFound
 
@@ -69,7 +75,7 @@ When Raised: The GIF is still pending review and cannot be accessed
 
 ```python
 from base_api import MediaLoadError
-from pornhub_api.modules.errors import NotFound, BotDetection, LoginFailed
+from pornhub_api.modules.errors import PornhubAPIError, NotFound, BotDetection, LoginFailed
 
 try:
     video = await client.get_video(url, load_html=True, load_api=False)
@@ -78,6 +84,8 @@ except MediaLoadError as error:
         print("Video does not exist")
     elif isinstance(error.original_error, BotDetection):
         print("Bypassing bot protection failed")
+    elif isinstance(error.original_error, PornhubAPIError):
+        print("PornHub API error occurred")
     else:
         raise
 
@@ -93,6 +101,7 @@ The public page presents these strings as output from its handling example, not 
 
 - `Video does not exist` is printed when the example handles `NotFound`.
 - `Bypassing bot protection failed` is printed when the example handles `BotDetection`.
+- `PornHub API error occurred` is printed when the example handles `PornhubAPIError`.
 
 Diagnose the condition by inspecting the typed exception or `MediaLoadError.original_error` as shown. Handle the documented type and re-raise unrecognized failures; the source page does not prescribe any other automated corrective action.
 

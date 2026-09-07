@@ -13,13 +13,13 @@ dependency installation, migrations, or tests. On a suitable connection,
 install or refresh it explicitly with:
 
 ```bash
-uv run python scripts/update_geoip_database.py --accept-license
+.venv/bin/python scripts/update_geoip_database.py --accept-license
 ```
 
 To install a specific release:
 
 ```bash
-uv run python scripts/update_geoip_database.py \
+.venv/bin/python scripts/update_geoip_database.py \
   --release 2026-09 --accept-license
 ```
 

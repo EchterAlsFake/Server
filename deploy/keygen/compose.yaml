@@ -1,0 +1,61 @@
+name: eaf-keygen
+x-keygen: &keygen
+  image: keygen/api:v1.7.2@sha256:8d60120082255d0edb241718962c205ac2f356bd4d8afcfd823ab4410c402327
+  env_file: .env
+  restart: unless-stopped
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: local
+    options: {max-size: "2m", max-file: "2"}
+  volumes:
+    - ./Gemfile:/app/Gemfile:ro
+    - ./privacy.rb:/app/config/initializers/zz_privacy.rb:ro
+    - ./bootstrap.rb:/app/bootstrap.rb:ro
+    - ./credentials:/app/credentials
+  depends_on:
+    postgres: {condition: service_healthy}
+    redis: {condition: service_healthy}
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    env_file: postgres.env
+    restart: unless-stopped
+    command: [postgres, -c, log_statement=none, -c, log_min_error_statement=panic, -c, log_min_messages=fatal]
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U keygen -d keygen"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: {driver: local, options: {max-size: "2m", max-file: "2"}}
+  redis:
+    image: redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+    command: [redis-server, --appendonly, "no", --save, ""]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: {driver: local, options: {max-size: "2m", max-file: "2"}}
+  web:
+    <<: *keygen
+    command: web
+    ports: ["127.0.0.1:8004:3000"]
+    healthcheck:
+      test: [CMD, ruby, -rnet/http, -e, "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/v1/health')).is_a?(Net::HTTPSuccess) ? 0 : 1)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+  worker:
+    <<: *keygen
+    command: worker
+  setup:
+    <<: *keygen
+    profiles: [setup]
+    restart: "no"
+    command: setup
+volumes:
+  postgres:

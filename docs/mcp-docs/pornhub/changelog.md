@@ -13,11 +13,10 @@ keywords:
 
 Records the versions and documented changes for the PornHub API.
 
-## 5.4.2 follow-up — 2026-09-01
-- `5553a68` / `56578f3` — Removed the wrapper's hard-coded User-Agent and replaced constructor-triggered background login with the awaited `Client.create(..., login=True)` factory.
-
-## 5.4.2 — 2026-08-16
-- `50f41e3` / `8cfac95` — Corrected fallback width calculation for HLS variants that provide height without width.
+## 5.4.3 — 2026-09-06
+- `f8bbe99` — Introduced `PornhubAPIError` base exception class (inheriting from `Exception`) for all library errors; converted `GifPendingReview` and `VideoDisabled` to inherit from `PornhubAPIError` instead of `BaseException`. Removed redundant `SubscriptionHelper` class. Refactored scrape methods (`get_videos`, `get_uploads`, `get_gifs`, search, and account iterators) to return `AsyncGenerator[ScrapeResult, None]` directly. Added default `pages=1` to `Album.get_photos()` and removed `ProcessPoolExecutor` overhead. Fixed `Short.get_video()` by removing invalid `@property` decorator from the async method. Updated `Video.likes` type annotation to `int | str | None`. Consolidated HLS download handling via `_download_hls`. Streamlined HTML parsing extractors with Lexbor CSS selectors and URL deduplication. Refactored CLI URL handler dispatch and argument options. Announced native MCP documentation server support.
+- `5553a68` / `56578f3` — Removed the wrapper's hard-coded User-Agent from default headers and replaced constructor-triggered background login with the awaited `Client.create(..., login=True)` factory method, setting default `core=None` to instantiate independent networking cores.
+- `50f41e3` / `8cfac95` — Corrected aspect ratio calculation in `estimate_width` for HLS variants providing height without width.
 
 ## 5.4.1 — 2026-08-13
 - `fe1d38f` — Added the HTML-backed `UserHelper.name` field with selectors for both supported profile layouts.

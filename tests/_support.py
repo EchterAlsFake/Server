@@ -16,9 +16,7 @@ os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["PATREON_SECRET"] = "patreon-test-secret"
 os.environ["NOWPAYMENTS_IPN_SECRET"] = "nowpayments-test-secret"
 os.environ["NOWPAYMENTS_SANDBOX"] = "true"
-os.environ["LICENSE_PRIVATE_KEY_B64"] = base64.b64encode(bytes(range(32))).decode(
-    "ascii"
-)
+
 
 import main  # noqa: E402
 from pf_server.country_service import CountryEvidence  # noqa: E402
@@ -42,6 +40,10 @@ class ServerTestCase(unittest.TestCase):
             WTF_CSRF_ENABLED=False,
         )
         self.client = main.app.test_client()
+        from license_fixtures import issuance
+        self.keygen_mock = patch("pf_server.licensing.ensure_license", side_effect=issuance)
+        self.keygen_mock.start()
+        self.addCleanup(self.keygen_mock.stop)
         self.country_lookup = patch.object(
             main.app.extensions["country_resolver"],
             "lookup",

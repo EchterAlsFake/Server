@@ -1,68 +1,44 @@
 """License creation, recipient validation, and SMTP delivery services."""
 
-import base64
 import json
 import os
 import re
-import secrets
+import uuid
 import smtplib
 import ssl
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime, make_msgid
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from flask import current_app
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
 from .models import License
+from .keygen_service import ensure_license
 from .time_utils import rfc3339_utc
 
 
-def canonical_json_bytes(payload: dict) -> bytes:
-    return json.dumps(
-        payload,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    ).encode("utf-8")
-
-
 def make_license_key(prefix: str = "PF") -> str:
-    raw = secrets.token_hex(16).upper()
-    return f"{prefix}-" + "-".join(raw[index : index + 8] for index in range(0, 32, 8))
+    """Local opaque identity, never a customer credential or signing key."""
+    return str(uuid.uuid4())
 
 
-def sign_license(payload: dict) -> str:
-    encoded_private_key = current_app.config.get("LICENSE_PRIVATE_KEY_B64")
-    if not encoded_private_key:
-        raise RuntimeError("Missing LICENSE_PRIVATE_KEY_B64")
-    private_key = Ed25519PrivateKey.from_private_bytes(
-        base64.b64decode(encoded_private_key, validate=True)
-    )
-    signature = private_key.sign(canonical_json_bytes(payload))
-    return base64.b64encode(signature).decode("ascii")
-
-
-def build_license_file(
-    license_key: str,
-    issuance_reference: str,
-    created_at: str,
-) -> bytes:
-    """Create the signed license document used by downloads and email delivery."""
-    payload = {
-        "schema": 1,
-        "product": "porn-fetch",
-        "kid": "v1",
-        "alg": "ed25519",
-        "license_key": license_key,
-        "issuance_reference": issuance_reference,
-        "created_at": created_at,
-        "features": ["full_unlock"],
-    }
-    payload["sig"] = sign_license(payload)
-    return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+def build_license_file(license_key: str, issuance_reference: str, created_at: str) -> bytes:
+    """Package Keygen's signed key; provider identifiers never leave this service."""
+    record = db.session.get(License, license_key)
+    if record is None:
+        raise ValueError("Missing issuance record")
+    if not record.keygen_id:
+        record.keygen_id = str(uuid.uuid5(uuid.NAMESPACE_URL,
+            "https://licenses.echteralsfake.me/issuance/" + record.license_key))
+        db.session.commit()
+    if not record.signed_key:
+        remote = ensure_license(record.keygen_id)
+        record.signed_key = remote["attributes"]["key"]
+        db.session.commit()
+    payload = {"schema": 2, "product": "porn-fetch", "license_key": record.signed_key}
+    return (json.dumps(payload, indent=2) + "\n").encode("utf-8")
 
 
 def get_or_create_license(issuance_reference: str) -> License:
@@ -79,9 +55,9 @@ def get_or_create_license(issuance_reference: str) -> License:
         db.session.add(license_record)
         try:
             db.session.commit()
-        except SQLAlchemyError:
+        except IntegrityError:
             db.session.rollback()
-            raise
+            license_record = License.query.filter_by(issuance_reference=issuance_reference).one()
     return license_record
 
 

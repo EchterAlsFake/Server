@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">PornHub API</span>
                 </a>
-                <span class="sidebar-version">v5.4.2</span>
+                <span class="sidebar-version">v5.4.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -128,6 +128,7 @@
     <div class="nav-sub-links">
         <a href="#short-download" class="nav-link nav-link-sub">download()</a>
         <a href="#short-get_author" class="nav-link nav-link-sub">get_author()</a>
+        <a href="#short-get_video" class="nav-link nav-link-sub">get_video()</a>
     </div>
 </div>
 
@@ -171,7 +172,7 @@
                             <span aria-hidden="true">/</span>
                             <span>PornHub API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v5.4.2</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v5.4.3</div>
                         <h1>PornHub API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -327,7 +328,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
 
     <h3>Constructor Parameters</h3>
     <ul class="param-list">
-        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Networking core instance. The source default is one module-created <code>BaseCore()</code> shared by callers that omit this argument; pass an explicit core for independent configuration and lifecycle.</span></li>
+        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore | None</span> <span class="param-desc">— Optional networking core instance. If omitted or <code>None</code> (default), a fresh <code>BaseCore</code> instance is initialized with default headers and cookies.</span></li>
         <li class="param-item"><span class="param-name">email</span> <span class="param-type">str | None</span> <span class="param-desc">— Account email for login</span></li>
         <li class="param-item"><span class="param-name">password</span> <span class="param-type">str | None</span> <span class="param-desc">— Account password for login</span></li>
     </ul>
@@ -667,13 +668,20 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             <h3 class="method-title">Create Client <code>create()</code></h3>
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
-        <div class="method-desc">Constructs a client and, when requested with credentials, waits for login to complete before returning it. Use this factory when initialization must include authentication.</div>
+        <div class="method-desc">Asynchronously constructs a client and, when <code>login=True</code> and credentials are provided, awaits <code>login()</code> before returning the instance. This is the recommended entry point when creating an authenticated client.</div>
         <div class="method-signature">client = <span class="token-keyword">await</span> Client.create(
-    core: BaseCore = BaseCore(),
+    core: BaseCore | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     email: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     password: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     login: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
 ) -&gt; Client</div>
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore | None</span> <span class="param-desc">— Optional custom networking core instance</span></li>
+            <li class="param-item"><span class="param-name">email</span> <span class="param-type">str | None</span> <span class="param-desc">— Account email</span></li>
+            <li class="param-item"><span class="param-name">password</span> <span class="param-type">str | None</span> <span class="param-desc">— Account password</span></li>
+            <li class="param-item"><span class="param-name">login</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> and credentials are provided, automatically awaits login</span></li>
+        </ul>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Client</span>
     </div>
@@ -731,7 +739,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
                 <tr><td><code>duration</code></td><td><code>int | None</code></td><td>API / HTML</td><td>Video duration in seconds</td></tr>
                 <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Preview thumbnail URL</td></tr>
                 <tr><td><code>views</code></td><td><code>str | None</code></td><td>API / HTML</td><td>View count</td></tr>
-                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Like / rating count</td></tr>
+                <tr><td><code>likes</code></td><td><code>int | str | None</code></td><td>API / HTML</td><td>Like / rating count</td></tr>
                 <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>API / HTML</td><td>Upload / publish date</td></tr>
                 <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>API / HTML</td><td>Category names</td></tr>
                 <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>API / HTML</td><td>Tag names</td></tr>
@@ -1157,14 +1165,14 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Iterates over all photos in the album. Each result is a dictionary containing <code>url</code>, <code>download_url</code>, <code>rating</code>, and <code>views</code>. Uses <code>ProcessPoolExecutor</code> for parallel HTML parsing across pages.</div>
+        <div class="method-desc">Iterates over photos in the album. Each result is a dictionary containing <code>url</code>, <code>download_url</code>, <code>rating</code>, and <code>views</code>.</div>
         <div class="method-signature"><span class="token-keyword">async for</span> photo <span class="token-keyword">in</span> album.get_photos(
-    pages: <span class="token-builtin">int</span>
+    pages: <span class="token-builtin">int</span> = <span class="token-number">1</span>
 ) -&gt; <span class="token-builtin">dict</span></div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
-            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— <strong>Required.</strong> Number of album pages to fetch</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of album pages to fetch (default: <code>1</code>)</span></li>
         </ul>
 
         <h4 class="method-section-title">Returns</h4>
@@ -1342,6 +1350,29 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
 ) -&gt; Pornstar</div>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar</span>
+    </div>
+
+    <!-- get_video -->
+    <span class="section-anchor" id="short-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Returns the full <code>Video</code> object corresponding to this short.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> short.get_video(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
+    load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Video</div>
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, fetches full HTML page for video details</span></li>
+            <li class="param-item"><span class="param-name">load_api</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches metadata via the Webmaster API</span></li>
+        </ul>
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
     </div>
 </div>
 
@@ -1730,12 +1761,13 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>Source loaders translate request failures into exceptions from <code>pornhub_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading, such as login, may still raise package or core exceptions directly.</p>
+    <p>All custom exceptions inherit from <code>PornhubAPIError</code>, which inherits from Python's built-in <code>Exception</code>. Source loaders translate request failures into these library exceptions. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading, such as login, raise package or core exceptions directly.</p>
 
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
             <tbody>
+                <tr><td><code>PornhubAPIError</code></td><td>Base exception class for all PornHub API errors (inherits from <code>Exception</code>)</td></tr>
                 <tr><td><code>NotFound</code></td><td>Server returned HTTP 404</td></tr>
                 <tr><td><code>NetworkError</code></td><td>General network request failure (wraps <code>NetworkRequestError</code>)</td></tr>
                 <tr><td><code>BotDetection</code></td><td>Bot protection triggered</td></tr>
@@ -1753,7 +1785,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
-<span class="token-keyword">from</span> pornhub_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection, LoginFailed
+<span class="token-keyword">from</span> pornhub_api.modules.errors <span class="token-keyword">import</span> PornhubAPIError, NotFound, BotDetection, LoginFailed
 
 <span class="token-keyword">try</span>:
     video = <span class="token-keyword">await</span> client.get_video(url, load_html=<span class="token-keyword">True</span>, load_api=<span class="token-keyword">False</span>)
@@ -1762,6 +1794,8 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <span class="token-builtin">print</span>(<span class="token-string">"Video does not exist"</span>)
     <span class="token-keyword">elif</span> isinstance(error.original_error, BotDetection):
         <span class="token-builtin">print</span>(<span class="token-string">"Bypassing bot protection failed"</span>)
+    <span class="token-keyword">elif</span> isinstance(error.original_error, PornhubAPIError):
+        <span class="token-builtin">print</span>(<span class="token-string">"PornHub API error occurred"</span>)
     <span class="token-keyword">else</span>:
         <span class="token-keyword">raise</span>
 
@@ -1828,14 +1862,11 @@ phub --download "https://www.pornhub.com/view_video.php?viewkey=..." --quality b
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
 
-    <h3>5.4.2 follow-up — 2026-09-01</h3>
+    <h3>5.4.3 — 2026-09-06</h3>
     <ul>
-        <li><code>5553a68</code> / <code>56578f3</code> — Removed the wrapper's hard-coded User-Agent and replaced constructor-triggered background login with the awaited <code>Client.create(..., login=True)</code> factory.</li>
-    </ul>
-
-    <h3>5.4.2 — 2026-08-16</h3>
-    <ul>
-        <li><code>50f41e3</code> / <code>8cfac95</code> — Corrected fallback width calculation for HLS variants that provide height without width.</li>
+        <li><code>f8bbe99</code> — Introduced <code>PornhubAPIError</code> base exception class (inheriting from <code>Exception</code>) for all library errors; converted <code>GifPendingReview</code> and <code>VideoDisabled</code> to inherit from <code>PornhubAPIError</code> instead of <code>BaseException</code>. Removed redundant <code>SubscriptionHelper</code> class. Refactored scrape methods (<code>get_videos</code>, <code>get_uploads</code>, <code>get_gifs</code>, search, and account iterators) to return <code>AsyncGenerator[ScrapeResult, None]</code> directly. Added default <code>pages=1</code> to <code>Album.get_photos()</code> and removed <code>ProcessPoolExecutor</code> overhead. Fixed <code>Short.get_video()</code> by removing invalid <code>@property</code> decorator from the async method. Updated <code>Video.likes</code> type annotation to <code>int | str | None</code>. Consolidated HLS download handling via <code>_download_hls</code>. Streamlined HTML parsing extractors with Lexbor CSS selectors and URL deduplication. Refactored CLI URL handler dispatch and argument options. Announced native MCP documentation server support.</li>
+        <li><code>5553a68</code> / <code>56578f3</code> — Removed the wrapper's hard-coded User-Agent from default headers and replaced constructor-triggered background login with the awaited <code>Client.create(..., login=True)</code> factory method, setting default <code>core=None</code> to instantiate independent networking cores.</li>
+        <li><code>50f41e3</code> / <code>8cfac95</code> — Corrected aspect ratio calculation in <code>estimate_width</code> for HLS variants providing height without width.</li>
     </ul>
 
     <h3>5.4.1 — 2026-08-13</h3>

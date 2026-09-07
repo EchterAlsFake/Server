@@ -8,7 +8,7 @@ This checklist ensures that server-side updates are fully prepared *before* a ne
 Because the new app version expects a new public key for verification, the server must begin signing purchases with the new private key immediately upon launch.
 
 - [ ] Open the `.env` file on your server.
-- [ ] Replace `LICENSE_PRIVATE_KEY_B64` with the Base64-encoded version of your **new** Ed25519 private key.
+- [ ] Verify the Keygen product token and policy ID are configured in the restricted production environment; do not place signing keys in this service.
 - [ ] *(Optional Housekeeping)*: Replace `mediafetch_public_key.key` in the server directory with your new public key for reference/backups.
 
 ## 📝 2. Update the Local Changelog

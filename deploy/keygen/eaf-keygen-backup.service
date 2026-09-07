@@ -1,0 +1,8 @@
+[Unit]
+Description=Encrypted Keygen and purchase-state backup
+Requires=docker.service
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/srv/server/.venv/bin/python /srv/keygen/backup.py backup
+UMask=0077

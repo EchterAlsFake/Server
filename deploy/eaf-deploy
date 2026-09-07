@@ -1,0 +1,259 @@
+#!/usr/bin/python3
+"""Build as asuna; install and supervise isolated application services."""
+
+import argparse
+from datetime import datetime, timezone
+import fcntl
+import json
+import os
+from pathlib import Path
+import pwd
+import shutil
+import subprocess
+import sys
+import time
+import urllib.request
+
+APPS = {
+    "server": (Path("/home/asuna/Dokumente/Server"), "3.14", 8000, "/ping"),
+    "vplan": (Path("/home/asuna/Dokumente/all4schools-substitution-viewer"), "3.12", 8001, "/healthz"),
+    "mcp": (Path("/home/asuna/Dokumente/Server"), "3.14", 8002, "/healthz"),
+}
+ROOT = Path("/srv")
+ENV = {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "UV_PYTHON_INSTALL_DIR": "/usr/local/share/eaf-python",
+    "UV_LINK_MODE": "copy",
+    "PYTHONDONTWRITEBYTECODE": "1",
+}
+
+
+def run(args, *, cwd=None, user=None, capture=False, extra=None):
+    command = list(map(str, args))
+    environment = ENV | (extra or {})
+    if user:
+        command = ["runuser", "-u", user, "--", "env", "-i",
+                   "HOME=" + pwd.getpwnam(user).pw_dir,
+                   *[f"{key}={value}" for key, value in environment.items()], *command]
+    return subprocess.run(command, cwd=cwd, env=os.environ | environment,
+                          check=True, capture_output=capture, text=capture)
+
+
+def build(app):
+    source, version, _, _ = APPS[app]
+    stage = Path(f"/srv/.build-{app}")
+    if stage.exists():
+        raise RuntimeError(f"{stage} already exists; inspect and move it aside before retrying")
+    stage.mkdir(mode=0o750)
+    owner = pwd.getpwnam("asuna")
+    os.chown(stage, owner.pw_uid, owner.pw_gid)
+    files = run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                cwd=source, user="asuna", capture=True).stdout
+    excluded = {".git", ".env", ".venv", ".validation", "data", "node_modules", "uv.lock"}
+    selected = [
+        name for name in files.split("\0")
+        if name and not (set(Path(name).parts) & excluded)
+    ]
+    if app == "mcp":
+        selected = [
+            name for name in selected
+            if name.startswith("mcp_service/") or name.startswith("docs/mcp-docs/")
+        ]
+    files = "\0".join(selected) + "\0"
+    subprocess.run(["rsync", "-rlpt", "--safe-links", "--from0", "--files-from=-",
+                    str(source) + "/", str(stage) + "/"], input=files.encode(), check=True)
+    for directory, dirs, names in os.walk(stage):
+        os.chown(directory, owner.pw_uid, owner.pw_gid)
+        for name in names:
+            os.chown(Path(directory) / name, owner.pw_uid, owner.pw_gid, follow_symlinks=False)
+    def build_run(args, **kwargs):
+        return run(args, cwd=stage, user="asuna", **kwargs)
+    build_run(["uv", "venv", "--python", version, stage / ".venv"])
+    requirements = "mcp_service/pyproject.toml" if app == "mcp" else "pyproject.toml"
+    build_run(["uv", "pip", "install", "--python", stage / ".venv/bin/python",
+               "--upgrade", "-r", requirements])
+    receipt = build_run(["uv", "pip", "freeze", "--python", stage / ".venv/bin/python"],
+                        capture=True).stdout
+    (stage / "installed-packages.txt").write_text(receipt)
+    os.chown(stage / "installed-packages.txt", owner.pw_uid, owner.pw_gid)
+    build_run(["uv", "venv", "--python", version, stage / ".validation"])
+    build_run(["uv", "pip", "install", "--python", stage / ".validation/bin/python",
+               "-r", "installed-packages.txt"])
+    python = stage / ".validation/bin/python"
+    if app == "vplan":
+        build_run(["uv", "pip", "install", "--python", python,
+                   "-c", "installed-packages.txt", "--group", "dev"])
+        build_run([python, "-m", "pytest"],
+                  extra={"VPLAN_DATA_DIR": str(stage / ".test-runtime")})
+        build_run(["npm", "ci", "--no-audit", "--no-fund"])
+        for action in ("check", "lint", "test", "build"):
+            build_run(["npm", "run", action])
+        build_run([python, "-m", "compileall", "-q", "backend", "tests"])
+        shutil.rmtree(stage / "node_modules")
+        shutil.rmtree(stage / ".test-runtime", ignore_errors=True)
+    elif app == "server":
+        build_run([python, "-m", "unittest", "discover", "-s", "tests", "-v"])
+        build_run([python, "docs/build.py"])
+        build_run([python, "-m", "compileall", "-q", "main.py", "pf_server", "docs/build.py", "api_tests.py"])
+    else:
+        build_run([python, "-m", "unittest", "discover", "-s", "mcp_service/tests", "-v"])
+        build_run([python, "-m", "compileall", "-q", "mcp_service"])
+    shutil.rmtree(stage / ".validation")
+    # The candidate never contains operator configuration or runtime data.
+    if (stage / ".env").exists() or (stage / "data").exists():
+        raise RuntimeError("Unexpected configuration or runtime data in build")
+    return stage
+
+
+def protect(stage, app):
+    group = pwd.getpwnam(f"eaf-{app}").pw_gid
+    for directory, dirs, names in os.walk(stage):
+        os.chown(directory, 0, group)
+        os.chmod(directory, 0o750)
+        for name in names:
+            path = Path(directory) / name
+            if not path.is_symlink():
+                executable = path.stat().st_mode & 0o111
+                os.chown(path, 0, group)
+                os.chmod(path, 0o750 if executable else 0o640)
+    run(["setfacl", "-m", "u:asuna:rx", stage])
+
+
+def runtime(app, args, capture=False):
+    live = ROOT / app
+    if app == "server":
+        variables = {
+            "PF_SERVER_DATA_DIR": str(live / "data"),
+            "PF_SERVER_DB": str(live / "data/server.db"),
+            "GEOIP_DATABASE_PATH": str(live / "data/geoip/dbip-city-lite.mmdb"),
+        }
+    elif app == "vplan":
+        variables = {
+            "VPLAN_DATA_DIR": str(live / "data"),
+            "VPLAN_DATABASE_PATH": str(live / "data/vplan.db"),
+            "VPLAN_CACHE_PATH": str(live / "data/plan-cache.json"),
+        }
+    else:
+        variables = {"EAF_MCP_DOCS_DIR": str(live / "docs/mcp-docs")}
+    return run([live / ".venv/bin/python", *args], cwd=live, user=f"eaf-{app}",
+               capture=capture, extra=variables)
+
+
+def activate(app):
+    live = ROOT / app
+    if app == "server":
+        runtime(app, ["deploy/preflight.py"])
+        runtime(app, ["-m", "flask", "--app", "main", "db", "upgrade"])
+        runtime(app, ["-m", "flask", "--app", "main", "init-runtime"])
+    elif app == "vplan":
+        runtime(app, ["-c",
+            "from backend.config import Settings; s=Settings.load(); "
+            "assert not s.configuration_errors, ', '.join(s.configuration_errors); "
+            "assert s.secure_cookie and s.trust_cloudflare_ip and s.upgrade_insecure_requests; "
+            "assert s.public_host == 'vplan.echteralsfake.me'; "
+            "assert '.invalid' not in s.api_url and '.invalid' not in s.api_refresh_url "
+            "and '.invalid' not in s.api_auth_url, 'Replace example API endpoints'"])
+    else:
+        runtime(app, ["-c",
+            "from mcp_service.app import catalog; "
+            "expected = sum(1 for path in catalog.root.rglob('*.md') if not path.is_symlink()); "
+            "assert len(catalog.documents) == expected, 'Incomplete documentation catalog'"])
+    run(["systemctl", "enable", f"eaf-{app}.service"])
+    run(["systemctl", "restart", f"eaf-{app}.service"])
+    _, _, port, path = APPS[app]
+    for _ in range(30):
+        try:
+            host = {
+                "server": "echteralsfake.me",
+                "vplan": "vplan.echteralsfake.me",
+                "mcp": f"127.0.0.1:{port}",
+            }[app]
+            request = urllib.request.Request(
+                f"http://127.0.0.1:{port}{path}", headers={"Host": host}
+            )
+            with urllib.request.urlopen(request, timeout=2) as response:
+                payload = response.read()
+                if response.status == 200 and (app != "vplan" or json.loads(payload).get("configured")):
+                    print(f"{app}: service is healthy", flush=True)
+                    return
+        except (OSError, ValueError):
+            pass
+        time.sleep(1)
+    raise RuntimeError(f"{app} failed health check; inspect systemctl status eaf-{app}")
+
+
+def install(app, stage, prepare):
+    live = ROOT / app
+    protect(stage, app)
+    if prepare:
+        if (live / ".venv").exists():
+            raise RuntimeError("Already prepared; use --activate or update without flags")
+        # First installation: preserve the operator's files in the prepared directory.
+        for item in stage.iterdir():
+            if (live / item.name).exists():
+                raise RuntimeError(f"Refusing to overwrite {live / item.name}")
+            item.rename(live / item.name)
+        stage.rmdir()
+        if app == "mcp":
+            print("mcp: prepared; no secrets are required", flush=True)
+        else:
+            print(f"{app}: prepared; fill {live / '.env'} before --activate", flush=True)
+        return
+    if not (live / ".venv").exists():
+        raise RuntimeError("First deployment requires --prepare")
+    run(["systemctl", "stop", f"eaf-{app}.service"])
+    backup_root = ROOT / ".eaf-backups"
+    backup_root.mkdir(mode=0o700, exist_ok=True)
+    backup = backup_root / f"{app}-{datetime.now(timezone.utc):%Y%m%dT%H%M%S%fZ}"
+    live.rename(backup)
+    try:
+        # Retain a stopped, consistent copy of code, environment, database and secrets.
+        account = pwd.getpwnam(f"eaf-{app}")
+        if (backup / "data").exists():
+            shutil.copytree(backup / "data", stage / "data", copy_function=shutil.copy2,
+                            symlinks=True)
+            for directory, dirs, files in os.walk(stage / "data"):
+                os.chown(directory, account.pw_uid, account.pw_gid)
+                os.chmod(directory, 0o700)
+                for name in files:
+                    path = Path(directory) / name
+                    os.chown(path, account.pw_uid, account.pw_gid, follow_symlinks=False)
+                    if not path.is_symlink():
+                        os.chmod(path, 0o600)
+        if (backup / ".env").exists():
+            shutil.copy2(backup / ".env", stage / ".env")
+            os.chown(stage / ".env", pwd.getpwnam("asuna").pw_uid, account.pw_gid)
+            os.chmod(stage / ".env", 0o640)
+        stage.rename(live)
+        activate(app)
+        print(f"Previous installation: {backup}", flush=True)
+    except BaseException:
+        run(["systemctl", "stop", f"eaf-{app}.service"])
+        if live.exists():
+            live.rename(backup_root / f"failed-{backup.name}")
+        backup.rename(live)
+        run(["systemctl", "start", f"eaf-{app}.service"])
+        print("Restored the previous stopped installation and database.", file=sys.stderr)
+        raise
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("app", choices=APPS)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--prepare", action="store_true")
+    mode.add_argument("--activate", action="store_true")
+    args = parser.parse_args()
+    if os.geteuid() != 0:
+        parser.error("Run using sudo")
+    os.umask(0o027)
+    with open("/run/lock/eaf-deploy.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if args.activate:
+            activate(args.app)
+        else:
+            install(args.app, build(args.app), args.prepare)
+
+
+if __name__ == "__main__":
+    main()

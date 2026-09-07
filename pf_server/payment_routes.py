@@ -36,6 +36,7 @@ from .licensing import (
 )
 from .logging_config import safe_log_reference
 from .models import License, Transaction
+from .keygen_service import KeygenUnavailable
 from .nowpayments_service import (
     CompletionState,
     PaymentProviderError,
@@ -132,12 +133,14 @@ def download_license():
         return jsonify({"error": "Payment not approved or session not found"}), 402
 
     issuance_reference = transaction.provider_payment_id
-    license_record = get_or_create_license(issuance_reference)
-    license_file = build_license_file(
-        license_record.license_key,
-        issuance_reference,
-        license_record.created_at,
-    )
+    try:
+        license_record = get_or_create_license(issuance_reference)
+        license_file = build_license_file(
+            license_record.license_key, issuance_reference, license_record.created_at,
+        )
+    except KeygenUnavailable:
+        db.session.rollback()
+        return jsonify({"error": "License delivery is temporarily unavailable. Please retry."}), 503, {"Retry-After": "30"}
     return send_file(
         BytesIO(license_file),
         as_attachment=True,
@@ -149,19 +152,7 @@ def download_license():
 @payments_bp.route("/check_license", methods=["POST"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
 def check_license():
-    data = request.get_json(silent=True)
-    license_key = data.get("license_key") if isinstance(data, dict) else None
-    if (
-        not isinstance(license_key, str)
-        or not license_key.strip()
-        or len(license_key) > 128
-    ):
-        return jsonify({"error": "Missing license_key in JSON payload"}), 400
-
-    license_record = db.session.get(License, license_key.strip())
-    if license_record is None:
-        return jsonify({"error": "License not found", "state": "invalid"}), 404
-    return jsonify({"state": license_record.state}), 200
+    return jsonify({"error": "Use the Keygen licensing client", "state": "unsupported"}), 410
 
 
 @payments_bp.route("/check-payment-status", methods=["GET"])

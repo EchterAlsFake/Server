@@ -57,7 +57,7 @@ A fully asynchronous Python API wrapper and scraper for MissAV. Fetch JAV video 
 
 ### [PornHub API](pornhub/getting-started.md)
 
-v5.4.2
+v5.4.3
 
 A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine.
 

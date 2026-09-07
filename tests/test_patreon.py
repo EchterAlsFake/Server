@@ -46,8 +46,9 @@ class PatreonWebhookTests(ServerTestCase):
         self.assertEqual(deliveries[0][0], "member@example.com")
         license_payload = json.loads(deliveries[0][1])
         self.assertEqual(license_payload["product"], "porn-fetch")
-        self.assertEqual(license_payload["features"], ["full_unlock"])
-        self.assertTrue(license_payload["issuance_reference"].startswith("PT-"))
+        self.assertEqual(license_payload["schema"], 2)
+        self.assertTrue(license_payload["license_key"].startswith("key/"))
+        self.assertNotIn("issuance_reference", license_payload)
         self.assertNotIn("stripe_session_id", license_payload)
         self.assertNotIn("member@example.com", deliveries[0][1].decode("utf-8"))
 

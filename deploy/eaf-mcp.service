@@ -1,0 +1,41 @@
+[Unit]
+Description=Public EAF documentation MCP server
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/srv/mcp/mcp_service/app.py
+
+[Service]
+Type=exec
+User=eaf-mcp
+Group=eaf-mcp
+WorkingDirectory=/srv/mcp
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+Environment=EAF_MCP_DOCS_DIR=/srv/mcp/docs/mcp-docs
+ExecStart=/srv/mcp/.venv/bin/python -m uvicorn mcp_service.app:app --host 127.0.0.1 --port 8002 --workers 1 --no-access-log --no-proxy-headers --log-level warning
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/srv/mcp
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+MemoryMax=512M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

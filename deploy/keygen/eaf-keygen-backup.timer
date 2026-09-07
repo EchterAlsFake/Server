@@ -1,0 +1,8 @@
+[Unit]
+Description=Daily Keygen backup
+[Timer]
+OnCalendar=*-*-* 04:10:00
+RandomizedDelaySec=10m
+Persistent=true
+[Install]
+WantedBy=timers.target

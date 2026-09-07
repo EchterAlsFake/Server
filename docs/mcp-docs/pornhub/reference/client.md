@@ -54,7 +54,7 @@ client = await Client.create(
 ```
 
 ## Constructor Parameters
-- core BaseCore — Networking core instance. The source default is one module-created `BaseCore()` shared by callers that omit this argument; pass an explicit core for independent configuration and lifecycle.
+- core BaseCore | None — Optional networking core instance. If omitted or `None` (default), a fresh `BaseCore` instance is initialized with default headers and cookies.
 - email str | None — Account email for login
 - password str | None — Account password for login
 
@@ -316,16 +316,22 @@ async for result in client.search_hubtraffic(
 
 ## create
 
-Constructs a client and, when requested with credentials, waits for login to complete before returning it. Use this factory when initialization must include authentication.
+Asynchronously constructs a client and, when `login=True` and credentials are provided, awaits `login()` before returning the instance. This is the recommended entry point when creating an authenticated client.
 
 ```python
 client = await Client.create(
-    core: BaseCore = BaseCore(),
+    core: BaseCore | None = None,
     email: str | None = None,
     password: str | None = None,
     login: bool = False
 ) -> Client
 ```
+
+### Parameters
+- core BaseCore | None — Optional custom networking core instance
+- email str | None — Account email
+- password str | None — Account password
+- login bool — If `True` and credentials are provided, automatically awaits login
 
 ### Returns
 

@@ -1,0 +1,38 @@
+licenses.echteralsfake.me {
+    encode zstd gzip
+    header Strict-Transport-Security "max-age=31536000"
+    header -Server
+    header {
+        Cache-Control "no-store"
+        Referrer-Policy "no-referrer"
+        X-Content-Type-Options "nosniff"
+    }
+    # Only expose the client protocol. Administrative calls use loopback.
+    @client {
+        path /v1/licenses/actions/validate-key /v1/machines /v1/machines/*
+        header_regexp Authorization "^License key/"
+    }
+    handle @client {
+        request_body {
+            max_size 32KB
+        }
+        reverse_proxy 127.0.0.1:8004 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up -User-Agent
+            header_up -Origin
+            header_up X-Forwarded-For 127.0.0.1
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+    }
+    handle /healthz {
+        rewrite * /v1/health
+        reverse_proxy 127.0.0.1:8004
+    }
+    handle {
+        respond "Licensing API" 404
+    }
+}

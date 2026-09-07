@@ -9,6 +9,7 @@ keywords:
   - "Short"
   - "download"
   - "get_author"
+  - "get_video"
   - "url"
   - "title"
   - "video_id"
@@ -24,7 +25,6 @@ keywords:
   - "author_link"
   - "avatar"
   - "video_url"
-  - "m3u8_base_url"
 ---
 
 # Short — PornHub API
@@ -135,6 +135,25 @@ await short.get_author(
 ### Returns
 
 → Pornstar
+
+## get_video
+
+Returns the full `Video` object corresponding to this short.
+
+```python
+await short.get_video(
+    load_html: bool = False,
+    load_api: bool = True
+) -> Video
+```
+
+### Parameters
+- load_html bool — If `True`, fetches full HTML page for video details
+- load_api bool — If `True` (default), fetches metadata via the Webmaster API
+
+### Returns
+
+→ Video
 
 ## Related MCP documents
 

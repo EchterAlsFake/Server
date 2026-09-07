@@ -1,0 +1,9 @@
+[project]
+name = "eaf-docs-mcp"
+version = "1.0.0"
+description = "Public read-only MCP server for EAF Python API documentation"
+requires-python = ">=3.14"
+dependencies = [
+    "mcp>=2.1.1",
+    "uvicorn>=0.52.0",
+]
