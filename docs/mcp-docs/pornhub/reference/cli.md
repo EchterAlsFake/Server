@@ -52,6 +52,10 @@ Flag| Description
 `--recommended`| Download recommended videos (requires login)
 `--watched`| Download watched/history videos (requires login)
 
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
+
 ## Related MCP documents
 
 - [PornHub API getting started](../getting-started.md)

@@ -578,6 +578,39 @@ stream = helper.iterator(
     <span class="section-anchor" id="logging"></span>
     <h2><span class="section-icon">📝</span> Logging & Cleanup</h2>
 
+    <p>Configure logging once at application startup to capture provider and base API records in the same console or file output:</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>import logging
+from base_api.modules.logger import configure_app_logging
+
+configure_app_logging(log_file="api.log", level=logging.INFO)</code></pre>
+    </div>
+    <p>With no <code>logger_name</code>, <code>configure_app_logging()</code> configures the root logger. Omit <code>log_file</code> for console output only. Log files append by default; <code>overwrite_file=True</code> truncates the selected file. The default format includes timestamp, logger name, level, filename, line number, function, and message. Logged exceptions include the original traceback and chained causes.</p>
+    <p>Request and download failures include the requested URL or video URL. Direct media loading logs the model, source, and URL before raising a loader error. Iterator failures are logged even under <code>ErrorMode.SKIP</code> or <code>ErrorMode.YIELD</code>; retries identify the attempt, and error-handler failures are logged before raising <code>ErrorHandlerError</code>. Segment/download failures include stream or segment URLs and output paths where available.</p>
+    <p>Provider CLI entry points configure INFO-level console logging automatically and log caught per-URL failures with tracebacks. Library imports do not configure the root logger; importing Tube8 or Thumbzilla no longer enables root DEBUG logging.</p>
+    <h3>Logging a caught or stored exception</h3>
+    <p>Use <code>logger.exception()</code> inside an <code>except</code> block. The APIs already log failures at their handling boundaries; add application logging when more context is needed. Outside the original handler, pass the stored exception explicitly:</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>logger = logging.getLogger(__name__)
+
+try:
+    await video.download(configuration=config)
+except Exception:
+    logger.exception("Application download failed for %s", video.url)
+    raise
+
+if not result.succeeded:
+    error = result.error
+    logger.error(
+        "Scrape failed for %s: %s", result.url, error,
+        exc_info=(type(error), error, error.__traceback__),
+    )</code></pre>
+    </div>
+    <p><code>exc_info=True</code> alone cannot recover a traceback from a stored <code>ScrapeResult</code>. Ordinary status messages and failures reported only by a boolean or download report have no exception traceback to attach. Explicit cancellation is not wrapped as <code>DownloadFailed</code>; also inspect <code>False</code> or <code>DownloadReport.status</code> when the downloader reports an outcome that way.</p>
+    <h3>Core logging and cleanup</h3>
+    <p><code>core.enable_logging()</code> configures the core logger specifically. Use root logging above when the file should also receive provider and media-loader records. Optional remote logging uses <code>log_ip</code>/<code>log_port</code> on the core or <code>http_ip</code>/<code>http_port</code> on <code>configure_app_logging()</code>.</p>
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">import</span> logging
@@ -626,6 +659,8 @@ core.enable_logging(
     <h2><span class="section-icon">🚨</span> Error Reference</h2>
 
     <p>Errors live in <code>base_api.modules.errors</code>; frequently used version 4 errors are also exported from <code>base_api</code>.</p>
+    <p>The common provider errors derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Existing provider imports remain valid. Pornhub retains its own classes: its common errors subclass both the corresponding shared type and <code>PornhubAPIError</code>, preserving both ways of catching them.</p>
+    <p>Provider request wrappers chain translated exceptions with <code>raise ... from original_error</code>. Download wrappers also cover preparation failures, including loading metadata, choosing quality, and constructing the output path; <code>DownloadFailed</code> includes the video URL and retains the original error in <code>__cause__</code>. Specific availability exceptions remain supported, including HQPorner's <code>NotAvailable</code> (a <code>VideoUnavailable</code> subclass). An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped as <code>DownloadFailed</code>. Boolean/download-report outcomes from the base downloader are unchanged.</p>
     <div class="info-box note">
         <div class="info-box-title">Loader exceptions are wrapped</div>
         An exception raised by one source loader is exposed as <code>MediaLoadError</code>; inspect its <code>original_error</code> for a site package's <code>NotFound</code>, <code>RegionBlocked</code>, or similar exception. If several requested sources fail together, <code>MediaLoadErrors.errors</code> contains each failure. Helper item failures add one more typed <code>ItemFetchError</code> layer whose <code>original_error</code> is the media-load error.
@@ -634,6 +669,7 @@ core.enable_logging(
         <table>
             <thead><tr><th>Family</th><th>Exceptions and meaning</th></tr></thead>
             <tbody>
+                <tr><td>Shared provider errors</td><td><code>BaseScraperError</code>, <code>ScraperException</code>, <code>NotFound</code>, <code>NetworkError</code>, <code>BotDetection</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code>, <code>DownloadFailed</code>, <code>VideoUnavailable</code></td></tr>
                 <tr><td>HTTP/network</td><td><code>NetworkRequestError</code>, <code>HTTPStatusError</code>, <code>RateLimitError</code>, <code>RequestRetriesExhausted</code>, <code>ResourceGone</code>, <code>AccessDeniedError</code>, <code>InvalidProxy</code>, <code>ProxySSLError</code></td></tr>
                 <tr><td>Media fields</td><td><code>UnknownMediaFieldError</code>, <code>FieldNotLoadableError</code>, <code>DataNotLoadedError</code></td></tr>
                 <tr><td>Media loaders</td><td><code>LoaderConfigurationError</code>, <code>LoaderContractError</code>, <code>MediaLoadError</code>, <code>MediaLoadErrors</code></td></tr>

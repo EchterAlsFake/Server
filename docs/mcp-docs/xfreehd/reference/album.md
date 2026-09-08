@@ -40,6 +40,8 @@ Type: int | None; Description: Calculated total pages in the album
 
 Fetches direct photo image URLs for a specific album index page.
 
+`get_images_by_page(page)` raises `NotFound` when `page` exceeds `total_pages_count`; the message includes the requested page, album URL, and total page count.
+
 ```python
 await album.get_images_by_page(
     page: int = 1

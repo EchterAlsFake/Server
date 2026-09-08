@@ -679,18 +679,23 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 
     <p>Source loaders translate request failures into exceptions from <code>hqporner_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
+    <p>Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in <code>__cause__</code>. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in <code>DownloadFailed</code>; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped in <code>DownloadFailed</code>. Base downloader <code>False</code> and <code>DownloadReport</code> results remain supported; inspect the result as well as handling exceptions.</p>
+    <p>The common provider errors <code>NotFound</code>, <code>NetworkError</code>, <code>BotDetection</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code>, and <code>DownloadFailed</code> are catchable through <code>base_api.modules.errors</code>. They derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Existing provider import paths remain valid.</p>
+    <p>See <a href="../eaf_base_api/index.html#logging">Logging &amp; Cleanup</a> for application logging setup.</p>
+    <p><code>InvalidActress</code> derives from <code>ScraperException</code>. <code>NotAvailable</code> derives from the shared <code>VideoUnavailable</code> and is still raised directly when no download qualities are available. Both retain their default messages and accept a custom message.</p>
+
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
             <tbody>
                 <tr><td><code>InvalidActress</code></td><td>The actress name or URL pattern did not match checks</td></tr>
-                <tr><td><code>NotAvailable</code></td><td>Video could not be downloaded because the CDN returned no qualities</td></tr>
+                <tr><td><code>NotAvailable</code></td><td>No download qualities are available; this error subclasses <code>VideoUnavailable</code></td></tr>
                 <tr><td><code>NotFound</code></td><td>Server returned HTTP 404</td></tr>
-                <tr><td><code>NetworkError</code></td><td>General network request failure (wraps <code>NetworkRequestError</code>)</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to a network error, exhausted request retries, or a non-404 HTTPStatusError</td></tr>
                 <tr><td><code>BotDetection</code></td><td>Bot protection triggered</td></tr>
                 <tr><td><code>ProxyError</code></td><td>Invalid or failing proxy</td></tr>
                 <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
-                <tr><td><code>DownloadFailed</code></td><td>Download operation failed</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception</td></tr>
             </tbody>
         </table>
     </div>
@@ -717,6 +722,8 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="cli-section">
     <span class="section-anchor" id="cli"></span>
     <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.</p>
 
     <p>The HQPorner API package includes a rich CLI accessible via <code>hqporner_api</code> or <code>python -m hqporner_api</code>:</p>
 

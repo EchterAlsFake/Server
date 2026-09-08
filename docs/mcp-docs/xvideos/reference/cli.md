@@ -38,6 +38,10 @@ Flag| Description
 `--output`| Output path (directory or file)
 `--no-title`| `True`/`False` — Skip auto-appending title
 
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
+
 ## Related MCP documents
 
 - [XVideos API getting started](../getting-started.md)

@@ -94,6 +94,8 @@ Type: bool; Description: True when the result contains an item
 
 Type: Video; Description: Returns the item or raises its terminal error
 
+A missing main video container raises `ValueError` instead of returning an empty successful extraction. During iteration, `Helper` logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a `PageFetchError` when raised or yielded. An existing container with no matching videos can still produce an empty result.
+
 ## Related MCP documents
 
 - [Thumbzilla API getting started](../getting-started.md)

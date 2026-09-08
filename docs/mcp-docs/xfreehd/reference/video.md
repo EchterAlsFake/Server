@@ -102,6 +102,8 @@ video.video_qualities() -> list[int]
 
 Downloads the video directly from CDN server using `DownloadConfigRAW`. Supports `hd` and `sd` quality configuration.
 
+`Video.download()` returns `True` when the RAW downloader completes. On an exception it raises `DownloadFailed` with the video URL and original cause; it no longer returns an exception object. Replace checks such as `isinstance(result, DownloadFailed)` with `try`/`except DownloadFailed`.
+
 ```python
 await video.download(
     configuration: DownloadConfigRAW

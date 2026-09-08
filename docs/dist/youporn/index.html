@@ -699,17 +699,22 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 
     <p>Source loaders translate request failures into exceptions from <code>youporn_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Direct unresolved-field access raises <code>base_api.DataNotLoadedError</code>, while operations outside media loading may raise package or core exceptions directly.</p>
 
+    <p>Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in <code>__cause__</code>. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in <code>DownloadFailed</code>; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped in <code>DownloadFailed</code>. Base downloader <code>False</code> and <code>DownloadReport</code> results remain supported; inspect the result as well as handling exceptions.</p>
+    <p>The common provider errors <code>NotFound</code>, <code>NetworkError</code>, <code>BotDetection</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code>, and <code>DownloadFailed</code> are catchable through <code>base_api.modules.errors</code>. They derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Existing provider import paths remain valid.</p>
+    <p>The provider-specific <code>RegionBlocked</code> and legacy <code>youporn_api.modules.errors.DataNotLoadedError</code> now derive from <code>ScraperException</code>. The legacy class is distinct from <code>base_api.DataNotLoadedError</code>, which is raised for unresolved media fields.</p>
+    <p>See <a href="../eaf_base_api/index.html#logging">Logging &amp; Cleanup</a> for application logging setup.</p>
+
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Exception</th><th>Trigger Cause</th></tr></thead>
             <tbody>
                 <tr><td><code>VideoUnavailable</code></td><td>The server returned HTTP 404, or the requested video is deleted or unavailable</td></tr>
                 <tr><td><code>RegionBlocked</code></td><td>Video content is blocked in user's geographic region</td></tr>
-                <tr><td><code>NetworkError</code></td><td>Request failed due to HTTP connection problems</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to a network error, exhausted request retries, or a non-404 HTTPStatusError</td></tr>
                 <tr><td><code>BotDetection</code></td><td>Bot-protection challenge block detected</td></tr>
                 <tr><td><code>ProxyError</code></td><td>Proxy configuration failed or proxy is down</td></tr>
                 <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
-                <tr><td><code>DownloadFailed</code></td><td>Segmented stream or raw file download failed</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception</td></tr>
             </tbody>
         </table>
     </div>
@@ -738,6 +743,8 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="cli-section">
     <span class="section-anchor" id="cli"></span>
     <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.</p>
 
     <p>YouPorn API includes a command-line interface accessible via <code>youporn_api</code> or <code>python -m youporn_api</code>:</p>
 

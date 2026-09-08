@@ -1781,19 +1781,24 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
     <span class="section-anchor" id="error-handling"></span>
     <h2><span class="section-icon">⚠️</span> Error Handling</h2>
 
-    <p>All custom exceptions inherit from <code>PornhubAPIError</code>, which inherits from Python's built-in <code>Exception</code>. Source loaders translate request failures into these library exceptions. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading, such as login, raise package or core exceptions directly.</p>
+    <p>All custom exceptions inherit from <code>PornhubAPIError</code>, which inherits from the shared <code>ScraperException</code> and <code>BaseScraperError</code>. Source loaders translate request failures into these library exceptions. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading, such as login, raise package or core exceptions directly.</p>
+
+    <p>Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in <code>__cause__</code>. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in <code>DownloadFailed</code>; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped in <code>DownloadFailed</code>. Base downloader <code>False</code> and <code>DownloadReport</code> results remain supported; inspect the result as well as handling exceptions.</p>
+    <p>The common provider errors <code>NotFound</code>, <code>NetworkError</code>, <code>BotDetection</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code>, and <code>DownloadFailed</code> are catchable through <code>base_api.modules.errors</code>. They derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Existing provider import paths remain valid.</p>
+    <p>See <a href="../eaf_base_api/index.html#logging">Logging &amp; Cleanup</a> for application logging setup.</p>
+    <p>Pornhub retains its own exception classes: each common error also subclasses the corresponding shared error. For example, <code>pornhub_api.modules.errors.DownloadFailed</code> can be caught as either <code>PornhubAPIError</code> or <code>base_api.modules.errors.DownloadFailed</code>.</p>
 
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Exception</th><th>When Raised</th></tr></thead>
             <tbody>
-                <tr><td><code>PornhubAPIError</code></td><td>Base exception class for all PornHub API errors (inherits from <code>Exception</code>)</td></tr>
+                <tr><td><code>PornhubAPIError</code></td><td>Base exception class for PornHub API errors; inherits from <code>ScraperException</code></td></tr>
                 <tr><td><code>NotFound</code></td><td>Server returned HTTP 404</td></tr>
-                <tr><td><code>NetworkError</code></td><td>General network request failure (wraps <code>NetworkRequestError</code>)</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to a network error, exhausted request retries, or a non-404 HTTPStatusError</td></tr>
                 <tr><td><code>BotDetection</code></td><td>Bot protection triggered</td></tr>
                 <tr><td><code>ProxyError</code></td><td>Invalid or failing proxy</td></tr>
                 <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
-                <tr><td><code>DownloadFailed</code></td><td>Download operation failed</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception</td></tr>
                 <tr><td><code>LoginFailed</code></td><td>Authentication failed (invalid credentials or token)</td></tr>
                 <tr><td><code>ClientAlreadyLogged</code></td><td>Attempted login when already authenticated</td></tr>
                 <tr><td><code>VideoDisabled</code></td><td>The video has been disabled by the platform</td></tr>
@@ -1834,6 +1839,8 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="cli-section">
     <span class="section-anchor" id="cli"></span>
     <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.</p>
 
     <p>The PornHub API package includes a built-in CLI accessible via <code>phub</code>, <code>pornhub_api</code>, or <code>python -m pornhub_api</code>:</p>
 

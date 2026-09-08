@@ -520,6 +520,8 @@ report = <span class="token-keyword">await</span> video.download(configuration=c
 <div class="section" id="scraping-results-section">
     <span class="section-anchor" id="scraping-results"></span>
     <h2><span class="section-icon">📊</span> Scraping Results</h2>
+
+    <p>A missing main video container raises <code>ValueError</code> instead of returning an empty successful extraction. During iteration, <code>Helper</code> logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a <code>PageFetchError</code> when raised or yielded. An existing container with no matching videos can still produce an empty result.</p>
     <p>All concurrently iterated methods accept one <code>IteratorConfig</code> policy and yield immutable <code>ScrapeResult[Video]</code> values. The package default loads <code>html</code> and skips terminal page failures. A supplied configuration replaces that default, so include <code>load_specific_sources=("html",)</code> and <code>page_error_mode=ErrorMode.SKIP</code> when preserving both behaviors; the example below deliberately opts into yielding page failures.</p>
     <p>The public configuration fields are <code>max_page_concurrency</code>, <code>max_item_concurrency</code>, <code>max_pending_items</code>, <code>extract_in_thread</code>, <code>order</code>, both <code>*_error_mode</code>, both <code>*_retry</code>, both <code>*_error_handler</code>, <code>load_specific_fields</code>, and <code>load_specific_sources</code>.</p>
 
@@ -586,16 +588,21 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 
     <p>Source loaders translate request failures into exceptions from <code>thumbzilla_api.modules.errors</code>. Calls that load media expose ordinary loader failures through <code>base_api.MediaLoadError</code> (or <code>MediaLoadErrors</code> for several sources); inspect <code>original_error</code>/<code>errors</code> as shown. Operations outside media loading may still raise package or core exceptions directly.</p>
 
+    <p>Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in <code>__cause__</code>. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in <code>DownloadFailed</code>; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped in <code>DownloadFailed</code>. Base downloader <code>False</code> and <code>DownloadReport</code> results remain supported; inspect the result as well as handling exceptions.</p>
+    <p>The common provider errors <code>NotFound</code>, <code>NetworkError</code>, <code>BotDetection</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code>, and <code>DownloadFailed</code> are catchable through <code>base_api.modules.errors</code>. They derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Existing provider import paths remain valid.</p>
+    <p>See <a href="../eaf_base_api/index.html#logging">Logging &amp; Cleanup</a> for application logging setup.</p>
+    <p>A missing main video container raises <code>ValueError</code> instead of returning an empty successful extraction. During iteration, <code>Helper</code> logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a <code>PageFetchError</code> when raised or yielded. An existing container with no matching videos can still produce an empty result.</p>
+
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Exception</th><th>Trigger Cause</th></tr></thead>
             <tbody>
                 <tr><td><code>NotFound</code></td><td>Server returned HTTP 404 (e.g. video deleted)</td></tr>
-                <tr><td><code>NetworkError</code></td><td>Request failed due to HTTP connection problems</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to a network error, exhausted request retries, or a non-404 HTTPStatusError</td></tr>
                 <tr><td><code>BotDetection</code></td><td>Anti-bot challenge block detected</td></tr>
                 <tr><td><code>ProxyError</code></td><td>Proxy configuration failed or proxy is down</td></tr>
                 <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
-                <tr><td><code>DownloadFailed</code></td><td>HLS segmented stream download failed</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception</td></tr>
             </tbody>
         </table>
     </div>
@@ -623,6 +630,8 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="cli-section">
     <span class="section-anchor" id="cli"></span>
     <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.</p>
 
     <p>Thumbzilla API includes a command-line interface accessible via <code>thumbzilla_api</code> or <code>python -m thumbzilla_api</code>:</p>
 

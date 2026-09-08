@@ -39,6 +39,10 @@ Flag| Description
 `--output DIR`| Destination file or directory path
 `--no-title True/False`| Skip auto-appending video title to output filename (default: `False`)
 
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
+
 ## Related MCP documents
 
 - [Eporner API getting started](../getting-started.md)
