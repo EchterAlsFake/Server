@@ -10,8 +10,11 @@ keywords:
   - "Model Context Protocol"
   - "Cursor"
   - "Claude Desktop"
+  - "Claude Code"
   - "VS Code"
   - "Copilot"
+  - "Cline"
+  - "Roo Code"
   - "Windsurf"
   - "Zed"
   - "Antigravity"
@@ -49,7 +52,7 @@ When connected to this MCP server, your AI assistant receives:
 
 ### 1. Cursor
 
-Add to `.cursor/mcp.json` in your project root, or configure via **Cursor Settings > Features > MCP**:
+Add to `.cursor/mcp.json` in your project root, or globally in `~/.cursor/mcp.json` (or configure via **Cursor Settings > Features > MCP**):
 
 ```json
 {
@@ -61,39 +64,7 @@ Add to `.cursor/mcp.json` in your project root, or configure via **Cursor Settin
 }
 ```
 
-### 2. VS Code (GitHub Copilot / Cline / Roo Code / Continue)
-
-Add to `.vscode/mcp.json` in your workspace or configure in your extension settings:
-
-```json
-{
-  "servers": {
-    "eaf-apis": {
-      "url": "https://mcp.echteralsfake.me/mcp",
-      "type": "sse"
-    }
-  }
-}
-```
-
-Alternatively, if your client uses `mcp-remote` over stdio:
-
-```json
-{
-  "servers": {
-    "eaf-apis": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.echteralsfake.me/mcp"]
-    }
-  }
-}
-```
-
-### 3. Claude Desktop
-
-Add to `claude_desktop_config.json`:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+If your Cursor client requires bridging over stdio, use `mcp-remote`:
 
 ```json
 {
@@ -106,9 +77,93 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-### 4. Windsurf (Codeium)
+### 2. VS Code (GitHub Copilot / Native MCP)
 
-Add to `~/.codeium/windsurf/mcp_config.json`:
+Add to `.vscode/mcp.json` in your workspace, or user-level configuration via the Command Palette (**MCP: Open User Configuration**):
+
+```json
+{
+  "servers": {
+    "eaf-apis": {
+      "type": "http",
+      "url": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}
+```
+
+Alternatively, if running through the `mcp-remote` stdio bridge:
+
+```json
+{
+  "servers": {
+    "eaf-apis": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.echteralsfake.me/mcp"]
+    }
+  }
+}
+```
+
+### 3. VS Code Extensions (Cline & Roo Code)
+
+Extensions such as **Cline** and **Roo Code** use the `mcpServers` object format (not `servers`).
+
+Configure in Cline (`cline_mcp_settings.json` via Cline MCP panel) or Roo Code (`.roo/mcp.json` or `mcp_settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "eaf-apis": {
+      "url": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}
+```
+
+Or via stdio bridge:
+
+```json
+{
+  "mcpServers": {
+    "eaf-apis": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.echteralsfake.me/mcp"]
+    }
+  }
+}
+```
+
+### 4. Claude Desktop & Claude Code
+
+#### Claude Desktop
+Claude Desktop connects to remote servers via a local `stdio` bridge. Add to `claude_desktop_config.json`:
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "eaf-apis": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.echteralsfake.me/mcp"]
+    }
+  }
+}
+```
+
+#### Claude Code (CLI)
+Add via the Claude Code CLI tool:
+
+```bash
+claude mcp add --transport http eaf-apis https://mcp.echteralsfake.me/mcp
+```
+
+### 5. Windsurf (Codeium)
+
+Add to `~/.codeium/windsurf/mcp_config.json` (macOS/Linux) or `%USERPROFILE%\.codeium\windsurf\mcp_config.json` (Windows):
 
 ```json
 {
@@ -120,9 +175,22 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 }
 ```
 
-### 5. Zed
+Or via stdio bridge (`mcp-remote`):
 
-Add to `~/.config/zed/settings.json`:
+```json
+{
+  "mcpServers": {
+    "eaf-apis": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.echteralsfake.me/mcp"]
+    }
+  }
+}
+```
+
+### 6. Zed
+
+Add to `~/.config/zed/settings.json` (or configure via **Settings > AI > Context Servers / MCP Servers**):
 
 ```json
 {
@@ -134,21 +202,23 @@ Add to `~/.config/zed/settings.json`:
 }
 ```
 
-### 6. Antigravity / Gemini CLI
+### 7. Antigravity / Gemini CLI
 
 Add via the CLI tool:
 
 ```bash
-agy mcp add eaf-apis --url https://mcp.echteralsfake.me/mcp
+agy mcp add eaf-apis https://mcp.echteralsfake.me/mcp
 ```
 
-Or add directly to your workspace configuration:
+> **Note:** Flags must precede `<name>`, and URLs are detected automatically—do **not** pass a `--url` flag (e.g. `agy mcp add eaf-apis --url ...` is rejected as an invalid command).
+
+Or add directly to your global configuration (`~/.gemini/config/mcp_config.json`):
 
 ```json
 {
-  "mcp_servers": {
+  "mcpServers": {
     "eaf-apis": {
-      "url": "https://mcp.echteralsfake.me/mcp"
+      "serverUrl": "https://mcp.echteralsfake.me/mcp"
     }
   }
 }

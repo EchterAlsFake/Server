@@ -159,7 +159,7 @@
                                 <p>Copy and paste the configuration snippet for your editor or AI agent:</p>
 
                                 <h4>Cursor</h4>
-                                <p>Add to <code>.cursor/mcp.json</code> in your project root or configure in <strong>Cursor Settings &gt; Features &gt; MCP</strong>:</p>
+                                <p>Add to <code>.cursor/mcp.json</code> in your project root, or globally in <code>~/.cursor/mcp.json</code> (or configure via <strong>Cursor Settings &gt; Features &gt; MCP</strong>):</p>
                                 <div class="code-window">
                                     <div class="code-header"><span>.cursor/mcp.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>{
@@ -171,22 +171,35 @@
 }</code></pre>
                                 </div>
 
-                                <h4>VS Code (GitHub Copilot / Cline / Roo Code / Continue)</h4>
-                                <p>Add to <code>.vscode/mcp.json</code> or your MCP extension configuration:</p>
+                                <h4>VS Code (GitHub Copilot / Native MCP)</h4>
+                                <p>Add to <code>.vscode/mcp.json</code> in your workspace or user profile (Command Palette: <strong>MCP: Open User Configuration</strong>):</p>
                                 <div class="code-window">
                                     <div class="code-header"><span>.vscode/mcp.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>{
   "servers": {
     "eaf-apis": {
-      "url": "https://mcp.echteralsfake.me/mcp",
-      "type": "sse"
+      "type": "http",
+      "url": "https://mcp.echteralsfake.me/mcp"
+    }
+  }
+}</code></pre>
+                                </div>
+
+                                <h4>VS Code Extensions (Cline / Roo Code)</h4>
+                                <p>Configure in Cline (<code>cline_mcp_settings.json</code> via Cline MCP panel) or Roo Code (<code>.roo/mcp.json</code> or <code>mcp_settings.json</code>):</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>mcp_settings.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>{
+  "mcpServers": {
+    "eaf-apis": {
+      "url": "https://mcp.echteralsfake.me/mcp"
     }
   }
 }</code></pre>
                                 </div>
 
                                 <h4>Claude Desktop</h4>
-                                <p>Add to <code>claude_desktop_config.json</code> (macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>, Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code>):</p>
+                                <p>Add to <code>claude_desktop_config.json</code> (macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>, Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code>, Linux: <code>~/.config/Claude/claude_desktop_config.json</code>):</p>
                                 <div class="code-window">
                                     <div class="code-header"><span>claude_desktop_config.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>{
@@ -199,8 +212,15 @@
 }</code></pre>
                                 </div>
 
+                                <h4>Claude Code (CLI)</h4>
+                                <p>Add via Claude Code CLI command:</p>
+                                <div class="code-window">
+                                    <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>claude mcp add --transport http eaf-apis https://mcp.echteralsfake.me/mcp</code></pre>
+                                </div>
+
                                 <h4>Windsurf (Codeium)</h4>
-                                <p>Add to <code>~/.codeium/windsurf/mcp_config.json</code>:</p>
+                                <p>Add to <code>~/.codeium/windsurf/mcp_config.json</code> (macOS/Linux) or <code>%USERPROFILE%\.codeium\windsurf\mcp_config.json</code> (Windows):</p>
                                 <div class="code-window">
                                     <div class="code-header"><span>mcp_config.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>{
@@ -213,7 +233,7 @@
                                 </div>
 
                                 <h4>Zed</h4>
-                                <p>Add to <code>~/.config/zed/settings.json</code>:</p>
+                                <p>Add to <code>~/.config/zed/settings.json</code> (or configure via <strong>Settings &gt; AI &gt; Context Servers / MCP Servers</strong>):</p>
                                 <div class="code-window">
                                     <div class="code-header"><span>settings.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>{
@@ -229,15 +249,15 @@
                                 <p>Add via CLI command:</p>
                                 <div class="code-window">
                                     <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>agy mcp add eaf-apis --url https://mcp.echteralsfake.me/mcp</code></pre>
+<pre><code>agy mcp add eaf-apis https://mcp.echteralsfake.me/mcp</code></pre>
                                 </div>
-                                <p>Or add directly to your workspace configuration:</p>
+                                <p>Or add directly to your global configuration (<code>~/.gemini/config/mcp_config.json</code>):</p>
                                 <div class="code-window">
-                                    <div class="code-header"><span>json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+                                    <div class="code-header"><span>mcp_config.json</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>{
-  "mcp_servers": {
+  "mcpServers": {
     "eaf-apis": {
-      "url": "https://mcp.echteralsfake.me/mcp"
+      "serverUrl": "https://mcp.echteralsfake.me/mcp"
     }
   }
 }</code></pre>
