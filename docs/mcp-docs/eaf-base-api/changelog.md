@@ -17,6 +17,7 @@ Records the versions and documented changes for the eaf_base_api API.
 
 Date / Version| Changes since 3.3.3
 ---|---
+**2026-09-15 — 4.2.0**|  Centralized provider helpers (`fetch_content`, `@download_errors`, `prepare_download_config`, `download_hls` in `base_api.modules.provider`). Added contextual logging (`ContextLogger`, `log_context`, `get_logger`, `configure_app_logging`) prefixing logs with `[class=<name> url=<url>]`. Structured error reporting with `.url`, `.class_name`, and `.api` properties across exception hierarchy, preserving root causes. Downloads now raise `DownloadFailed` on failure with full context instead of returning `False`. Added `extract_video_grid` utility for resilient grid scraping. Commits `8397f88`, `c4af5f7`, `ce2ff3a`.
 **2026-09-07 — 4.1.2**|  Added `scrape_stream()` async generator helper, optional dual-stack/IPv4/IPv6 address resolution via `RuntimeConfig.ip_resolve` and `CURL_IPRESOLVE` environment variable, standardized scraper utilities (`get_text_safe`, `get_attr_safe`, `parse_duration`, `parse_count`, `build_m3u8_master`, `str_to_bool`), and PyAV remuxing dependencies.
 **2026-08-19 — 4.1.1**|  Synchronized download/remux progress callbacks across worker threads, normalized discontinuous HLS packet timestamps during remuxing, and added regressions for stage-specific error handlers and per-core runtime settings. Commit `a062695`.
 **2026-08-16 — 4.1.0**|  Made HLS cancellation stop pending segment work promptly and corrected JSON resume-state serialization, including configured `Path` values. Commit `acdb967`.

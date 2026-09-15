@@ -15,6 +15,7 @@ Records the versions and documented changes for the xHamster API.
 
 Date| Commit| Changes
 ---|---|---
+2026-09-15| `a136ebe` / `8030a56`| Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added layout anchor validations to detect page structure changes. Implemented resilient fallback selectors for video and pornstar metadata. Enhanced download stream URL resolution and error handling. Added snippet-based unit tests for video and pornstar extraction.
 2026-08-24| `c640d89` / `b7c302e`| Adapted listing extraction to the site's new per-video `data-video-id` layout, searched all candidate result containers, deduplicated overlapping results, and mapped listing duration into the current `duration` field.
 2026-08-14| `79224f5`| Released 2.6 with expanded `Video` metadata: hash, description, duration/views/comments, timestamps, VR/HD flags, maximum resolution, orientation, and preview thumbnail.
 2026-08-11| `d9714c3`| Released 2.5 with complete typing and `py.typed`; repaired selectors and fallbacks; implemented `get_shorts()` on `Pornstar` and `Creator` (not the shared base or Channel); and aligned retry defaults with `RuntimeConfig`.

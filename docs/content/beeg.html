@@ -396,6 +396,11 @@ beeg_api --file urls.txt --quality best --output ./downloads --no-title False</c
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📜</span> Changelog</h2>
 
+    <h3>1.7 — September 15, 2026</h3>
+    <ul class="param-list" style="margin: 12px 0;">
+        <li class="param-item" style="display: block; padding: 6px 0;"><code>6bd391b</code> / <code>c5a4549</code> / <code>05837ac</code> — Adopted shared request and download error handling from <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added CLI support with automatic console logging, exception chaining, and contextual logging.</li>
+    </ul>
+
     <h3>1.7 — August 11, 2026</h3>
     <ul class="param-list" style="margin: 12px 0;">
         <li class="param-item" style="display: block; padding: 6px 0;"><code>9eb18ac</code> — Added complete public type hints and the <code>py.typed</code> marker, updated package metadata for 1.7, and reverted the temporary exact-suffix ID parsing change. The current implementation again uses <code>strip("-0")</code>.</li>

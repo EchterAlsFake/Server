@@ -15,6 +15,7 @@ Records the versions and documented changes for the YouPorn API.
 
 Date| Commit| Changes
 ---|---|---
+2026-09-15| `8144589` / `f4272be` / `dd6f050`| Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added `BaseProfile` (common header: `name`, `avatar`, `banner`, `description`) and comprehensive type hints across profile and video helpers.
 2026-08-11| `6c2af7f`| Completed additional public type-hint coverage.
 2026-08-11| `b7c2cb3`| Released 1.8 with typing improvements and the `py.typed` marker.
 2026-08-08| `36a06fe`| Centralized concurrent scraping on `IteratorConfig` and forwarded package source/retry defaults.

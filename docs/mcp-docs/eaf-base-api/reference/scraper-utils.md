@@ -86,6 +86,16 @@ def build_m3u8_master(streams: list[dict[str, Any]] | dict[str, str]) -> str
 
 Constructs a standard HLS master playlist string (`#EXTM3U`) containing `#EXT-X-STREAM-INF` tags from stream definitions. Used by scrapers to generate local master playlists from fragmented video sources or quality maps.
 
+## Grid Extraction
+
+### extract_video_grid
+
+```python
+def extract_video_grid(parser: Any, base_url: str, logger: Any) -> list[dict]
+```
+
+Extracts comprehensive video attributes (`video_id`, `title`, `url`, `duration`, `author_name`, `uploader_url`, `thumbnail`, `preview_video_url`, `performers`) from HTML search or listing grids. Gracefully probes multiple layout containers and video box selectors with layout anchor validations, resolving relative URLs with `urljoin(base_url, ...)`.
+
 ## Exception Helpers
 
 ### is_resource_gone

@@ -270,7 +270,7 @@ client = <span class="token-class">Client</span>()</code></pre>
             <h3 class="method-title">Download Video <code>download()</code></h3>
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
-        <div class="method-desc">Downloads the video via HLS streaming using the reconstructed M3U8 playlist URL. Appends the video title to the output path unless <code>no_title=True</code>.</div>
+        <div class="method-desc">Downloads the video via HLS streaming using the reconstructed M3U8 playlist URL. Appends the video title to the output path unless <code>no_title=True</code>. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigHLS
 ) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
@@ -396,6 +396,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.6 — 2026-09-15</h3>
+    <ul>
+        <li><code>8c16241</code> / <code>6389916</code> — Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for title, thumbnail, publish date, and duration. Enhanced m3u8 playlist URL extraction fallbacks (JS regex, direct regex, surrit regex) and validated base URL presence in download method. Added unit tests for snippet parsing and error scenarios.</li>
+    </ul>
 
     <h3>2.6 — 2026-08-14</h3>
     <ul>

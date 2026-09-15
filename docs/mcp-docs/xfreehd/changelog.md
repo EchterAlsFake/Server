@@ -15,6 +15,9 @@ keywords:
 
 Records the versions and documented changes for the XFreeHD API.
 
+## 1.7.1 — 2026-09-15
+- `a728c0e` / `b18b650` / `fb5e92c` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Cleanly report removed or deleted videos with `ResourceGone`. Expanded `Video` metadata fields: `author_thumbnail`, `author_url`, `author_subscribers`, `embed_url`, and `rating`. Added offline extraction unit tests.
+
 ## 1.7.1 — 2026-08-14 `264b618`
 - Added `Video.video_qualities()` for consumers that need numeric quality tiers for the current one- or two-CDN layouts.
 

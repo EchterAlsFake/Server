@@ -1257,6 +1257,21 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
                 <tr><td><code>video_url</code></td><td><code>str | None</code></td><td>Link to the full video version</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Synthesized master m3u8 playlist</td></tr>
                 <tr><td><code>media_definitions</code></td><td><code>dict | None</code></td><td>Raw media quality definitions</td></tr>
+                <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Video duration in seconds</td></tr>
+                <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>Category labels</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Tag labels</td></tr>
+                <tr><td><code>is_verified</code></td><td><code>bool | None</code></td><td>Whether the creator is verified</td></tr>
+                <tr><td><code>like_count</code></td><td><code>int | None</code></td><td>Numeric parsed like count</td></tr>
+                <tr><td><code>dislike_count</code></td><td><code>int | None</code></td><td>Numeric parsed dislike count</td></tr>
+                <tr><td><code>like_info</code></td><td><code>str | None</code></td><td>Formatted like string</td></tr>
+                <tr><td><code>favorite_info</code></td><td><code>str | None</code></td><td>Formatted favorite string</td></tr>
+                <tr><td><code>token</code></td><td><code>str | None</code></td><td>Short action token</td></tr>
+                <tr><td><code>author_id</code></td><td><code>str | None</code></td><td>Uploader numeric account ID</td></tr>
+                <tr><td><code>author_type</code></td><td><code>str | None</code></td><td>Author membership type (e.g. <code>"Mpp"</code>)</td></tr>
+                <tr><td><code>external_link</code></td><td><code>str | None</code></td><td>Creator external link URL</td></tr>
+                <tr><td><code>external_link_text</code></td><td><code>str | None</code></td><td>Call-to-action text for the external link</td></tr>
+                <tr><td><code>large_preview_url</code></td><td><code>str | None</code></td><td>High-resolution preview image URL</td></tr>
+                <tr><td><code>shortie_url</code></td><td><code>str | None</code></td><td>Canonical short URL identifier</td></tr>
             </tbody>
         </table>
     </div>
@@ -1817,6 +1832,11 @@ phub --download "https://www.pornhub.com/view_video.php?viewkey=..." --quality b
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>5.4.3 — 2026-09-15</h3>
+    <ul>
+        <li><code>d3c8743</code> / <code>81e4629</code> / <code>d034cf2</code> — Adopted centralized request and download error handling from <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with full context. Added dedicated <code>Pornstar</code> class inheriting from <code>UserHelper</code> and <code>client.get_pornstar()</code>. Greatly expanded <code>Short</code> metadata with 15 new attributes (duration, categories, tags, is_verified, like/dislike counts and info, token, author ID/type, external links, preview URLs). Added comprehensive unit test suites covering <code>Short</code>, <code>User</code>, <code>Album</code>, <code>Channel</code>, <code>Gif</code>, <code>Playlist</code>, and <code>Video</code>. Removed redundant code and streamlined scraping logic.</li>
+    </ul>
 
     <h3>5.4.3 — 2026-09-06</h3>
     <ul>

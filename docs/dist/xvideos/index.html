@@ -1006,6 +1006,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
 
+    <h3>2.5 — 2026-09-15</h3>
+    <ul>
+        <li><code>23dec61</code> / <code>bb96133</code> / <code>d03b382</code> — Adopted shared request and download error handling from <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete diagnostic context. Modernized HTML scraping for <code>Video</code>, <code>Channel</code>, and <code>Pornstar</code> classes with layout anchors and resilient fallback selectors (JSON-LD, setVideoTitle, setThumbUrl, setVideoHLS, data-id, model links). Added comprehensive unit test suites for channel, pornstar, and video extraction.</li>
+    </ul>
+
     <h3>2.5 — 2026-08-11</h3>
     <ul>
         <li><code>c1e34b3</code> / <code>f8ebcb3</code> — Added generic <code>ScrapeResult[Video]</code> typing and the PEP 561 <code>py.typed</code> marker, left iterator retry policies unset so they resolve from <code>RuntimeConfig</code>, and released 2.5.</li>

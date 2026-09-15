@@ -47,6 +47,7 @@
         <a href="#client-search_videos" class="nav-link nav-link-sub">search_videos()</a>
         <a href="#client-get_videos_by_category" class="nav-link nav-link-sub">get_videos_by_category()</a>
         <a href="#client-get_pornstar" class="nav-link nav-link-sub">get_pornstar()</a>
+        <a href="#client-get_channel" class="nav-link nav-link-sub">get_channel()</a>
     </div>
 </div>
 
@@ -64,6 +65,13 @@
     <a href="#pornstar" class="nav-link nav-link-parent">Pornstar <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
         <a href="#pornstar-videos" class="nav-link nav-link-sub">videos()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#channel" class="nav-link nav-link-parent">Channel <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#channel-videos" class="nav-link nav-link-sub">videos()</a>
     </div>
 </div>
 
@@ -177,7 +185,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.4.1 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.4.1 depends on <code>eaf-base-api&gt;=4.2.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -397,6 +405,31 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar</span>
     </div>
+
+    <!-- client-get_channel -->
+    <span class="section-anchor" id="client-get_channel"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Channel <code>get_channel()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Loads a channel profile page containing channel stats, logo, and banner.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_channel(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Channel</div>
+
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The Eporner channel profile URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— Pre-load parsed properties (default: <code>True</code>)</span></li>
+        </ul>
+
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Channel</span>
+    </div>
 </div>
 
 <!-- ================================================================
@@ -405,7 +438,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
 <div class="section" id="video-section">
     <span class="section-anchor" id="video"></span>
     <h2><span class="section-icon">🎬</span> Video</h2>
-    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with details extracted from API endpoints and HTML elements.</p>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a single video with details extracted from API endpoints and HTML elements. If a video has been deleted or removed by the platform, a <code>ResourceGone</code> error is raised cleanly.</p>
 
     <h3>Attributes</h3>
     <div class="table-wrapper">
@@ -416,22 +449,22 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             <tbody>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
                 <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video key ID</td></tr>
-                <tr><td><code>keywords</code></td><td><code>list | None</code></td><td>List of tags</td></tr>
-                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
-                <tr><td><code>views</code></td><td><code>int | None</code></td><td>Number of views</td></tr>
+                <tr><td><code>keywords</code></td><td><code>list[str] | None</code></td><td>List of tags</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title (loadable from both API and HTML)</td></tr>
+                <tr><td><code>views</code></td><td><code>int | None</code></td><td>Number of views (loadable from both API and HTML)</td></tr>
                 <tr><td><code>rate</code></td><td><code>str | None</code></td><td>Rating representation</td></tr>
                 <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Publication / upload date string</td></tr>
-                <tr><td><code>length_seconds</code></td><td><code>str | None</code></td><td>Duration in seconds</td></tr>
+                <tr><td><code>length_seconds</code></td><td><code>int | None</code></td><td>Duration in seconds</td></tr>
                 <tr><td><code>length_minutes</code></td><td><code>str | None</code></td><td>Duration in minutes (e.g. <code>12:34</code>)</td></tr>
-                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embed player path</td></tr>
-                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Default cover image thumbnail URL</td></tr>
+                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embed player path (loadable from both API and HTML)</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Default cover image thumbnail URL (loadable from both API and HTML)</td></tr>
                 <tr><td><code>rating_value</code></td><td><code>str | None</code></td><td>Rating score value</td></tr>
                 <tr><td><code>rating_count</code></td><td><code>str | None</code></td><td>Total rating votes</td></tr>
                 <tr><td><code>parsed_urls</code></td><td><code>dict | None</code></td><td>Resolvable CDN paths mapped by resolution (e.g. <code>{"720p": {"h264": "...", "av1": "..."}}</code>)</td></tr>
                 <tr><td><code>description</code></td><td><code>str | None</code></td><td>Video summary description</td></tr>
                 <tr><td><code>encoding_format</code></td><td><code>str | None</code></td><td>Encoding format metadata</td></tr>
                 <tr><td><code>is_family_friendly</code></td><td><code>str | None</code></td><td>Family friendly flag</td></tr>
-                <tr><td><code>thumbnails</code></td><td><code>list[str] | None</code></td><td>List of alternative thumbs</td></tr>
+                <tr><td><code>thumbnails</code></td><td><code>list[str] | None</code></td><td>List of alternative thumbs (loadable from both API and HTML)</td></tr>
                 <tr><td><code>content_url</code></td><td><code>str | None</code></td><td>Meta content URL</td></tr>
                 <tr><td><code>best_rating</code></td><td><code>str | None</code></td><td>Upper rating limits</td></tr>
                 <tr><td><code>worst_rating</code></td><td><code>str | None</code></td><td>Lower rating limits</td></tr>
@@ -489,7 +522,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>.</div>
+        <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>. Failure raises <code>DownloadFailed</code> with full context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigRAW,
     mode: Encoding | <span class="token-builtin">str</span>,
@@ -536,8 +569,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
      ================================================================ -->
 <div class="section" id="pornstar-section">
     <span class="section-anchor" id="pornstar"></span>
-    <h2><span class="section-icon">👤</span> Pornstar</h2>
-    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents an Eporner model profile with parsed statistics and biography properties.</p>
+    <h2><span class="section-icon">⭐</span> Pornstar</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseProfile</code> → <code>BaseMedia</code>. Represents an Eporner model profile with parsed statistics, bio, and video streams.</p>
 
     <h3>Attributes</h3>
     <div class="table-wrapper">
@@ -547,14 +580,16 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </thead>
             <tbody>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>Profile URL</td></tr>
-                <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Number of subscribers</td></tr>
-                <tr><td><code>picture</code></td><td><code>str | None</code></td><td>Cover avatar picture URL</td></tr>
-                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Name of the pornstar</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Name of the pornstar (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Number of subscribers (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>picture</code></td><td><code>str | None</code></td><td>Cover avatar picture URL (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>video_amount</code></td><td><code>str | None</code></td><td>Number of uploaded/starring videos (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Accumulated views on videos (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>websites</code></td><td><code>dict[str, str] | None</code></td><td>External links and social pages (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>pornstar_id</code></td><td><code>str | None</code></td><td>Unique numeric pornstar ID</td></tr>
                 <tr><td><code>photos_amount</code></td><td><code>str | None</code></td><td>Number of photos</td></tr>
-                <tr><td><code>video_amount</code></td><td><code>str | None</code></td><td>Number of uploaded/starring videos</td></tr>
                 <tr><td><code>pornstar_rank</code></td><td><code>str | None</code></td><td>Eporner site rank</td></tr>
                 <tr><td><code>profile_views</code></td><td><code>str | None</code></td><td>Total views of this profile</td></tr>
-                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Accumulated views on videos</td></tr>
                 <tr><td><code>photo_views</code></td><td><code>str | None</code></td><td>Accumulated views on photos</td></tr>
                 <tr><td><code>country</code></td><td><code>str | None</code></td><td>Country of origin</td></tr>
                 <tr><td><code>age</code></td><td><code>str | None</code></td><td>Pornstar age</td></tr>
@@ -566,7 +601,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>cup</code></td><td><code>str | None</code></td><td>Bra cup size</td></tr>
                 <tr><td><code>measurements</code></td><td><code>str | None</code></td><td>Body measurements string (e.g. <code>34-24-34</code>)</td></tr>
                 <tr><td><code>biography</code></td><td><code>str | None</code></td><td>Biography paragraph description</td></tr>
-                <tr><td><code>aliases</code></td><td><code>list | None</code></td><td>List of alternate names</td></tr>
+                <tr><td><code>aliases</code></td><td><code>list[str] | None</code></td><td>List of alternate names</td></tr>
             </tbody>
         </table>
     </div>
@@ -582,7 +617,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Yields video scrape results associated with this pornstar.</div>
+        <div class="method-desc">Yields video scrape results associated with this pornstar. Inherited from <code>BaseProfile</code>.</div>
         <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
     pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
@@ -591,7 +626,64 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, automatically calculates pages based on total <code>video_amount</code>)</span></li>
-            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy; defaults to Eporner's API+HTML configuration</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy</span></li>
+        </ul>
+
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     CHANNEL
+     ================================================================ -->
+<div class="section" id="channel-section">
+    <span class="section-anchor" id="channel"></span>
+    <h2><span class="section-icon">📺</span> Channel</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseProfile</code> → <code>BaseMedia</code>. Represents an Eporner channel profile with rank, stats, logo, banner, and video stream pagination.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Channel page URL</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Channel name (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Subscriber count (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>video_amount</code></td><td><code>str | None</code></td><td>Total uploaded videos count (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Accumulated video views count (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>picture</code></td><td><code>str | None</code></td><td>Profile/logo picture URL (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>channel_id</code></td><td><code>str | None</code></td><td>Unique numeric channel ID</td></tr>
+                <tr><td><code>channel_rank</code></td><td><code>str | None</code></td><td>Channel platform rank</td></tr>
+                <tr><td><code>logo</code></td><td><code>str | None</code></td><td>Channel logo image URL</td></tr>
+                <tr><td><code>banner</code></td><td><code>str | None</code></td><td>Channel header banner image URL</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- channel-videos -->
+    <span class="section-anchor" id="channel-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Channel Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Yields video scrape results for this channel. Inherited from <code>BaseProfile</code>.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.videos(
+    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, automatically calculates pages based on total <code>video_amount</code>)</span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy</span></li>
         </ul>
 
         <h4 class="method-section-title">Returns</h4>
@@ -673,6 +765,7 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
     <h2><span class="section-icon">📜</span> Changelog</h2>
     <h3>2.4.1 (current)</h3>
     <ul class="param-list">
+        <li class="param-item"><span class="param-name">2026-09-15 · <code>3ee78ee</code> / <code>6b80518</code> / <code>f9fd944</code> / <code>01429e8</code></span> <span class="param-desc">— Updated dependency to <code>eaf-base-api&gt;=4.2.0</code> and adopted centralized request/download error handling. Failed downloads now raise <code>DownloadFailed</code> with complete context. Added <code>BaseProfile</code>, <code>Pornstar</code>, and <code>Channel</code> classes with profile video scraping via <code>videos()</code>. Added <code>Client.get_channel()</code>. Expanded <code>Video</code> metadata (dual API/HTML source loading for title, views, embed URL, and thumbnails; <code>length_seconds</code> integer type; clean <code>ResourceGone</code> exception when videos are deleted or removed).</span></li>
         <li class="param-item"><span class="param-name">2026-08-14 · <code>7f1bbac</code></span> <span class="param-desc">— Added HTML-backed <code>tags</code>, <code>categories</code>, and <code>uploader</code> fields; renamed <code>get_available_qualities()</code> to <code>video_qualities()</code>; and made optional pornstar biography fields tolerant of missing page elements.</span></li>
         <li class="param-item"><span class="param-name">2026-08-11 · <code>c8f2974</code></span> <span class="param-desc">— Added typed <code>ScrapeResult[Video]</code> annotations and <code>py.typed</code>; fixed the Eporner v2 API URL/list response handling and treated package <code>NotFound</code> as a terminal resource error. Default iterator error handling now uses the structured <code>ScrapeErrorContext</code>/<code>ErrorAction</code> handler.</span></li>
         <li class="param-item"><span class="param-name">2026-08-08 · <code>f862f1c</code></span> <span class="param-desc">— Replaced all per-method concurrency, loading, ordering, retry, and callback arguments with <code>IteratorConfig</code> while preserving eager <code>("api", "html")</code> loading.</span></li>

@@ -31,7 +31,7 @@ keywords:
 
 Documents Pornstar behavior, signatures, fields, constraints, and examples for the Eporner API.
 
-dataclass Inherits from `BaseMedia`. Represents an Eporner model profile with parsed statistics and biography properties.
+dataclass Inherits from `BaseProfile` -> `BaseMedia`. Represents an Eporner model profile with parsed statistics and biography properties.
 
 ## Attributes
 

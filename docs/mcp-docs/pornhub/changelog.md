@@ -13,6 +13,9 @@ keywords:
 
 Records the versions and documented changes for the PornHub API.
 
+## 5.4.3 — 2026-09-15
+- `d3c8743` / `81e4629` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added `Pornstar(UserHelper)` class and `client.get_pornstar()`. Expanded `Short` metadata with 15 new attributes: `duration`, `categories`, `tags`, `is_verified`, `like_count`, `dislike_count`, `author_id`, `author_username`, `author_avatar`, `views`, `comments_count`, `publish_date`, `preview_video_url`, `is_premium`, and `is_featured`. Removed redundant code and added comprehensive test coverage.
+
 ## 5.4.3 — 2026-09-06
 - `f8bbe99` — Introduced `PornhubAPIError` base exception class (inheriting from `Exception`) for all library errors; converted `GifPendingReview` and `VideoDisabled` to inherit from `PornhubAPIError` instead of `BaseException`. Removed redundant `SubscriptionHelper` class. Refactored scrape methods (`get_videos`, `get_uploads`, `get_gifs`, search, and account iterators) to return `AsyncGenerator[ScrapeResult, None]` directly. Added default `pages=1` to `Album.get_photos()` and removed `ProcessPoolExecutor` overhead. Fixed `Short.get_video()` by removing invalid `@property` decorator from the async method. Updated `Video.likes` type annotation to `int | str | None`. Consolidated HLS download handling via `_download_hls`. Streamlined HTML parsing extractors with Lexbor CSS selectors and URL deduplication. Refactored CLI URL handler dispatch and argument options. Announced native MCP documentation server support.
 - `5553a68` / `56578f3` — Removed the wrapper's hard-coded User-Agent from default headers and replaced constructor-triggered background login with the awaited `Client.create(..., login=True)` factory method, setting default `core=None` to instantiate independent networking cores.

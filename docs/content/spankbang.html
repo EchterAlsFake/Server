@@ -353,7 +353,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>length</code></td><td><code>str | None</code></td><td>Length in seconds</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>HLS master playlist URL</td></tr>
                 <tr><td><code>direct_download_urls</code></td><td><code>list | None</code></td><td>CDN-resolved direct MP4 URLs</td></tr>
-                <tr><td><code>video_qualities</code></td><td><code>list | None</code></td><td>Sorted list of available resolution heights (e.g. <code>["240", "320", "480", "720", "1080"]</code>)</td></tr>
+                <tr><td><code>video_qualities</code></td><td><code>list[str] | None</code></td><td>Sorted list of available resolution heights (e.g. <code>["240", "320", "480", "720", "1080", "4k"]</code>)</td></tr>
                 <tr style="border-top: 1px solid var(--border-color);"><td colspan="3" style="font-weight: 600; padding-top: 12px;">Scraper Iterator Fallback Attributes</td></tr>
                 <tr><td><code>tag</code></td><td><code>str | None</code></td><td>Primary search tag associated with the item</td></tr>
                 <tr><td><code>views</code></td><td><code>str | None</code></td><td>View count string from the listing card</td></tr>
@@ -374,7 +374,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Downloads the video. Supports downloading via HLS segments (default) or fetching direct CDN MP4 files depending on the <code>use_hls</code> parameter.</div>
+        <div class="method-desc">Downloads the video. Supports downloading via HLS segments (default) or fetching direct CDN MP4 files depending on the <code>use_hls</code> parameter. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration_hls: DownloadConfigHLS | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     configuration_raw: DownloadConfigRAW | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
@@ -697,6 +697,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.4.1 — 2026-09-15</h3>
+    <ul>
+        <li><code>35024f6</code> / <code>9ab9185</code> — Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added 4K resolution support (sorted as 2160p) for video scraping and downloads. Upgraded scraper selectors across video, channel, creator, and pornstar pages with robust fallbacks and <code>data-testid</code> attributes. Enhanced <code>stream_data</code> regex parsing and added offline extraction unit tests.</li>
+    </ul>
 
     <h3>2.4.1 — 2026-08-14</h3>
     <ul>

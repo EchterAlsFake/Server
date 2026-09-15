@@ -13,6 +13,9 @@ keywords:
 
 Records the versions and documented changes for the Redtube API.
 
+## 1.4.1 — 2026-09-15
+- `105ca53` / `7751b3b` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added layout anchor checks across Video, Channel, Playlist, and Pornstar parsers. Implemented resilient fallback selectors for titles, stats, avatars, banners, and media definitions. Improved download stream resolution and added unit tests for video, channel, playlist, and pornstar HTML snippet extractions.
+
 ## 1.4.1 — 2026-08-14
 - `647f2db` — Added the HTML-backed `Video.publish_date` field.
 

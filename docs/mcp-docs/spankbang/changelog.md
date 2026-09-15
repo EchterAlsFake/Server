@@ -13,6 +13,9 @@ keywords:
 
 Records the versions and documented changes for the SpankBang API.
 
+## 2.4.1 — 2026-09-15
+- `35024f6` / `9ab9185` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added 4K resolution support (sorted as 2160p) for video scraping and downloads. Upgraded scraper selectors across video, channel, creator, and pornstar pages with robust fallbacks and `data-testid` attributes. Enhanced `stream_data` regex parsing and added offline extraction unit tests.
+
 ## 2.4.1 — 2026-08-14
 - `18a8f15` / `5871e80` — Updated request headers and forced HTTP/3 for newly initialized client sessions to restore access after upstream 403 responses.
 

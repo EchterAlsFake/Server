@@ -60,9 +60,25 @@ Type: str | None; Description: Number of views
 
 Type: str | None; Description: Username of the video uploader
 
+## author_thumbnail
+
+Type: str | None; Description: Uploader profile avatar/thumbnail URL
+
+## author_url
+
+Type: str | None; Description: Uploader channel/profile page URL
+
+## author_subscribers
+
+Type: str | None; Description: Uploader subscriber count
+
 ## thumbnail
 
 Type: str | None; Description: Cover image thumbnail URL
+
+## embed_url
+
+Type: str | None; Description: Embedded player URL
 
 ## length
 

@@ -80,7 +80,7 @@ Type: list | None; Description: CDN-resolved direct MP4 URLs
 
 ## video_qualities
 
-Type: list | None; Description: Sorted list of available resolution heights (e.g. ["240", "320", "480", "720", "1080"] )
+Type: list[str] | None; Description: Sorted list of available resolution heights (e.g. ["240", "320", "480", "720", "1080", "4k"] )
 
 ## tag
 

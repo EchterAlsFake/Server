@@ -30,19 +30,36 @@ configure_app_logging(log_file="api.log", level=logging.INFO)
 
 With no `logger_name`, `configure_app_logging()` configures the root logger. Omit `log_file` for console output only. Log files append by default; `overwrite_file=True` truncates the selected file. The default format includes timestamp, logger name, level, filename, line number, function, and message. Logged exceptions include the original traceback and chained causes.
 
+### Contextual Logging (4.2.0)
+
+Every library logger is wrapped in a `ContextLogger` adapter obtained via `get_logger(name, owner=None)`. When operations execute inside a `log_context(owner, url)` block, messages are automatically prefixed with `[class=<class_name> url=<url>]`, and the context variables are injected into `LogRecord.class_name` and `LogRecord.url`. Because context is stored in `ContextVar` instances, concurrent downloads and background tasks offloaded via `asyncio.to_thread` maintain their log context cleanly.
+
+```text
+ERROR xvideos_api.api [class=xvideos_api.api.Video url=https://example.test/video/123] Download failed: disk full
+Traceback (most recent call last):
+  ...
+OSError: disk full
+```
+
 Provider request and download failures include the requested URL or video URL. Direct media loading also logs the model, source, and URL before raising a loader error. Iterator failures are logged even under `ErrorMode.SKIP` or `ErrorMode.YIELD`; retry messages identify the attempt, and an error-handler failure is logged before raising `ErrorHandlerError`. Segment/download failures include stream or segment URLs and output paths where available.
 
-Provider CLI entry points configure INFO-level console logging automatically and log caught per-URL failures with tracebacks. Library imports do not configure the root logger; in particular, importing Tube8 or Thumbzilla no longer enables root DEBUG logging.
+Provider CLI entry points configure INFO-level console logging automatically and log caught per-URL failures with tracebacks. Library imports do not configure the root logger; importing Tube8 or Thumbzilla no longer enables root DEBUG logging.
 
 ## Logging a caught or stored exception
 
 Use `logger.exception()` inside an `except` block. Do not log only `str(error)`, which omits the traceback. The APIs already log failures at their handling boundaries, so application logging is only needed when adding context or handling another operation.
 
 ```python
+import logging
+from base_api.modules.errors import DownloadFailed
+
 logger = logging.getLogger(__name__)
 
 try:
     await video.download(configuration=config)
+except DownloadFailed as error:
+    print(error.api, error.class_name, error.url)
+    # The failure and full traceback have already been logged at library boundary.
 except Exception:
     logger.exception("Application download failed for %s", video.url)
     raise
@@ -59,7 +76,7 @@ if not result.succeeded:
     )
 ```
 
-Ordinary status messages and failures reported only by a boolean or download report have no exception traceback to attach. Explicit cancellation is not wrapped as `DownloadFailed`; callers should still inspect `False` or `DownloadReport.status` when the downloader reports an outcome that way.
+In version 4.2.0, `core.download()` raises `DownloadFailed` on failure with full context and chained cause rather than returning `False`. Cancellation via `stop_event` raises `DownloadCancelled` and task cancellation propagates `asyncio.CancelledError`; neither is logged as an error.
 
 ## Core logging and cleanup
 

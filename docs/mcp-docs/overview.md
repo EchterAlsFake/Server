@@ -39,9 +39,9 @@ The shared request, media-loading, iteration, caching, and download runtime used
 
 ### [Base API](eaf-base-api/overview.md)
 
-v4.1.1
+v4.2.0
 
-The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads.
+The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, provider helpers, and HLS/RAW downloads.
 
 ## API wrappers
 
@@ -57,7 +57,7 @@ A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metada
 
 v2.4.1
 
-A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine.
+A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies and channel profiles. Powered by the eaf_base_api networking engine.
 
 ### [HQPorner API](hqporner/getting-started.md)
 

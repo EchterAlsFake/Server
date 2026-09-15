@@ -15,6 +15,9 @@ keywords:
 
 Records the versions and documented changes for the MissAV API.
 
+## 2.6 — 2026-09-15
+- `8c16241` / `6389916` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for title, thumbnail, publish date, and duration. Enhanced m3u8 playlist URL extraction fallbacks (JS regex, direct regex, surrit regex) and validated base URL presence in download method. Added unit tests for snippet parsing and error scenarios.
+
 ## 2.6 — 2026-08-14
 - `5cce2e3` / `562b69c` — Updated cross-site request headers and switched the client to the required `safari17_2_ios` impersonation profile to restore access after upstream 403 responses.
 

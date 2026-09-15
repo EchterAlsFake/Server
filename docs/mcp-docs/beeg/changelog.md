@@ -13,6 +13,9 @@ keywords:
 
 Records the versions and documented changes for the Beeg API.
 
+## 1.7 — September 15, 2026
+- `6bd391b` / `05837ac` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added CLI support and updated iterator typing.
+
 ## 1.7 — August 11, 2026
 - `9eb18ac` — Added complete public type hints and the `py.typed` marker, updated package metadata for 1.7, and reverted the temporary exact-suffix ID parsing change. The current implementation again uses `strip("-0")`.
 

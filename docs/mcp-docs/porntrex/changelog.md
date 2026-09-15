@@ -16,6 +16,9 @@ keywords:
 
 Records the versions and documented changes for the Porntrex API.
 
+## 1.8 — 2026-09-15
+- `541cd29` / `221d32b` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for video and channel/model metadata. Normalized protocol schemes for download URLs and validated quality availability. Added snippet-based unit tests for channel and video data extraction.
+
 ## d86ccad
 - Added generic `ScrapeResult[Video]` return annotations and the `py.typed` marker.
 - Changed unset iterator retry policies to resolve from the live `RuntimeConfig`.

@@ -32,7 +32,7 @@ Documents Profile objects behavior, signatures, fields, constraints, and example
 
 `Amateur` uses the shared behavior documented in this reference.
 
-Scraper objects representing creators, actors, and registered users share a common base class (`UserHelper`).
+Scraper objects representing creators, actors, and registered users share a common base class (`UserHelper`). `Amateur`, `User`, and `UserHelper` are exported directly in `tube8_api.__all__`.
 
 ## Attributes
 

@@ -320,7 +320,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Downloads the video via HLS streaming. Appends the video title to the output path unless <code>no_title=True</code> on the config.</div>
+        <div class="method-desc">Downloads the video via HLS streaming. Appends the video title to the output path unless <code>no_title=True</code> on the config. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigHLS
 ) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
@@ -658,6 +658,11 @@ xnxx_api --file file_list.txt --quality best --output ./downloads --no-title Fal
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>2.4.1 — 2026-09-15</h3>
+    <ul>
+        <li><code>6857235</code> / <code>0ee8040</code> — Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added layout anchor validations to detect page structure changes. Implemented robust fallback parsing for ld+json and HTML metadata (title, description, thumbnail, publish date, length, views, author, tags). Cleaned up log messages when paginating user videos.</li>
+    </ul>
 
     <h3>2.4.1 — 2026-08-14</h3>
     <ul>

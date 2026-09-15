@@ -388,12 +388,16 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Publication / upload date string</td></tr>
                 <tr><td><code>views</code></td><td><code>str | None</code></td><td>Number of views</td></tr>
                 <tr><td><code>author</code></td><td><code>str | None</code></td><td>Username of the video uploader</td></tr>
+                <tr><td><code>author_thumbnail</code></td><td><code>str | None</code></td><td>Uploader avatar picture URL</td></tr>
+                <tr><td><code>author_url</code></td><td><code>str | None</code></td><td>Uploader channel profile URL</td></tr>
+                <tr><td><code>author_subscribers</code></td><td><code>str | None</code></td><td>Uploader subscriber count</td></tr>
                 <tr><td><code>thumbnail</code></td><td><code>str | None</code></td><td>Cover image thumbnail URL</td></tr>
                 <tr><td><code>length</code></td><td><code>str | None</code></td><td>Duration string (e.g. <code>12:34</code>)</td></tr>
                 <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>List of category labels</td></tr>
                 <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>List of video tags</td></tr>
                 <tr><td><code>cdn_urls</code></td><td><code>list[str] | None</code></td><td>Direct MP4 CDN paths (up to two qualities: SD, HD)</td></tr>
-                <tr><td><code>rating</code></td><td><code>str | None</code></td><td>Optional ratings metadata</td></tr>
+                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embeddable iframe player URL</td></tr>
+                <tr><td><code>rating</code></td><td><code>str | None</code></td><td>Ratings metadata loaded from HTML</td></tr>
             </tbody>
         </table>
     </div>
@@ -614,6 +618,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.7.1 — 2026-09-15</h3>
+    <ul>
+        <li><code>a728c0e</code> / <code>b18b650</code> / <code>fb5e92c</code> — Adopted shared request and download error handling from <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete diagnostic context. Expanded <code>Video</code> metadata with <code>author_thumbnail</code>, <code>author_url</code>, <code>author_subscribers</code>, <code>embed_url</code>, and <code>rating</code>. Cleanly report removed or unavailable videos via <code>ResourceGone</code>. Added robust fallback selectors and offline extraction unit tests.</li>
+    </ul>
 
     <h3>1.7.1 — 2026-08-14 <code>264b618</code></h3>
     <ul>

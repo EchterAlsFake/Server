@@ -44,11 +44,16 @@ An exception raised by one source loader is exposed as `MediaLoadError`; inspect
 
 Provider request wrappers retain the original error through `raise ... from original_error`. Download wrappers also cover preparation failures, including metadata loading, quality selection, and output path setup. Their `DownloadFailed.__cause__` may therefore be a `MediaLoadError` or `MediaLoadErrors`, rather than a network or file error. Specific availability exceptions remain supported. Existing provider import paths remain valid.
 
+In version 4.2.0, provider and core exceptions are enriched with structured diagnostic attributes:
+- `error.url` — Target request URL or media URL
+- `error.class_name` — Qualified class name of the failing owner or caller
+- `error.api` — Top-level package / API name (e.g. `eporner_api`)
+
 Request, media source, iterator, download, and error-handler failures are logged with URL context and original tracebacks. See [Logging and cleanup](../guides/logging-and-cleanup.md) for application configuration and logging stored exceptions.
 
 ## BaseScraperError
 
-Shared base for core scraper errors and, through `ScraperException`, the common provider errors. It is not the base of every low-level exception in this module.
+Shared base for core scraper errors and, through `ScraperException`, the common provider errors. Exposes `.url`, `.class_name`, and `.api` attributes.
 
 ## ScraperException
 
@@ -76,7 +81,11 @@ A provider wrapper translated `UnknownError`. Unexpected exceptions outside that
 
 ## DownloadFailed
 
-A provider download failed during preparation or transfer. The message includes the video URL and `__cause__` retains the original exception. XFreeHD now raises this exception instead of returning an exception object. Explicit cancellation is not wrapped in this type. Existing base downloader `False` and `DownloadReport` outcomes remain supported; callers must also inspect those results.
+A provider download failed during preparation or transfer. The message includes the video URL, and `error.url`, `error.class_name`, and `error.api` are populated; `__cause__` retains the original exception. In version 4.2.0, `core.download()` raises `DownloadFailed` on failure rather than returning `False`.
+
+## DownloadCancelled
+
+Raised when a download operation is halted via its configured `stop_event`. Propagates cleanly without being wrapped in `DownloadFailed` and without logging error tracebacks.
 
 ## VideoUnavailable
 

@@ -368,7 +368,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>.</div>
+        <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigRAW
 ) -&gt; <span class="token-builtin">bool</span></div>
@@ -595,6 +595,11 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.8 — 2026-09-15</h3>
+    <ul>
+        <li><code>541cd29</code> / <code>221d32b</code> — Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for video and channel/model metadata. Normalized protocol schemes for download URLs and validated quality availability. Added snippet-based unit tests for channel and video data extraction.</li>
+    </ul>
 
     <h3>1.8 — 2026-08-11 <code>d86ccad</code></h3>
     <ul>

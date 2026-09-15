@@ -17,19 +17,31 @@ keywords:
 
 Documents Profile objects behavior, signatures, fields, constraints, and examples for the YouPorn API.
 
+## BaseProfile
+
+Shared base dataclass inheriting from `BaseMedia`. Implements common profile header metadata and video pagination for `Channel`, `Collection`, `Pornstar`, and `User`.
+
+### Shared Attributes
+- `name: str | None` — Profile or channel name
+- `avatar: str | None` — Profile avatar image URL
+- `banner: str | None` — Channel or profile header banner image URL
+- `description: str | None` — Bio or description text
+
 ## Channel
 
-`Channel` uses the shared behavior documented in this reference.
+`Channel` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
 
 ## Collection
 
-`Collection` uses the shared behavior documented in this reference.
+`Collection` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
 
 ## Pornstar
 
-`Pornstar` uses the shared behavior documented in this reference.
+`Pornstar` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
 
-Scrapers representing publisher channels, custom collections, and pornstar profile pages provide listing iterators.
+## User
+
+`User` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
 
 ## Methods
 

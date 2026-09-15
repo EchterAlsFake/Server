@@ -65,7 +65,7 @@ Type: str | None; Description: Publication / upload date string
 
 ## length_seconds
 
-Type: str | None; Description: Duration in seconds
+Type: int | None; Description: Duration in seconds
 
 ## length_minutes
 

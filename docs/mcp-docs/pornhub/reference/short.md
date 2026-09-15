@@ -103,6 +103,66 @@ Type: str | None; Description: Synthesized master m3u8 playlist
 
 Type: dict | None; Description: Raw media quality definitions
 
+## duration
+
+Type: int | None; Description: Video duration in seconds
+
+## categories
+
+Type: list[str] | None; Description: Category labels
+
+## tags
+
+Type: list[str] | None; Description: Tag labels
+
+## is_verified
+
+Type: bool | None; Description: Whether the creator is verified
+
+## like_count
+
+Type: int | None; Description: Numeric parsed like count
+
+## dislike_count
+
+Type: int | None; Description: Numeric parsed dislike count
+
+## like_info
+
+Type: str | None; Description: Formatted like string
+
+## favorite_info
+
+Type: str | None; Description: Formatted favorite string
+
+## token
+
+Type: str | None; Description: Short action token
+
+## author_id
+
+Type: str | None; Description: Uploader numeric account ID
+
+## author_type
+
+Type: str | None; Description: Author membership type (e.g. "Mpp")
+
+## external_link
+
+Type: str | None; Description: Creator external link URL
+
+## external_link_text
+
+Type: str | None; Description: Call-to-action text for the external link
+
+## large_preview_url
+
+Type: str | None; Description: High-resolution preview image URL
+
+## shortie_url
+
+Type: str | None; Description: Canonical short URL identifier
+
 ## Methods
 
 ## download

@@ -434,7 +434,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Downloads the video via HLS streaming. Appends the video title to the output path unless <code>no_title=True</code> on the config.</div>
+        <div class="method-desc">Downloads the video via HLS streaming. Appends the video title to the output path unless <code>no_title=True</code> on the config. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigHLS
 ) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
@@ -836,6 +836,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.4.1 — 2026-09-15</h3>
+    <ul>
+        <li><code>105ca53</code> / <code>7751b3b</code> — Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added layout anchor checks across Video, Channel, Playlist, and Pornstar parsers. Implemented resilient fallback selectors for titles, stats, avatars, banners, and media definitions. Improved download stream resolution and added unit tests for video, channel, playlist, and pornstar HTML snippet extractions.</li>
+    </ul>
 
     <h3>1.4.1 — 2026-08-14</h3>
     <ul>

@@ -509,12 +509,28 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
 </div>
 
 <!-- ================================================================
-     CHANNEL / COLLECTION / PORNSTAR
+     CHANNEL / COLLECTION / PORNSTAR / BASEPROFILE
      ================================================================ -->
 <div class="section" id="something-section">
     <span class="section-anchor" id="something"></span>
-    <h2><span class="section-icon">👤</span> Channel / Collection / Pornstar</h2>
-    <p>Scrapers representing publisher channels, custom collections, and pornstar profile pages provide listing iterators.</p>
+    <h2><span class="section-icon">👤</span> BaseProfile, Channel, Pornstar, & Collection</h2>
+    <p><code>BaseProfile</code> inherits from <code>BaseMedia</code> and provides the common header properties (<code>name</code>, <code>avatar</code>, <code>banner</code>, and <code>description</code>) shared by both <code>Channel</code> and <code>Pornstar</code> profiles. Scrapers representing publisher channels, custom collections, and pornstar profile pages provide listing iterators via <code>videos()</code>.</p>
+
+    <h3>BaseProfile Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Profile page URL</td></tr>
+                <tr><td><code>name</code></td><td><code>str | None</code></td><td>Profile display name</td></tr>
+                <tr><td><code>avatar</code></td><td><code>str | None</code></td><td>Avatar image URL</td></tr>
+                <tr><td><code>banner</code></td><td><code>str | None</code></td><td>Profile header banner image URL</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Profile bio description</td></tr>
+            </tbody>
+        </table>
+    </div>
 
     <h3>Methods</h3>
 
@@ -799,6 +815,7 @@ youporn_api --file urls.txt --quality best --output ./downloads --no-title False
         <table>
             <thead><tr><th>Date</th><th>Commit</th><th>Changes</th></tr></thead>
             <tbody>
+                <tr><td>2026-09-15</td><td><code>8144589</code> / <code>874e7ab</code> / <code>f4272be</code></td><td>Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete diagnostic context. Added <code>BaseProfile</code> class for common header attributes (name, avatar, banner, description) across <code>Channel</code> and <code>Pornstar</code>. Added complete public type-hint coverage across the API.</td></tr>
                 <tr><td>2026-08-11</td><td><code>6c2af7f</code></td><td>Completed additional public type-hint coverage.</td></tr>
                 <tr><td>2026-08-11</td><td><code>b7c2cb3</code></td><td>Released 1.8 with typing improvements and the <code>py.typed</code> marker.</td></tr>
                 <tr><td>2026-08-08</td><td><code>36a06fe</code></td><td>Centralized concurrent scraping on <code>IteratorConfig</code> and forwarded package source/retry defaults.</td></tr>

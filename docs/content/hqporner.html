@@ -442,7 +442,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Downloads the video direct MP4 files using range/multipart support. Appends the video title to path unless <code>no_title=True</code>.</div>
+        <div class="method-desc">Downloads the video direct MP4 files using range/multipart support. Appends the video title to path unless <code>no_title=True</code>. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigRAW
 ) -> <span class="token-builtin">bool</span></div>
@@ -694,6 +694,7 @@ hqporner_api --search "blonde" --pages 2 --quality 1080 --output ./blonde_videos
     <h2><span class="section-icon">📜</span> Changelog</h2>
     <h3>2.5 (current)</h3>
     <ul class="param-list">
+        <li class="param-item"><span class="param-name">2026-09-15 · <code>fccc573</code> / <code>4e702e9</code></span> <span class="param-desc">— Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete diagnostic context. Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for video metadata and CDN URLs. Enhanced download quality resolution using <code>PATTERN_RESOLUTION</code> and validation. Added snippet-based unit tests for HTML extraction and layout checks.</span></li>
         <li class="param-item"><span class="param-name">2026-08-11 · <code>a097c19</code></span> <span class="param-desc">— Released 2.5, added generic <code>ScrapeResult[Video]</code> annotations and the <code>py.typed</code> marker, and switched missing iterator policies to live RuntimeConfig-derived defaults.</span></li>
         <li class="param-item"><span class="param-name">2026-08-08 · <code>e3055d4</code></span> <span class="param-desc">— Centralized every listing method on <code>IteratorConfig</code>, preserving required <code>("html",)</code> loading and page-failure skipping while removing legacy concurrency/loading/order/callback parameters.</span></li>
         <li class="param-item"><span class="param-name">2026-08-07 · <code>eaceacf</code></span> <span class="param-desc">— Migrated to <code>eaf-base-api&gt;=4.0.0</code>: explicit request methods, source-aware fields/loaders, bounded scheduling, deterministic stream cleanup, structured results/errors, and extractor validation.</span></li>

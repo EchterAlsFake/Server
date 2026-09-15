@@ -24,7 +24,7 @@ Identifies documented SpankBang API errors, their meanings, and the safe handlin
 
 Source loaders translate request failures into exceptions from `spankbang_api.modules.errors`. Calls that load media expose ordinary loader failures through `base_api.MediaLoadError` (or `MediaLoadErrors` for several sources); inspect `original_error`/`errors` as shown. Operations outside media loading may still raise package or core exceptions directly.
 
-Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in `__cause__`. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in `DownloadFailed`; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped in `DownloadFailed`. Base downloader `False` and `DownloadReport` results remain supported; inspect the result as well as handling exceptions.
+Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in `__cause__` and carry structured diagnostic attributes (`url`, `class_name`, `api`). Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in `DownloadFailed`; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped in `DownloadFailed`. In version 4.2.0, failed downloads raise `DownloadFailed` rather than returning `False`.
 
 The common provider errors `NotFound`, `NetworkError`, `BotDetection`, `ProxyError`, `UnknownNetworkError`, and `DownloadFailed` are catchable through `base_api.modules.errors`. They derive from `ScraperException`, which now derives from `BaseScraperError`. Existing provider import paths remain valid.
 
@@ -58,7 +58,7 @@ Trigger Cause: Video stream is unavailable from SpankBang
 
 ## DownloadFailed
 
-When Raised: Download preparation or transfer failed; the video URL is included and `__cause__` retains the original exception
+When Raised: Download preparation or transfer failed; includes `.url`, `.class_name`, `.api`, and `__cause__` retains the original exception. Failed downloads raise `DownloadFailed` rather than returning `False`.
 
 ```python
 from base_api import MediaLoadError

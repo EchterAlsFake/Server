@@ -643,6 +643,7 @@ tube8_api --file urls.txt --quality best --output ./downloads --no-title False</
         <table>
             <thead><tr><th>Date</th><th>Commit</th><th>Changes</th></tr></thead>
             <tbody>
+                <tr><td>2026-09-15</td><td><code>b4e8cd3</code> / <code>8d881f9</code></td><td>Adopted shared request and download error handling from <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete diagnostic context. Exported <code>Amateur</code>, <code>User</code>, and <code>UserHelper</code> in <code>__all__</code>. Adopted centralized <code>extract_video_grid</code> from <code>base_api.modules.static_functions</code>. Added layout anchors and resilient fallback selectors for video, channel, amateur, and pornstar pages with offline unit tests.</td></tr>
                 <tr><td>2026-08-11</td><td><code>d999d7a</code></td><td>Completed public type hints and added the <code>py.typed</code> marker.</td></tr>
                 <tr><td>2026-08-11</td><td><code>7e67e0e</code></td><td>Released 1.3 and corrected search-result URLs that incorrectly targeted <code>thumbzilla.com</code> instead of <code>tube8.com</code>.</td></tr>
                 <tr><td>2026-08-08</td><td><code>aaa2784</code></td><td>Centralized concurrent scraping on <code>IteratorConfig</code> and the package's three-attempt page/item defaults.</td></tr>

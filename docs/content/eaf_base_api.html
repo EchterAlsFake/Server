@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Base API -->
 <!-- SLOT:HERO_TITLE = eaf_base_api -->
 <!-- SLOT:HERO_SUBTITLE = The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads. -->
-<!-- SLOT:VERSION = 4.1.1 -->
+<!-- SLOT:VERSION = 4.2.0 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/eaf_base_api -->
 <!-- SLOT:PYPI_PACKAGE = eaf_base_api -->
 
@@ -32,6 +32,7 @@
 
 <div class="nav-section-title">Downloads & Reference</div>
 <a href="#downloads" class="nav-link">Download Configs</a>
+<a href="#provider-helpers" class="nav-link">Provider Helpers</a>
 <a href="#utilities" class="nav-link">Shared Utilities</a>
 <a href="#logging" class="nav-link">Logging & Cleanup</a>
 <a href="#migration" class="nav-link">3.x → 4.0 Migration</a>
@@ -480,6 +481,41 @@ stream = helper.iterator(
     <p>Direct-file downloads add <code>allow_multipart=True</code>, <code>max_workers=5</code>, <code>read_timeout=120.0</code>, <code>chunk_size=1024</code>, and <code>max_retries=5</code>. These downloader retries are separate from <code>RuntimeConfig.request_attempts</code>.</p>
 </div>
 
+<div class="section" id="provider-helpers-section">
+    <span class="section-anchor" id="provider-helpers"></span>
+    <h2><span class="section-icon">🤝</span> Provider Helpers (4.2.0)</h2>
+
+    <p><code>base_api.modules.provider</code> centralizes common request and download handling across all 15 site packages, eliminating boilerplate while enforcing uniform exception translation and contextual logging:</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Function</th><th>Signature</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>fetch_content</code></td><td><code>async (core, url, *, logger, owner=None, get_json=False, error_types=errors, not_found_error=None, access_denied_error=None) -&gt; str | dict</code></td><td>Fetches text or JSON and translates transport failures (HTTP 404, bot blocks, proxy errors, network errors) into provider exceptions, chaining the cause. Attaches <code>class_name</code> and <code>url</code> context.</td></tr>
+                <tr><td><code>download_errors</code></td><td><code>(error_type=errors.DownloadFailed) -&gt; decorator</code></td><td>Decorator giving media download methods uniform logging, contextual tracing, and cancellation semantics. Raises <code>DownloadFailed</code> (with URL, class_name, and API) on failure, while propagating <code>DownloadCancelled</code> and <code>asyncio.CancelledError</code> cleanly.</td></tr>
+                <tr><td><code>prepare_download_config</code></td><td><code>(configuration, title: str | None) -&gt; configuration</code></td><td>Shallow-copies download configuration and appends sanitized title with <code>.mp4</code> when <code>no_title=False</code>, keeping callbacks and stop events shared.</td></tr>
+                <tr><td><code>download_hls</code></td><td><code>async (media, configuration) -&gt; bool | DownloadReport</code></td><td>Loads <code>title</code> and <code>m3u8_base_url</code>, prepares the configuration, and delegates to <code>media.core.download(configuration=config)</code>.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api.modules.provider <span class="token-keyword">import</span> fetch_content, download_errors, download_hls
+<span class="token-keyword">from</span> base_api.modules.logger <span class="token-keyword">import</span> get_logger
+<span class="token-keyword">from</span> my_api.modules.errors <span class="token-keyword">import</span> DownloadFailed
+
+logger = get_logger(__name__)
+
+<span class="token-keyword">async def</span> get_html_content(core, url, *, owner=<span class="token-keyword">None</span>):
+    <span class="token-keyword">return await</span> fetch_content(core, url, logger=logger, owner=owner)
+
+<span class="token-class">@download_errors</span>(DownloadFailed)
+<span class="token-keyword">async def</span> download(self, configuration):
+    <span class="token-keyword">return await</span> download_hls(self, configuration)</code></pre>
+    </div>
+</div>
+
 <div class="section" id="utilities-section">
     <span class="section-anchor" id="utilities"></span>
     <h2><span class="section-icon">🛠️</span> Shared Utilities</h2>
@@ -495,6 +531,7 @@ stream = helper.iterator(
                 <tr><td><code>parse_duration</code></td><td><code>(text: str | None) -&gt; int | None</code></td><td>Parses duration strings (e.g. <code>"12:34"</code>, <code>"1:23:45"</code>, <code>"45s"</code>, <code>"12m"</code>) into integer seconds.</td></tr>
                 <tr><td><code>parse_count</code></td><td><code>(text: str | int | float | None) -&gt; int | None</code></td><td>Parses view and like counts with human-readable suffixes (e.g. <code>"1.5M"</code>, <code>"300K"</code>, <code>"12,450"</code>) into integers.</td></tr>
                 <tr><td><code>build_m3u8_master</code></td><td><code>(streams: list[dict[str, Any]] | dict[str, str]) -&gt; str</code></td><td>Constructs a standard HLS master playlist (<code>#EXTM3U</code>) with resolution and bandwidth headers from a list or dictionary of stream variants.</td></tr>
+                <tr><td><code>extract_video_grid</code></td><td><code>(parser: Any, base_url: str, logger: Any) -&gt; list[dict]</code></td><td>Extracts standardized video attributes (title, url, thumbnail, duration, author, preview) from search/listing grids. Used by Tube8 and Thumbzilla.</td></tr>
                 <tr><td><code>str_to_bool</code></td><td><code>(value: Any) -&gt; bool</code></td><td>Coerces common string boolean representations (<code>"true"</code>, <code>"1"</code>, <code>"yes"</code>) to boolean.</td></tr>
                 <tr><td><code>is_resource_gone</code></td><td><code>(exc: BaseException) -&gt; bool</code></td><td>Checks if an exception or nested cause represents an HTTP 404, 410, or <code>ResourceGone</code> error.</td></tr>
                 <tr><td><code>contains_resource_gone</code></td><td><code>(exc: BaseException) -&gt; bool</code></td><td>Recursively inspects aggregate exceptions (e.g. <code>MediaLoadErrors</code>) to check if any nested failure represents a gone resource.</td></tr>
@@ -511,13 +548,25 @@ stream = helper.iterator(
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>import logging
-from base_api.modules.logger import configure_app_logging
+from base_api import configure_app_logging, DownloadFailed
 
 configure_app_logging(log_file="api.log", level=logging.INFO)</code></pre>
     </div>
     <p>With no <code>logger_name</code>, <code>configure_app_logging()</code> configures the root logger. Omit <code>log_file</code> for console output only. Log files append by default; <code>overwrite_file=True</code> truncates the selected file. The default format includes timestamp, logger name, level, filename, line number, function, and message. Logged exceptions include the original traceback and chained causes.</p>
-    <p>Request and download failures include the requested URL or video URL. Direct media loading logs the model, source, and URL before raising a loader error. Iterator failures are logged even under <code>ErrorMode.SKIP</code> or <code>ErrorMode.YIELD</code>; retries identify the attempt, and error-handler failures are logged before raising <code>ErrorHandlerError</code>. Segment/download failures include stream or segment URLs and output paths where available.</p>
+
+    <h3>Contextual Logging (4.2.0)</h3>
+    <p>Every library logger is wrapped in a <code>ContextLogger</code> adapter obtained via <code>get_logger(name, owner=None)</code>. When operations run inside a <code>log_context(owner, url)</code> block, messages are automatically prefixed with <code>[class=&lt;class_name&gt; url=&lt;url&gt;]</code>, and the context variables are injected into <code>LogRecord.class_name</code> and <code>LogRecord.url</code>. Because context is stored in <code>ContextVar</code> instances, concurrent downloads and background tasks offloaded via <code>asyncio.to_thread</code> keep their log context completely separate.</p>
+    <div class="code-window">
+        <div class="code-header"><span>text</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>ERROR xvideos_api.api [class=xvideos_api.api.Video url=https://example.test/video/123] Download failed: disk full
+Traceback (most recent call last):
+  ...
+OSError: disk full</code></pre>
+    </div>
+    <p>Creating a client or core does <em>not</em> attach handlers or change your application's logging configuration. Without application setup, Python's default logging handler prints warnings and errors to stderr.</p>
+
     <p>Provider CLI entry points configure INFO-level console logging automatically and log caught per-URL failures with tracebacks. Library imports do not configure the root logger; importing Tube8 or Thumbzilla no longer enables root DEBUG logging.</p>
+
     <h3>Logging a caught or stored exception</h3>
     <p>Use <code>logger.exception()</code> inside an <code>except</code> block. The APIs already log failures at their handling boundaries; add application logging when more context is needed. Outside the original handler, pass the stored exception explicitly:</p>
     <div class="code-window">
@@ -526,6 +575,9 @@ configure_app_logging(log_file="api.log", level=logging.INFO)</code></pre>
 
 try:
     await video.download(configuration=config)
+except DownloadFailed as error:
+    print(error.api, error.class_name, error.url)
+    # The failure and its full traceback have already been logged.
 except Exception:
     logger.exception("Application download failed for %s", video.url)
     raise
@@ -537,7 +589,8 @@ if not result.succeeded:
         exc_info=(type(error), error, error.__traceback__),
     )</code></pre>
     </div>
-    <p><code>exc_info=True</code> alone cannot recover a traceback from a stored <code>ScrapeResult</code>. Ordinary status messages and failures reported only by a boolean or download report have no exception traceback to attach. Explicit cancellation is not wrapped as <code>DownloadFailed</code>; also inspect <code>False</code> or <code>DownloadReport.status</code> when the downloader reports an outcome that way.</p>
+    <p><code>exc_info=True</code> alone cannot recover a traceback from a stored <code>ScrapeResult</code>. Ordinary download failures now raise <code>DownloadFailed</code> instead of returning <code>False</code>. Explicit cancellation via <code>stop_event</code> raises <code>DownloadCancelled</code>, and async task cancellation propagates <code>asyncio.CancelledError</code> without error logs. With <code>DownloadConfigHLS(return_report=True)</code>, incomplete or cancelled downloads still return their explicit <code>DownloadReport</code>.</p>
+
     <h3>Core logging and cleanup</h3>
     <p><code>core.enable_logging()</code> configures the core logger specifically. Use root logging above when the file should also receive provider and media-loader records. Optional remote logging uses <code>log_ip</code>/<code>log_port</code> on the core or <code>http_ip</code>/<code>http_port</code> on <code>configure_app_logging()</code>.</p>
     <div class="code-window">
@@ -588,8 +641,9 @@ core.enable_logging(
     <h2><span class="section-icon">🚨</span> Error Reference</h2>
 
     <p>Errors live in <code>base_api.modules.errors</code>; frequently used version 4 errors are also exported from <code>base_api</code>.</p>
-    <p>The common provider errors derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Existing provider imports remain valid. Pornhub retains its own classes: its common errors subclass both the corresponding shared type and <code>PornhubAPIError</code>, preserving both ways of catching them.</p>
-    <p>Provider request wrappers chain translated exceptions with <code>raise ... from original_error</code>. Download wrappers also cover preparation failures, including loading metadata, choosing quality, and constructing the output path; <code>DownloadFailed</code> includes the video URL and retains the original error in <code>__cause__</code>. Specific availability exceptions remain supported, including HQPorner's <code>NotAvailable</code> (a <code>VideoUnavailable</code> subclass). An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped as <code>DownloadFailed</code>. Boolean/download-report outcomes from the base downloader are unchanged.</p>
+    <p>The common provider errors derive from <code>ScraperException</code>, which now derives from <code>BaseScraperError</code>. Catch common failures from <code>base_api</code>: <code>DownloadFailed</code>, <code>NetworkError</code>, <code>NotFound</code>, <code>ProxyError</code>, <code>BotDetection</code>, <code>VideoUnavailable</code>, <code>LoginFailed</code>, and <code>RegionBlocked</code>. Existing provider imports remain valid. Pornhub retains its own classes: its common errors subclass both the corresponding shared type and <code>PornhubAPIError</code>, preserving both ways of catching them.</p>
+    <p>Translated exceptions carry rich diagnostic attributes: <code>error.url</code>, <code>error.class_name</code>, and <code>error.api</code>. Provider request wrappers chain translated exceptions with <code>raise ... from original_error</code>, preserving lower-level causes in <code>__cause__</code>.</p>
+    <p>Download operations now raise <code>DownloadFailed</code> on failure instead of returning <code>False</code>. Download wrappers cover preparation failures (metadata loading, quality selection, output path setup); <code>DownloadFailed</code> includes the video URL and retains the original error in <code>__cause__</code>. An explicit <code>DownloadCancelled</code> or <code>asyncio.CancelledError</code> propagates without being wrapped as <code>DownloadFailed</code> and without error logs. With <code>DownloadConfigHLS(return_report=True)</code>, incomplete or cancelled downloads still return their explicit <code>DownloadReport</code>.</p>
     <div class="info-box note">
         <div class="info-box-title">Loader exceptions are wrapped</div>
         An exception raised by one source loader is exposed as <code>MediaLoadError</code>; inspect its <code>original_error</code> for a site package's <code>NotFound</code>, <code>RegionBlocked</code>, or similar exception. If several requested sources fail together, <code>MediaLoadErrors.errors</code> contains each failure. Helper item failures add one more typed <code>ItemFetchError</code> layer whose <code>original_error</code> is the media-load error.
@@ -618,6 +672,7 @@ core.enable_logging(
         <table>
             <thead><tr><th>Date / Version</th><th>Changes since 3.3.3</th></tr></thead>
             <tbody>
+                <tr><td><strong>2026-09-15 — 4.2.0</strong></td><td>Centralized provider request and download helpers in <code>base_api.modules.provider</code> (<code>fetch_content</code>, <code>download_errors</code>, <code>prepare_download_config</code>, <code>download_hls</code>). Added contextual logging via <code>ContextLogger</code>, <code>log_context</code>, <code>class_name</code>, and <code>get_logger</code> with <code>[class=... url=...]</code> formatting. Structured exception reporting with <code>error.url</code>, <code>error.class_name</code>, and <code>error.api</code> attributes, and strict exception chaining via <code>__cause__</code>. Standardized download failure semantics: <code>download()</code> raises <code>DownloadFailed</code> on failure instead of returning <code>False</code>; cancellation via <code>stop_event</code> raises <code>DownloadCancelled</code> without error logs. Added <code>extract_video_grid()</code> to <code>base_api.modules.static_functions</code> for shared search result extraction.</td></tr>
                 <tr><td><strong>2026-09-07 — 4.1.2</strong></td><td>Added <code>scrape_stream()</code> async generator helper, optional dual-stack/IPv4/IPv6 address resolution via <code>RuntimeConfig.ip_resolve</code> and <code>CURL_IPRESOLVE</code> environment variable, standardized scraper utilities (<code>get_text_safe</code>, <code>get_attr_safe</code>, <code>parse_duration</code>, <code>parse_count</code>, <code>build_m3u8_master</code>, <code>str_to_bool</code>), and PyAV remuxing dependencies.</td></tr>
                 <tr><td><strong>2026-08-19 — 4.1.1</strong></td><td>Synchronized download/remux progress callbacks across worker threads, normalized discontinuous HLS packet timestamps during remuxing, and added regressions for stage-specific error handlers and per-core runtime settings. Commit <code>a062695</code>.</td></tr>
                 <tr><td><strong>2026-08-16 — 4.1.0</strong></td><td>Made HLS cancellation stop pending segment work promptly and corrected JSON resume-state serialization, including configured <code>Path</code> values. Commit <code>acdb967</code>.</td></tr>

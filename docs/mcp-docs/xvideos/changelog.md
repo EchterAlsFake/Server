@@ -13,6 +13,9 @@ keywords:
 
 Records the versions and documented changes for the XVideos API.
 
+## 2.5 — 2026-09-15
+- `23dec61` / `d03b382` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Modernized HTML scraping across `Video`, `Channel`, and `Pornstar` classes with resilient fallback chains (JSON-LD metadata, inline scripts `html5player.setVideoTitle`, `setThumbUrl`, `setVideoHLS`, `data-id`, model links, and layout anchors) and unit tests.
+
 ## 2.5 — 2026-08-11
 - `c1e34b3` / `f8ebcb3` — Added generic `ScrapeResult[Video]` typing and the PEP 561 `py.typed` marker, left iterator retry policies unset so they resolve from `RuntimeConfig`, and released 2.5.
 

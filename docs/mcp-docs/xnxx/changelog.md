@@ -13,6 +13,9 @@ keywords:
 
 Records the versions and documented changes for the XNXX API.
 
+## 2.4.1 — 2026-09-15
+- `6857235` / `0ee8040` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context (`url`, `class_name`, `api`). Added layout anchor validations to detect page structure changes. Implemented robust fallback parsing for ld+json and HTML metadata (title, description, thumbnail, publish date, length, views, author, tags). Cleaned up log messages when paginating user videos.
+
 ## 2.4.1 — 2026-08-14
 - `af53c16` — Added HTML-backed `Video.author` and `Video.tags` fields.
 

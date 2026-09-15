@@ -120,6 +120,25 @@ await client.get_pornstar(
 
 → Pornstar
 
+## get_channel
+
+Loads a channel profile page containing rank, stats, and logo/banner URLs.
+
+```python
+await client.get_channel(
+    url: str,
+    load_html: bool = True
+) -> Channel
+```
+
+### Parameters
+- url str — The Eporner channel profile URL
+- load_html bool — Pre-load parsed properties (default: `True`)
+
+### Returns
+
+→ Channel
+
 ## Related MCP documents
 
 - [Eporner API getting started](../getting-started.md)
