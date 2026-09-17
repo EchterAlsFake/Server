@@ -36,7 +36,7 @@ pip install unofficial-api-for-xhamster[av]
 ```
 
 **Note**
-Requires **Python ≥ 3.12**. Version 2.6 uses `eaf_base_api ≥ 4.0.0`, which is installed automatically.
+Requires **Python ≥ 3.12**. Version 2.6.2 uses `eaf_base_api ≥ 4.0.0`, which is installed automatically.
 
 ## Quick Start
 

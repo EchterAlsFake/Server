@@ -81,8 +81,10 @@ def patreon_member_is_paid_and_entitled(member: PatreonMember) -> bool:
         attributes.patron_status == "active_patron"
         and (attributes.last_charge_status or "").casefold() == "paid"
         and (attributes.currently_entitled_amount_cents or 0) > 0
-        and not attributes.is_free_trial
-        and not attributes.is_gifted
+        # Patreon documents every member attribute as optional.  Absence cannot
+        # be treated as evidence that a membership is neither trial nor gifted.
+        and attributes.is_free_trial is False
+        and attributes.is_gifted is False
         and patreon_member_has_license_tier(member)
     )
 
@@ -111,10 +113,11 @@ def ensure_patreon_delivery(member_id: str) -> PatreonLicenseDelivery:
         return concurrent_delivery
 
 
-def claim_patreon_delivery(member_id: str) -> str:
+def claim_patreon_delivery(member_id: str) -> tuple[str, str | None]:
     now = datetime.now(timezone.utc)
     now_text = now.isoformat()
     lease_expires_at = (now + timedelta(minutes=10)).isoformat()
+    lease_token = secrets.token_urlsafe(32)
     statement = (
         db.update(PatreonLicenseDelivery)
         .where(
@@ -128,23 +131,36 @@ def claim_patreon_delivery(member_id: str) -> str:
             ),
         )
         .values(
-            status="sending", updated_at=now_text, lease_expires_at=lease_expires_at
+            status="sending",
+            updated_at=now_text,
+            lease_expires_at=lease_expires_at,
+            lease_token=lease_token,
         )
     )
     result = db.session.execute(statement)
     db.session.commit()
     if result.rowcount == 1:
-        return "claimed"
+        return "claimed", lease_token
     delivery = db.session.get(PatreonLicenseDelivery, member_id)
-    return "sent" if delivery and delivery.status == "sent" else "busy"
+    status = "sent" if delivery and delivery.status == "sent" else "busy"
+    return status, None
 
 
-def mark_patreon_delivery_failed(member_id: str) -> None:
+def mark_patreon_delivery_failed(member_id: str, lease_token: str) -> None:
     timestamp = datetime.now(timezone.utc).isoformat()
     db.session.execute(
         db.update(PatreonLicenseDelivery)
-        .where(PatreonLicenseDelivery.member_id == member_id)
-        .values(status="failed", updated_at=timestamp, lease_expires_at=None)
+        .where(
+            PatreonLicenseDelivery.member_id == member_id,
+            PatreonLicenseDelivery.status == "sending",
+            PatreonLicenseDelivery.lease_token == lease_token,
+        )
+        .values(
+            status="failed",
+            updated_at=timestamp,
+            lease_expires_at=None,
+            lease_token=None,
+        )
     )
     db.session.commit()
 
@@ -152,9 +168,11 @@ def mark_patreon_delivery_failed(member_id: str) -> None:
 def deliver_patreon_license(member_id: str, recipient: str) -> str:
     """Create at most one license per Patreon member and send it with retry support."""
     ensure_patreon_delivery(member_id)
-    claim_status = claim_patreon_delivery(member_id)
+    claim_status, lease_token = claim_patreon_delivery(member_id)
     if claim_status != "claimed":
         return claim_status
+    if lease_token is None:
+        raise RuntimeError("Patreon delivery claim has no fencing token")
 
     try:
         delivery = db.session.get(PatreonLicenseDelivery, member_id)
@@ -189,21 +207,30 @@ def deliver_patreon_license(member_id: str, recipient: str) -> str:
     except Exception:
         db.session.rollback()
         try:
-            mark_patreon_delivery_failed(member_id)
+            mark_patreon_delivery_failed(member_id, lease_token)
         except SQLAlchemyError:
             db.session.rollback()
         raise
 
     sent_at = datetime.now(timezone.utc).isoformat()
-    db.session.execute(
+    result = db.session.execute(
         db.update(PatreonLicenseDelivery)
-        .where(PatreonLicenseDelivery.member_id == member_id)
+        .where(
+            PatreonLicenseDelivery.member_id == member_id,
+            PatreonLicenseDelivery.status == "sending",
+            PatreonLicenseDelivery.lease_token == lease_token,
+        )
         .values(
             status="sent",
             updated_at=sent_at,
             sent_at=sent_at,
             lease_expires_at=None,
+            lease_token=None,
         )
     )
     db.session.commit()
+    if result.rowcount != 1:
+        delivery = db.session.get(PatreonLicenseDelivery, member_id)
+        if delivery is None or delivery.status != "sent":
+            raise RuntimeError("Patreon delivery claim was lost after SMTP delivery")
     return "sent"

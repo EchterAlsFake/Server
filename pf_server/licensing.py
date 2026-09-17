@@ -1,6 +1,7 @@
 """License creation, recipient validation, and SMTP delivery services."""
 
 import json
+import hashlib
 import os
 import re
 import uuid
@@ -14,6 +15,7 @@ from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
+from .config import smtp_transport_is_local
 from .models import License
 from .keygen_service import ensure_license
 from .time_utils import rfc3339_utc
@@ -134,6 +136,10 @@ def send_license_email(recipient: str, license_file: bytes) -> None:
         raise RuntimeError(
             "LICENSE_SMTP_PASSWORD is required with LICENSE_SMTP_USERNAME"
         )
+    if smtp_username and not (use_ssl or use_starttls):
+        raise RuntimeError("SMTP authentication requires TLS or SSL")
+    if not (use_ssl or use_starttls) and not smtp_transport_is_local(smtp_host):
+        raise RuntimeError("Remote SMTP delivery requires TLS or SSL")
 
     filename = "porn_fetch.license"
     german = load_license_email_catalog("de")
@@ -143,7 +149,14 @@ def send_license_email(recipient: str, license_file: bytes) -> None:
     message["To"] = recipient
     message["Subject"] = f"{german['subject']} / {english['subject']}"
     message["Date"] = format_datetime(datetime.now(timezone.utc))
-    message["Message-ID"] = make_msgid(domain=email_from.rpartition("@")[2] or None)
+    message_domain = email_from.rpartition("@")[2]
+    if message_domain:
+        # Retrying the same license keeps the same identity, helping receiving
+        # systems suppress the unavoidable SMTP accepted/DB commit crash window.
+        delivery_id = hashlib.sha256(license_file).hexdigest()[:32]
+        message["Message-ID"] = f"<license-{delivery_id}@{message_domain}>"
+    else:
+        message["Message-ID"] = make_msgid()
     message.set_content(
         "Deutsch\n--------\n"
         + german["body"].format(filename=filename)

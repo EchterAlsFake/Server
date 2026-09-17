@@ -69,3 +69,4 @@ class PatreonLicenseDelivery(db.Model):
     updated_at = db.Column(db.String(40), nullable=False)
     sent_at = db.Column(db.String(40), nullable=True)
     lease_expires_at = db.Column(db.String(40), nullable=True)
+    lease_token = db.Column(db.String(64), nullable=True)

@@ -139,6 +139,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `PATREON_SECRET` | Verifies Patreon callback signatures | Unset |
 | `PATREON_LICENSE_TIER_IDS` | Optional comma-separated eligible tier IDs | All paid entitled tiers |
 | `LICENSE_SMTP_*` | SMTP host, port, credentials, sender, TLS, and SSL settings | See `.env.example` |
+| `LICENSE_MAIL_PROVIDER_NAME` | Public name of the outgoing mail provider | Unset |
 
 For local license testing, configure a Keygen product token and policy ID:
 
@@ -212,8 +213,8 @@ Before enabling live payments (sandbox mode may intentionally remain enabled dur
 2. Set `NOWPAYMENTS_SANDBOX=false` and configure both NOWPayments secrets.
 3. Route `API_DOMAIN` to this service and verify webhook hostname isolation.
 4. Configure the Patreon secret and SMTP delivery settings.
-5. Review the German and English email catalogs; their `reviewed` flags currently document review state.
-6. Name any third-party mail provider in both privacy-policy templates and verify its data handling.
+5. Keep the reviewed German and English email catalogs accurate; production preflight rejects catalogs whose `reviewed` flag is not true.
+6. Set `LICENSE_MAIL_PROVIDER_NAME` so both privacy-policy templates identify the outgoing mail provider, and verify its data handling.
 7. Obtain professional review of the tax-evidence and geographic policy documented in `docs/CHECKOUT_COUNTRY_COMPLIANCE.md`.
 8. Back up `server.db`, the invoice directory, the signing key, and the Flask secret.
 

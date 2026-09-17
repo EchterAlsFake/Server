@@ -57,7 +57,7 @@ When Raised: Download preparation or transfer failed; includes `.url`, `.class_n
 
 ## LoginFailed
 
-Trigger Cause: Sign-in credentials or API challenge failed
+Trigger Cause: Sign-in credentials, API response error (e.g. invalid login or password in JSON response payload), or API challenge failed
 
 ```python
 from xhamster_api.modules.errors import NotFound, LoginFailed

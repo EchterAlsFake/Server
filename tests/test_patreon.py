@@ -7,6 +7,7 @@ from _support import ServerTestCase, main
 
 import pf_server.patreon_service as patreon_service
 from pf_server.models import License, PatreonLicenseDelivery
+from pf_server.extensions import limiter
 
 
 class PatreonWebhookTests(ServerTestCase):
@@ -20,6 +21,33 @@ class PatreonWebhookTests(ServerTestCase):
         with main.app.app_context():
             self.assertEqual(PatreonLicenseDelivery.query.count(), 0)
             self.assertEqual(License.query.count(), 0)
+
+    def test_invalid_signature_flood_does_not_consume_valid_delivery_limit(self):
+        limiter.enabled = True
+        limiter.reset()
+        headers = {
+            "Content-Type": "application/json",
+            "X-Patreon-Event": "members:update",
+            "X-Patreon-Signature": "0" * 32,
+        }
+        invalid_responses = [
+            self.client.post(
+                "/patreon-webhook",
+                data=b"{}",
+                headers=headers,
+                base_url="https://api.echteralsfake.me",
+            )
+            for _ in range(21)
+        ]
+
+        with patch.object(patreon_service, "send_license_email") as send_email:
+            valid_response = self.post_patreon(self.eligible_patreon_payload())
+
+        self.assertTrue(all(response.status_code == 403 for response in invalid_responses[:20]))
+        self.assertEqual(invalid_responses[20].status_code, 429)
+        self.assertEqual(valid_response.status_code, 200)
+        send_email.assert_called_once()
+        limiter.enabled = False
 
     def test_paid_member_receives_one_signed_license_for_both_events(self):
         deliveries = []
@@ -138,6 +166,50 @@ class PatreonWebhookTests(ServerTestCase):
         send_email.assert_not_called()
         with main.app.app_context():
             self.assertEqual(PatreonLicenseDelivery.query.count(), 0)
+
+    def test_missing_trial_or_gift_flags_fail_closed(self):
+        payloads = []
+        missing = self.eligible_patreon_payload(member_id="member-missing-flags")
+        missing["data"]["attributes"].pop("is_free_trial")
+        missing["data"]["attributes"].pop("is_gifted")
+        payloads.append(missing)
+
+        null_flags = self.eligible_patreon_payload(member_id="member-null-flags")
+        null_flags["data"]["attributes"].update(
+            {"is_free_trial": None, "is_gifted": None}
+        )
+        payloads.append(null_flags)
+
+        with patch.object(patreon_service, "send_license_email") as send_email:
+            responses = [self.post_patreon(payload) for payload in payloads]
+
+        self.assertTrue(all(response.status_code == 200 for response in responses))
+        self.assertTrue(
+            all(response.get_json() == {"status": "not_eligible"} for response in responses)
+        )
+        send_email.assert_not_called()
+
+    def test_stale_worker_cannot_overwrite_the_current_lease(self):
+        with main.app.app_context():
+            main.db.session.add(
+                PatreonLicenseDelivery(
+                    member_id="member-123",
+                    status="sending",
+                    created_at="2026-01-01T00:00:00+00:00",
+                    updated_at="2026-01-01T00:00:00+00:00",
+                    lease_expires_at="2999-01-01T00:00:00+00:00",
+                    lease_token="current-token",
+                )
+            )
+            main.db.session.commit()
+
+            patreon_service.mark_patreon_delivery_failed(
+                "member-123", "stale-token"
+            )
+            delivery = main.db.session.get(PatreonLicenseDelivery, "member-123")
+
+            self.assertEqual(delivery.status, "sending")
+            self.assertEqual(delivery.lease_token, "current-token")
 
     def test_paid_member_update_delivers_after_an_initial_pending_charge(self):
         pending = self.eligible_patreon_payload()

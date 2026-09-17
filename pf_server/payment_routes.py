@@ -1,5 +1,6 @@
 """License purchase, invoice, and payment webhook routes."""
 
+import hashlib
 import hmac
 import json
 import re
@@ -57,6 +58,17 @@ from .webhook_models import NowPaymentsWebhook, PatreonWebhook
 
 payments_bp = Blueprint("payments", __name__)
 WEBHOOK_RATE_LIMIT = "20 per second"
+
+
+def webhook_replay_rate_limit_key() -> str:
+    """Isolate replay limits by signature without retaining an IP address."""
+    signature = (
+        request.headers.get("X-Patreon-Signature")
+        or request.headers.get("x-nowpayments-sig")
+        or "missing"
+    )
+    material = f"{request.path}\0{signature.strip().lower()}".encode("utf-8")
+    return hashlib.sha256(material).hexdigest()
 
 
 def require_api_subdomain() -> None:
@@ -289,7 +301,7 @@ def create_crypto_payment():
 
 @payments_bp.route("/nowpayments-ipn", methods=["POST"])
 @csrf.exempt
-@limiter.limit(WEBHOOK_RATE_LIMIT)
+@limiter.limit(WEBHOOK_RATE_LIMIT, key_func=webhook_replay_rate_limit_key)
 def nowpayments_ipn():
     require_api_subdomain()
     received_signature = request.headers.get("x-nowpayments-sig", "")
@@ -365,7 +377,7 @@ def nowpayments_ipn():
 
 @payments_bp.route("/patreon-webhook", methods=["POST"])
 @csrf.exempt
-@limiter.limit(WEBHOOK_RATE_LIMIT)
+@limiter.limit(WEBHOOK_RATE_LIMIT, key_func=webhook_replay_rate_limit_key)
 def patreon_webhook():
     require_api_subdomain()
     received_signature = request.headers.get("X-Patreon-Signature", "").strip()

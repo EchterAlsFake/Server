@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">xHamster API</span>
                 </a>
-                <span class="sidebar-version">v2.6</span>
+                <span class="sidebar-version">v2.6.2</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -115,7 +115,7 @@
                             <span aria-hidden="true">/</span>
                             <span>xHamster API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.6</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.6.2</div>
                         <h1>xHamster API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for xHamster. Fetch video details, shorts, channel information, pornstar metadata, or log into user accounts. Stream downloads via HLS. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -193,7 +193,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.6 uses <code>eaf_base_api ≥ 4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.6.2 uses <code>eaf_base_api ≥ 4.0.0</code>, which is installed automatically.
     </div>
 </div>
 
@@ -455,7 +455,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <span class="tag tag-async">async</span>
             </div>
         </div>
-        <div class="method-desc">Performs authentication and yields an active <code>Account</code> instance. Supports cookie injection fallback.</div>
+        <div class="method-desc">Performs authentication and returns an active <code>Account</code> instance. Validates API response payloads (<code>extras.error</code> / <code>extras.result</code>), raising <code>LoginFailed</code> when credentials are invalid or payload structure is unexpected. Supports cookie injection fallback.</div>
         <div class="method-signature"><span class="token-keyword">await</span> client.login(
     username: <span class="token-builtin">str</span>,
     password: <span class="token-builtin">str</span>,
@@ -865,7 +865,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
                 <tr><td><code>ProxyError</code></td><td>Proxy configuration failed or proxy is down</td></tr>
                 <tr><td><code>UnknownNetworkError</code></td><td>Unexpected network errors</td></tr>
                 <tr><td><code>DownloadFailed</code></td><td>Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception</td></tr>
-                <tr><td><code>LoginFailed</code></td><td>Sign-in credentials or API challenge failed</td></tr>
+                <tr><td><code>LoginFailed</code></td><td>Sign-in credentials, API response error (e.g. invalid login or password in JSON response payload), or API challenge failed</td></tr>
             </tbody>
         </table>
     </div>
@@ -946,6 +946,7 @@ xhamster_api --file urls.txt --quality best --output ./downloads --no-title Fals
         <table>
             <thead><tr><th>Date</th><th>Commit</th><th>Changes</th></tr></thead>
             <tbody>
+                <tr><td>2026-09-17</td><td><code>e452f99</code> / <code>79f61a7</code></td><td>Released 2.6.2. Added validation for invalid credential error payloads in xHamster login API JSON responses (<code>extras.error</code>), raising <code>LoginFailed</code> when authentication fails rather than returning an invalid <code>Account</code> instance on HTTP 200 responses.</td></tr>
                 <tr><td>2026-09-15</td><td><code>a136ebe</code> / <code>8030a56</code></td><td>Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete context. Added layout anchor validations to detect page structure changes. Implemented resilient fallback selectors for video and pornstar metadata. Enhanced download stream URL resolution and error handling. Added snippet-based unit tests for video and pornstar extraction.</td></tr>
                 <tr><td>2026-08-24</td><td><code>c640d89</code> / <code>b7c302e</code></td><td>Adapted listing extraction to the site's new per-video <code>data-video-id</code> layout, searched all candidate result containers, deduplicated overlapping results, and mapped listing duration into the current <code>duration</code> field.</td></tr>
                 <tr><td>2026-08-14</td><td><code>79224f5</code></td><td>Released 2.6 with expanded <code>Video</code> metadata: hash, description, duration/views/comments, timestamps, VR/HD flags, maximum resolution, orientation, and preview thumbnail.</td></tr>

@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 DEFAULT_RATE_LIMIT = "10000 per minute"
 MAX_REQUEST_SIZE = 200 * 1024
 LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
+LOCAL_SMTP_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 
 
 def _boolean(source: Mapping[str, str], name: str, default: bool) -> bool:
@@ -62,6 +63,11 @@ def _secret_key(source: Mapping[str, str], data_directory: str) -> str:
         return secret
 
 
+def smtp_transport_is_local(host: str) -> bool:
+    """Allow an unencrypted hop only to a relay on the same machine."""
+    return host.casefold().rstrip(".") in LOCAL_SMTP_HOSTS
+
+
 def load_environment_config(
     project_root: str,
     environ: Mapping[str, str] | None = None,
@@ -89,8 +95,10 @@ def load_environment_config(
     if not 1 <= smtp_port <= 65535:
         raise ValueError("LICENSE_SMTP_PORT must be between 1 and 65535")
 
+    smtp_host = source.get("LICENSE_SMTP_HOST", "").strip()
     smtp_username = source.get("LICENSE_SMTP_USERNAME", "").strip()
     smtp_password = source.get("LICENSE_SMTP_PASSWORD", "")
+    email_from = source.get("LICENSE_EMAIL_FROM", smtp_username).strip()
     smtp_starttls = _boolean(source, "LICENSE_SMTP_STARTTLS", True)
     smtp_ssl = _boolean(source, "LICENSE_SMTP_SSL", False)
     if smtp_starttls and smtp_ssl:
@@ -99,6 +107,19 @@ def load_environment_config(
         )
     if smtp_username and not smtp_password:
         raise ValueError("LICENSE_SMTP_PASSWORD is required with LICENSE_SMTP_USERNAME")
+    if smtp_username and not (smtp_starttls or smtp_ssl):
+        raise ValueError("SMTP authentication requires TLS or SSL")
+    if smtp_host and not (smtp_starttls or smtp_ssl) and not smtp_transport_is_local(smtp_host):
+        raise ValueError("Remote SMTP delivery requires TLS or SSL")
+    if email_from and (
+        "\r" in email_from
+        or "\n" in email_from
+        or any(character.isspace() for character in email_from)
+        or email_from.count("@") != 1
+        or email_from.startswith("@")
+        or email_from.endswith("@")
+    ):
+        raise ValueError("LICENSE_EMAIL_FROM must be a bare email address")
 
     keygen_url, keygen_host = _origin(source, "KEYGEN_INTERNAL_URL", "http://127.0.0.1:8004")
     if keygen_host != "127.0.0.1" and not keygen_url.startswith("https://"):
@@ -159,11 +180,14 @@ def load_environment_config(
         "KEYGEN_INTERNAL_URL": keygen_url,
         "KEYGEN_PRODUCT_TOKEN": source.get("KEYGEN_PRODUCT_TOKEN", ""),
         "KEYGEN_POLICY_ID": source.get("KEYGEN_POLICY_ID", ""),
-        "LICENSE_SMTP_HOST": source.get("LICENSE_SMTP_HOST", "").strip(),
+        "LICENSE_SMTP_HOST": smtp_host,
         "LICENSE_SMTP_PORT": smtp_port,
         "LICENSE_SMTP_USERNAME": smtp_username,
         "LICENSE_SMTP_PASSWORD": smtp_password,
-        "LICENSE_EMAIL_FROM": source.get("LICENSE_EMAIL_FROM", smtp_username).strip(),
+        "LICENSE_EMAIL_FROM": email_from,
+        "LICENSE_MAIL_PROVIDER_NAME": source.get(
+            "LICENSE_MAIL_PROVIDER_NAME", ""
+        ).strip()[:100],
         "LICENSE_SMTP_STARTTLS": smtp_starttls,
         "LICENSE_SMTP_SSL": smtp_ssl,
         "LICENSE_SMTP_TIMEOUT_SECONDS": 15,

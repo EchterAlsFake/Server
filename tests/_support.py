@@ -20,6 +20,7 @@ os.environ["NOWPAYMENTS_SANDBOX"] = "true"
 
 import main  # noqa: E402
 from pf_server.country_service import CountryEvidence  # noqa: E402
+from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
     Checklist,
     CiStatus,
@@ -34,6 +35,8 @@ with main.app.app_context():
 
 class ServerTestCase(unittest.TestCase):
     def setUp(self):
+        limiter.reset()
+        limiter.enabled = False
         main.app.config.update(
             TESTING=True,
             RATELIMIT_ENABLED=False,
@@ -70,6 +73,8 @@ class ServerTestCase(unittest.TestCase):
         self.country_lookup.stop()
         with main.app.app_context():
             main.db.session.remove()
+        limiter.reset()
+        limiter.enabled = True
 
     @staticmethod
     def eligible_patreon_payload(

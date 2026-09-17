@@ -3,7 +3,7 @@
 import json
 import os
 import string
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from _support import ServerTestCase, main
 
@@ -444,7 +444,7 @@ class PaymentTests(ServerTestCase):
                 f"license_email_{language}.json",
             )
             with open(catalog_path, encoding="utf-8") as catalog_file:
-                self.assertIs(json.load(catalog_file)["reviewed"], False)
+                self.assertIs(json.load(catalog_file)["reviewed"], True)
 
         with main.app.app_context():
             catalogs = {
@@ -466,6 +466,49 @@ class PaymentTests(ServerTestCase):
                 for language in catalogs
             }
             self.assertEqual(placeholders["de"], placeholders["en"])
+
+    def test_smtp_uses_starttls_authentication_and_a_stable_message_id(self):
+        smtp_client = MagicMock()
+        smtp_client.__enter__.return_value = smtp_client
+        settings = {
+            "LICENSE_SMTP_HOST": "smtp.example",
+            "LICENSE_SMTP_PORT": 587,
+            "LICENSE_SMTP_USERNAME": "mailer@example.com",
+            "LICENSE_SMTP_PASSWORD": "secret",
+            "LICENSE_EMAIL_FROM": "mailer@example.com",
+            "LICENSE_SMTP_STARTTLS": True,
+            "LICENSE_SMTP_SSL": False,
+            "LICENSE_SMTP_TIMEOUT_SECONDS": 15,
+        }
+
+        with (
+            main.app.app_context(),
+            patch.dict(main.app.config, settings),
+            patch.object(licensing.smtplib, "SMTP", return_value=smtp_client),
+        ):
+            licensing.send_license_email("member@example.com", b"signed-license")
+            licensing.send_license_email("member@example.com", b"signed-license")
+
+        smtp_client.starttls.assert_called()
+        smtp_client.login.assert_called_with("mailer@example.com", "secret")
+        messages = [call.args[0] for call in smtp_client.send_message.call_args_list]
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0]["Message-ID"], messages[1]["Message-ID"])
+        self.assertEqual(messages[0]["To"], "member@example.com")
+        self.assertEqual(messages[0].get_content_type(), "multipart/mixed")
+
+    def test_smtp_runtime_guard_rejects_plaintext_remote_delivery(self):
+        settings = {
+            "LICENSE_SMTP_HOST": "smtp.example",
+            "LICENSE_EMAIL_FROM": "mailer@example.com",
+            "LICENSE_SMTP_USERNAME": "",
+            "LICENSE_SMTP_PASSWORD": "",
+            "LICENSE_SMTP_STARTTLS": False,
+            "LICENSE_SMTP_SSL": False,
+        }
+        with main.app.app_context(), patch.dict(main.app.config, settings):
+            with self.assertRaisesRegex(RuntimeError, "requires TLS or SSL"):
+                licensing.send_license_email("member@example.com", b"license")
 
     def test_repeated_download_reuses_the_same_license(self):
         with main.app.app_context():

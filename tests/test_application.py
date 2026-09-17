@@ -32,8 +32,11 @@ class ApplicationTests(ServerTestCase):
         self.assertEqual(after_rotation.status_code, 302)
 
     def test_updated_privacy_pages_render_in_both_languages(self):
-        english = self.client.get("/privacy_policy")
-        german = self.client.get("/datenschutz")
+        with patch.dict(
+            main.app.config, {"LICENSE_MAIL_PROVIDER_NAME": "Example Mail"}
+        ):
+            english = self.client.get("/privacy_policy")
+            german = self.client.get("/datenschutz")
 
         self.assertEqual(english.status_code, 200)
         self.assertEqual(german.status_code, 200)
@@ -45,6 +48,8 @@ class ApplicationTests(ServerTestCase):
         )
         self.assertIn("Privex-VPS &amp; WireGuard-Transport".encode(), german.data)
         self.assertIn("Acer Swift 3".encode(), german.data)
+        self.assertIn(b"Example Mail", english.data)
+        self.assertIn(b"Example Mail", german.data)
 
     def test_documentation_paths_cannot_escape_the_generated_site(self):
         target, status = serve_docs_file("assets/../../main.py")

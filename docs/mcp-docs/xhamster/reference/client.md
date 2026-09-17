@@ -172,7 +172,7 @@ async for result in client.search_videos(
 
 ## login
 
-Performs authentication and yields an active `Account` instance. Supports cookie injection fallback.
+Performs authentication and returns an active `Account` instance. Validates API response payloads (`extras.error` / `extras.result`), raising `LoginFailed` when credentials are invalid or payload structure is unexpected. Supports cookie injection fallback.
 
 ```python
 await client.login(

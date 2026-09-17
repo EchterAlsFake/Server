@@ -158,6 +158,48 @@ class ConfigurationTests(unittest.TestCase):
                             {"SECRET_KEY": "secret", **settings},
                         )
 
+    def test_remote_or_authenticated_smtp_cannot_use_plaintext(self):
+        with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
+            for settings in (
+                {
+                    "LICENSE_SMTP_HOST": "smtp.example",
+                    "LICENSE_SMTP_STARTTLS": "false",
+                },
+                {
+                    "LICENSE_SMTP_HOST": "localhost",
+                    "LICENSE_SMTP_USERNAME": "mailer",
+                    "LICENSE_SMTP_PASSWORD": "secret",
+                    "LICENSE_SMTP_STARTTLS": "false",
+                },
+            ):
+                with self.subTest(settings=settings):
+                    with self.assertRaisesRegex(ValueError, "requires TLS or SSL"):
+                        load_environment_config(
+                            directory,
+                            {"SECRET_KEY": "secret", **settings},
+                        )
+
+            local_relay = load_environment_config(
+                directory,
+                {
+                    "SECRET_KEY": "secret",
+                    "LICENSE_SMTP_HOST": "127.0.0.1",
+                    "LICENSE_SMTP_STARTTLS": "false",
+                },
+            )
+            self.assertFalse(local_relay["LICENSE_SMTP_STARTTLS"])
+
+    def test_smtp_sender_must_be_a_bare_mailbox(self):
+        with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
+            with self.assertRaisesRegex(ValueError, "LICENSE_EMAIL_FROM"):
+                load_environment_config(
+                    directory,
+                    {
+                        "SECRET_KEY": "secret",
+                        "LICENSE_EMAIL_FROM": "Sender <sender@example.com>",
+                    },
+                )
+
     def test_remote_keygen_requires_https(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
             with self.assertRaisesRegex(ValueError, "require HTTPS"):
