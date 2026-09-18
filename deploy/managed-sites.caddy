@@ -9,18 +9,133 @@
 
 echteralsfake.me, docs.echteralsfake.me, api.echteralsfake.me {
     import application_defaults
-    @killswitch path /killswitch /killswitch/*
-    respond @killswitch 404
-    reverse_proxy 127.0.0.1:8000 {
-        header_up -Forwarded
-        header_up -X-Real-IP
-        header_up -True-Client-IP
-        header_up -CF-Connecting-IP
-        header_up -X-Forwarded-Prefix
-        header_up -X-Forwarded-Port
-        header_up X-Forwarded-For {client_ip}
-        header_up X-Forwarded-Host {host}
-        header_up X-Forwarded-Proto https
+
+    @dashboard_keygen_root {
+        host echteralsfake.me
+        path /dashboard/keygen
+    }
+    redir @dashboard_keygen_root /dashboard/keygen/ 308
+
+    @dashboard_keygen {
+        host echteralsfake.me
+        path /dashboard/keygen/*
+    }
+    handle @dashboard_keygen {
+        forward_auth 127.0.0.1:8010 {
+            uri /dashboard/api/auth/check
+        }
+        uri strip_prefix /dashboard/keygen
+        reverse_proxy 127.0.0.1:8005 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @dashboard {
+        host echteralsfake.me
+        path /dashboard /dashboard/*
+    }
+    handle @dashboard {
+        reverse_proxy 127.0.0.1:8010 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up -X-Forwarded-Prefix
+            header_up -X-Forwarded-Port
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @visit_script {
+        host echteralsfake.me docs.echteralsfake.me
+        path /__eaf/visit.js
+    }
+    handle @visit_script {
+        rewrite * /dashboard/static/visit.js
+        reverse_proxy 127.0.0.1:8010
+    }
+
+    @visit {
+        host echteralsfake.me docs.echteralsfake.me
+        path /__eaf/visit
+        method POST
+    }
+    handle @visit {
+        request_body {
+            max_size 1KB
+        }
+        reverse_proxy 127.0.0.1:8010 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @error_log {
+        host api.echteralsfake.me
+        path /error_log
+    }
+    handle @error_log {
+        @not_post not method POST
+        respond @not_post 405
+        request_body {
+            max_size 4KB
+        }
+        header {
+            Cache-Control "no-store"
+            Referrer-Policy "no-referrer"
+            X-Content-Type-Options "nosniff"
+        }
+        reverse_proxy 127.0.0.1:8090 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up -X-Forwarded-Prefix
+            header_up -X-Forwarded-Port
+            header_up -Authorization
+            header_up -Cookie
+            header_up User-Agent "EAF-Error-Relay"
+            header_up -Origin
+            header_up -Referer
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+            transport http {
+                dial_timeout 2s
+                response_header_timeout 15s
+                read_timeout 15s
+                write_timeout 10s
+            }
+        }
+    }
+
+    handle {
+        @killswitch path /killswitch /killswitch/*
+        respond @killswitch 404
+        reverse_proxy 127.0.0.1:8000 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up -X-Forwarded-Prefix
+            header_up -X-Forwarded-Port
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+        }
     }
 }
 
@@ -31,16 +146,41 @@ www.echteralsfake.me {
 
 vplan.echteralsfake.me {
     import application_defaults
-    reverse_proxy 127.0.0.1:8001 {
-        header_up -Forwarded
-        header_up -X-Real-IP
-        header_up -True-Client-IP
-        header_up -X-Forwarded-Prefix
-        header_up -X-Forwarded-Port
-        header_up X-Forwarded-For {client_ip}
-        header_up X-Forwarded-Host {host}
-        header_up X-Forwarded-Proto https
-        header_up CF-Connecting-IP {client_ip}
+    @visit_script path /__eaf/visit.js
+    handle @visit_script {
+        rewrite * /dashboard/static/visit.js
+        reverse_proxy 127.0.0.1:8010
+    }
+    @visit {
+        path /__eaf/visit
+        method POST
+    }
+    handle @visit {
+        request_body {
+            max_size 1KB
+        }
+        reverse_proxy 127.0.0.1:8010 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -CF-Connecting-IP
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+    handle {
+        reverse_proxy 127.0.0.1:8001 {
+            header_up -Forwarded
+            header_up -X-Real-IP
+            header_up -True-Client-IP
+            header_up -X-Forwarded-Prefix
+            header_up -X-Forwarded-Port
+            header_up X-Forwarded-For {client_ip}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto https
+            header_up CF-Connecting-IP {client_ip}
+        }
     }
 }
 

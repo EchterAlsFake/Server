@@ -259,6 +259,7 @@ class ApplicationTests(ServerTestCase):
                 "session_id",
                 "provider_payment_id",
                 "provider_reference_type",
+                "environment",
                 "expected_price_amount",
                 "expected_price_currency",
                 "expected_pay_amount",

@@ -1,0 +1,43 @@
+[Unit]
+Description=Privacy-first PocketBase error log
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/srv/pocketbase/pocketbase
+
+[Service]
+Type=simple
+User=eaf-pocketbase
+Group=eaf-pocketbase
+WorkingDirectory=/srv/pocketbase
+ExecStart=/srv/pocketbase/pocketbase serve --http=127.0.0.1:8090 --dir=/var/lib/eaf-pocketbase --hooksDir=/srv/pocketbase/pb_hooks --migrationsDir=/srv/pocketbase/pb_migrations --automigrate=false --dev=false --hooksWatch=false --indexFallback=false --origins=https://api.echteralsfake.me
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/eaf-pocketbase
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+MemoryHigh=192M
+MemoryMax=256M
+TasksMax=64
+CPUQuota=100%
+LimitNOFILE=4096
+RestrictNamespaces=true
+
+[Install]
+WantedBy=multi-user.target

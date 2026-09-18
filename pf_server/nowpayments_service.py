@@ -83,6 +83,9 @@ def _store_pending_transaction(
             session_id=session_id,
             provider_payment_id=provider_payment_id,
             provider_reference_type=provider_reference_type,
+            environment=(
+                "sandbox" if current_app.config.get("NOWPAYMENTS_SANDBOX") else "production"
+            ),
             expected_price_amount=expected_price_amount,
             expected_price_currency=expected_price_currency,
             customer_country=customer_country,

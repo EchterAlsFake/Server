@@ -434,6 +434,7 @@ class PaymentTests(ServerTestCase):
             self.assertEqual(transaction.expected_price_currency, "eur")
             self.assertEqual(transaction.expected_pay_amount, "0.5")
             self.assertEqual(transaction.expected_pay_currency, "ltc")
+            self.assertEqual(transaction.environment, "sandbox")
             self.assertFalse(hasattr(transaction, "email"))
 
     def test_email_translation_catalogs_have_matching_keys_and_placeholders(self):

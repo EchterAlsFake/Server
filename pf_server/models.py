@@ -22,6 +22,7 @@ class Transaction(db.Model):
     session_id = db.Column(db.String, primary_key=True)
     provider_payment_id = db.Column(db.String, unique=True, nullable=False)
     provider_reference_type = db.Column(db.String(16), nullable=False)
+    environment = db.Column(db.String(16), nullable=False, default="production")
     expected_price_amount = db.Column(db.String(32), nullable=False)
     expected_price_currency = db.Column(db.String(20), nullable=False)
     expected_pay_amount = db.Column(db.String(32), nullable=True)

@@ -73,6 +73,21 @@ Systemd and Caddy changes need separate review and installation; the update comm
 does not silently replace system configuration. The helper's source is
 `Server/deploy/eaf-deploy`, installed at `/usr/local/sbin/eaf-deploy`.
 
+## PocketBase error-log intake
+
+The separate eaf-pocketbase.service receives only exact POST /error_log on
+api.echteralsfake.me through Caddy, forwarding to loopback port 8090. Its source,
+unit, migration history and isolated regression tests are in deploy/pocketbase.
+See [the integration and operations guide](pocketbase/README.md) before changing
+its contract or deployment. Production hooks live in /srv/pocketbase; private
+state lives in /var/lib/eaf-pocketbase. Changes require explicit migration and
+service restart; the normal server deployment does not install them.
+
+The audit added bounded requests/resources, stronger redaction, locked signup,
+and a 100,000-record ceiling. At capacity intake returns 503 without deleting
+existing records. Activity logs stay disabled; there is no automatic record
+expiry. Retain rollback snapshots privately and retire them deliberately.
+
 ## Backups and recovery
 
 Pre-update backups are local and root-only. They include purchase data and private
