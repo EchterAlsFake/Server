@@ -79,6 +79,10 @@
                 <input type="checkbox" id="chk-age">
                 <span class="checkbox-text">I confirm that I am at least 18 years of age.</span>
             </label>
+            <label class="checkbox-container">
+                <input type="checkbox" id="chk-terms">
+                <span class="checkbox-text">I have read and accept the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>, including the rule on publishing premium-license bypass instructions.</span>
+            </label>
             
             <label class="checkbox-container">
                 <input type="checkbox" id="chk-withdrawal">
@@ -129,6 +133,7 @@
     function initCheckout() {
         const payBtn = document.getElementById("pay-btn");
         const chkAge = document.getElementById("chk-age");
+        const chkTerms = document.getElementById("chk-terms");
         const chkWithdrawal = document.getElementById("chk-withdrawal");
         const checkoutCountry = document.getElementById("checkout-country");
 
@@ -144,7 +149,7 @@
 
         // Enable or disable the pay button based on checkboxes
         function updateButtonState() {
-            const checked = chkAge.checked && chkWithdrawal.checked && checkoutCountry.value;
+            const checked = chkAge.checked && chkTerms.checked && chkWithdrawal.checked && checkoutCountry.value;
             payBtn.disabled = !checked;
             
             // Fiat also requires email
@@ -153,6 +158,7 @@
         }
 
         chkAge.addEventListener("change", updateButtonState);
+        chkTerms.addEventListener("change", updateButtonState);
         chkWithdrawal.addEventListener("change", updateButtonState);
         checkoutCountry.addEventListener("change", updateButtonState);
         fiatEmail.addEventListener("input", updateButtonState);
@@ -170,7 +176,7 @@
                         "Content-Type": "application/json",
                         "X-CSRFToken": csrfToken
                     },
-                    body: JSON.stringify({ country: checkoutCountry.value })
+                    body: JSON.stringify({ country: checkoutCountry.value, terms_accepted: chkTerms.checked })
                 });
 
                 if (response.ok) {
@@ -214,7 +220,8 @@
                     },
                     body: JSON.stringify({
                         email: fiatEmail.value,
-                        country: checkoutCountry.value
+                        country: checkoutCountry.value,
+                        terms_accepted: chkTerms.checked
                     })
                 });
 

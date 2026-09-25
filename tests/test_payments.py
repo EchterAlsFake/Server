@@ -13,6 +13,14 @@ from pf_server.models import License, Transaction
 
 
 class PaymentTests(ServerTestCase):
+    def test_checkout_requires_explicit_terms_acceptance(self):
+        with patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key"}):
+            for route in ("/create-crypto-payment", "/create-fiat-payment"):
+                with self.subTest(route=route):
+                    response = self.client.post(route, json={"country": "DE"})
+                    self.assertEqual(response.status_code, 400)
+                    self.assertIn("Terms of Service", response.get_json()["error"])
+
     def add_transaction(
         self,
         session_id: str,
@@ -363,7 +371,7 @@ class PaymentTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE"},
+                json={"country": "DE", "terms_accepted": True},
                 base_url="https://attacker.invalid",
             )
 
@@ -420,7 +428,7 @@ class PaymentTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-fiat-payment",
-                json={"email": "buyer@example.com", "country": "DE"},
+                json={"email": "buyer@example.com", "country": "DE", "terms_accepted": True},
             )
 
         self.assertEqual(response.status_code, 200)

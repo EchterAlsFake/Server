@@ -132,7 +132,7 @@ class CountryComplianceTests(ServerTestCase):
     def test_checkout_blocks_restricted_mismatched_and_unverifiable_locations(self):
         with patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key"}):
             restricted = self.client.post(
-                "/create-crypto-payment", json={"country": "KP"}
+                "/create-crypto-payment", json={"country": "KP", "terms_accepted": True}
             )
             self.mock_country_lookup.return_value = CountryEvidence(
                 status="found",
@@ -141,13 +141,13 @@ class CountryComplianceTests(ServerTestCase):
                 database_label="DB-IP fixture",
             )
             mismatch = self.client.post(
-                "/create-crypto-payment", json={"country": "DE"}
+                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True}
             )
             self.mock_country_lookup.return_value = CountryEvidence(
                 status="database_unavailable"
             )
             unavailable = self.client.post(
-                "/create-crypto-payment", json={"country": "DE"}
+                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True}
             )
 
         self.assertEqual(restricted.status_code, 451)
@@ -170,7 +170,7 @@ class CountryComplianceTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE"},
+                json={"country": "DE", "terms_accepted": True},
                 headers={"X-Forwarded-For": "203.0.113.10"},
             )
 

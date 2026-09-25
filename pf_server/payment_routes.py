@@ -255,6 +255,8 @@ def create_fiat_payment():
     if not current_app.config.get("NOWPAYMENTS_API_KEY"):
         return jsonify({"error": "NOWPayments API key not configured on server."}), 500
     data = request.get_json(silent=True)
+    if not isinstance(data, dict) or data.get("terms_accepted") is not True:
+        return jsonify({"error": "Please accept the Terms of Service."}), 400
     country, country_error = validate_checkout_country(data)
     if country_error:
         return country_error
@@ -283,6 +285,8 @@ def create_crypto_payment():
     if not current_app.config.get("NOWPAYMENTS_API_KEY"):
         return jsonify({"error": "NOWPayments API key not configured on server."}), 500
     data = request.get_json(silent=True)
+    if not isinstance(data, dict) or data.get("terms_accepted") is not True:
+        return jsonify({"error": "Please accept the Terms of Service."}), 400
     country, country_error = validate_checkout_country(data)
     if country_error:
         return country_error
