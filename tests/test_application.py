@@ -1,6 +1,7 @@
 """Application factory, public feature, update, and operations tests."""
 
 import os
+import re
 from datetime import datetime
 from unittest.mock import patch
 
@@ -15,21 +16,127 @@ from pf_server.models import CiStatus, Stats
 
 
 class ApplicationTests(ServerTestCase):
-    def test_landing_page_auth_uses_application_configuration(self):
-        with patch.dict(main.app.config, {"CHECKLIST_AUTH": "site-password"}):
-            login = self.client.post(
-                "/access",
-                data={"password": "site-password", "next": "/"},
-                base_url="https://localhost",
+    def test_root_requires_explicit_age_confirmation(self):
+        gate = self.client.get("/")
+        rejected = self.client.post("/", data={})
+        accepted = self.client.post("/", data={"adult_confirmed": "yes"})
+
+        self.assertEqual(gate.status_code, 200)
+        self.assertIn(b'name="adult_confirmed"', gate.data)
+        self.assertIn(b"at least 18 years old", gate.data)
+        self.assertIn("noindex", gate.headers["X-Robots-Tag"])
+        self.assertEqual(rejected.status_code, 400)
+        self.assertIn(b'role="alert"', rejected.data)
+        self.assertEqual(accepted.status_code, 303)
+        self.assertEqual(accepted.headers["Location"], "/porn_fetch")
+        self.assertIn("no-store", accepted.headers["Cache-Control"])
+
+        with patch.dict(main.app.config, {"WTF_CSRF_ENABLED": True}):
+            csrf_rejected = self.client.post("/", data={"adult_confirmed": "yes"})
+            token = re.search(
+                rb'name="csrf_token" value="([^"]+)"', self.client.get("/").data
+            ).group(1)
+            csrf_accepted = self.client.post(
+                "/", data={"adult_confirmed": "yes", "csrf_token": token.decode()}
             )
+        self.assertEqual(csrf_rejected.status_code, 400)
+        self.assertEqual(csrf_accepted.status_code, 303)
+
+    def test_commercial_seo_exposes_only_the_product_page(self):
+        commercial_host = "https://echteralsfake.me"
+        with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": False}):
+            product = self.client.get("/porn_fetch", base_url=commercial_host)
+            sitemap = self.client.get("/sitemap.xml", base_url=commercial_host)
+            robots = self.client.get("/robots.txt", base_url=commercial_host)
+            docs_sitemap = self.client.get("/sitemap.xml", base_url="https://docs.echteralsfake.me")
+
+        self.assertEqual(product.status_code, 200)
+        self.assertIn(b'<meta name="robots" content="index, follow">', product.data)
+        self.assertIn(b'<link rel="canonical" href="https://echteralsfake.me/porn_fetch">', product.data)
+        self.assertIn(b'<meta name="description"', product.data)
+        self.assertEqual(sitemap.status_code, 200)
+        self.assertIn(b"https://echteralsfake.me/porn_fetch", sitemap.data)
+        self.assertNotIn(b"<loc>https://echteralsfake.me/</loc>", sitemap.data)
+        self.assertIn(b"Sitemap: https://echteralsfake.me/sitemap.xml", robots.data)
+        self.assertEqual(docs_sitemap.status_code, 404)
+
+        with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": True}):
+            test_product = self.client.get("/porn_fetch", base_url=commercial_host)
+            test_sitemap = self.client.get("/sitemap.xml", base_url=commercial_host)
+        self.assertIn(b'<meta name="robots" content="noindex, nofollow">', test_product.data)
+        self.assertEqual(test_sitemap.status_code, 404)
+
+    def test_purchase_pages_show_current_payment_options_and_accessible_checkout(self):
+        options = self.client.get("/porn_fetch")
+        checkout = self.client.get("/buy_license")
+
+        self.assertEqual(options.status_code, 200)
+        self.assertEqual(checkout.status_code, 200)
+        self.assertIn(b"NOWPayments", options.data)
+        self.assertIn(b"Patreon", options.data)
+        self.assertIn(b"214243387", options.data)
+        self.assertIn("€19.99".encode(), options.data)
+        self.assertNotIn(b"SubscribeStar", options.data)
+        self.assertNotIn(b"Transak", checkout.data)
+        self.assertNotIn(b"pay-fiat-btn", checkout.data)
+        self.assertIn(b'<fieldset class="checkout-agreements">', checkout.data)
+        self.assertIn(b'role="alert"', checkout.data)
+        self.assertIn(b'Skip to main content', checkout.data)
+        self.assertIn(b'Test site', checkout.data)
+        self.assertIn(b'id="chk-test-site"', checkout.data)
+
+        with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": False}):
+            live_checkout = self.client.get("/buy_license")
+        self.assertNotIn(b'id="chk-test-site"', live_checkout.data)
+        self.assertNotIn(b'class="test-site-banner"', live_checkout.data)
+
+    def test_root_age_gate_does_not_require_the_checklist_password(self):
+        former_password_page = self.client.get("/access")
+        self.assertEqual(former_password_page.status_code, 302)
+        self.assertEqual(former_password_page.headers["Location"], "/")
+        with patch.dict(main.app.config, {"CHECKLIST_AUTH": "site-password"}):
             landing_page = self.client.get("/", base_url="https://localhost")
-
-        self.assertEqual(login.status_code, 302)
         self.assertEqual(landing_page.status_code, 200)
-
+        self.assertIn(b'name="adult_confirmed"', landing_page.data)
         with patch.dict(main.app.config, {"CHECKLIST_AUTH": "rotated-password"}):
             after_rotation = self.client.get("/", base_url="https://localhost")
-        self.assertEqual(after_rotation.status_code, 302)
+        self.assertEqual(after_rotation.status_code, 200)
+
+    def test_vplan_referral_blocks_commercial_site_for_the_browser(self):
+        host = "https://echteralsfake.me"
+        blocked = self.client.get(
+            "/", base_url=host,
+            headers={"Referer": "https://vplan.echteralsfake.me/school/plan?private=1"},
+        )
+        self.assertEqual(blocked.status_code, 403)
+        self.assertIn(b"Access unavailable", blocked.data)
+        self.assertNotIn(b"Porn Fetch is intended for adults", blocked.data)
+        self.assertIn("Secure", blocked.headers["Set-Cookie"])
+        self.assertIn("HttpOnly", blocked.headers["Set-Cookie"])
+        self.assertIn("SameSite=Lax", blocked.headers["Set-Cookie"])
+        self.assertIn("no-store", blocked.headers["Cache-Control"])
+
+        self.assertEqual(self.client.get("/porn_fetch", base_url=host).status_code, 403)
+        self.assertEqual(self.client.get("/buy_license", base_url=host).status_code, 403)
+        self.assertEqual(self.client.post("/", base_url=host, data={"adult_confirmed": "yes"}).status_code, 403)
+        self.assertEqual(main.app.test_client().get("/", base_url=host).status_code, 200)
+        self.assertNotEqual(self.client.get("/docs/", base_url=host).status_code, 403)
+        self.assertNotEqual(self.client.get("/", base_url="https://docs.echteralsfake.me").status_code, 403)
+
+        with patch.dict(main.app.extensions, {"vplan_referral_key": b"new-app-lifetime-key"}):
+            after_restart = self.client.get("/", base_url=host)
+        self.assertEqual(after_restart.status_code, 200)
+
+    def test_vplan_referral_host_match_is_exact(self):
+        host = "https://echteralsfake.me"
+        for referer in (
+            "https://vplan.echteralsfake.me.evil.example/",
+            "https://vplan.echteralsfake.me@evil.example/",
+            "http://vplan.echteralsfake.me/",
+            "https://other.example/",
+        ):
+            response = self.client.get("/", base_url=host, headers={"Referer": referer})
+            self.assertEqual(response.status_code, 200, referer)
 
     def test_updated_privacy_pages_render_in_both_languages(self):
         with patch.dict(

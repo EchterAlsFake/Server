@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from urllib.parse import urlencode
 
 import httpx
 from flask import current_app
@@ -102,78 +101,6 @@ def _store_pending_transaction(
     except SQLAlchemyError:
         db.session.rollback()
         raise
-
-
-def create_fiat_payment(
-    email: str,
-    customer_country: str,
-    country_evidence: str,
-    geolocation_database: str,
-) -> dict[str, str]:
-    session_id, created_at = _new_session()
-    payload = {
-        "price_amount": 30,
-        "price_currency": "eur",
-        "pay_currency": "ltc",
-        "ipn_callback_url": f"{current_app.config['API_DOMAIN']}/nowpayments-ipn",
-        "order_id": session_id,
-        "order_description": "Porn Fetch License Key (Fiat)",
-    }
-    try:
-        response = httpx.post(
-            f"{current_app.config['NOWPAYMENTS_API_URL']}/payment",
-            json=payload,
-            headers=_headers(),
-            timeout=10.0,
-        )
-        response.raise_for_status()
-        payment_data = response.json()
-        if not isinstance(payment_data, dict):
-            raise TypeError("NOWPayments payment response was not an object")
-        pay_address = payment_data.get("pay_address")
-        payment_id = _provider_identifier(
-            payment_data.get("payment_id"), "payment ID"
-        )
-        raw_pay_amount = payment_data.get("pay_amount")
-        pay_currency = payment_data.get("pay_currency")
-        if (
-            not isinstance(pay_address, str)
-            or not pay_address
-            or type(raw_pay_amount) not in (int, float)
-            or not isinstance(pay_currency, str)
-            or not pay_currency
-        ):
-            raise ValueError("NOWPayments payment response was incomplete")
-        expected_pay_amount = Decimal(str(raw_pay_amount))
-        if not expected_pay_amount.is_finite() or expected_pay_amount <= 0:
-            raise ValueError("NOWPayments payment amount was invalid")
-    except (httpx.HTTPError, TypeError, ValueError) as error:
-        raise PaymentProviderError("Failed to create fiat payment") from error
-
-    _store_pending_transaction(
-        session_id,
-        payment_id,
-        created_at,
-        provider_reference_type="payment",
-        expected_price_amount="30",
-        expected_price_currency="eur",
-        customer_country=customer_country,
-        country_evidence=country_evidence,
-        geolocation_database=geolocation_database,
-        expected_pay_amount=str(expected_pay_amount),
-        expected_pay_currency=pay_currency.casefold(),
-    )
-    transak_url = "https://global.transak.com/?" + urlencode(
-        {
-            "cryptoCurrencyCode": "LTC",
-            "network": "litecoin",
-            "fiatCurrency": "EUR",
-            "fiatAmount": 30,
-            "walletAddress": pay_address,
-            "emailAddress": email,
-        }
-    )
-    return {"session_id": session_id, "transak_url": transak_url}
 
 
 def create_crypto_invoice(

@@ -1,0 +1,114 @@
+.lede {
+    max-width: 62ch;
+    color: var(--text);
+    font-size: 20px;
+    line-height: 1.65;
+}
+
+.task-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    margin-top: 22px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--border);
+}
+
+.task-card {
+    padding: 20px;
+    background: var(--surface-1);
+}
+
+.task-card h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+}
+
+.task-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.metric-card {
+    margin: 26px 0;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface-1);
+}
+
+.metric-card figcaption,
+.distribution-item > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 9px;
+    color: var(--text-soft);
+    font-family: var(--mono);
+    font-size: 14px;
+}
+
+.metric-card strong,
+.distribution-item strong {
+    color: var(--accent-strong);
+    font-size: 12px;
+}
+
+.metric-card p {
+    margin: 12px 0 0;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+progress {
+    display: block;
+    width: 100%;
+    height: 7px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 2px;
+    background: var(--surface-3);
+    color: var(--accent);
+}
+
+progress::-webkit-progress-bar {
+    background: var(--surface-3);
+}
+
+progress::-webkit-progress-value {
+    background: var(--accent);
+}
+
+progress::-moz-progress-bar {
+    background: var(--accent);
+}
+
+.distribution-list {
+    display: grid;
+    gap: 16px;
+    max-width: 620px;
+    margin: 22px 0 34px;
+}
+
+.distribution-item {
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface-1);
+}
+
+@media (max-width: 620px) {
+    .task-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .metric-card figcaption {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+}

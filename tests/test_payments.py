@@ -15,11 +15,35 @@ from pf_server.models import License, Transaction
 class PaymentTests(ServerTestCase):
     def test_checkout_requires_explicit_terms_acceptance(self):
         with patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key"}):
-            for route in ("/create-crypto-payment", "/create-fiat-payment"):
+            for route in ("/create-crypto-payment",):
                 with self.subTest(route=route):
                     response = self.client.post(route, json={"country": "DE"})
                     self.assertEqual(response.status_code, 400)
                     self.assertIn("Terms of Service", response.get_json()["error"])
+
+    def test_sandbox_checkout_requires_explicit_test_acknowledgment(self):
+        with patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key", "NOWPAYMENTS_SANDBOX": True}):
+            missing = self.client.post(
+                "/create-crypto-payment",
+                json={"country": "DE", "terms_accepted": True},
+            )
+            rejected = self.client.post(
+                "/create-crypto-payment",
+                json={"country": "DE", "terms_accepted": True, "test_acknowledged": False},
+            )
+
+        self.assertEqual(missing.status_code, 400)
+        self.assertEqual(rejected.status_code, 400)
+        self.assertIn("test site", missing.get_json()["error"])
+
+    def test_live_checkout_does_not_require_test_acknowledgment(self):
+        with patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key", "NOWPAYMENTS_SANDBOX": False}):
+            response = self.client.post(
+                "/create-crypto-payment",
+                json={"country": "invalid", "terms_accepted": True},
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("valid country", response.get_json()["error"])
 
     def add_transaction(
         self,
@@ -371,7 +395,7 @@ class PaymentTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE", "terms_accepted": True},
+                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True},
                 base_url="https://attacker.invalid",
             )
 
@@ -403,47 +427,12 @@ class PaymentTests(ServerTestCase):
                 "DB-IP City Lite test fixture",
             )
 
-    def test_new_direct_payments_store_callback_validation_expectations(self):
-        class FakeNowPaymentsResponse:
-            @staticmethod
-            def raise_for_status():
-                return None
-
-            @staticmethod
-            def json():
-                return {
-                    "payment_id": "payment-direct-123",
-                    "pay_address": "litecoin-address",
-                    "pay_amount": 0.5,
-                    "pay_currency": "ltc",
-                }
-
-        with (
-            patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key"}),
-            patch.object(
-                nowpayments_service.httpx,
-                "post",
-                return_value=FakeNowPaymentsResponse(),
-            ),
-        ):
-            response = self.client.post(
-                "/create-fiat-payment",
-                json={"email": "buyer@example.com", "country": "DE", "terms_accepted": True},
-            )
-
-        self.assertEqual(response.status_code, 200)
-        with main.app.app_context():
-            transaction = main.db.session.get(
-                Transaction, response.get_json()["session_id"]
-            )
-            self.assertEqual(transaction.provider_payment_id, "payment-direct-123")
-            self.assertEqual(transaction.provider_reference_type, "payment")
-            self.assertEqual(transaction.expected_price_amount, "30")
-            self.assertEqual(transaction.expected_price_currency, "eur")
-            self.assertEqual(transaction.expected_pay_amount, "0.5")
-            self.assertEqual(transaction.expected_pay_currency, "ltc")
-            self.assertEqual(transaction.environment, "sandbox")
-            self.assertFalse(hasattr(transaction, "email"))
+    def test_removed_fiat_checkout_is_unavailable(self):
+        response = self.client.post(
+            "/create-fiat-payment",
+            json={"email": "buyer@example.com", "country": "DE", "terms_accepted": True},
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_email_translation_catalogs_have_matching_keys_and_placeholders(self):
         for language in ("de", "en"):

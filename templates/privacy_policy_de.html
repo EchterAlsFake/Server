@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block html_lang %}de{% endblock %}
+
 {% block title %}Datenschutzerklärung - Porn Fetch{% endblock %}
 
 {% block content %}
@@ -10,7 +12,7 @@
 
     <div style="margin-top: 25px; line-height: 1.8;">
 
-        <h3>1. Verantwortlicher</h3>
+        <h2>1. Verantwortlicher</h2>
         <p>Verantwortlicher im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:</p>
         <p>
             <strong>Johannes Habel</strong><br>
@@ -20,13 +22,13 @@
             E-Mail: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>
         </p>
 
-        <h3>2. Von der Porn-Fetch-Anwendung nicht erhobene Daten</h3>
+        <h2>2. Von der Porn-Fetch-Anwendung nicht erhobene Daten</h2>
         <p>Die Anwendung Porn Fetch läuft lokal und übermittelt <strong>keine</strong> Browser-Historien oder Aufzeichnungen heruntergeladener Videos an meinen Server. Mein Anwendungsserver protokolliert <strong>keine</strong> Besucher-IP-Adressen. Er führt zusammengefasste Zähler für Anfragen, Übertragungsvolumen und ungefähre tägliche Besucherzahlen. Für die tägliche Besucherzählung wird die Verbindungs-IP-Adresse nur im Arbeitsspeicher mit einem geheimen, täglich wechselnden Bezug in einen nicht rückrechenbaren Prüfwert umgewandelt. Gespeichert werden kurzfristig nur diese Prüfwerte zur Vermeidung von Doppelzählungen und dauerhaft lediglich Tages-, Host- und grobe Seitenbereichssummen. Es werden weder Nutzerprofile erstellt noch Besuche über Tage oder Webseiten hinweg verknüpft. Kauf- und Lizenzerfüllungsdaten werden gesondert wie nachfolgend beschrieben verarbeitet.</p>
 
-        <h3>3. Selbst gehosteter Server &amp; Internetanbieter</h3>
+        <h2>3. Selbst gehosteter Server &amp; Internetanbieter</h2>
         <p>Diese Webseite wird auf meiner eigenen Hardware selbst gehostet. Mein Internetzugang wird von der <strong>Vodafone GmbH</strong> (Edmund-Rumpler-Straße 2, 51149 Köln, Deutschland) als Internet-Service-Provider (ISP) bereitgestellt. Als Telekommunikationsanbieter kann Vodafone gesetzlich verpflichtet sein, bestimmte Verbindungsdaten (wie IP-Adressen und Portnummern) für einen begrenzten Zeitraum nach dem Telekommunikationsgesetz (TKG) und möglicher künftiger Vorratsdatenspeicherungsgesetzgebung zu speichern. Diese Datenspeicherung erfolgt durch Vodafone in seiner Eigenschaft als ISP und liegt <strong>außerhalb meiner Kontrolle</strong>. Ich habe keinen Zugriff auf die von Vodafone gespeicherten Daten und fordere diese auch nicht an. Weitere Informationen finden Sie in der <a href="https://www.vodafone.de/de/datenschutz/privatsphaere" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Vodafone</a>.</p>
 
-        <h3>4. Privex-VPS &amp; WireGuard-Transport</h3>
+        <h2>4. Privex-VPS &amp; WireGuard-Transport</h2>
         <p>Öffentliche Verbindungen erreichen zunächst einen von <strong>Privex Inc.</strong> betriebenen virtuellen Server in Schweden. Der VPS leitet die weiterhin TLS-verschlüsselte Verbindung durch einen WireGuard-Tunnel an meinen Acer Swift 3 oder mein Google Pixel 7 Pro in Deutschland weiter. HTTPS wird erst nach dem WireGuard-Tunnel durch meinen Reverse-Proxy auf dem deutschen Endgerät terminiert; Privex terminiert HTTPS für diese Webseite nicht.</p>
         <p>Privex und die an der Bereitstellung des VPS beteiligten Rechenzentrums- und Netzbetreiber können Verbindungsdaten verarbeiten, die für Routing und Absicherung des Dienstes erforderlich sind, darunter:</p>
         <ul>
@@ -35,10 +37,10 @@
         </ul>
         <p>Die zusätzliche WireGuard-Verschlüsselung schützt den Verkehr zwischen dem schwedischen VPS und dem deutschen Endgerät. Weitere Informationen zur Datenverarbeitung durch Privex finden Sie in der <a href="https://www.privex.io/privacy/" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Privex</a>.</p>
 
-        <h3>5. Keine Cookies oder externen Analyseanbieter</h3>
+        <h2>5. Keine Cookies oder externen Analyseanbieter</h2>
         <p>Diese Webseite verwendet <strong>keinerlei</strong> Cookies — weder eigene Tracking-Cookies noch Cookies von Drittanbietern. Ein kleines, selbst gehostetes Skript meldet ausschließlich den groben Seitenbereich an meinen Server, damit die in Abschnitt 2 beschriebene tägliche Gesamtzählung erfolgen kann; URL-Parameter und Seitentitel werden nicht übertragen. Ich lade <strong>keine</strong> externen Schriftarten (wie Google Fonts), externe Stylesheets, Analyse-Skripte von Drittanbietern, Werbenetzwerke, Social-Media-Plugins oder sonstige externe Ressourcen. Alle Assets werden direkt von meinem eigenen Server ausgeliefert.</p>
 
-        <h3>6. Zahlungsabwicklung über NowPayments.io</h3>
+        <h2>6. Zahlungsabwicklung über NowPayments.io</h2>
         <p>Wenn Sie eine Lizenz erwerben möchten, erfolgt die Zahlung über Kryptowährung mittels <strong>NowPayments.io</strong> (betrieben von FD Transfers LLC). NowPayments-Widgets sind auf meinen Checkout-Seiten eingebunden. Bei der Interaktion mit diesen Widgets kann NowPayments folgende Daten verarbeiten:</p>
         <ul>
             <li>Kryptowährungs-Wallet-Adressen und Transaktionsdaten</li>
@@ -47,19 +49,19 @@
             <li>In bestimmten Fällen KYC-/AML-Verifizierungsdaten (Identitätsdokumente), sofern gesetzlich vorgeschrieben</li>
         </ul>
         <p>Beim Checkout werden Sie gebeten, Ihr Land auszuwählen, damit der Leistungsort für Steuerzwecke dokumentiert und geografische Beschränkungen angewendet werden können. Beim Absenden verarbeitet mein Server die Verbindungs-IP-Adresse kurzzeitig im Arbeitsspeicher und vergleicht deren Land anhand einer lokal installierten DB-IP-City-Lite-Datenbank mit Ihrer Auswahl. Es erfolgt keine Anfrage an eine Geolokalisierungs-API. Die IP-Adresse und ein etwaiges Ergebnis zur Region werden verworfen, bevor die Anwendung die Anfrage verarbeitet oder protokolliert. Mit der Transaktion werden nur der ausgewählte Ländername, die Tatsache der Übereinstimmung von Kundenerklärung und lokaler IP-Geolokalisierung sowie die Versionsbezeichnung der Datenbank gespeichert. Für diese Prüfung werden weder Straße noch Rechnungsanschrift oder eine sonstige Adresse abgefragt oder gespeichert. DB-IP City Lite wird von <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP.com</a> unter CC BY 4.0 bereitgestellt.</p>
-        <p>NowPayments agiert für die eigene Zahlungsabwicklung als eigenständiger Verantwortlicher. Mein Server speichert die zur Prüfung und Dokumentation eines Kaufs erforderlichen Bestell- und Anbieterkennungen, den Zahlungsstatus, Rechnungsangaben, Betrag, Währung, Transaktionshash, das ausgewählte Land und die Metadaten des Ländernachweises. Kryptowährungs-Wallet-Adressen werden nicht gespeichert. Der Kryptowährungs-Checkout erfordert weder Namen noch E-Mail-Adresse; eine für den optionalen kartengestützten Ablauf angegebene E-Mail-Adresse wird an den Zahlungsanbieter übermittelt, aber von meinem Server nicht gespeichert. Die erzeugte Lizenzdatei enthält eine nicht personenbezogene Ausgabereferenz und eine kryptografische Signatur, jedoch weder Namen noch E-Mail-Adresse.</p>
+        <p>NowPayments agiert für die eigene Zahlungsabwicklung als eigenständiger Verantwortlicher. Mein Server speichert die zur Prüfung und Dokumentation eines Kaufs erforderlichen Bestell- und Anbieterkennungen, den Zahlungsstatus, Rechnungsangaben, Betrag, Währung, Transaktionshash, das ausgewählte Land und die Metadaten des Ländernachweises. Kryptowährungs-Wallet-Adressen werden nicht gespeichert. Der Kryptowährungs-Checkout erfordert weder Namen noch E-Mail-Adresse. Die erzeugte Lizenzdatei enthält eine nicht personenbezogene Ausgabereferenz und eine kryptografische Signatur, jedoch weder Namen noch E-Mail-Adresse.</p>
         <p>Bitte beachten Sie, dass Blockchain-Transaktionen <strong>von Natur aus öffentlich</strong> sind und von jedem im jeweiligen Blockchain-Netzwerk eingesehen werden können. Weitere Informationen zur Datenverarbeitung durch NowPayments finden Sie in der <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von NowPayments</a>. Für datenschutzbezogene Anfragen an NowPayments: <a href="mailto:support@nowpayments.io">support@nowpayments.io</a>.</p>
 
-        <h3>7. Patreon-Mitgliedschaft und Lizenzzustellung</h3>
+        <h2>7. Patreon-Mitgliedschaft und Lizenzzustellung</h2>
         <p>Umfasst eine bezahlte Patreon-Mitgliedschaft eine Porn-Fetch-Lizenz, sendet Patreon einen signierten Webhook an meinen Server. Abhängig von den Freigabeeinstellungen des Mitglieds und den API-Berechtigungen enthält dieser eine Patreon-Mitgliedskennung, E-Mail-Adresse, Mitgliedschafts- und Berechtigungsstatus, Stufenkennungen sowie den Zahlungsstatus. Die Daten werden ausschließlich verwendet, um die Berechtigung zu prüfen, Doppelausgaben zu verhindern und die vertragliche Lizenzleistung zuzustellen. Kostenlose, geschenkte, Probe-, unbezahlte oder abgelehnte Mitgliedschaften erhalten über diesen Ablauf keine Lizenz.</p>
         <p>Die E-Mail-Adresse wird nur im Arbeitsspeicher validiert und zusammen mit der zweisprachigen Zustellnachricht und dem signierten Lizenzanhang an den konfigurierten ausgehenden Mailserver übergeben; sie wird nicht in der Patreon-Zustelltabelle gespeichert und der rohe Webhook wird nicht aufbewahrt. Der Server speichert Patreon-Mitgliedskennung, ausgegebenen Lizenzschlüssel, Zustellstatus und Zeitstempel, damit Wiederholungen nicht mehrere Schlüssel erzeugen. Patreon-Mitglieder können die Freigabe ihrer E-Mail-Adresse einschränken; eine automatische Zustellung per E-Mail ist dann nicht möglich. Patreon stellt Mitgliedsdaten im Rahmen des Creator Privacy Promise bereit. Weitere Informationen finden Sie in der <a href="https://privacy.patreon.com/policies" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Patreon</a> und im <a href="https://support.patreon.com/hc/en-us/articles/360026912432-Data-Processing-Agreement-Creator-Privacy-Promise" target="_blank" rel="noopener noreferrer">Creator Privacy Promise</a>.</p>
 
         <h3>Lizenzaktivierung</h3><p>Der selbst gehostete Lizenzdienst unter licenses.echteralsfake.me speichert eine Lizenzkennung, den signierten Lizenzschlüssel, bis zu zehn zufällige Installations-UUIDs und notwendige Aktivierungs- und Erneuerungszeitpunkte. Hardwarekennungen, Hostnamen, Browserverläufe und heruntergeladene Inhalte werden nicht erhoben. E-Mail-Adressen und Referenzen der Zahlungsanbieter werden nicht an Keygen übermittelt. Installationseinträge bleiben bis zur Deaktivierung oder Löschung der Lizenz erhalten. Beim ersten Offline-Import ermöglicht eine gültige Lizenz sieben Tage vorläufigen Zugriff; nach der Aktivierung gelten signierte Offline-Nachweise sieben Tage ab Erneuerung. Bei Nutzung der Anwendung erfolgt die Erneuerung normalerweise einmal täglich. Zugriffsprotokolle des Lizenzdienstes und externe Telemetrie sind deaktiviert; verschlüsselte lokale Sicherungen werden nach sieben Tagen gelöscht.</p>
 
-        <h3>8. Externe Links</h3>
+        <h2>8. Externe Links</h2>
         <p>Diese Webseite kann Links zu externen Webseiten Dritter enthalten. Ich habe <strong>keinen Einfluss</strong> auf die Inhalte, Datenschutzpraktiken oder die Datenverarbeitung dieser externen Seiten. Das Aufrufen externer Links erfolgt vollständig auf eigenes Risiko. Ich übernehme <strong>keinerlei Haftung oder Verantwortung</strong> für die Datenschutzpraktiken oder Inhalte verlinkter Drittanbieter-Webseiten. Ich empfehle Ihnen, die Datenschutzerklärungen jeder Webseite zu prüfen, die Sie über Links von meiner Seite besuchen.</p>
 
-        <h3>9. Rechtsgrundlagen der Datenverarbeitung</h3>
+        <h2>9. Rechtsgrundlagen der Datenverarbeitung</h2>
         <p>Soweit personenbezogene Daten beim Webseitenbetrieb, bei der Zahlungsabwicklung oder bei der Patreon-Lizenzzustellung verarbeitet werden, geschieht dies auf folgenden Rechtsgrundlagen:</p>
         <ul>
             <li><strong>Art. 6 Abs. 1 lit. b DSGVO</strong> — Vertragserfüllung: Prüfung eines Kaufs oder einer bezahlten Mitgliedschaft sowie Ausgabe und Zustellung der Lizenz.</li>
@@ -67,7 +69,7 @@
             <li><strong>Art. 6 Abs. 1 lit. c DSGVO</strong> — Rechtliche Verpflichtung: Ermittlung und Dokumentation der zutreffenden steuerlichen Behandlung, Einhaltung geografischer Beschränkungen, soweit diese gesetzlich vorgeschrieben sind, sowie Aufbewahrung von Rechnungs- und Buchhaltungsangaben.</li>
         </ul>
 
-        <h3>10. Ihre Rechte nach EU-Recht (DSGVO)</h3>
+        <h2>10. Ihre Rechte nach EU-Recht (DSGVO)</h2>
         <p>Nach der Datenschutz-Grundverordnung (DSGVO) stehen Ihnen hinsichtlich personenbezogener Daten, die für Webseitenbetrieb, Käufe und Lizenzzustellung verarbeitet werden, folgende Rechte zu:</p>
         <ul>
             <li><strong>Auskunftsrecht</strong> (Art. 15 DSGVO) — Sie haben das Recht, eine Bestätigung darüber zu verlangen, ob personenbezogene Daten über Sie verarbeitet werden, und gegebenenfalls eine Kopie dieser Daten zu erhalten.</li>
@@ -79,7 +81,7 @@
         </ul>
         <p>Zur Ausübung Ihrer Rechte wenden Sie sich bitte an mich unter <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>. Ich werde Ihr Anliegen unverzüglich, spätestens jedoch innerhalb eines Monats nach Eingang bearbeiten (Art. 12 Abs. 3 DSGVO).</p>
 
-        <h3>11. Beschwerderecht bei einer Aufsichtsbehörde</h3>
+        <h2>11. Beschwerderecht bei einer Aufsichtsbehörde</h2>
         <p>Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO). Die für meinen Standort zuständige Aufsichtsbehörde ist:</p>
         <p>
             Landesbeauftragter für den Datenschutz Sachsen-Anhalt<br>
@@ -89,14 +91,14 @@
             Webseite: <a href="https://datenschutz.sachsen-anhalt.de" target="_blank" rel="noopener noreferrer">https://datenschutz.sachsen-anhalt.de</a>
         </p>
 
-        <h3>12. Speicherdauer</h3>
+        <h2>12. Speicherdauer</h2>
         <p>Vor Softwareaktualisierungen werden zugriffsgeschützte lokale Sicherungen der Datenbank, Rechnungen und Konfiguration zur Wiederherstellung erstellt. Sie werden nicht öffentlich ausgeliefert. Löschungen im laufenden Dienst entfernen diese Sicherungen nicht automatisch. Die Wartungsanweisung sieht vor, nicht mehr benötigte Sicherungen innerhalb von sieben Tagen und vor geltenden Löschfristen manuell zu entfernen; eine automatische Ablaufkontrolle besteht nicht.</p>
         <p>Patreon-Webhook-Inhalte und E-Mail-Adressen der Mitglieder werden von meinem Server nicht aufbewahrt. Mitgliedskennung, Lizenzzuordnung und Zustellzeitstempel werden gespeichert, solange die ausgegebene Lizenz gültig ist, damit sie geprüft und eine doppelte Zustellung verhindert werden kann; sie werden auf einen berechtigten Löschantrag hin gelöscht, sofern keine vertraglichen oder gesetzlichen Pflichten eine weitere Aufbewahrung erfordern. Transaktions-, Rechnungs-, Länder- und Ländernachweisdaten werden während der jeweils geltenden gesetzlichen Buchhaltungsfrist gespeichert; für vom EU-One-Stop-Shop erfasste Aufzeichnungen kann eine Aufbewahrung von zehn Jahren erforderlich sein. Im Übrigen werden sie nur so lange gespeichert, wie sie für vertragliche Ansprüche und Support erforderlich sind. Checkout-IP-Adressen und Regionsergebnisse werden von meiner Anwendung nicht gespeichert. Privex, Patreon, NowPayments, der konfigurierte Maildienst{% if config.LICENSE_MAIL_PROVIDER_NAME %} ({{ config.LICENSE_MAIL_PROVIDER_NAME }}){% endif %} und Vodafone speichern Daten nach ihren jeweils geltenden Richtlinien und gesetzlichen Pflichten.</p>
 
-        <h3>13. Änderungen dieser Datenschutzerklärung</h3>
+        <h2>13. Änderungen dieser Datenschutzerklärung</h2>
         <p>Ich behalte mir vor, diese Datenschutzerklärung jederzeit anzupassen, um Änderungen der Rechtslage, technische Änderungen oder Änderungen der Geschäftspraktiken abzubilden. Das Datum am Anfang dieser Seite gibt an, wann diese Erklärung zuletzt aktualisiert wurde. Ich empfehle Ihnen, diese Erklärung regelmäßig zu überprüfen.</p>
 
-        <h3>14. Kontakt</h3>
+        <h2>14. Kontakt</h2>
         <p>Bei Fragen zu dieser Datenschutzerklärung oder zur Ausübung Ihrer Betroffenenrechte wenden Sie sich bitte an:<br>
         <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a></p>
     </div>

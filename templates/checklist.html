@@ -96,13 +96,13 @@
 {% block content %}
 <div class="checklist-container">
     <div class="checklist-header">
-        <h2>Project Checklist</h2>
+        <h1>Project Checklist</h1>
         <div>
             <span id="progress-text">0%</span>
         </div>
     </div>
     
-    <div class="progress-bar-container">
+    <div class="progress-bar-container" role="progressbar" aria-label="Checklist completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="progress-bar" id="progress-bar"></div>
     </div>
 
@@ -112,6 +112,7 @@
 
     {% if is_auth %}
     <form class="add-task-form" id="add-task-form">
+        <label class="visually-hidden" for="new-task-input">New task</label>
         <input type="text" id="new-task-input" placeholder="New task..." required>
         <button type="submit">Add Task</button>
     </form>
@@ -155,6 +156,7 @@
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = task.is_done;
+            checkbox.setAttribute('aria-label', `Completed: ${task.task}`);
             if (isAuth) {
                 checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
             } else {
@@ -172,6 +174,7 @@
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-btn';
                 removeBtn.textContent = 'Remove';
+                removeBtn.setAttribute('aria-label', `Remove task: ${task.task}`);
                 removeBtn.addEventListener('click', () => removeTask(task.id));
                 li.appendChild(removeBtn);
             }
@@ -181,6 +184,7 @@
         const percentage = tasks.length === 0 ? 0 : Math.round((doneCount / tasks.length) * 100);
         progressBar.style.width = `${percentage}%`;
         progressText.textContent = `${percentage}%`;
+        document.querySelector('.progress-bar-container').setAttribute('aria-valuenow', String(percentage));
     }
 
     async function addTask(e) {

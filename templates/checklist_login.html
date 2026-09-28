@@ -42,13 +42,14 @@
 {% endblock %}
 {% block content %}
 <div class="login-container">
-    <h2>Authentication Required</h2>
+    <h1>Authentication Required</h1>
     {% if error %}
-    <p class="error-msg">{{ error }}</p>
+    <p class="error-msg" id="login-error" role="alert">{{ error }}</p>
     {% endif %}
     <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="password" name="password" placeholder="Enter password" required>
+        <label for="checklist-password">Password</label>
+        <input id="checklist-password" type="password" name="password" autocomplete="current-password" {% if error %}aria-describedby="login-error"{% endif %} required>
         <button type="submit">Login</button>
     </form>
 </div>

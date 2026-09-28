@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Age confirmation - Porn Fetch{% endblock %}
+
+{% block content %}
+<section class="card age-gate" aria-labelledby="age-gate-title">
+    <h1 id="age-gate-title">Age confirmation</h1>
+    <p>Porn Fetch is intended for adults. You must be at least 18 years old to continue to the product page.</p>
+    <form action="/" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if error %}<p class="form-error" id="age-gate-error" role="alert">{{ error }}</p>{% endif %}
+        <label class="age-gate-agreement" for="adult-confirmed">
+            <input type="checkbox" id="adult-confirmed" name="adult_confirmed" value="yes" required {% if error %}aria-describedby="age-gate-error"{% endif %}>
+            <span>I confirm that I am at least 18 years old.</span>
+        </label>
+        <button class="btn btn-primary" type="submit">Continue to Porn Fetch</button>
+    </form>
+</section>
+{% endblock %}

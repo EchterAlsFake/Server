@@ -1,41 +1,43 @@
 {% extends "base.html" %}
 
-{% block title %}Porn Fetch - License Purchase Options{% endblock %}
+{% block title %}Porn Fetch - Source-Available Adult Media Downloader{% endblock %}
+
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block seo_head %}
+    <meta name="rating" content="adult">
+    <meta name="description" content="Porn Fetch is a source-available adult media downloader for Windows, Linux, macOS, and Android. Explore its features and premium license options.">
+    <link rel="canonical" href="{{ config.APP_DOMAIN }}/porn_fetch">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Porn Fetch - Adult Media Downloader">
+    <meta property="og:description" content="Download videos and collections with a source-available app for Windows, Linux, macOS, and Android.">
+    <meta property="og:url" content="{{ config.APP_DOMAIN }}/porn_fetch">
+    <meta name="twitter:card" content="summary">
+{% endblock %}
 
 {% block content %}
 <div class="hero" style="padding-bottom: 10px;">
-    <h1>Get Porn Fetch Premium</h1>
-    <p>Test the premium entitlement for video qualities above 720p in development builds. No real payment is processed in this environment.</p>
+    <h1>Porn Fetch: Adult Media Downloader</h1>
+    <p>Premium access unlocks video qualities above 720p. {% if config.NOWPAYMENTS_SANDBOX %}Crypto checkout is in test mode; no real crypto payment is processed here.{% endif %}</p>
 </div>
 
 <!-- General Purchase Info -->
 <div class="card" style="text-align: center; max-width: 800px; margin: 20px auto; border-top: 4px solid var(--color-primary);">
-    <h2 style="font-size: 1.8rem; margin-top: 10px;">License Benefits</h2>
-    
-    <div style="background: var(--color-bg); padding: 20px; border-radius: var(--radius-md); border: 1px solid #1f2937; margin: 20px auto 30px; max-width: 600px;">
-        <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; margin-bottom: 10px;">19,99€ <span style="font-size: 1rem; color: var(--color-text-muted); font-weight: normal;">one-time payment</span></div>
-        <ul class="pf-info-list" style="max-width: 500px; margin: 0 auto;">
-            <li><strong>Offline grace period</strong> - Signed offline permits currently last seven days after renewal.</li>
-            <li><strong>Multiple installations</strong> - The test policy currently permits up to ten installation slots.</li>
-            <li><strong>Supporting development</strong> - A future paid offer may help cover hosting and development costs.</li>
-        </ul>
-    </div>
-    
     <h2>Select Your Payment Method</h2>
-    <p style="color: var(--color-text-muted); margin-bottom: 25px; font-size: 0.95rem;">Choose between anonymous cryptocurrency or standard credit card billing.</p>
+    <p style="color: var(--color-text-muted); margin-bottom: 25px; font-size: 0.95rem;">Choose a one-time crypto purchase through NOWPayments or a Patreon membership. Both are listed at €19.99; review the provider's final amount and billing terms before confirming.</p>
     
     <div class="pf-purchase-grid">
         <!-- Option 1: Crypto (Green Accent) -->
         <div class="feature-card pf-card" style="border: 2px solid var(--color-crypto);">
             <div class="pf-card-body">
-                <span style="background: var(--color-crypto); color: #090d16; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Anonymous</span>
+                <span style="background: var(--color-crypto); color: #090d16; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">One-time · €19.99</span>
                 <h3 style="margin-top: 15px; font-size: 1.5rem; color: var(--color-crypto);">Pay with Crypto</h3>
-                <p style="font-size: 0.9rem; margin-bottom: 20px; color: var(--color-text-muted);">Secure, anonymous payment processed via NOWPayments.io</p>
+                <p style="font-size: 0.9rem; margin-bottom: 20px; color: var(--color-text-muted);">Crypto checkout hosted by NOWPayments.</p>
                 <ul class="pf-info-list crypto-list" style="font-size: 0.9rem;">
-                    <li><strong>Anonymity</strong> - No account, name, or email details required.</li>
-                    <li><strong>Over 350 accepted coins</strong> - Pay with Bitcoin, Monero, Ethereum, Litecoin, etc.</li>
-                    <li><strong>Fast payments</strong> - Instant automated transaction verification.</li>
-                    <li><strong>One-time payment</strong> - Strictly one-time charge (no subscription).</li>
+                    <li><strong>No account required</strong> - Select your country and accept the checkout terms.</li>
+                    <li><strong>Supported assets</strong> - Choose from the cryptocurrencies shown by NOWPayments.</li>
+                    <li><strong>License delivery</strong> - Download your license after the payment is confirmed.</li>
+                    <li><strong>Billing</strong> - One-time payment, with no recurring charge.</li>
                 </ul>
             </div>
             <div class="pf-card-footer">
@@ -43,22 +45,51 @@
             </div>
         </div>
         
-        <!-- Option 2: Credit Card / SubscribeStar (Violet Accent) -->
+        <!-- Option 2: Patreon membership -->
         <div class="feature-card pf-card" style="border: 2px solid var(--color-card);">
             <div class="pf-card-body">
-                <span style="background: var(--color-card); color: #ffffff; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Credit Card</span>
-                <h3 style="margin-top: 15px; font-size: 1.5rem; color: var(--color-card);">Regular Billing</h3>
-                <p style="font-size: 0.9rem; margin-bottom: 20px; color: var(--color-text-muted);">Standard card checkout via SubscribeStar.adult</p>
+                <span style="background: var(--color-card); color: #ffffff; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Membership · €19.99</span>
+                <h3 style="margin-top: 15px; font-size: 1.5rem; color: var(--color-card);">Join on Patreon</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 20px; color: var(--color-text-muted);">Choose the Porn Fetch membership on Patreon. Its tier page is still being set up.</p>
                 <ul class="pf-info-list card-list" style="font-size: 0.9rem;">
-                    <li><strong>Account creation needed</strong> - Requires registering a SubscribeStar account (can be closed instantly after downloading license).</li>
-                    <li><strong>Subscription model</strong> - This is structured as a subscription. <strong>You must cancel it instantly</strong> after downloading to avoid recurring billing!</li>
-                    <li><strong>ID verification</strong> - Depending on your jurisdiction, SubscribeStar might require identity verification.</li>
+                    <li><strong>Patreon account required</strong> - Join through the official Patreon page.</li>
+                    <li><strong>Billing terms</strong> - Review the membership's renewal schedule and total on Patreon before joining.</li>
+                    <li><strong>License delivery</strong> - The paid membership triggers email delivery when Patreon shares your email address.</li>
                 </ul>
             </div>
             <div class="pf-card-footer">
-                <a href="https://subscribestar.adult/echteralsfake" target="_blank" rel="noopener" class="btn btn-card" style="width: 100%;">Pay with Credit Card</a>
+                <a href="https://www.patreon.com/profile/creators?u=214243387&amp;vanity=profile" target="_blank" rel="noopener noreferrer" class="btn btn-card" style="width: 100%;">View Patreon page (setup pending)</a>
             </div>
         </div>
     </div>
+
+    <section class="license-benefits" aria-labelledby="license-benefits-heading">
+        <h2 id="license-benefits-heading">License Benefits</h2>
+        <ul class="pf-info-list">
+            <li><strong>Offline grace period</strong> - Signed offline permits currently last seven days after renewal.</li>
+            <li><strong>Multiple installations</strong> - The test policy currently permits up to ten installation slots.</li>
+            <li><strong>Supporting development</strong> - Your payment supports hosting and ongoing development.</li>
+        </ul>
+    </section>
 </div>
+
+<section class="card" aria-labelledby="product-overview-heading">
+    <h2 id="product-overview-heading">What is Porn Fetch?</h2>
+    <p>Porn Fetch is a source-available application for downloading videos, playlists, and model collections from supported adult websites. It runs on Windows, Linux, macOS, and Android.</p>
+    <div class="grid-3">
+        <div class="feature-card">
+            <h3>Videos and collections</h3>
+            <p>Save individual videos or download supported playlists and channels in one workflow.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Privacy controls</h3>
+            <p>No mandatory account or ads. Optional session cookies and proxy support are available when needed.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Built for your device</h3>
+            <p>Use the graphical app or command line on supported desktop and Android systems.</p>
+        </div>
+    </div>
+    <p><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">View the Porn Fetch source and releases on GitHub</a>.</p>
+</section>
 {% endblock %}

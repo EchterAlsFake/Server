@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import secrets
 
 import click
 
@@ -26,6 +27,8 @@ from pf_server.operations_routes import (
 )
 from pf_server.page_routes import pages_bp
 from pf_server.payment_routes import payments_bp
+from pf_server.referral_guard import block_vplan_referrals
+from pf_server.seo_routes import seo_bp
 from pf_server.tax_service import country_transaction_summary
 from pf_server.update_routes import updates_bp
 
@@ -51,6 +54,8 @@ def create_app(
     if test_config:
         application.config.update(test_config)
     configure_logging(application)
+    application.extensions["vplan_referral_key"] = secrets.token_bytes(32)
+    application.before_request(block_vplan_referrals)
 
     application.wsgi_app = ProxyFix(
         application.wsgi_app,
@@ -100,6 +105,7 @@ def create_app(
     for blueprint in (
         pages_bp,
         payments_bp,
+        seo_bp,
         docs_bp,
         updates_bp,
         operations_bp,

@@ -146,6 +146,7 @@ www.echteralsfake.me {
 
 vplan.echteralsfake.me {
     import application_defaults
+    header >Referrer-Policy "strict-origin"
     @visit_script path /__eaf/visit.js
     handle @visit_script {
         rewrite * /dashboard/static/visit.js

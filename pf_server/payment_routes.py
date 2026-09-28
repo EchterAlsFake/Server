@@ -33,7 +33,6 @@ from .invoice_service import (
 from .licensing import (
     build_license_file,
     get_or_create_license,
-    normalize_recipient_email,
 )
 from .logging_config import safe_log_reference
 from .models import License, Transaction
@@ -44,9 +43,6 @@ from .nowpayments_service import (
     complete_payment,
     create_crypto_invoice,
     verify_ipn_signature,
-)
-from .nowpayments_service import (
-    create_fiat_payment as create_fiat_payment_with_provider,
 )
 from .patreon_service import (
     calculate_patreon_signature,
@@ -249,36 +245,6 @@ def simulate_payment_success():
     return jsonify({"status": "ok", "message": "Payment simulation successful."}), 200
 
 
-@payments_bp.route("/create-fiat-payment", methods=["POST"])
-@limiter.limit(DEFAULT_RATE_LIMIT)
-def create_fiat_payment():
-    if not current_app.config.get("NOWPAYMENTS_API_KEY"):
-        return jsonify({"error": "NOWPayments API key not configured on server."}), 500
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict) or data.get("terms_accepted") is not True:
-        return jsonify({"error": "Please accept the Terms of Service."}), 400
-    country, country_error = validate_checkout_country(data)
-    if country_error:
-        return country_error
-    assert country is not None
-    email = normalize_recipient_email(
-        data.get("email") if isinstance(data, dict) else None
-    )
-    if email is None:
-        return jsonify({"error": "A valid email address is required"}), 400
-    try:
-        result = create_fiat_payment_with_provider(
-            email,
-            country.country_name,
-            country.evidence_source,
-            country.database_label,
-        )
-    except (PaymentProviderError, SQLAlchemyError):
-        current_app.logger.exception("NOWPayments fiat payment creation failed")
-        return jsonify({"error": "Failed to create fiat payment"}), 500
-    return jsonify(result), 200
-
-
 @payments_bp.route("/create-crypto-payment", methods=["POST"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
 def create_crypto_payment():
@@ -287,6 +253,13 @@ def create_crypto_payment():
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or data.get("terms_accepted") is not True:
         return jsonify({"error": "Please accept the Terms of Service."}), 400
+    if (
+        current_app.config.get("NOWPAYMENTS_SANDBOX")
+        and data.get("test_acknowledged") is not True
+    ):
+        return jsonify({
+            "error": "Please acknowledge that this is a test site and no real purchase is made."
+        }), 400
     country, country_error = validate_checkout_country(data)
     if country_error:
         return country_error

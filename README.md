@@ -121,7 +121,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `SECRET_KEY` | Signs Flask sessions and CSRF tokens | Persisted locally in `.flask_secret` |
 | `PF_SERVER_DATA_DIR` | Database, secret, and invoice directory | Repository root |
 | `PF_SERVER_DB` | SQLite database path override | `$PF_SERVER_DATA_DIR/server.db` |
-| `CHECKLIST_AUTH` | Password for the landing-page gate and checklist editor | Unset; landing page fails closed |
+| `CHECKLIST_AUTH` | Password for the checklist editor | Unset; checklist editing is unavailable |
 | `CI_TOKEN` | Authorizes `POST /ci/<test_name>` | Unset; CI writes fail closed |
 | `KILL_TOKEN` | Authorizes the local poweroff endpoint | Unset; endpoint is unavailable |
 | `RATELIMIT_STORAGE_URI` | Flask-Limiter storage backend | `memory://` (per process) |
@@ -153,12 +153,14 @@ The product token is a server-side credential and must not be shipped with the a
 
 ## HTTP surface
 
-Public pages include `/porn_fetch`, `/donation`, `/stats`, `/impress`, `/terms`, `/refund_policy`, `/privacy_policy`, `/datenschutz`, and `/legal-statement`. `/` is protected by the `CHECKLIST_AUTH` access gate; `/access` performs the login.
+Public pages include `/porn_fetch`, `/donation`, `/stats`, `/impress`, `/terms`, `/refund_policy`, `/privacy_policy`, `/datenschutz`, and `/legal-statement`. `/` displays an age-confirmation form and redirects to `/porn_fetch` only after its checkbox is submitted. It does not require `CHECKLIST_AUTH`; the old `/access` URL now redirects to `/`. Checklist editing has its own login. Direct requests to `/porn_fetch` remain available so search crawlers can index the product page. On the commercial host, `/robots.txt` and `/sitemap.xml` expose `/porn_fetch` as the public page when sandbox mode is off. Sandbox pages carry `noindex` and the sandbox sitemap is unavailable.
+
+The commercial host returns a plain 403 page when the request's `Referer` has the exact HTTPS origin `vplan.echteralsfake.me`. It sets a host-only, secure, HTTP-only browser marker signed by a random key held only in the current app process. The marker stays effective while the process runs and the browser retains the cookie; a restart invalidates it. The `/docs/` and `/dashboard/` routes and non-commercial hosts are excluded. The VPlan Caddy host overrides its upstream `no-referrer` policy with `strict-origin` so normal HTTPS navigation supplies the source origin without revealing the plan path. This mechanism depends on a browser sending the `Referer` header and retaining its cookie; it cannot identify someone who suppresses either signal. The deployed Gunicorn service uses one worker; multiple workers would need shared signing state.
 
 The main API groups are:
 
 - Releases: `GET /update` and `GET /appcast.xml`
-- Licenses and payments: `GET /buy_license`, `POST /create-crypto-payment`, `POST /create-fiat-payment`, `GET /check-payment-status`, `GET /download_license`, `GET /download_invoice`, and `POST /check_license`
+- Licenses and payments: `GET /buy_license`, `POST /create-crypto-payment`, `GET /check-payment-status`, `GET /download_license`, `GET /download_invoice`, and `POST /check_license`. Patreon license delivery uses the webhook endpoint. Sandbox crypto checkout requires `test_acknowledged: true` in addition to terms acceptance.
 - Webhooks: `POST /nowpayments-ipn` and `POST /patreon-webhook`
 - CI: `POST /ci/<test_name>`, `GET /ci/<test_name>`, `GET /ci/<test_name>.json`, and `GET /ci/<test_name>/badge.svg`
 - Checklist: `/checklist`, `/checklist/login`, `/checklist/api/*`, and `/checklist/progress.svg`

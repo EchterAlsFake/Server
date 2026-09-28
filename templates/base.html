@@ -1,113 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{% block html_lang %}en{% endblock %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Porn Fetch - The Ultimate Adult Media Downloader{% endblock %}</title>
+    {% if config.NOWPAYMENTS_SANDBOX %}
+    <meta name="robots" content="noindex, nofollow">
+    {% else %}
+    {% block robots %}<meta name="robots" content="noindex">{% endblock %}
+    {% endif %}
+    {% block seo_head %}{% endblock %}
     <link rel="stylesheet" href="/static/index.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <style>
-        /* OVERRIDES TO FIX LAYOUT AND PREVENT AWKWARD WRAPPING */
-        .legal-banner-container {
-            flex-direction: row !important;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: nowrap !important; /* Strictly enforces a single line */
-            gap: 15px;
-        }
-
-        .legal-banner-buttons {
-            justify-content: flex-start;
-            align-items: center;
-            flex-wrap: nowrap !important; /* Stops the left buttons from dropping to a second line */
-            flex: 1;
-            gap: 8px !important; /* Reduced gap to ensure all buttons fit */
-
-            /* Modern fallback: allows horizontal scrolling on small screens instead of wrapping */
-            overflow-x: auto;
-            scrollbar-width: none; /* Hides scrollbar in Firefox */
-            -ms-overflow-style: none; /* Hides scrollbar in IE/Edge */
-        }
-
-        /* Hides scrollbar in Chrome/Safari/Edge */
-        .legal-banner-buttons::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Slim down the nav buttons slightly to reclaim horizontal space */
-        .nav-btn {
-            white-space: nowrap !important; /* Prevents text inside the button from stacking */
-            padding: 8px 16px !important; /* Slimmer padding to fit 1100px container */
-            font-size: 0.8rem !important; /* Slightly adjusted font size */
-        }
-
-        /* MODERN TOR BUTTON STYLES */
-        .tor-network-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #7D4698 0%, #593196 100%);
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 8px 18px;
-            border-radius: var(--radius-pill);
-            font-family: var(--font-base);
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            box-shadow: var(--shadow-sm);
-            transition: all var(--transition);
-            border: 1px solid #7D4698;
-            flex-shrink: 0; /* Prevents the Tor button from being squished */
-            white-space: nowrap;
-        }
-
-        .tor-network-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-            background: linear-gradient(135deg, #8E54AD 0%, #6A3BB2 100%);
-            border-color: #8E54AD;
-        }
-
-        .tor-icon {
-            font-size: 1.1rem;
-            line-height: 1;
-        }
-
-        /* Mobile Layout Stack */
-        @media (max-width: 900px) {
-            .legal-banner-container {
-                flex-direction: column !important;
-                align-items: stretch;
-            }
-            .tor-network-btn {
-                justify-content: center;
-            }
-        }
-    </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    {% if config.NOWPAYMENTS_SANDBOX %}
+    <div class="test-site-banner" role="note" aria-label="Test site notice" lang="en">
+        <strong>Test site</strong>
+        <span>Not a real online shop. No real purchases. Some information may be incomplete or inaccurate.</span>
+    </div>
+    {% endif %}
     <header class="legal-banner">
         <div class="legal-banner-container">
-            <div class="legal-banner-buttons">
+            <nav class="legal-banner-buttons" aria-label="Site and legal pages">
                 <a href="/" class="nav-btn">Home / Startseite</a>
                 <a href="/impress" class="nav-btn">Impress / Impressum</a>
                 <a href="/terms" class="nav-btn">AGB / ToS</a>
-                <a href="/privacy_policy" class="nav-btn">Privacy Policy</a>
-                <a href="/datenschutz" class="nav-btn">Datenschutzerklärung</a>
-            </div>
+                <a href="/privacy_policy" class="nav-btn">Privacy (EN)</a>
+                <a href="/datenschutz" class="nav-btn">Datenschutz (DE)</a>
+            </nav>
             <a href="http://i3vtbgg6dufszjzbccyzd3wk4v2on3k6ljzjpg2ppzapgqmjmsxlvkid.onion/" class="tor-network-btn" target="_blank" rel="noopener noreferrer">
-                <span class="tor-icon">🧅</span>
+                <span class="tor-icon" aria-hidden="true">🧅</span>
                 <span>Tor Network</span>
             </a>
         </div>
     </header>
 
-    <main class="container">
+    <main class="container" id="main-content" tabindex="-1">
         {% block content %}{% endblock %}
     </main>
 

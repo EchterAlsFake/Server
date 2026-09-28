@@ -15,12 +15,13 @@
             NOW<span>Payments</span>
         </div>
         <div style="font-size: 0.8rem; color: #94a3b8; text-align: right;">
-            Order #PF-{{ range(1000, 9999)|random }}<br>
-            <span style="color: #10b981;">Hosted Checkout</span>
+            €19.99 one-time<br>
+            <span style="color: #10b981;">Crypto checkout</span>
         </div>
     </div>
     
     <div class="nowpayments-body" id="checkout-form-container">
+        {% if config.NOWPAYMENTS_SANDBOX %}
         <!-- Test Environment Warning Banner -->
         <div style="background: rgba(245, 158, 11, 0.1); border: 2px dashed #f59e0b; padding: 20px; border-radius: var(--radius-md); margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.05);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
@@ -37,12 +38,13 @@
             <div style="padding-top: 12px; border-top: 1px dashed rgba(245, 158, 11, 0.25); font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
                 <strong style="color: #f59e0b; display: block; margin-bottom: 6px;">How to complete checkout:</strong>
                 <ol style="margin: 0; padding-left: 20px;">
-                    <li style="margin-bottom: 4px;">Tick all the <strong>Required Legal Agreements</strong> below.</li>
-                    <li style="margin-bottom: 4px;">Click the green <strong>"Proceed to Payment"</strong> button.</li>
+                    <li style="margin-bottom: 4px;">Tick all the <strong>Required confirmations</strong> below, including the test-site acknowledgment.</li>
+                    <li style="margin-bottom: 4px;">Click <strong>"Continue to NOWPayments"</strong>.</li>
                     <li>You will either be redirected to the NOWPayments.io Sandbox interface where you can click the simulation button, or a local simulation screen will appear here. Simply click the simulation button to instantly generate your premium license.</li>
                 </ol>
             </div>
         </div>
+        {% endif %}
 
         <div style="margin-bottom: 20px;">
             <span class="nowpayments-label">Product</span>
@@ -56,13 +58,13 @@
 
         <div style="margin-top: 10px; margin-bottom: 25px;">
             <label for="checkout-country" class="nowpayments-label">Country for tax purposes</label>
-            <select id="checkout-country" required style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #1e293b; background: #0f172a; color: #f8fafc;">
+            <select id="checkout-country" required aria-describedby="country-help" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #1e293b; background: #0f172a; color: #f8fafc; font-size: 1rem;">
                 <option value="">Select your country</option>
                 {% for code, name in countries %}
                 <option value="{{ code }}">{{ name }}</option>
                 {% endfor %}
             </select>
-            <p style="font-size: 0.85rem; line-height: 1.5; color: #94a3b8; margin: 10px 0 0;">
+            <p id="country-help" style="font-size: 0.85rem; line-height: 1.5; color: #94a3b8; margin: 10px 0 0;">
                 Tax rules require us to determine the customer's country. When you submit checkout,
                 your IP address is checked once against a database stored on this server. No lookup API
                 is contacted, and the IP address is neither saved nor logged. Only the selected country
@@ -72,8 +74,8 @@
         </div>
         
         <!-- Legal Checkboxes -->
-        <div style="margin-top: 10px; margin-bottom: 25px;">
-            <span class="nowpayments-label">Required Legal Agreements</span>
+        <fieldset class="checkout-agreements">
+            <legend class="nowpayments-label">Required confirmations</legend>
             
             <label class="checkbox-container">
                 <input type="checkbox" id="chk-age">
@@ -88,21 +90,24 @@
                 <input type="checkbox" id="chk-withdrawal">
                 <span class="checkbox-text">I expressly consent to the immediate performance of the contract and acknowledge that, by giving this consent, I lose my 14-day right of withdrawal.</span>
             </label>
-        </div>
+            {% if config.NOWPAYMENTS_SANDBOX %}
+            <label class="checkbox-container checkout-test-acknowledgment">
+                <input type="checkbox" id="chk-test-site" required>
+                <span class="checkbox-text">I understand that this is a test environment, not a real online shop. No real purchase is made, and some information may be incomplete or inaccurate.</span>
+            </label>
+            {% endif %}
+        </fieldset>
         
-        <div style="margin-top: 10px; margin-bottom: 25px;">
-            <span class="nowpayments-label">Email Address (For Fiat Delivery)</span>
-            <input type="email" id="fiat-email" placeholder="Enter your email" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #1e293b; background: #0f172a; color: #f8fafc;">
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-            <button id="pay-btn" class="nowpayments-btn" disabled style="flex: 1;">Pay with Crypto (€19.99)</button>
-            <button id="pay-fiat-btn" class="nowpayments-btn" disabled style="flex: 1; background-color: #3b82f6;">Buy with Credit Card (€30)</button>
+        <p class="checkout-help" id="checkout-requirements">Select your country and confirm all {% if config.NOWPAYMENTS_SANDBOX %}four statements{% else %}three agreements{% endif %} to continue.</p>
+        <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
+        <div class="checkout-actions">
+            <button type="button" id="pay-btn" class="nowpayments-btn" disabled aria-describedby="checkout-requirements">Continue to NOWPayments (€19.99)</button>
         </div>
     </div>
     
     <!-- Simulated Local Transaction Screen (Hidden by Default, used for sandbox fallback) -->
     <div class="nowpayments-body tx-screen" id="tx-screen-container" style="display: none;">
+        <h2 tabindex="-1" id="simulation-heading">Local payment simulation</h2>
         <div class="status-indicator" style="margin-bottom: 15px;">
             <span class="status-dot" style="background-color: #dfb317;"></span>
             <span style="color: #dfb317; font-weight: bold;">Local Simulation Mode</span>
@@ -118,7 +123,8 @@
             <div style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #f8fafc; word-break: break-all;" id="sim-session-id">NP-xxxxxx</div>
         </div>
         
-        <button id="simulate-success-btn" class="nowpayments-btn">Simulate Successful Payment</button>
+        <p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p>
+        <button type="button" id="simulate-success-btn" class="nowpayments-btn">Simulate Successful Payment</button>
     </div>
 </div>
 
@@ -135,38 +141,40 @@
         const chkAge = document.getElementById("chk-age");
         const chkTerms = document.getElementById("chk-terms");
         const chkWithdrawal = document.getElementById("chk-withdrawal");
+        const chkTestSite = document.getElementById("chk-test-site");
         const checkoutCountry = document.getElementById("checkout-country");
 
         const checkoutForm = document.getElementById("checkout-form-container");
         const txScreen = document.getElementById("tx-screen-container");
         const simSessionId = document.getElementById("sim-session-id");
         const simulateBtn = document.getElementById("simulate-success-btn");
+        const checkoutError = document.getElementById("checkout-error");
+        const simulationError = document.getElementById("simulation-error");
 
         let currentSessionId = null;
 
-        const fiatEmail = document.getElementById("fiat-email");
-        const payFiatBtn = document.getElementById("pay-fiat-btn");
+        function showError(element, message) {
+            element.textContent = message;
+            element.focus();
+        }
 
-        // Enable or disable the pay button based on checkboxes
-        function updateButtonState() {
-            const checked = chkAge.checked && chkTerms.checked && chkWithdrawal.checked && checkoutCountry.value;
+        function updateButtonState(clearError = true) {
+            const checked = chkAge.checked && chkTerms.checked && chkWithdrawal.checked && checkoutCountry.value && (!chkTestSite || chkTestSite.checked);
             payBtn.disabled = !checked;
-            
-            // Fiat also requires email
-            const emailValid = fiatEmail.value.includes("@");
-            payFiatBtn.disabled = !(checked && emailValid);
+            if (clearError) checkoutError.textContent = "";
         }
 
         chkAge.addEventListener("change", updateButtonState);
         chkTerms.addEventListener("change", updateButtonState);
         chkWithdrawal.addEventListener("change", updateButtonState);
+        if (chkTestSite) chkTestSite.addEventListener("change", updateButtonState);
         checkoutCountry.addEventListener("change", updateButtonState);
-        fiatEmail.addEventListener("input", updateButtonState);
 
         // Handle checkout progression
         payBtn.addEventListener("click", async () => {
+            checkoutError.textContent = "";
             payBtn.disabled = true;
-            payBtn.innerText = "Creating Transaction...";
+            payBtn.textContent = "Creating transaction…";
 
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -176,7 +184,7 @@
                         "Content-Type": "application/json",
                         "X-CSRFToken": csrfToken
                     },
-                    body: JSON.stringify({ country: checkoutCountry.value, terms_accepted: chkTerms.checked })
+                    body: JSON.stringify({ country: checkoutCountry.value, terms_accepted: chkTerms.checked, test_acknowledged: Boolean(chkTestSite && chkTestSite.checked) })
                 });
 
                 if (response.ok) {
@@ -188,71 +196,29 @@
                         simSessionId.innerText = data.session_id;
                         checkoutForm.style.display = "none";
                         txScreen.style.display = "block";
+                        document.getElementById("simulation-heading").focus();
                     } else {
                         // Redirect directly to NOWPayments hosted invoice
                         window.location.href = data.invoice_url;
                     }
                 } else {
                     const errData = await response.json().catch(() => ({}));
-                    alert(errData.error || "Error creating payment. Please try again.");
-                    payBtn.disabled = false;
-                    payBtn.innerText = "Proceed to Payment";
+                    showError(checkoutError, errData.error || "Could not create the payment. Please try again.");
+                    updateButtonState(false);
+                    payBtn.textContent = "Continue to NOWPayments (€19.99)";
                 }
             } catch (err) {
                 console.error(err);
-                alert("Network error. Could not create payment transaction.");
-                payBtn.disabled = false;
-                payBtn.innerText = "Pay with Crypto (€19.99)";
-            }
-        });
-
-        payFiatBtn.addEventListener("click", async () => {
-            payFiatBtn.disabled = true;
-            payFiatBtn.innerText = "Redirecting to Transak...";
-
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const response = await fetch("/create-fiat-payment", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: JSON.stringify({
-                        email: fiatEmail.value,
-                        country: checkoutCountry.value,
-                        terms_accepted: chkTerms.checked
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    currentSessionId = data.session_id;
-
-                    if (data.transak_url) {
-                        window.location.href = data.transak_url;
-                    } else if (data.invoice_url && data.invoice_url.startsWith("local-sim:")) {
-                        simSessionId.innerText = data.session_id;
-                        checkoutForm.style.display = "none";
-                        txScreen.style.display = "block";
-                    }
-                } else {
-                    const errData = await response.json().catch(() => ({}));
-                    alert(errData.error || "Error creating fiat payment. Please try again.");
-                    payFiatBtn.disabled = false;
-                    payFiatBtn.innerText = "Buy with Credit Card (€30)";
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Network error. Could not create fiat payment transaction.");
-                payFiatBtn.disabled = false;
-                payFiatBtn.innerText = "Buy with Credit Card (€30)";
+                showError(checkoutError, "Network error. Check your connection and try again.");
+                updateButtonState(false);
+                payBtn.textContent = "Continue to NOWPayments (€19.99)";
             }
         });
 
         simulateBtn.addEventListener("click", async () => {
+            simulationError.textContent = "";
             if (!currentSessionId) {
-                alert("No transaction session found to simulate.");
+                showError(simulationError, "No transaction session found to simulate.");
                 return;
             }
             try {
@@ -268,11 +234,11 @@
                 if (response.ok) {
                     window.location.href = `/buy_success?session_id=${currentSessionId}`;
                 } else {
-                    alert("Failed to simulate payment approval on server.");
+                    showError(simulationError, "The server could not approve the simulated payment. Try again.");
                 }
             } catch (err) {
                 console.error("Simulation error:", err);
-                alert("Error communicating with simulation endpoint.");
+                showError(simulationError, "Network error. Check your connection and try again.");
             }
         });
     }

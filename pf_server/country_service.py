@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from .countries import country_name
 
-CHECKOUT_PATHS = frozenset({"/create-crypto-payment", "/create-fiat-payment"})
+CHECKOUT_PATHS = frozenset({"/create-crypto-payment"})
 IP_HEADER_ENVIRONMENT_KEYS = (
     "HTTP_TRUE_CLIENT_IP",
     "HTTP_X_FORWARDED_FOR",
