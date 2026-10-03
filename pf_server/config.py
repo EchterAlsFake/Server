@@ -68,6 +68,17 @@ def smtp_transport_is_local(host: str) -> bool:
     return host.casefold().rstrip(".") in LOCAL_SMTP_HOSTS
 
 
+def _keygen_transport_is_local(host: str) -> bool:
+    """Allow plaintext HTTP only to loopback or private container network peers."""
+    normalized = host.casefold().rstrip(".")
+    return (
+        normalized in LOCAL_SMTP_HOSTS
+        or "." not in normalized
+        or normalized.endswith(".internal")
+        or normalized.endswith(".local")
+    )
+
+
 def load_environment_config(
     project_root: str,
     environ: Mapping[str, str] | None = None,
@@ -122,7 +133,7 @@ def load_environment_config(
         raise ValueError("LICENSE_EMAIL_FROM must be a bare email address")
 
     keygen_url, keygen_host = _origin(source, "KEYGEN_INTERNAL_URL", "http://127.0.0.1:8004")
-    if keygen_host != "127.0.0.1" and not keygen_url.startswith("https://"):
+    if not _keygen_transport_is_local(keygen_host) and not keygen_url.startswith("https://"):
         raise ValueError("Remote Keygen connections require HTTPS")
 
     nowpayments_sandbox = _boolean(source, "NOWPAYMENTS_SANDBOX", True)
