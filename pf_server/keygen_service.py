@@ -17,7 +17,7 @@ def request(method: str, path: str, **kwargs) -> httpx.Response:
             method,
             config["KEYGEN_INTERNAL_URL"] + "/v1" + path,
             headers={
-                "Host": "licenses.echteralsfake.me",
+                "Host": "licenses.pornfetch.to",
                 "X-Forwarded-Proto": "https",
                 "Authorization": "Bearer " + config["KEYGEN_PRODUCT_TOKEN"],
                 "Accept": "application/vnd.api+json",

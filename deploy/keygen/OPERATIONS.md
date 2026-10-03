@@ -1,6 +1,6 @@
 # Keygen operations
 
-Production: `/srv/keygen`; API: `https://licenses.echteralsfake.me`.
+Production: `/srv/keygen`; API: `https://licenses.pornfetch.to`.
 The loopback API listens on port 8004. PostgreSQL and Redis have no host port bindings.
 Docker restarts all four services after reboot. Caddy manages TLS through the existing
 DNS challenge and relay arrangement. Public routes accept only license credentials;
@@ -40,7 +40,7 @@ emails are sent by Keygen. The existing purchase service still sends Patreon ema
 
 ```sh
 sudo docker compose --project-directory /srv/keygen ps
-curl -fsS https://licenses.echteralsfake.me/healthz
+curl -fsS https://licenses.pornfetch.to/healthz
 sudo systemctl status eaf-keygen-backup.timer
 sudo /srv/server/.venv/bin/python /srv/keygen/admin.py machines LICENSE_UUID
 sudo /srv/server/.venv/bin/python /srv/keygen/admin.py deactivate MACHINE_UUID

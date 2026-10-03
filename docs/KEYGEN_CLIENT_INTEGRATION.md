@@ -13,7 +13,7 @@ Ed25519 verification key and account/product/policy IDs. It is public configurat
 not a secret. Never fetch a replacement verification key from an imported license or
 the network. Private keys and product/admin tokens must never enter the application.
 
-The endpoint is `https://licenses.echteralsfake.me`. TLS verification stays enabled.
+The endpoint is `https://licenses.pornfetch.to`. TLS verification stays enabled.
 Requests use the imported signed key as a license-scoped credential.
 
 ## Product behavior

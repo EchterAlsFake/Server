@@ -58,7 +58,7 @@ def timestamp(value: str) -> float:
 class LicenseClient:
     def __init__(self, state_dir, *, public_key: str, account_id: str,
                  product_id: str, policy_id: str,
-                 base_url="https://licenses.echteralsfake.me", transport=None,
+                 base_url="https://licenses.pornfetch.to", transport=None,
                  clock=time.time, monotonic=time.monotonic):
         if not base_url.startswith("https://"):
             raise LicenseError("The licensing endpoint must use HTTPS")

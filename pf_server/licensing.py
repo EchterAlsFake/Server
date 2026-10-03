@@ -33,7 +33,7 @@ def build_license_file(license_key: str, issuance_reference: str, created_at: st
         raise ValueError("Missing issuance record")
     if not record.keygen_id:
         record.keygen_id = str(uuid.uuid5(uuid.NAMESPACE_URL,
-            "https://licenses.echteralsfake.me/issuance/" + record.license_key))
+            "https://licenses.pornfetch.to/issuance/" + record.license_key))
         db.session.commit()
     if not record.signed_key:
         remote = ensure_license(record.keygen_id)

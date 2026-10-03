@@ -12,7 +12,7 @@ parser.add_argument("id", type=lambda value: str(uuid.UUID(value)))
 args = parser.parse_args()
 credentials = json.loads(Path("/srv/keygen/credentials/product.json").read_text())
 with httpx.Client(base_url="http://127.0.0.1:8004/v1/", timeout=15, trust_env=False,
-                  headers={"Host": "licenses.echteralsfake.me", "X-Forwarded-Proto": "https",
+                  headers={"Host": "licenses.pornfetch.to", "X-Forwarded-Proto": "https",
                            "Authorization": "Bearer " + credentials["product_token"],
                            "Content-Type": "application/vnd.api+json"}) as api:
     if args.action == "machines":

@@ -17,7 +17,7 @@ parser.add_argument("--port", type=int, default=8005)
 args = parser.parse_args()
 credentials = json.loads((Path(args.root)/"credentials/product.json").read_text())
 base = f"http://127.0.0.1:{args.port}/v1/"
-headers = {"Host": "licenses.echteralsfake.me", "X-Forwarded-Proto": "https",
+headers = {"Host": "licenses.pornfetch.to", "X-Forwarded-Proto": "https",
            "Authorization": "Bearer "+credentials["product_token"], "Content-Type": "application/vnd.api+json"}
 admin = httpx.Client(base_url=base, headers=headers, trust_env=False, timeout=30)
 license_id = str(uuid.uuid4())
@@ -25,7 +25,7 @@ clients = []
 
 def send(request):
     headers = dict(request.headers)
-    headers.update({"host": "licenses.echteralsfake.me", "x-forwarded-proto": "https"})
+    headers.update({"host": "licenses.pornfetch.to", "x-forwarded-proto": "https"})
     return httpx.request(request.method, f"http://127.0.0.1:{args.port}"+request.url.raw_path.decode(),
                          headers=headers, content=request.content, trust_env=False, timeout=20)
 
@@ -74,7 +74,7 @@ try:
         assert not result.allowed
         # Simulate an outage after an explicit rejection: cached grace cannot unlock it.
         limited.http.close()
-        limited.http=httpx.Client(base_url="https://licenses.echteralsfake.me/v1/",
+        limited.http=httpx.Client(base_url="https://licenses.pornfetch.to/v1/",
             transport=httpx.MockTransport(lambda request: httpx.Response(503)))
         assert not limited.check(force=True).allowed
         active.verify_key(key)  # Restored signing key must match the pre-backup public key.
