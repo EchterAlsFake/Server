@@ -224,3 +224,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Keygen credentials
+deploy/keygen/credentials/
+
