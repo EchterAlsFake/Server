@@ -27,6 +27,7 @@ from pf_server.models import (  # noqa: E402
     License,
     PatreonLicenseDelivery,
     Transaction,
+    LicenseRenewal,
 )
 
 with main.app.app_context():
@@ -41,6 +42,8 @@ class ServerTestCase(unittest.TestCase):
             TESTING=True,
             RATELIMIT_ENABLED=False,
             WTF_CSRF_ENABLED=False,
+            PATREON_PAYMENTS_ENABLED=True,
+            PATREON_LICENSE_TIER_IDS=frozenset({'license-tier'}),
         )
         self.client = main.app.test_client()
         from license_fixtures import issuance
@@ -61,6 +64,7 @@ class ServerTestCase(unittest.TestCase):
         with main.app.app_context():
             for model in (
                 Checklist,
+                LicenseRenewal,
                 CiStatus,
                 PatreonLicenseDelivery,
                 License,

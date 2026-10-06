@@ -57,13 +57,16 @@ def timestamp(value: str) -> float:
 
 class LicenseClient:
     def __init__(self, state_dir, *, public_key: str, account_id: str,
-                 product_id: str, policy_id: str,
+                 product_id: str, policy_id: str, build_release_date: str | None = None,
                  base_url="https://licenses.pornfetch.to", transport=None,
                  clock=time.time, monotonic=time.monotonic):
         if not base_url.startswith("https://"):
             raise LicenseError("The licensing endpoint must use HTTPS")
         self.public_key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key))
         self.account_id, self.product_id, self.policy_id = account_id, product_id, policy_id
+        # Supply this from immutable, authenticated build metadata, never the clock.
+        self.build_release_time = timestamp(build_release_date) if build_release_date else None
+        self.startup_validation_pending = True
         self.clock, self.monotonic = clock, monotonic
         self.anchor_wall, self.anchor_mono = clock(), monotonic()
         directory = Path(state_dir)
@@ -113,9 +116,12 @@ class LicenseClient:
             if (payload["account"]["id"] != self.account_id
                 or payload["product"]["id"] != self.product_id
                 or payload["policy"]["id"] != self.policy_id
-                or payload["policy"]["duration"] is not None
-                or payload["license"]["expiry"] is not None):
+                or payload["policy"]["duration"] not in (None, 31556952)):
                 raise ValueError()
+            if payload["policy"]["duration"] is not None and self.build_release_time is None:
+                raise ValueError()
+            if payload["license"]["expiry"] is not None:
+                timestamp(payload["license"]["expiry"])
             uuid.UUID(payload["license"]["id"])
             timestamp(payload["license"]["created"])
             return payload
@@ -152,11 +158,15 @@ class LicenseClient:
             if len(licenses) != 1:
                 raise ValueError()
             attributes = licenses[0]["attributes"]
-            if attributes["suspended"] or attributes["expiry"] is not None:
+            if attributes["suspended"]:
                 raise ValueError()
             if licenses[0]["relationships"]["policy"]["data"]["id"] != self.policy_id:
                 raise ValueError()
-            return {"issued": issued, "expiry": expiry, "machine_id": machine["id"]}
+            updates_end = timestamp(attributes["expiry"]) if attributes["expiry"] is not None else None
+            if self.build_release_time is not None and updates_end is None:
+                raise ValueError()
+            return {"issued": issued, "expiry": expiry, "machine_id": machine["id"],
+                    "updates_end": updates_end}
         except (ValueError, KeyError, TypeError, UnicodeError, InvalidSignature):
             raise LicenseError("Machine permit signature or signed claims are invalid") from None
 
@@ -253,8 +263,10 @@ class LicenseClient:
             expected = self.anchor_wall + (self.monotonic() - self.anchor_mono)
             rollback = now < max(state.get("last_seen", now), expected) - 300
             state["last_seen"] = max(now, state.get("last_seen", now))
-            due = force or rollback or now - record.get("renewed", 0) >= DAY
-            if due and (force or now >= record.get("retry_at", 0)):
+            startup = self.startup_validation_pending
+            self.startup_validation_pending = False
+            due = startup or force or rollback or now - record.get("renewed", 0) >= DAY
+            if due and (startup or force or now >= record.get("retry_at", 0)):
                 try:
                     self._refresh(state, record, license_id, now)
                 except TemporaryFailure:
@@ -275,9 +287,14 @@ class LicenseClient:
                 except (LicenseError, KeyError):
                     return LicenseStatus("invalid_signature", False)
                 expiry = permit["expiry"]
+                if (self.build_release_time is not None and
+                    self.build_release_time > permit["updates_end"]):
+                    return LicenseStatus("renewal_required", False, expiry)
                 return LicenseStatus("expired_grace" if now >= expiry else
                                      "offline_grace" if record.get("offline") else "valid",
                                      now < expiry, expiry)
+            if self.build_release_time is not None:
+                return LicenseStatus("activation_required", False)
             expiry = record["first_import"] + WEEK
             return LicenseStatus("provisional" if now < expiry else "expired_grace", now < expiry, expiry)
 

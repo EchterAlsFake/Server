@@ -187,6 +187,7 @@ def load_environment_config(
         "CI_TOKEN": source.get("CI_TOKEN"),
         "CHECKLIST_AUTH": source.get("CHECKLIST_AUTH"),
         "PATREON_SECRET": source.get("PATREON_SECRET", ""),
+        "PATREON_PAYMENTS_ENABLED": source.get("PATREON_PAYMENTS_ENABLED", "false").lower() == "true",
         "PATREON_LICENSE_TIER_IDS": tier_ids,
         "KEYGEN_INTERNAL_URL": keygen_url,
         "KEYGEN_PRODUCT_TOKEN": source.get("KEYGEN_PRODUCT_TOKEN", ""),

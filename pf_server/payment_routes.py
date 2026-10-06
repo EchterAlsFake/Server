@@ -33,10 +33,11 @@ from .invoice_service import (
 from .licensing import (
     build_license_file,
     get_or_create_license,
+    fulfill_transaction_license,
 )
 from .logging_config import safe_log_reference
 from .models import License, Transaction
-from .keygen_service import KeygenUnavailable
+from .keygen_service import KeygenUnavailable, renewal_target
 from .nowpayments_service import (
     CompletionState,
     PaymentProviderError,
@@ -142,10 +143,7 @@ def download_license():
 
     issuance_reference = transaction.provider_payment_id
     try:
-        license_record = get_or_create_license(issuance_reference)
-        license_file = build_license_file(
-            license_record.license_key, issuance_reference, license_record.created_at,
-        )
+        license_file = fulfill_transaction_license(transaction)
     except KeygenUnavailable:
         db.session.rollback()
         return jsonify({"error": "License delivery is temporarily unavailable. Please retry."}), 503, {"Retry-After": "30"}
@@ -265,11 +263,17 @@ def create_crypto_payment():
         return country_error
     assert country is not None
     try:
+        target = renewal_target(data['renewal_license_key']) if data.get('renewal_license_key') else None
         result = create_crypto_invoice(
             country.country_name,
             country.evidence_source,
             country.database_label,
+            **({'renewal_license_id': target} if target else {}),
         )
+    except ValueError:
+        return jsonify({'error': 'Renewal requires an activated commercial license.'}), 400
+    except KeygenUnavailable:
+        return jsonify({'error': 'Licensing is temporarily unavailable.'}), 503
     except (PaymentProviderError, SQLAlchemyError):
         current_app.logger.exception("NOWPayments invoice creation failed")
         return jsonify({"error": "Failed to generate crypto payment"}), 500
@@ -357,6 +361,8 @@ def nowpayments_ipn():
 @limiter.limit(WEBHOOK_RATE_LIMIT, key_func=webhook_replay_rate_limit_key)
 def patreon_webhook():
     require_api_subdomain()
+    if not current_app.config.get('PATREON_PAYMENTS_ENABLED'):
+        return jsonify({'error': 'patreon_payments_disabled'}), 503
     received_signature = request.headers.get("X-Patreon-Signature", "").strip()
     signing_secret = current_app.config.get("PATREON_SECRET")
     if not signing_secret:

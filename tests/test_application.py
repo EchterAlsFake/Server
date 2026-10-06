@@ -367,6 +367,7 @@ class ApplicationTests(ServerTestCase):
                 "provider_payment_id",
                 "provider_reference_type",
                 "environment",
+                "renewal_license_id",
                 "expected_price_amount",
                 "expected_price_currency",
                 "expected_pay_amount",

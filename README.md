@@ -251,3 +251,14 @@ and seven-day offline permits. See [application integration](docs/KEYGEN_CLIENT_
 and [operations](deploy/keygen/OPERATIONS.md). The reusable package is `license_client/`.
 The purchase service no longer holds an Ed25519 private key. Configure `KEYGEN_PRODUCT_TOKEN`
 and `KEYGEN_POLICY_ID` before enabling fulfillment. The old `/check_license` route returns 410.
+
+Commercial MSI licensing uses a perpetual fallback with one calendar year of updates
+from first activation. Renewal checkout accepts `renewal_license_key` in the existing
+`POST /create-crypto-payment` JSON body; the server proves key possession and binds
+the resulting license UUID before payment. Verified renewal callbacks preserve the
+key, with atomic deduplication in Keygen and a durable provider-charge binding locally.
+NOWPayments remains sandboxed. Patreon requires explicit `PATREON_PAYMENTS_ENABLED=true`
+and a configured qualifying tier (minimum 1999 cents); it is disabled on MSI. Its
+`renew_verified_patreon_charge` adapter is internal, for a provider-verified annual
+renewal charge, and is deliberately not invoked by repeat membership updates.
+Desktop builds must supply their immutable `build_release_date` to `LicenseClient`.

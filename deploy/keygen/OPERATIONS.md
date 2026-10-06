@@ -1,5 +1,11 @@
 # Keygen operations
 
+> Historical Docker deployment notes below do not describe the current MSI server.
+> MSI uses rootless Podman, systemd TPM credentials and Keygen CE 1.8. The authoritative
+> current runbook is `/srv/infra/msi/KEYGEN-PRODUCTION-LICENSING.md`. Do not run the
+> historical Docker/bootstrap/backup commands on MSI. The current commercial policy
+> is `7038281b-2429-4aa4-81db-4f04a87e7184`; the earlier beta policy is preserved.
+
 Production: `/srv/keygen`; API: `https://licenses.pornfetch.to`.
 The loopback API listens on port 8004. PostgreSQL and Redis have no host port bindings.
 Docker restarts all four services after reboot. Caddy manages TLS through the existing

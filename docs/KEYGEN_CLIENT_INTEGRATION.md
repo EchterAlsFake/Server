@@ -18,8 +18,11 @@ Requests use the imported signed key as a license-scoped credential.
 
 ## Product behavior
 
-Both NOWPayments purchases and qualifying paid Patreon memberships grant perpetual
-access to `full_unlock`. Membership cancellation does not revoke a license.
+Commercial purchases cost EUR 19.99 and grant perpetual access to builds released
+on or before the signed update-entitlement end. Updates last one calendar year from
+first activation. Same-key renewals extend from the current expiry when active and
+from renewal time when expired. Membership cancellation does not revoke ownership.
+Patreon payments remain disabled pending provider/tier and charge verification setup.
 Ten active installation profiles may be registered per license. These are persistent
 random UUIDv4 identities, not physical-computer identities. Never read MAC addresses,
 hardware serial numbers, hostname, OS machine IDs, or `uuid.getnode()`/`uuid.uuid1()`.
@@ -39,7 +42,9 @@ from pathlib import Path
 from license_client import LicenseClient, LicenseError
 
 config = json.loads(Path("license_client/production.json").read_text())
-client = LicenseClient(app_data_dir / "licensing", **config)
+# BUILD_RELEASE_DATE is embedded in the signed build/release manifest by release CI.
+# Never derive it from the local clock, file mtime, or an unsigned update feed.
+client = LicenseClient(app_data_dir / "licensing", build_release_date=BUILD_RELEASE_DATE, **config)
 
 # Run network work in a background task, never on the UI event thread.
 status = client.check()  # startup, and every 60 seconds while the app is open
@@ -68,6 +73,8 @@ an already-running export/download because renewal failed.
 | State | Display and action |
 | --- | --- |
 | valid | Licensed; show installation management and optional expiry of offline permit. |
+| renewal_required | This build is newer than the entitlement deadline; offer renewal or an entitled older build. |
+| activation_required | Connect once to start the update entitlement and obtain a signed machine permit. |
 | provisional | Server unavailable; temporary access ends at `expires_at`; offer Retry. |
 | offline_grace | Previously activated; offline access ends at `expires_at`; offer Retry. |
 | expired_grace | Premium access paused; reconnect and retry. |
@@ -80,17 +87,28 @@ an already-running export/download because renewal failed.
 | deactivated | This installation is released and premium access is disabled. |
 
 After every call, update the UI on the main thread. Periodic `check()` enforces expiry
-even if the app stays open for weeks; actual online renewal happens at most daily under
-normal operation. Transient failures use bounded exponential retry backoff, at most one
+even if the app stays open for weeks; online validation happens on each process start
+and at most daily thereafter under normal operation. Transient failures use bounded exponential retry backoff, at most one
 hour. Explicit retry bypasses the delay. Avoid adding independent timers that renew
 on every screen change or download.
 
 ## Grace and trust boundaries
 
-First offline import grants seven days measured from the locally persisted first import.
-Reopening, reimporting, or switching between previously imported licenses does not restart
-their deadlines. Successful activation permanently transitions that local license to signed
-seven-day machine permits. A failed renewal cannot extend a permit.
+Commercial keys need a first online activation. The permanent signed key contains
+the account/product/policy/license identity and initial duration, but its embedded
+expiry stays null after activation and renewal. The signed machine checkout includes
+the CURRENT license expiry: that is the update-entitlement end, NOT a run-until date.
+Compare the authenticated BUILD_RELEASE_DATE <= that signed expiry. Never compare
+the current clock to the license expiry to decide whether an entitled build runs.
+The checkout meta.expiry is a separate freshness limit of seven days. Refresh it
+online even when the update entitlement expired; MAINTAIN_ACCESS permits that.
+Legacy no-duration keys retain provisional import behavior only with legacy config.
+
+The Qt updater still uses GitHub release metadata; it is not protected by Keygen
+Releases. Release CI must bind a UTC release timestamp and artifact digest/version
+into authenticated build metadata. An editable GitHub published_at or local mtime
+is not an immutable entitlement input. Enforce the comparison at startup AND before
+offering/installing an update. Do not replace the pinned account public key at runtime.
 
 An explicit rejection blocks access even if a cached permit remains. An offline client
 cannot discover revocation until it reconnects or its permit expires. Deactivation frees

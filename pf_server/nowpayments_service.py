@@ -76,6 +76,7 @@ def _store_pending_transaction(
     geolocation_database: str,
     expected_pay_amount: str | None = None,
     expected_pay_currency: str | None = None,
+    renewal_license_id: str | None = None,
 ) -> None:
     db.session.add(
         Transaction(
@@ -94,6 +95,7 @@ def _store_pending_transaction(
             expected_pay_currency=expected_pay_currency,
             status="pending",
             created_at=created_at,
+            renewal_license_id=renewal_license_id,
         )
     )
     try:
@@ -107,6 +109,7 @@ def create_crypto_invoice(
     customer_country: str,
     country_evidence: str,
     geolocation_database: str,
+    renewal_license_id: str | None = None,
 ) -> dict[str, str]:
     session_id, created_at = _new_session()
     payload = {
@@ -151,6 +154,7 @@ def create_crypto_invoice(
             customer_country=customer_country,
             country_evidence=country_evidence,
             geolocation_database=geolocation_database,
+            renewal_license_id=renewal_license_id,
         )
         return {
             "session_id": session_id,
@@ -167,6 +171,7 @@ def create_crypto_invoice(
         customer_country=customer_country,
         country_evidence=country_evidence,
         geolocation_database=geolocation_database,
+        renewal_license_id=renewal_license_id,
     )
     return {"session_id": session_id, "invoice_url": invoice_url}
 
@@ -271,6 +276,8 @@ def complete_payment(webhook: NowPaymentsWebhook) -> CompletionResult:
         return CompletionResult(claim_state)
 
     try:
+        from .licensing import fulfill_transaction_license
+        fulfill_transaction_license(transaction)
         invoice = load_invoice(webhook.order_id)
         if invoice is None:
             crypto_amount = webhook.actually_paid or webhook.pay_amount or Decimal(0)

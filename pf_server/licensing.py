@@ -16,8 +16,19 @@ from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
 from .config import smtp_transport_is_local
-from .models import License
-from .keygen_service import ensure_license
+from .models import License, Transaction
+from .keygen_service import ensure_license, renew_verified_payment
+
+
+def fulfill_transaction_license(transaction) -> bytes:
+    """Call only for a verified payment (or the explicitly labelled sandbox)."""
+    if transaction.renewal_license_id:
+        remote = renew_verified_payment('nowpayments', transaction.environment,
+                                        transaction.provider_payment_id, transaction.renewal_license_id)
+        return (json.dumps({'schema': 2, 'product': 'porn-fetch',
+                            'license_key': remote['attributes']['key']}) + '\n').encode()
+    record = get_or_create_license(transaction.provider_payment_id)
+    return build_license_file(record.license_key, record.issuance_reference, record.created_at)
 from .time_utils import rfc3339_utc
 
 
@@ -36,7 +47,8 @@ def build_license_file(license_key: str, issuance_reference: str, created_at: st
             "https://licenses.pornfetch.to/issuance/" + record.license_key))
         db.session.commit()
     if not record.signed_key:
-        remote = ensure_license(record.keygen_id)
+        payment = Transaction.query.filter_by(provider_payment_id=record.issuance_reference).first()
+        remote = ensure_license(record.keygen_id, test=bool(payment and payment.environment == 'sandbox'))
         record.signed_key = remote["attributes"]["key"]
         db.session.commit()
     payload = {"schema": 2, "product": "porn-fetch", "license_key": record.signed_key}

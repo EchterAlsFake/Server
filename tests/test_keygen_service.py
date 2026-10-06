@@ -28,7 +28,7 @@ class KeygenTests(ServerTestCase):
             with patch.object(licensing, "ensure_license", side_effect=issuance) as request:
                 first = licensing.build_license_file(record.license_key, record.issuance_reference, record.created_at)
                 second = licensing.build_license_file(record.license_key, record.issuance_reference, record.created_at)
-                request.assert_called_once_with(identity)
+                request.assert_called_once_with(identity, test=False)
                 self.assertEqual(first, second)
                 self.assertNotIn(b"synthetic-purchase", first)
             self.assertEqual(License.query.count(), 1)
