@@ -17,14 +17,16 @@ SpankBang supports dual download configurations. Under the hood, the master play
 
 ## HLS Download (Recommended)
 
-HLS provides highly reliable stream downloads, slicing chunked `.ts` packages and remuxing them to `.mp4` via PyAV:
+HLS provides highly reliable stream downloads, slicing chunked `.ts` packages and remuxing them to `.mp4` via FFmpeg:
 
 ```python
 from base_api import DownloadConfigHLS
 
 config = DownloadConfigHLS(
     quality="best",
-    path="./downloads"
+    path="./downloads",
+    remux=True,
+    metadata=video,  # Optional: write MP4 metadata tags in a single remux pass
 )
 success = await video.download(configuration_hls=config, use_hls=True)
 ```

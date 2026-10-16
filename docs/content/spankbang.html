@@ -97,11 +97,7 @@
 <pre><code>pip install unofficial-api-for-spankbang</code></pre>
     </div>
 
-    <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
-    <div class="code-window">
-        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-spankbang[av]</code></pre>
-    </div>
+    <p>For <strong>TS→MP4 remuxing</strong> and metadata tagging support (recommended for HLS downloads with <code>remux=True</code>), ensure <code>ffmpeg</code> is installed on your system <code>PATH</code> (or set <code>RuntimeConfig.ffmpeg_path</code>).</p>
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
@@ -535,7 +531,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
     <p>SpankBang supports dual download configurations. Under the hood, the master playlist contains an HLS stream, but direct CDN links are also extracted if you prefer RAW MP4 chunked downloading.</p>
 
     <h3>HLS Download (Recommended)</h3>
-    <p>HLS provides highly reliable stream downloads, slicing chunked `.ts` packages and remuxing them to `.mp4` via PyAV:</p>
+    <p>HLS provides highly reliable stream downloads, slicing chunked `.ts` packages and remuxing them to `.mp4` via FFmpeg:</p>
     <div class="code-window">
         <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigHLS

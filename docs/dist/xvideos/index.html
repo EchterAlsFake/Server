@@ -190,11 +190,7 @@
 <pre><code>pip install unofficial-api-for-xvideos</code></pre>
     </div>
 
-    <p>For <strong>TS → MP4 remuxing</strong> support (recommended), install with the optional <code>av</code> dependency:</p>
-    <div class="code-window">
-        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-xvideos[av]</code></pre>
-    </div>
+    <p>For <strong>TS → MP4 remuxing</strong> and metadata tagging support (recommended for HLS downloads with <code>remux=True</code>), ensure <code>ffmpeg</code> is installed on your system <code>PATH</code> (or set <code>RuntimeConfig.ffmpeg_path</code>).</p>
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
@@ -841,7 +837,8 @@ config = <span class="token-class">DownloadConfigHLS</span>(
     quality=<span class="token-string">"best"</span>,           <span class="token-comment"># "best", "half", "worst", or int like 720</span>
     path=<span class="token-string">"./downloads"</span>,       <span class="token-comment"># Output directory (title auto-appended)</span>
     no_title=<span class="token-keyword">False</span>,           <span class="token-comment"># If True, use path as exact filename</span>
-    remux=<span class="token-keyword">True</span>,               <span class="token-comment"># Convert TS segments to MP4 (needs av)</span>
+    remux=<span class="token-keyword">True</span>,               <span class="token-comment"># Convert TS segments to MP4 using FFmpeg</span>
+    metadata=video,           <span class="token-comment"># Optional: write MP4 metadata tags in a single remux pass</span>
     return_report=<span class="token-keyword">True</span>,       <span class="token-comment"># Return DownloadReport instead of bool</span>
 )
 
@@ -861,7 +858,10 @@ report = <span class="token-keyword">await</span> video.download(configuration=c
                 <tr><td><code>no_title</code></td><td><code>bool</code></td><td><code>False</code></td><td>Skip auto-appending video title to filename</td></tr>
                 <tr><td><code>callback</code></td><td><code>(int, int) → None</code></td><td><code>None</code></td><td>Progress callback <code>(downloaded, total)</code>. Falls back to text progress bar.</td></tr>
                 <tr><td><code>stop_event</code></td><td><code>asyncio.Event</code></td><td><code>None</code></td><td>Set this event to cancel the download</td></tr>
-                <tr><td><code>remux</code></td><td><code>bool</code></td><td><code>False</code></td><td>Remux TS → MP4 using PyAV</td></tr>
+                <tr><td><code>remux</code></td><td><code>bool</code></td><td><code>False</code></td><td>Remux TS → MP4 using FFmpeg</td></tr>
+                <tr><td><code>metadata</code></td><td><code>Any | dict | None</code></td><td><code>None</code></td><td>Optional <code>Video</code> object or metadata dict written into the MP4 container during remuxing</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>bytes | str | Path | None</code></td><td><code>None</code></td><td>Optional cover-art image bytes or path embedded during remuxing</td></tr>
+                <tr><td><code>metadata_written</code></td><td><code>bool</code></td><td><code>False</code></td><td>Output flag set to <code>True</code> when single-pass metadata/cover tagging succeeded</td></tr>
                 <tr><td><code>start_segment</code></td><td><code>int</code></td><td><code>0</code></td><td>Skip first N segments</td></tr>
                 <tr><td><code>segment_state_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Path for resume state JSON file</td></tr>
                 <tr><td><code>segment_dir</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Directory for individual segment files</td></tr>
@@ -1079,7 +1079,7 @@ xvideos_api --file urls.txt --quality 720 --output ./downloads/ --no-title False
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        PyAV (for TS→MP4 remuxing) is <strong>not available</strong> on Termux/Android. Use <code>remux=False</code> on those platforms.
+        HLS TS→MP4 remuxing requires <code>ffmpeg</code> (available on Termux via <code>pkg install ffmpeg</code>). If <code>ffmpeg</code> is not installed, use <code>remux=False</code> or allow automatic fallback to raw MPEG-TS output.
     </div>
 </div>
 

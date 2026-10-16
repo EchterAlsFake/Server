@@ -16,13 +16,17 @@ keywords:
   - "str_to_bool"
   - "is_resource_gone"
   - "contains_resource_gone"
+  - "find_ffmpeg"
+  - "has_ffmpeg"
+  - "remux_ts_to_mp4"
+  - "write_metadata_tags"
 ---
 
 # Scraper Utilities — eaf_base_api
 
-Documents centralized parsing, DOM extraction, playlist generation, and exception helper functions in `eaf_base_api`.
+Documents centralized parsing, DOM extraction, playlist generation, FFmpeg remuxing/tagging, and exception helper functions in `eaf_base_api`.
 
-These functions are exported from `base_api` and `base_api.modules.static_functions` for consistent behavior across all scrapers.
+These functions are exported from `base_api`, `base_api.modules.static_functions`, and `base_api.modules.ffmpeg` for consistent behavior across all scrapers.
 
 ## DOM Extraction
 
@@ -95,6 +99,57 @@ def extract_video_grid(parser: Any, base_url: str, logger: Any) -> list[dict]
 ```
 
 Extracts comprehensive video attributes (`video_id`, `title`, `url`, `duration`, `author_name`, `uploader_url`, `thumbnail`, `preview_video_url`, `performers`) from HTML search or listing grids. Gracefully probes multiple layout containers and video box selectors with layout anchor validations, resolving relative URLs with `urljoin(base_url, ...)`.
+
+## FFmpeg Remuxing & Metadata Tagging
+
+### find_ffmpeg / has_ffmpeg
+
+```python
+def find_ffmpeg(ffmpeg_path: str | Path | None = None) -> str | None
+def has_ffmpeg(ffmpeg_path: str | Path | None = None) -> bool
+```
+
+Locates a usable `ffmpeg` executable from an explicit path, `RuntimeConfig.ffmpeg_path`, or the system `PATH`.
+
+### remux_ts_to_mp4
+
+```python
+def remux_ts_to_mp4(
+    input_path: str | Path,
+    output_path: str | Path,
+    *,
+    callback: Callable[[int, int], Any] | None = None,
+    ios_support: bool = False,
+    metadata: Any | dict[str, Any] | None = None,
+    thumbnail: bytes | str | Path | None = None,
+    ffmpeg_path: str | Path | None = None,
+) -> RemuxResult
+```
+
+Remuxes a concatenated MPEG-TS file into an MP4 container (`-c copy`) using FFmpeg, optionally writing MP4 metadata tags and cover art in a single pass. Returns `RemuxResult(remuxed: bool, metadata_written: bool)`.
+
+### write_metadata_tags
+
+```python
+def write_metadata_tags(
+    path: str | Path,
+    *,
+    metadata: Any | dict[str, Any] | None = None,
+    title: str | None = None,
+    author: str | None = None,
+    genre: str | Sequence[str] | None = None,
+    date: str | None = None,
+    description: str | None = None,
+    url: str | None = None,
+    comment: str | None = None,
+    network: str | None = None,
+    thumbnail: bytes | str | Path | None = None,
+    overwrite: bool = True,
+    ffmpeg_path: str | Path | None = None,
+) -> Path
+```
+
+Writes MP4 metadata tags and optional cover art (`thumbnail`) into an existing MP4 file via an atomic temporary file replacement (`-c copy -movflags +faststart`). Raises `MetadataWriteError` if FFmpeg is missing or fails.
 
 ## Exception Helpers
 

@@ -70,10 +70,10 @@
         <div class="code-header"><span>shell</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code>pip install eaf_base_api
 
-<span class="token-comment"># Install optional HLS parsing/remux dependencies as well</span>
+<span class="token-comment"># Install optional HLS playlist parsing dependencies</span>
 pip install "eaf_base_api[hls]"</code></pre>
     </div>
-    <p>Version 4 requires <strong>Python 3.12 or newer</strong>. The package ships a <code>py.typed</code> marker, so type checkers can consume its inline annotations.</p>
+    <p>Version 4 requires <strong>Python 3.12 or newer</strong>. The package ships a <code>py.typed</code> marker, so type checkers can consume its inline annotations. TS→MP4 remuxing (<code>remux=True</code>) and MP4 metadata/cover-art tagging use an external <code>ffmpeg</code> executable (discovered via <code>RuntimeConfig.ffmpeg_path</code>, <code>EAF_FFMPEG_BINARY</code> / <code>PORN_FETCH_FFMPEG_BINARY</code>, bundled <code>third_party/</code> directories, or the system <code>PATH</code>).</p>
 </div>
 
 <div class="section" id="runtime-config-section">
@@ -113,6 +113,7 @@ pip install "eaf_base_api[hls]"</code></pre>
                 <tr><td><code>max_workers_download</code></td><td><code>int</code></td><td><code>20</code></td><td>HLS download worker count for this core</td></tr>
                 <tr><td><code>videos_concurrency</code></td><td><code>int</code></td><td><code>5</code></td><td>Fallback item concurrency for resolved iterator configs</td></tr>
                 <tr><td><code>pages_concurrency</code></td><td><code>int</code></td><td><code>2</code></td><td>Fallback page concurrency for resolved iterator configs</td></tr>
+                <tr><td><code>ffmpeg_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Optional explicit path to an <code>ffmpeg</code> executable used for TS→MP4 remuxing and MP4 metadata/cover-art tagging</td></tr>
             </tbody>
         </table>
     </div>
@@ -448,7 +449,7 @@ stream = helper.iterator(
     <h2><span class="section-icon">⬇️</span> Download Configurations</h2>
 
     <h3>Shared fields</h3>
-    <p><code>DownloadConfigHLS</code> and <code>DownloadConfigRAW</code> share <code>quality</code>, <code>path</code>, <code>callback</code>, <code>no_title</code>, and <code>stop_event</code>. Quality accepts a supported integer height or <code>"best"</code>, <code>"half"</code>, <code>"worst"</code>, and common <code>"720p"</code>-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.</p>
+    <p><code>DownloadConfigHLS</code> and <code>DownloadConfigRAW</code> share <code>quality</code>, <code>path</code>, <code>callback</code>, <code>no_title</code>, <code>stop_event</code>, <code>metadata</code>, <code>thumbnail</code>, and <code>metadata_written</code>. Quality accepts a supported integer height or <code>"best"</code>, <code>"half"</code>, <code>"worst"</code>, and common <code>"720p"</code>-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.</p>
 
     <h3>HLS inspection</h3>
     <p><code>await core.list_available_qualities(m3u8_url)</code> returns sorted, unique integer tiers from a master playlist. <code>await core.get_m3u8_by_quality(m3u8_url, quality)</code> returns the selected media-playlist URL. Both methods accept a playlist URL, inline master text, or a callable/awaitable resolving to either form. Relative variant paths can be resolved only when the master was fetched from a URL; an inline master must contain absolute variant URLs.</p>
@@ -459,7 +460,10 @@ stream = helper.iterator(
             <thead><tr><th>Field</th><th>Default</th><th>Description</th></tr></thead>
             <tbody>
                 <tr><td><code>m3u8_base_url</code></td><td><code>None</code></td><td>Master playlist URL, awaitable, or callable used by <code>BaseCore.download</code></td></tr>
-                <tr><td><code>remux</code></td><td><code>False</code></td><td>Remux concatenated transport stream to MP4</td></tr>
+                <tr><td><code>remux</code></td><td><code>False</code></td><td>Remux concatenated transport stream to MP4 using FFmpeg (<code>-c copy -movflags +faststart</code>)</td></tr>
+                <tr><td><code>metadata</code></td><td><code>None</code></td><td>Optional metadata mapping or media object (<code>title</code>, <code>artist</code>/<code>author</code>, <code>genre</code>, <code>date</code>/<code>publish_date</code>, <code>thumbnail_data</code>) embedded into the MP4 in a single FFmpeg pass during remuxing</td></tr>
+                <tr><td><code>thumbnail</code></td><td><code>None</code></td><td>Optional JPEG/PNG cover-art <code>bytes</code> or file <code>Path</code> attached as <code>attached_pic</code> during single-pass remuxing</td></tr>
+                <tr><td><code>metadata_written</code></td><td><code>False</code></td><td>Set to <code>True</code> on <code>DownloadConfigHLS</code> and <code>DownloadReport</code> when single-pass remuxing also embedded metadata/cover art</td></tr>
                 <tr><td><code>start_segment</code></td><td><code>0</code></td><td>First segment index</td></tr>
                 <tr><td><code>segment_state_path</code></td><td><code>None</code></td><td>JSON resume-state file; <code>Path</code> values are serialized safely in 4.1+</td></tr>
                 <tr><td><code>segment_dir</code></td><td><code>None</code></td><td>Directory for downloaded segments</td></tr>
@@ -467,14 +471,14 @@ stream = helper.iterator(
                 <tr><td><code>cleanup_on_stop</code></td><td><code>True</code></td><td>Remove temporary state when cancelled</td></tr>
                 <tr><td><code>keep_segment_dir</code></td><td><code>False</code></td><td>Retain segment files after completion</td></tr>
                 <tr><td><code>callback_remux</code></td><td><code>None</code></td><td>Progress callback for remuxing</td></tr>
-                <tr><td><code>ios_support</code></td><td><code>False</code></td><td>Enable the iOS-compatible remux path</td></tr>
+                <tr><td><code>ios_support</code></td><td><code>False</code></td><td>Retained for signature compatibility; FFmpeg remuxing copies H.264/AAC streams with <code>+faststart</code> by default</td></tr>
             </tbody>
         </table>
     </div>
-    <p><code>BaseCore.download()</code> reads <code>RuntimeConfig.timeout</code> and <code>RuntimeConfig.max_workers_download</code> from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout and worker settings isolated from the process-wide default configuration. HLS cancellation uses an <code>asyncio.Event</code>: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads. Version 4.1.1 also normalizes discontinuous packet timestamps while remuxing so valid HLS discontinuities do not abort MP4 output.</p>
+    <p><code>BaseCore.download()</code> reads <code>RuntimeConfig.timeout</code>, <code>RuntimeConfig.max_workers_download</code>, and <code>RuntimeConfig.ffmpeg_path</code> from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout, worker, and FFmpeg settings isolated from the process-wide default configuration. HLS cancellation uses an <code>asyncio.Event</code>: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads.</p>
     <div class="info-box note">
-        <div class="info-box-title">PyAV Remuxing Dependency</div>
-        Remuxing concatenated transport streams to MP4 (<code>remux=True</code>) requires the PyAV library. Install it with <code>pip install "eaf_base_api[hls]"</code> or <code>pip install av</code>.
+        <div class="info-box-title">FFmpeg Remuxing & Single-Pass Metadata</div>
+        Remuxing concatenated transport streams to MP4 (<code>remux=True</code>) uses an external <code>ffmpeg</code> executable rather than PyAV (<code>av</code>). <code>find_ffmpeg()</code> resolves the binary from <code>RuntimeConfig.ffmpeg_path</code>, <code>EAF_FFMPEG_BINARY</code> / <code>PORN_FETCH_FFMPEG_BINARY</code>, bundled <code>third_party/</code> directories, or the system <code>PATH</code>. When <code>metadata</code> or <code>thumbnail</code> is supplied on <code>DownloadConfigHLS</code>, FFmpeg converts the MPEG-TS stream and embeds container metadata and cover art in a single pass (falling back to a plain remux if cover/metadata attachment fails) and sets <code>DownloadReport.metadata_written = True</code>.
     </div>
 
     <h3>DownloadConfigRAW</h3>
@@ -520,7 +524,7 @@ logger = get_logger(__name__)
     <span class="section-anchor" id="utilities"></span>
     <h2><span class="section-icon">🛠️</span> Shared Utilities</h2>
 
-    <p><code>base_api</code> exports standardized parsing, sanitization, and helper functions used across scrapers:</p>
+    <p><code>base_api</code> exports standardized parsing, sanitization, FFmpeg remuxing/tagging, and helper functions used across scrapers:</p>
 
     <div class="table-wrapper">
         <table>
@@ -535,6 +539,10 @@ logger = get_logger(__name__)
                 <tr><td><code>str_to_bool</code></td><td><code>(value: Any) -&gt; bool</code></td><td>Coerces common string boolean representations (<code>"true"</code>, <code>"1"</code>, <code>"yes"</code>) to boolean.</td></tr>
                 <tr><td><code>is_resource_gone</code></td><td><code>(exc: BaseException) -&gt; bool</code></td><td>Checks if an exception or nested cause represents an HTTP 404, 410, or <code>ResourceGone</code> error.</td></tr>
                 <tr><td><code>contains_resource_gone</code></td><td><code>(exc: BaseException) -&gt; bool</code></td><td>Recursively inspects aggregate exceptions (e.g. <code>MediaLoadErrors</code>) to check if any nested failure represents a gone resource.</td></tr>
+                <tr><td><code>find_ffmpeg</code></td><td><code>(ffmpeg_bin: Path | str | None = None, *, original_executable: Path | None = None, extra_roots: tuple[Path, ...] = ()) -&gt; Path | None</code></td><td>Resolves the <code>ffmpeg</code> executable from explicit paths, <code>RuntimeConfig.ffmpeg_path</code>, environment variables, bundled <code>third_party/</code> directories, or the system <code>PATH</code>.</td></tr>
+                <tr><td><code>has_ffmpeg</code></td><td><code>(ffmpeg_bin: Path | str | None = None, *, original_executable: Path | None = None, extra_roots: tuple[Path, ...] = ()) -&gt; bool</code></td><td>Returns <code>True</code> if a usable <code>ffmpeg</code> binary is available.</td></tr>
+                <tr><td><code>remux_ts_to_mp4</code></td><td><code>(input_path: Path | str, output_path: Path | str, ffmpeg_bin: Path | str | None = None, *, metadata: Any = None, thumbnail: bytes | Path | str | None = None, timeout: int = 600) -&gt; bool</code></td><td>Remuxes an MPEG-TS file into a faststart MP4 container, optionally embedding container metadata and cover art in a single FFmpeg pass.</td></tr>
+                <tr><td><code>write_metadata_tags</code></td><td><code>(file_path: Path | str, data: Any, thumbnail: bytes | Path | str | None = None, *, ffmpeg_bin: Path | str | None = None, timeout: int = 180) -&gt; bool</code></td><td>Atomically writes MP4 metadata tags and optional cover art to an existing MP4 file via FFmpeg stream copy.</td></tr>
             </tbody>
         </table>
     </div>
@@ -657,7 +665,7 @@ core.enable_logging(
                 <tr><td>Media fields</td><td><code>UnknownMediaFieldError</code>, <code>FieldNotLoadableError</code>, <code>DataNotLoadedError</code></td></tr>
                 <tr><td>Media loaders</td><td><code>LoaderConfigurationError</code>, <code>LoaderContractError</code>, <code>MediaLoadError</code>, <code>MediaLoadErrors</code></td></tr>
                 <tr><td>Scrape operations</td><td><code>PageFetchError</code>, <code>ItemFetchError</code>, <code>ErrorHandlerError</code></td></tr>
-                <tr><td>Downloads/playlists</td><td><code>DownloadCancelled</code>, <code>SegmentError</code>, <code>PlaylistExtractionError</code>, <code>StateLoadError</code>, <code>MaxRetriesExceeded</code></td></tr>
+                <tr><td>Downloads/playlists</td><td><code>DownloadCancelled</code>, <code>SegmentError</code>, <code>PlaylistExtractionError</code>, <code>StateLoadError</code>, <code>MaxRetriesExceeded</code>, <code>MetadataWriteError</code></td></tr>
                 <tr><td>Bot challenges</td><td><code>BotProtectionDetected</code>, <code>ChallengeRegexError</code>, <code>ChallengeMathError</code>, <code>SecurityAbort</code></td></tr>
             </tbody>
         </table>
@@ -672,7 +680,7 @@ core.enable_logging(
         <table>
             <thead><tr><th>Date / Version</th><th>Changes since 3.3.3</th></tr></thead>
             <tbody>
-                <tr><td><strong>2026-09-15 — 4.2.0</strong></td><td>Centralized provider request and download helpers in <code>base_api.modules.provider</code> (<code>fetch_content</code>, <code>download_errors</code>, <code>prepare_download_config</code>, <code>download_hls</code>). Added contextual logging via <code>ContextLogger</code>, <code>log_context</code>, <code>class_name</code>, and <code>get_logger</code> with <code>[class=... url=...]</code> formatting. Structured exception reporting with <code>error.url</code>, <code>error.class_name</code>, and <code>error.api</code> attributes, and strict exception chaining via <code>__cause__</code>. Standardized download failure semantics: <code>download()</code> raises <code>DownloadFailed</code> on failure instead of returning <code>False</code>; cancellation via <code>stop_event</code> raises <code>DownloadCancelled</code> without error logs. Added <code>extract_video_grid()</code> to <code>base_api.modules.static_functions</code> for shared search result extraction.</td></tr>
+                <tr><td><strong>2026-10-16 — 4.2.0</strong></td><td>Replaced PyAV (<code>av</code>) remuxing with direct FFmpeg execution in <code>base_api.modules.ffmpeg</code> (<code>find_ffmpeg</code>, <code>has_ffmpeg</code>, <code>remux_ts_to_mp4</code>, <code>write_metadata_tags</code>) and added single-pass HLS remuxing with MP4 metadata &amp; cover-art embedding via <code>DownloadConfigHLS(metadata=..., thumbnail=...)</code> and <code>DownloadReport.metadata_written</code>. Added <code>RuntimeConfig.ffmpeg_path</code> and <code>MetadataWriteError</code>. Centralized provider request and download helpers in <code>base_api.modules.provider</code> (<code>fetch_content</code>, <code>download_errors</code>, <code>prepare_download_config</code>, <code>download_hls</code>), contextual logging via <code>ContextLogger</code>/<code>log_context</code>/<code>get_logger</code>, structured exception reporting (<code>error.url</code>, <code>error.class_name</code>, <code>error.api</code>), and <code>extract_video_grid()</code>.</td></tr>
                 <tr><td><strong>2026-09-07 — 4.1.2</strong></td><td>Added <code>scrape_stream()</code> async generator helper, optional dual-stack/IPv4/IPv6 address resolution via <code>RuntimeConfig.ip_resolve</code> and <code>CURL_IPRESOLVE</code> environment variable, standardized scraper utilities (<code>get_text_safe</code>, <code>get_attr_safe</code>, <code>parse_duration</code>, <code>parse_count</code>, <code>build_m3u8_master</code>, <code>str_to_bool</code>), and PyAV remuxing dependencies.</td></tr>
                 <tr><td><strong>2026-08-19 — 4.1.1</strong></td><td>Synchronized download/remux progress callbacks across worker threads, normalized discontinuous HLS packet timestamps during remuxing, and added regressions for stage-specific error handlers and per-core runtime settings. Commit <code>a062695</code>.</td></tr>
                 <tr><td><strong>2026-08-16 — 4.1.0</strong></td><td>Made HLS cancellation stop pending segment work promptly and corrected JSON resume-state serialization, including configured <code>Path</code> values. Commit <code>acdb967</code>.</td></tr>

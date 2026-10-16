@@ -21,6 +21,9 @@ keywords:
   - "keep_segment_dir"
   - "callback_remux"
   - "ios_support"
+  - "metadata"
+  - "thumbnail"
+  - "metadata_written"
 ---
 
 # Download configuration — eaf_base_api
@@ -29,7 +32,7 @@ Explains the documented download configuration and download procedure for the ea
 
 ## Shared fields
 
-`DownloadConfigHLS` and `DownloadConfigRAW` share `quality`, `path`, `callback`, `no_title`, and `stop_event`. Quality accepts a supported integer height or `"best"`, `"half"`, `"worst"`, and common `"720p"`-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.
+`DownloadConfigHLS` and `DownloadConfigRAW` share `quality`, `path`, `callback`, `no_title`, `stop_event`, and `metadata_written`. Quality accepts a supported integer height or `"best"`, `"half"`, `"worst"`, and common `"720p"`-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.
 
 ## HLS inspection
 
@@ -43,7 +46,19 @@ Default: None; Description: Master playlist URL, awaitable, or callable used by 
 
 ## remux
 
-Default: False; Description: Remux concatenated transport stream to MP4. Requires PyAV (pip install av or pip install "eaf_base_api[hls]").
+Default: False; Description: Remux concatenated transport stream to MP4 using FFmpeg (`ffmpeg` on `PATH` or `RuntimeConfig.ffmpeg_path`). If `ffmpeg` is missing, logs a warning and preserves the raw MPEG-TS stream cleanly.
+
+## metadata
+
+Default: None; Description: Optional provider `Video` object or `dict` of MP4 metadata tags (`title`, `author`, `genre`/`tags`, `date`/`publish_date`, `description`, `url`, `comment`, `network`) written in a single FFmpeg pass when remuxing.
+
+## thumbnail
+
+Default: None; Description: Optional cover-art image (`bytes`, `str`, or `Path`) embedded as an attached picture stream during the single-pass FFmpeg remux.
+
+## metadata_written
+
+Default: False; Description: Output flag set to `True` on `DownloadConfigHLS` and `DownloadReport` when single-pass metadata/cover-art tagging succeeded during remuxing.
 
 ## start_segment
 
@@ -75,9 +90,9 @@ Default: None; Description: Progress callback for remuxing
 
 ## ios_support
 
-Default: False; Description: Enable the iOS-compatible remux path
+Default: False; Description: Enable the iOS-compatible remux path (`-bsf:a aac_adtstoasc -movflags +faststart`)
 
-`BaseCore.download()` reads `RuntimeConfig.timeout` and `RuntimeConfig.max_workers_download` from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout and worker settings isolated from the process-wide default configuration. HLS cancellation uses an `asyncio.Event`: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads. Version 4.1.1 also normalizes discontinuous packet timestamps while remuxing so valid HLS discontinuities do not abort MP4 output.
+`BaseCore.download()` reads `RuntimeConfig.timeout`, `RuntimeConfig.max_workers_download`, and `RuntimeConfig.ffmpeg_path` from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout, worker, and FFmpeg settings isolated from the process-wide default configuration. HLS cancellation uses an `asyncio.Event`: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads. When `remux=True` and `metadata` or `thumbnail` are provided, `eaf_base_api` writes container metadata and cover art in the same FFmpeg remux pass—avoiding a second full-file rewrite—and sets `configuration.metadata_written = True` (and `DownloadReport.metadata_written = True`). If cover/tag arguments fail, it automatically falls back to a clean remux so the downloaded video is never lost.
 
 ## DownloadConfigRAW
 

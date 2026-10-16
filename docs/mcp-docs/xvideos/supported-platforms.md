@@ -21,7 +21,7 @@ Linux (Arch)| x86_64| ✅ Tested
 Android 16| aarch64| ✅ Tested
 
 **Note**
-PyAV (for TS→MP4 remuxing) is **not available** on Termux/Android. Use `remux=False` on those platforms.
+HLS TS→MP4 remuxing requires `ffmpeg` (available on Termux via `pkg install ffmpeg`). If `ffmpeg` is not installed, use `remux=False` or allow automatic fallback to raw MPEG-TS output.
 
 ## Related MCP documents
 

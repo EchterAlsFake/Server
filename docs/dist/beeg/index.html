@@ -154,12 +154,7 @@
 <pre><code>pip install unofficial-api-for-beeg</code></pre>
     </div>
 
-    <p>For <strong>TS→MP4 remuxing</strong> support (recommended for HLS downloads), install with the optional <code>av</code> dependency:</p>
-    <div class="code-window">
-        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>pip install unofficial-api-for-beeg[av]</code></pre>
-
-    </div>
+    <p>For <strong>TS→MP4 remuxing</strong> and metadata tagging support (recommended for HLS downloads with <code>remux=True</code>), ensure <code>ffmpeg</code> is installed on your system <code>PATH</code> (or set <code>RuntimeConfig.ffmpeg_path</code>).</p>
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>

@@ -29,11 +29,7 @@ Install from PyPI using pip:
 pip install unofficial-api-for-xvideos
 ```
 
-For **TS → MP4 remuxing** support (recommended), install with the optional `av` dependency:
-
-```bash
-pip install unofficial-api-for-xvideos[av]
-```
+For **TS → MP4 remuxing** and single-pass MP4 metadata tagging (recommended), ensure `ffmpeg` is installed on your `PATH` or configured via `RuntimeConfig.ffmpeg_path`.
 
 **Note**
 Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.0.0` is installed automatically as a dependency.

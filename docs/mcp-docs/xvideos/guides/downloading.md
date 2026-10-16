@@ -20,6 +20,9 @@ keywords:
   - "cleanup_on_stop"
   - "keep_segment_dir"
   - "ios_support"
+  - "metadata"
+  - "thumbnail"
+  - "metadata_written"
 ---
 
 # Downloading — XVideos API
@@ -35,7 +38,8 @@ config = DownloadConfigHLS(
     quality="best",           # "best", "half", "worst", or int like 720
     path="./downloads",       # Output directory (title auto-appended)
     no_title=False,           # If True, use path as exact filename
-    remux=True,               # Convert TS segments to MP4 (needs av)
+    remux=True,               # Convert TS segments to MP4 using FFmpeg
+    metadata=video,           # Optional: write MP4 metadata tags in a single remux pass
     return_report=True,       # Return DownloadReport instead of bool
 )
 
@@ -69,7 +73,19 @@ Type: asyncio.Event; Default: None; Description: Set this event to cancel the do
 
 ## remux
 
-Type: bool; Default: False; Description: Remux TS → MP4 using PyAV
+Type: bool; Default: False; Description: Remux TS → MP4 using FFmpeg
+
+## metadata
+
+Type: Any | dict | None; Default: None; Description: Optional Video object or metadata dict written into the MP4 container during remuxing
+
+## thumbnail
+
+Type: bytes | str | Path | None; Default: None; Description: Optional cover-art image bytes or path embedded during remuxing
+
+## metadata_written
+
+Type: bool; Default: False; Description: Output flag set to True when single-pass metadata/cover tagging succeeded
 
 ## start_segment
 

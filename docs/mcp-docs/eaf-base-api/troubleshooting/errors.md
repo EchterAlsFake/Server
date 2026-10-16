@@ -183,6 +183,10 @@ Family: Downloads/playlists
 
 Family: Downloads/playlists
 
+## MetadataWriteError
+
+Family: Downloads/playlists. Raised when standalone MP4 metadata/cover-art tagging (`write_metadata_tags`) fails or when `ffmpeg` cannot be located.
+
 ## BotProtectionDetected
 
 Family: Bot challenges
