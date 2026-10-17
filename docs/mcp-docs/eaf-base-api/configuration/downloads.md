@@ -13,6 +13,9 @@ keywords:
   - "DownloadConfigRAW"
   - "m3u8_base_url"
   - "remux"
+  - "metadata"
+  - "thumbnail"
+  - "metadata_written"
   - "start_segment"
   - "segment_state_path"
   - "segment_dir"
@@ -21,9 +24,6 @@ keywords:
   - "keep_segment_dir"
   - "callback_remux"
   - "ios_support"
-  - "metadata"
-  - "thumbnail"
-  - "metadata_written"
 ---
 
 # Download configuration — eaf_base_api
@@ -32,7 +32,7 @@ Explains the documented download configuration and download procedure for the ea
 
 ## Shared fields
 
-`DownloadConfigHLS` and `DownloadConfigRAW` share `quality`, `path`, `callback`, `no_title`, `stop_event`, and `metadata_written`. Quality accepts a supported integer height or `"best"`, `"half"`, `"worst"`, and common `"720p"`-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.
+`DownloadConfigHLS` and `DownloadConfigRAW` share `quality`, `path`, `callback`, `no_title`, `stop_event`, `metadata`, `thumbnail`, and `metadata_written`. Quality accepts a supported integer height or `"best"`, `"half"`, `"worst"`, and common `"720p"`-style values. Version 4.1 normalizes landscape and portrait variants by their shorter dimension, chooses the closest available tier for an explicit numeric request (preferring the higher tier on a tie), and uses bandwidth and frame rate as fallbacks when a master playlist omits resolution metadata.
 
 ## HLS inspection
 
@@ -46,19 +46,19 @@ Default: None; Description: Master playlist URL, awaitable, or callable used by 
 
 ## remux
 
-Default: False; Description: Remux concatenated transport stream to MP4 using FFmpeg (`ffmpeg` on `PATH` or `RuntimeConfig.ffmpeg_path`). If `ffmpeg` is missing, logs a warning and preserves the raw MPEG-TS stream cleanly.
+Default: False; Description: Remux concatenated transport stream to MP4 using FFmpeg ( -c copy -movflags +faststart )
 
 ## metadata
 
-Default: None; Description: Optional provider `Video` object or `dict` of MP4 metadata tags (`title`, `author`, `genre`/`tags`, `date`/`publish_date`, `description`, `url`, `comment`, `network`) written in a single FFmpeg pass when remuxing.
+Default: None; Description: Optional metadata mapping or media object ( title , artist / author , genre , date / publish_date , thumbnail_data ) embedded into the MP4 in a single FFmpeg pass during remuxing
 
 ## thumbnail
 
-Default: None; Description: Optional cover-art image (`bytes`, `str`, or `Path`) embedded as an attached picture stream during the single-pass FFmpeg remux.
+Default: None; Description: Optional JPEG/PNG cover-art bytes or file Path attached as attached_pic during single-pass remuxing
 
 ## metadata_written
 
-Default: False; Description: Output flag set to `True` on `DownloadConfigHLS` and `DownloadReport` when single-pass metadata/cover-art tagging succeeded during remuxing.
+Default: False; Description: Set to True on DownloadConfigHLS and DownloadReport when single-pass remuxing also embedded metadata/cover art
 
 ## start_segment
 
@@ -90,9 +90,12 @@ Default: None; Description: Progress callback for remuxing
 
 ## ios_support
 
-Default: False; Description: Enable the iOS-compatible remux path (`-bsf:a aac_adtstoasc -movflags +faststart`)
+Default: False; Description: Retained for signature compatibility; FFmpeg remuxing copies H.264/AAC streams with +faststart by default
 
-`BaseCore.download()` reads `RuntimeConfig.timeout`, `RuntimeConfig.max_workers_download`, and `RuntimeConfig.ffmpeg_path` from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout, worker, and FFmpeg settings isolated from the process-wide default configuration. HLS cancellation uses an `asyncio.Event`: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads. When `remux=True` and `metadata` or `thumbnail` are provided, `eaf_base_api` writes container metadata and cover art in the same FFmpeg remux pass—avoiding a second full-file rewrite—and sets `configuration.metadata_written = True` (and `DownloadReport.metadata_written = True`). If cover/tag arguments fail, it automatically falls back to a clean remux so the downloaded video is never lost.
+`BaseCore.download()` reads `RuntimeConfig.timeout`, `RuntimeConfig.max_workers_download`, and `RuntimeConfig.ffmpeg_path` from that core when dispatching each HLS download. Dedicated cores therefore keep their HLS timeout, worker, and FFmpeg settings isolated from the process-wide default configuration. HLS cancellation uses an `asyncio.Event`: setting it cancels pending segment tasks promptly, and progress/remux callbacks are synchronized across worker threads.
+
+**FFmpeg Remuxing & Single-Pass Metadata**
+Remuxing concatenated transport streams to MP4 (`remux=True`) uses an external `ffmpeg` executable rather than PyAV (`av`). `find_ffmpeg()` resolves the binary from `RuntimeConfig.ffmpeg_path`, `EAF_FFMPEG_BINARY` / `PORN_FETCH_FFMPEG_BINARY`, bundled `third_party/` directories, or the system `PATH`. When `metadata` or `thumbnail` is supplied on `DownloadConfigHLS`, FFmpeg converts the MPEG-TS stream and embeds container metadata and cover art in a single pass (falling back to a plain remux if cover/metadata attachment fails) and sets `DownloadReport.metadata_written = True`.
 
 ## DownloadConfigRAW
 

@@ -107,7 +107,7 @@ Type: list[str] | None; Description: Sorted list of available resolutions (e.g. 
 
 ## download
 
-Downloads the video directly from CDN server using `DownloadConfigRAW`.
+Downloads the video directly from CDN server using `DownloadConfigRAW`. Ordinary failures raise `DownloadFailed` with full diagnostic context and chained cause.
 
 ```python
 await video.download(

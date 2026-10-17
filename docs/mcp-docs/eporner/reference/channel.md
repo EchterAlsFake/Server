@@ -25,7 +25,7 @@ keywords:
 
 Documents Channel behavior, signatures, fields, constraints, and examples for the Eporner API.
 
-dataclass Inherits from `BaseProfile` -> `BaseMedia`. Represents an Eporner channel profile with rank, stats, logo, banner, and video stream pagination.
+dataclass Inherits from `BaseProfile` → `BaseMedia`. Represents an Eporner channel profile with rank, stats, logo, banner, and video stream pagination.
 
 ## Attributes
 
@@ -35,15 +35,15 @@ Type: str; Description: Channel page URL
 
 ## name
 
-Type: str | None; Description: Channel name (from `BaseProfile`)
+Type: str | None; Description: Channel name (from BaseProfile )
 
 ## subscribers
 
-Type: str | None; Description: Subscriber count (from `BaseProfile`)
+Type: str | None; Description: Subscriber count (from BaseProfile )
 
 ## video_amount
 
-Type: str | None; Description: Total uploaded videos count (from `BaseProfile`)
+Type: str | None; Description: Total uploaded videos count (from BaseProfile )
 
 ## total_pages
 
@@ -51,11 +51,11 @@ Type: int | None; Description: Page count discovered from HTML pagination links 
 
 ## video_views
 
-Type: str | None; Description: Accumulated video views count (from `BaseProfile`)
+Type: str | None; Description: Accumulated video views count (from BaseProfile )
 
 ## picture
 
-Type: str | None; Description: Profile/logo picture URL (from `BaseProfile`)
+Type: str | None; Description: Profile/logo picture URL (from BaseProfile )
 
 ## channel_id
 
@@ -96,11 +96,10 @@ async for result in channel.videos(
 
 ## Related MCP documents
 
-- [Client — Eporner API](client.md)
-- [Pornstar — Eporner API](pornstar.md)
-- [Video — Eporner API](video.md)
 - [Eporner API getting started](../getting-started.md)
+- [Errors and troubleshooting — Eporner API](../troubleshooting/errors.md)
 - [Overview — eaf_base_api](../../eaf-base-api/overview.md)
+- [Legal disclaimer for EAF API wrappers](../../legal/disclaimer.md)
 
 ## Original public page
 

@@ -102,7 +102,7 @@ Type: str | None; Description: Raw listing element fallbacks
 
 ## download
 
-Downloads the video. Supports downloading via HLS segments (default) or fetching direct CDN MP4 files depending on the `use_hls` parameter.
+Downloads the video. Supports downloading via HLS segments (default) or fetching direct CDN MP4 files depending on the `use_hls` parameter. Ordinary failures raise `DownloadFailed` with full diagnostic context and chained cause.
 
 ```python
 await video.download(

@@ -143,7 +143,7 @@ Type: str | None; Description: Preview media path
 
 ## download
 
-Downloads the video via HLS streaming. Appends the video title to the output path unless `no_title=True` on the config.
+Downloads the video via HLS streaming. Appends the video title to the output path unless `no_title=True` on the config. Ordinary failures raise `DownloadFailed` with full diagnostic context and chained cause.
 
 ```python
 await video.download(

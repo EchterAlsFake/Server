@@ -16,9 +16,11 @@ Documents the command-line interface, arguments, and examples for the HQPorner A
 
 ## hqporner_api
 
-`hqporner_api` can be invoked directly or via `python -m hqporner_api`.
+`hqporner_api` uses the shared behavior documented in this reference.
 
-The HQPorner API package includes a rich CLI:
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+The HQPorner API package includes a rich CLI accessible via `hqporner_api` or `python -m hqporner_api`:
 
 ```bash
 # Download a single video
@@ -43,10 +45,6 @@ Flag| Description
 `--no-title True/False`| Skip auto-appending video title to output filename (default: `False`)
 `--pages N`| Number of pages to scrape (default: `1`)
 `--concurrency N`| Max concurrent downloads to run in parallel (default: `3`)
-
-The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
-
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
 
 ## Related MCP documents
 

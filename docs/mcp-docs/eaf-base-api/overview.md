@@ -14,10 +14,6 @@ keywords:
 
 Documents Overview behavior, signatures, fields, constraints, and examples for the eaf_base_api API.
 
-> **⚡ Official MCP Server:**
-> Connect your AI coding assistant (Cursor, VS Code, Claude, Windsurf, Zed) to our official, free MCP server at `https://mcp.echteralsfake.me/mcp` (No auth, no strict rate limits, completely anonymous, covers all 16 APIs). Using MCP + AI in your workflow is absolutely the recommended way to work on the projects. See the [Official MCP Server Guide](../official-mcp-server.md).
-
-
 **Version 4 is intentionally breaking**
 The legacy multi-mode `BaseCore.fetch()`, `BaseMedia.load(api=..., html=...)`, mutable `ScrapeResult.video`/`is_success` contract, and boolean retry callbacks were removed. Use the explicit request, media, iterator, and download interface references in this corpus.
 
@@ -27,12 +23,9 @@ The legacy multi-mode `BaseCore.fetch()`, `BaseMedia.load(api=..., html=...)`, m
 - **Helper + IteratorConfig** — bounded page/item scheduling, ordering, retries, error handlers, and load selection
 - **ScrapeStream + ScrapeResult** — deterministic stream cleanup and immutable success/failure results
 - **CacheBackend** — replaceable storage contract; the built-in cache uses byte limits and TTL expiry
-- **Provider Helpers (`base_api.modules.provider`)** — standardized request execution (`fetch_content`), download error wrapping (`@download_errors`), configuration normalization (`prepare_download_config`), and HLS streams (`download_hls`)
-- **ContextLogger & Logging** — contextual logging via `[class=<name> url=<url>]` prefixes, structured diagnostic attributes (`url`, `class_name`, `api`), and unified application configuration via `configure_app_logging()`
 
 ## Related MCP documents
 
-- [Scraper Utilities — eaf_base_api](reference/scraper-utils.md)
 - [Error reference — eaf_base_api](troubleshooting/errors.md)
 - [EAF Python API documentation overview](../overview.md)
 

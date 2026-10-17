@@ -80,7 +80,7 @@ video.video_qualities -> list[str]
 
 ## download
 
-Downloads the video direct MP4 files using range/multipart support. Appends the video title to path unless `no_title=True`.
+Downloads the video direct MP4 files using range/multipart support. Appends the video title to path unless `no_title=True`. Ordinary failures raise `DownloadFailed` with full diagnostic context and chained cause.
 
 ```python
 await video.download(

@@ -16,12 +16,15 @@ keywords:
   - "publish_date"
   - "views"
   - "author"
+  - "author_thumbnail"
+  - "author_url"
+  - "author_subscribers"
   - "thumbnail"
   - "length"
   - "categories"
   - "tags"
   - "cdn_urls"
-  - "rating"
+  - "embed_url"
 ---
 
 # Video — XFreeHD API
@@ -62,11 +65,11 @@ Type: str | None; Description: Username of the video uploader
 
 ## author_thumbnail
 
-Type: str | None; Description: Uploader profile avatar/thumbnail URL
+Type: str | None; Description: Uploader avatar picture URL
 
 ## author_url
 
-Type: str | None; Description: Uploader channel/profile page URL
+Type: str | None; Description: Uploader channel profile URL
 
 ## author_subscribers
 
@@ -75,10 +78,6 @@ Type: str | None; Description: Uploader subscriber count
 ## thumbnail
 
 Type: str | None; Description: Cover image thumbnail URL
-
-## embed_url
-
-Type: str | None; Description: Embedded player URL
 
 ## length
 
@@ -96,9 +95,13 @@ Type: list[str] | None; Description: List of video tags
 
 Type: list[str] | None; Description: Direct MP4 CDN paths (up to two qualities: SD, HD)
 
+## embed_url
+
+Type: str | None; Description: Embeddable iframe player URL
+
 ## rating
 
-Type: str | None; Description: Optional ratings metadata
+Type: str | None; Description: Ratings metadata loaded from HTML
 
 ## Methods
 

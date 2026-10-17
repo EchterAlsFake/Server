@@ -26,8 +26,6 @@ keywords:
   - "interface"
   - "ip_resolve"
   - "http_version"
-  - "dns_over_https"
-  - "ffmpeg_path"
 ---
 
 # RuntimeConfig — eaf_base_api
@@ -98,7 +96,7 @@ Type: str | None; Default: None; Description: Local interface IP address to bind
 
 ## ip_resolve
 
-Type: int | None; Default: None; Description: Optional IP address resolution mode: None for dual-stack default, 1 for IPv4 only, or 2 for IPv6 only. Also respects the CURL_IPRESOLVE environment variable (e.g. CURL_IPRESOLVE=1 or 4 for IPv4, 2 or 6 for IPv6).
+Type: int | None; Default: None; Description: Optional IP resolution: None (dual-stack default), 1 (IPv4 only), or 2 (IPv6 only). Also respects CURL_IPRESOLVE environment variable.
 
 ## http_version
 
@@ -136,10 +134,6 @@ Type: str; Default: "en-US,en;q=0.9"; Description: Default Accept-Language ; cha
 
 Type: int; Default: 20; Description: HLS download worker count for this core
 
-## ffmpeg_path
-
-Type: str | Path | None; Default: None; Description: Optional explicit path to an `ffmpeg` binary used for HLS TS→MP4 remuxing and metadata tagging; falls back to `shutil.which("ffmpeg")` on `PATH`
-
 ## videos_concurrency
 
 Type: int; Default: 5; Description: Fallback item concurrency for resolved iterator configs
@@ -148,9 +142,13 @@ Type: int; Default: 5; Description: Fallback item concurrency for resolved itera
 
 Type: int; Default: 2; Description: Fallback page concurrency for resolved iterator configs
 
+## ffmpeg_path
+
+Type: str | None; Default: None; Description: Optional explicit path to an ffmpeg executable used for TS→MP4 remuxing and MP4 metadata/cover-art tagging
+
 ## When changes take effect
 
-Cache limits/TTLs and the initial locale header are captured when `BaseCore` is constructed. Proxy, interface, TLS, HTTP, DoH, impersonation, cookies, and bandwidth options are captured whenever its session is created. Request budgets, retry delays/multiplier, and request delay are read for each request; HLS timeout, workers, and `ffmpeg_path` are read when a download begins; and omitted `IteratorConfig` values are resolved whenever a new stream is created.
+Cache limits/TTLs and the initial locale header are captured when `BaseCore` is constructed. Proxy, interface, ip_resolve, TLS, HTTP, DoH, impersonation, cookies, and bandwidth options are captured whenever its session is created. Request budgets, retry delays/multiplier, and request delay are read for each request; HLS timeout/workers are read when a download begins; and omitted `IteratorConfig` values are resolved whenever a new stream is created.
 
 **Applying changed session settings**
 `initialize_session()` is idempotent: it creates a session only while `core.session` is `None`. To apply changed session-bound settings such as proxy, cookies, TLS, or interface, call `await core.close()`; the next request, context-manager entry, or explicit `initialize_session()` creates a fresh session from the current configuration.

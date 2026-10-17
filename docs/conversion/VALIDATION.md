@@ -2,10 +2,10 @@
 
 - Mode: full
 - Status: pass
-- Markdown documents checked: 197
+- Markdown documents checked: 224
 - HTML source unchanged: True
 - Symlinks: 0
-- Retrieval cases checked: 30
+- Retrieval cases checked: 34
 - Largest file: `pornhub/reference/client.md` (10550 bytes)
 
 ## Errors

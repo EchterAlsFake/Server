@@ -11,6 +11,7 @@ keywords:
   - "search_videos"
   - "get_videos_by_category"
   - "get_pornstar"
+  - "get_channel"
 ---
 
 # Client — Eporner API
@@ -126,7 +127,7 @@ await client.get_pornstar(
 
 ## get_channel
 
-Loads a channel profile page containing rank, stats, and logo/banner URLs.
+Loads a channel profile page containing channel stats, logo, and banner.
 
 ```python
 await client.get_channel(

@@ -17,10 +17,6 @@ keywords:
 
 Explains how to install, configure, and make a first asynchronous request with the XNXX API.
 
-> **⚡ Official MCP Server:**
-> Connect your AI coding assistant (Cursor, VS Code, Claude, Windsurf, Zed) to our official, free MCP server at `https://mcp.echteralsfake.me/mcp` (No auth, no strict rate limits, completely anonymous, covers all 16 APIs). Using MCP + AI in your workflow is absolutely the recommended way to work on the projects. See the [Official MCP Server Guide](../official-mcp-server.md).
-
-
 ## Installation
 
 Install from PyPI using pip:
@@ -29,7 +25,7 @@ Install from PyPI using pip:
 pip install unofficial-api-for-xnxx
 ```
 
-For **TS→MP4 remuxing** and single-pass MP4 metadata tagging (recommended for HLS downloads), ensure `ffmpeg` is installed on your `PATH` or configured via `RuntimeConfig.ffmpeg_path`.
+For **TS→MP4 remuxing** and metadata tagging support (recommended for HLS downloads with `remux=True`), ensure `ffmpeg` is installed on your system `PATH` (or set `RuntimeConfig.ffmpeg_path`).
 
 **Note**
 Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.2.2` is installed automatically as a dependency.
@@ -80,23 +76,8 @@ core = BaseCore(configuration=my_config)
 client = Client(core=core)
 ```
 
-## Command-Line Interface (CLI)
-
-The package includes a command-line interface executable via `xnxx_api` or `python -m xnxx_api`:
-
-```bash
-# Download a video
-xnxx_api --download "https://www.xnxx.com/video-12345/sample_video" --quality best --output ./downloads
-
-# Or invoke as a Python module
-python -m xnxx_api --download "https://www.xnxx.com/video-12345/sample_video" --quality best --output ./downloads
-```
-
-See the [CLI Reference](reference/cli.md) for full options.
-
 ## Related MCP documents
 
-- [CLI reference — XNXX API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — XNXX API](troubleshooting/errors.md)

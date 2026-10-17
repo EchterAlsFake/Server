@@ -22,6 +22,8 @@ keywords:
 
 Documents Iteration and ScrapeResult behavior, signatures, fields, constraints, and examples for the Thumbzilla API.
 
+A missing main video container raises `ValueError` instead of returning an empty successful extraction. During iteration, `Helper` logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a `PageFetchError` when raised or yielded. An existing container with no matching videos can still produce an empty result.
+
 All concurrently iterated methods accept one `IteratorConfig` policy and yield immutable `ScrapeResult[Video]` values. The package default loads `html` and skips terminal page failures. A supplied configuration replaces that default, so include `load_specific_sources=("html",)` and `page_error_mode=ErrorMode.SKIP` when preserving both behaviors; the example in this document deliberately opts into yielding page failures.
 
 ```python
@@ -93,8 +95,6 @@ Type: bool; Description: True when the result contains an item
 ## unwrap
 
 Type: Video; Description: Returns the item or raises its terminal error
-
-A missing main video container raises `ValueError` instead of returning an empty successful extraction. During iteration, `Helper` logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a `PageFetchError` when raised or yielded. An existing container with no matching videos can still produce an empty result.
 
 ## Related MCP documents
 

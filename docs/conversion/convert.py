@@ -26,6 +26,7 @@ BASE_URL = "https://docs.echteralsfake.me/"
 DISPLAY_NAMES = {
     "beeg": "Beeg",
     "eaf_base_api": "eaf_base_api",
+    "empflix": "EMPFlix",
     "eporner": "Eporner",
     "hqporner": "HQPorner",
     "missav": "MissAV",
@@ -34,6 +35,7 @@ DISPLAY_NAMES = {
     "redtube": "Redtube",
     "spankbang": "SpankBang",
     "thumbzilla": "Thumbzilla",
+    "tnaflix": "TNAFlix",
     "tube8": "Tube8",
     "xfreehd": "XFreeHD",
     "xhamster": "xHamster",

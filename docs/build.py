@@ -6,6 +6,7 @@ from pathlib import Path
 BRAND_MARKS = {
     "eaf_base_api": "EAF",
     "beeg": "B",
+    "empflix": "E",
     "eporner": "E",
     "hqporner": "H",
     "missav": "M",
@@ -14,6 +15,7 @@ BRAND_MARKS = {
     "redtube": "R",
     "spankbang": "S",
     "thumbzilla": "T",
+    "tnaflix": "T",
     "tube8": "T",
     "xfreehd": "X",
     "xhamster": "X",

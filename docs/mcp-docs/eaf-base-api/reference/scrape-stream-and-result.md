@@ -1,6 +1,6 @@
 ---
 title: "ScrapeStream and ScrapeResult — eaf_base_api"
-summary: "Documents ScrapeStream, scrape_stream, and ScrapeResult behavior, signatures, fields, constraints, and examples for the eaf_base_api API."
+summary: "Documents ScrapeStream and ScrapeResult behavior, signatures, fields, constraints, and examples for the eaf_base_api API."
 public_url: "https://docs.echteralsfake.me/eaf_base_api/"
 aliases:
   - "base API ScrapeStream and ScrapeResult"
@@ -9,12 +9,9 @@ keywords:
   - "eaf_base_api"
   - "base_api"
   - "ScrapeStream and ScrapeResult"
-  - "scrape_stream"
   - "ScrapeResult"
   - "stage"
   - "url"
-  - "page_index"
-  - "item_index"
   - "attempts"
   - "item"
   - "error"
@@ -24,17 +21,16 @@ keywords:
 
 # ScrapeStream and ScrapeResult — eaf_base_api
 
-Documents `ScrapeStream`, `scrape_stream()`, and `ScrapeResult` behavior, signatures, fields, constraints, and examples for the eaf_base_api API.
+Documents ScrapeStream and ScrapeResult behavior, signatures, fields, constraints, and examples for the eaf_base_api API.
 
-## Stream Consumption Approaches
+## ScrapeResult
 
-`eaf_base_api` provides two ways to consume scrape streams:
+`ScrapeResult` uses the shared behavior documented in this reference.
 
-### 1. Direct iteration via `scrape_stream()` (Async Generator)
-
-The `scrape_stream()` helper function returns an `AsyncGenerator[ScrapeResult[T], None]`. Consume it directly with `async for`:
+`Helper.iterator()` returns a lazily started `ScrapeStream` async context manager. For convenient direct iteration without manually managing context lifecycles, `scrape_stream()` provides an `AsyncGenerator[ScrapeResult[T], None]` that handles internal stream lifecycle automatically.
 
 ```python
+# Direct iteration via scrape_stream() async generator
 from base_api import scrape_stream
 
 async for result in scrape_stream(
@@ -44,19 +40,11 @@ async for result in scrape_stream(
     core=core,
 ):
     if not result.succeeded:
-        print(f"Failed {result.stage} for {result.url}: {result.error}")
+        print(result.stage, result.url, result.error)
         continue
-    media = result.unwrap()  # Returns loaded item or raises result.error
-    print(media.title)
-```
+    media = result.unwrap()  # Returns T or raises result.error
 
-**Note:** `scrape_stream()` is an async generator, **not** an async context manager. Do not use `async with scrape_stream(...)`.
-
-### 2. Context manager via `Helper.iterator()` (`ScrapeStream`)
-
-`Helper.iterator()` returns a `ScrapeStream` instance that implements an async context manager. Use it when manual control over stream entry and exit is preferred:
-
-```python
+# Alternatively, using Helper.iterator() with an async context manager
 stream = helper.iterator(
     target_page_urls=page_urls,
     item_extractor=extractor,
@@ -71,50 +59,40 @@ async with stream:
         media = result.unwrap()
 ```
 
-## ScrapeResult
+**Generator vs Context Manager**
+`scrape_stream()` is an async generator: use `async for result in scrape_stream(...):` directly without an `async with` block. In contrast, `Helper.iterator()` returns a `ScrapeStream` context manager which supports `async with stream:` to guarantee background worker cancellation if the loop exits early.
 
-Every yielded item in a scrape stream is an immutable `ScrapeResult[T]` instance with the following fields:
+## stage
 
-### stage
+Description: ScrapeStage.PAGE or ScrapeStage.ITEM
 
-Type: `ScrapeStage`; Description: `ScrapeStage.PAGE` or `ScrapeStage.ITEM` indicating which stage produced this result.
+## url
 
-### url
+Description: Page or item URL associated with this outcome
 
-Type: `str`; Description: Page URL or item URL associated with this outcome.
+## attempts
 
-### page_index
+Description: Number of attempts consumed
 
-Type: `int`; Description: Zero-based target-page index.
+## item
 
-### item_index
+Description: Loaded media on success, otherwise None
 
-Type: `int | None`; Description: Zero-based item extractor position within the page, or `None` for page-level failures.
+## error
 
-### attempts
+Description: Typed PageFetchError / ItemFetchError on yielded failure
 
-Type: `int`; Description: Number of stage retry attempts consumed.
+## succeeded
 
-### item
+Description: True exactly when the result contains an item
 
-Type: `T | None`; Description: Loaded media model on success, otherwise `None`.
+## unwrap
 
-### error
-
-Type: `PageFetchError | ItemFetchError | None`; Description: Typed scrape operation exception on yielded failure, otherwise `None`.
-
-### succeeded
-
-Type: `bool`; Description: `True` exactly when the result contains a successfully loaded `item`.
-
-### unwrap()
-
-Description: Returns the loaded `item` if `succeeded` is `True`, or raises the stored `error`.
+Description: Return the item or raise the stored typed scrape error
 
 ## Related MCP documents
 
 - [Overview — eaf_base_api](../overview.md)
-- [IteratorConfig — eaf_base_api](../configuration/iterator-config.md)
 - [Error reference — eaf_base_api](../troubleshooting/errors.md)
 - [EAF Python API documentation overview](../../overview.md)
 

@@ -198,5 +198,30 @@
     "expected_markdown_path": "project/ai-transparency.md",
     "expected_heading": "AI transparency statement",
     "expected_important_terms": ["Documentation", "Core networking", "Engineering principles"]
+  },
+  {
+    "query": "how do I install and start using EMPFlix API",
+    "expected_markdown_path": "empflix/getting-started.md",
+    "expected_heading": "EMPFlix API getting started",
+    "expected_important_terms": ["pip install", "asyncio", "Client"]
+  },
+  {
+    "query": "download EMPFlix progressive video DownloadConfigRAW",
+    "expected_markdown_path": "empflix/guides/downloading.md",
+    "expected_heading": "Downloading — EMPFlix API",
+    "expected_important_terms": ["DownloadConfigRAW", "progressive", "MP4"]
+  },
+  {
+    "query": "how do I install and start using TNAFlix API",
+    "expected_markdown_path": "tnaflix/getting-started.md",
+    "expected_heading": "TNAFlix API getting started",
+    "expected_important_terms": ["pip install", "asyncio", "Client"]
+  },
+  {
+    "query": "get TNAFlix studio publisher channel videos",
+    "expected_markdown_path": "tnaflix/reference/channel.md",
+    "expected_heading": "Channel — TNAFlix API",
+    "expected_important_terms": ["Channel", "videos", "subscribers_count"],
+    "expected_symbol": "Channel"
   }
 ]

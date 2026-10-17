@@ -16,9 +16,11 @@ Documents the command-line interface, arguments, and examples for the XNXX API.
 
 ## xnxx_api
 
-`xnxx_api` can be invoked directly or via `python -m xnxx_api`.
+`xnxx_api` uses the shared behavior documented in this reference.
 
-The XNXX API package includes a CLI tool executable directly from the terminal:
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+The XNXX API package includes a CLI tool executable directly from the terminal via `xnxx_api` or `python -m xnxx_api`:
 
 ```bash
 # Download a single video to target folder
@@ -37,10 +39,6 @@ Flag| Description
 `--quality QUALITY`| **Required.** Set video download quality: `best`, `half`, `worst`
 `--output DIR`| **Required.** Destination file or directory path
 `--no-title True/False`| **Required.** Skip auto-appending video title to output filename (set to `True` if output path includes target filename)
-
-The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
-
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
 
 ## Related MCP documents
 

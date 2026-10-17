@@ -25,11 +25,11 @@ Identifies documented HQPorner API errors, their meanings, and the safe handling
 
 Source loaders translate request failures into exceptions from `hqporner_api.modules.errors`. Calls that load media expose ordinary loader failures through `base_api.MediaLoadError` (or `MediaLoadErrors` for several sources); inspect `original_error`/`errors` as shown. Operations outside media loading may still raise package or core exceptions directly.
 
-Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in `__cause__` and carry structured diagnostic attributes (`url`, `class_name`, `api`). Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in `DownloadFailed`; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped in `DownloadFailed`. In version 4.2.0, failed downloads raise `DownloadFailed` rather than returning `False`.
+Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in `__cause__`. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in `DownloadFailed`; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped in `DownloadFailed`. Base downloader `False` and `DownloadReport` results remain supported; inspect the result as well as handling exceptions.
 
 The common provider errors `NotFound`, `NetworkError`, `BotDetection`, `ProxyError`, `UnknownNetworkError`, and `DownloadFailed` are catchable through `base_api.modules.errors`. They derive from `ScraperException`, which now derives from `BaseScraperError`. Existing provider import paths remain valid.
 
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
+See [Logging & Cleanup](../../eaf-base-api/overview.md) for application logging setup.
 
 `InvalidActress` derives from `ScraperException`. `NotAvailable` derives from the shared `VideoUnavailable` and is still raised directly when no download qualities are available. Both retain their default messages and accept a custom message.
 
@@ -39,7 +39,7 @@ When Raised: The actress name or URL pattern did not match checks
 
 ## NotAvailable
 
-When Raised: No download qualities are available; this error subclasses `VideoUnavailable`
+When Raised: No download qualities are available; this error subclasses VideoUnavailable
 
 ## NotFound
 
@@ -47,7 +47,7 @@ When Raised: Server returned HTTP 404
 
 ## NetworkError
 
-When Raised: Request failed due to a network error, exhausted request retries, or a non-404 `HTTPStatusError`
+When Raised: Request failed due to a network error, exhausted request retries, or a non-404 HTTPStatusError
 
 ## BotDetection
 
@@ -63,7 +63,7 @@ When Raised: Unexpected network errors
 
 ## DownloadFailed
 
-When Raised: Download preparation or transfer failed; includes `.url`, `.class_name`, `.api`, and `__cause__` retains the original exception. Failed downloads raise `DownloadFailed` rather than returning `False`.
+When Raised: Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception
 
 ```python
 from base_api import MediaLoadError

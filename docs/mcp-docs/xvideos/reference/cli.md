@@ -16,9 +16,11 @@ Documents the command-line interface, arguments, and examples for the XVideos AP
 
 ## xvideos_api
 
-`xvideos_api` can be invoked directly or via `python -m xvideos_api`.
+`xvideos_api` uses the shared behavior documented in this reference.
 
-XVideos API includes a command-line interface:
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+XVideos API includes a command-line interface accessible via `xvideos_api` or `python -m xvideos_api`:
 
 ```bash
 # Download a single video
@@ -37,10 +39,6 @@ Flag| Description
 `--quality`| Video quality: `best`, `half`, `worst`
 `--output`| Output path (directory or file)
 `--no-title`| `True`/`False` — Skip auto-appending title
-
-The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
-
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
 
 ## Related MCP documents
 

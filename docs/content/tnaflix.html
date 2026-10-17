@@ -1,0 +1,871 @@
+<!-- ============================================================
+     TNAFlix API Documentation — Content File
+     ============================================================ -->
+
+<!-- META -->
+<!-- SLOT:TITLE = TNAFlix API -->
+<!-- SLOT:HERO_TITLE = TNAFlix API -->
+<!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for tnaflix.com. Extract full video metadata, publisher channels, user profiles, and pornstars, run search queries, and download high-definition progressive MP4 media. Powered by the eaf_base_api networking engine. -->
+<!-- SLOT:VERSION = 1.0 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-tnaflix -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-tnaflix -->
+
+<!-- SIDEBAR_NAV -->
+<!-- BEGIN:SIDEBAR_NAV -->
+<div class="nav-section-title">Getting Started</div>
+<a href="#installation" class="nav-link">Installation</a>
+<a href="#quickstart" class="nav-link">Quick Start</a>
+<a href="#configuration" class="nav-link">Configuration</a>
+
+<div class="nav-section-title">Core Objects</div>
+<div class="nav-collapsible">
+    <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
+        <a href="#client-get_channel" class="nav-link nav-link-sub">get_channel()</a>
+        <a href="#client-get_profile" class="nav-link nav-link-sub">get_profile()</a>
+        <a href="#client-get_pornstar" class="nav-link nav-link-sub">get_pornstar()</a>
+        <a href="#client-search" class="nav-link nav-link-sub">search()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#video-download" class="nav-link nav-link-sub">download()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#channel" class="nav-link nav-link-parent">Channel <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#channel-videos" class="nav-link nav-link-sub">videos()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#profile" class="nav-link nav-link-parent">Profile <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#profile-videos" class="nav-link nav-link-sub">videos()</a>
+    </div>
+</div>
+
+<div class="nav-collapsible">
+    <a href="#pornstar" class="nav-link nav-link-parent">Pornstar <span class="toggle-icon">▼</span></a>
+    <div class="nav-sub-links">
+        <a href="#pornstar-videos" class="nav-link nav-link-sub">videos()</a>
+    </div>
+</div>
+
+<div class="nav-section-title">Features</div>
+<a href="#searching" class="nav-link">Search &amp; Filtering</a>
+<a href="#sorting-enums" class="nav-link">Sorting Enums</a>
+<a href="#downloading" class="nav-link">Downloading Options</a>
+<a href="#scraping-results" class="nav-link">Scraping Results</a>
+<a href="#error-handling" class="nav-link">Error Handling</a>
+
+<div class="nav-section-title">Extras</div>
+<a href="#changelog" class="nav-link">Changelog</a>
+<a href="#cli" class="nav-link">CLI Usage</a>
+<a href="#platforms" class="nav-link">Supported Platforms</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- MAIN_CONTENT -->
+<!-- BEGIN:MAIN_CONTENT -->
+
+<!-- ================================================================
+     DISCLAIMER & FEATURES
+     ================================================================ -->
+<div class="section" id="intro-section">
+    <div class="info-box warning" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+        <div class="info-box-title" style="color: #ef4444; font-size: 14px;">⚠️ Legal Disclaimer</div>
+        This tool is an unofficial, independent project and is not affiliated with, endorsed by, or sponsored by the target website. This software is provided "as is" for educational and personal purposes only. The developer assumes no responsibility for any consequences arising from the use of this tool, including but not limited to account suspension, IP blocking, or any violation of the target website's Terms of Service. Users are solely responsible for ensuring their use complies with all applicable laws and policies. Use at your own risk.
+    </div>
+
+    <div class="info-box success" style="margin-top: 24px;">
+        <div class="info-box-title" style="font-size: 14px;">💚 Support &amp; Commercial Licensing</div>
+        If you find this project helpful, please consider donating to support its continued development! <br><br>
+        
+        <div style="margin: 16px 0;">
+            <a href="https://nowpayments.io/donation/EchterAlsFake" class="btn-donate" target="_blank" rel="noreferrer noopener" style="border-bottom: none;">
+                <span style="font-size: 20px;">💎</span> Donate Crypto
+            </a>
+        </div>
+        
+        <strong>Other Options:</strong><br>
+         • <a href="https://paypal.me/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">PayPal</a><br>
+         • <a href="https://ko-fi.com/EchterAlsFake" style="color: #4ade80; text-decoration: underline;" target="_blank">Ko-Fi</a><br><br>
+        
+        For extended features, enterprise integrations, or custom commercial licensing, please contact 
+        <a href="mailto:EchterAlsFakeBS@proton.me" style="color: #4ade80; font-weight: 600; text-decoration: underline;">EchterAlsFakeBS@proton.me</a>.
+    </div>
+</div>
+
+<!-- ================================================================
+     INSTALLATION
+     ================================================================ -->
+<div class="section" id="installation-section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="section-icon">📦</span> Installation</h2>
+
+    <p>Install the library from PyPI using pip:</p>
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>pip install unofficial-api-for-tnaflix</code></pre>
+    </div>
+
+    <div class="info-box note">
+        <div class="info-box-title">Note</div>
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.2</code>. The networking engine is installed automatically.
+    </div>
+</div>
+
+<!-- ================================================================
+     QUICK START
+     ================================================================ -->
+<div class="section" id="quickstart-section">
+    <span class="section-anchor" id="quickstart"></span>
+    <h2><span class="section-icon">🚀</span> Quick Start</h2>
+
+    <p>All operations are asynchronous and should be executed within an <code>async</code> context:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> tnaflix_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigRAW
+
+<span class="token-keyword">async def</span> <span class="token-function">main</span>():
+    client = <span class="token-class">Client</span>()
+
+    <span class="token-comment"># Fetch a video</span>
+    video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">"https://www.tnaflix.com/hd-videos/example-video-12345"</span>)
+
+    <span class="token-comment"># Print metadata</span>
+    <span class="token-builtin">print</span>(f<span class="token-string">"Title: {video.title}"</span>)
+    <span class="token-builtin">print</span>(f<span class="token-string">"Duration: {video.length} ({video.duration}s)"</span>)
+    <span class="token-builtin">print</span>(f<span class="token-string">"Available Qualities: {video.video_qualities}"</span>)
+
+    <span class="token-comment"># Download video using progressive MP4 downloader</span>
+    config = <span class="token-class">DownloadConfigRAW</span>(quality=<span class="token-string">"best"</span>, path=<span class="token-string">"./downloads"</span>)
+    success = <span class="token-keyword">await</span> video.download(configuration=config)
+    <span class="token-builtin">print</span>(f<span class="token-string">"Download complete: {success}"</span>)
+
+asyncio.run(main())</code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     CONFIGURATION
+     ================================================================ -->
+<div class="section" id="configuration-section">
+    <span class="section-anchor" id="configuration"></span>
+    <h2><span class="section-icon">⚙️</span> Configuration</h2>
+
+    <p>TNAFlix API uses <code>eaf_base_api</code> for networking. Configure proxies, request attempts, timeouts, limits, and headers through a custom <code>BaseCore</code>.</p>
+    <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and <code>BaseCore</code>.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> tnaflix_api <span class="token-keyword">import</span> Client
+
+config = <span class="token-class">RuntimeConfig</span>()
+config.proxy = <span class="token-string">"socks5://127.0.0.1:9050"</span>
+config.request_attempts = <span class="token-number">3</span>
+
+core = <span class="token-class">BaseCore</span>(configuration=config)
+client = <span class="token-class">Client</span>(core=core)</code></pre>
+    </div>
+
+    <h3>IteratorConfig, retry policy, and custom scrape errors</h3>
+    <p>Iterator methods accept an <code>iterator_config</code> object. By default, the API eagerly loads the <code>html</code> source for extracted media items.</p>
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorAction, ErrorMode, ResultOrder, RetryPolicy, ScrapeErrorContext
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
+
+<span class="token-keyword">async def</span> <span class="token-function">handle_scrape_error</span>(context: ScrapeErrorContext) -&gt; ErrorAction:
+    <span class="token-builtin">print</span>(context.stage, context.url, context.error, context.attempt)
+    <span class="token-keyword">return</span> ErrorAction.RETRY
+
+retry = <span class="token-class">RetryPolicy</span>(max_attempts=<span class="token-number">3</span>, base_delay=<span class="token-number">0.5</span>, multiplier=<span class="token-number">2</span>, max_delay=<span class="token-number">8</span>)
+iterator_config = <span class="token-class">IteratorConfig</span>(
+    max_page_concurrency=<span class="token-number">2</span>,
+    max_item_concurrency=<span class="token-number">5</span>,
+    order=ResultOrder.ORIGINAL,
+    load_specific_sources=(<span class="token-string">"html"</span>,),
+    page_retry=retry,
+    item_retry=retry,
+    page_error_mode=ErrorMode.SKIP,
+    item_error_mode=ErrorMode.YIELD,
+    page_error_handler=handle_scrape_error,
+    item_error_handler=handle_scrape_error,
+)
+
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"college"</span>, iterator_config=iterator_config):
+    <span class="token-builtin">print</span>(result.unwrap().title <span class="token-keyword">if</span> result.succeeded <span class="token-keyword">else</span> result.error)</code></pre>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================================================================
+     CLIENT
+     ================================================================ -->
+<div class="section" id="client-section">
+    <span class="section-anchor" id="client"></span>
+    <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <p>The <code>Client</code> class is the primary entry point to interact with the TNAFlix scraper ecosystem.</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> tnaflix_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+
+client = <span class="token-class">Client</span>()
+client_custom = <span class="token-class">Client</span>(core=<span class="token-class">BaseCore</span>())</code></pre>
+    </div>
+
+    <h3>Constructor Parameters</h3>
+    <ul class="param-list">
+        <li class="param-item"><span class="param-name">core</span> <span class="param-type">BaseCore</span> <span class="param-desc">— Shared networking core instance (default: <code>BaseCore()</code>)</span></li>
+    </ul>
+
+    <h3>Methods</h3>
+
+    <!-- get_video -->
+    <span class="section-anchor" id="client-get_video"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Video <code>get_video()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches video metadata for a TNAFlix video URL and returns a populated <code>Video</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Video</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The full TNAFlix video page URL</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and extracts metadata immediately</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Video</span>
+    </div>
+
+    <!-- get_channel -->
+    <span class="section-anchor" id="client-get_channel"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Channel <code>get_channel()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches publisher studio or creator channel page metadata and returns a populated <code>Channel</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_channel(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Channel</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The TNAFlix channel URL (e.g. <code>https://www.tnaflix.com/channel/team-skeet</code>)</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and extracts metadata immediately</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Channel</span>
+    </div>
+
+    <!-- get_profile -->
+    <span class="section-anchor" id="client-get_profile"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Profile <code>get_profile()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches metadata for a TNAFlix user profile page and returns a populated <code>Profile</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_profile(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Profile</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The TNAFlix profile page URL (e.g. <code>https://www.tnaflix.com/profile/username</code>)</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and extracts metadata immediately</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Profile</span>
+    </div>
+
+    <!-- get_pornstar -->
+    <span class="section-anchor" id="client-get_pornstar"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Fetch Pornstar <code>get_pornstar()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Fetches metadata for a recognized pornstar profile page and returns a populated <code>Pornstar</code> object.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_pornstar(
+    url: <span class="token-builtin">str</span>,
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Pornstar</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">url</span> <span class="param-type">str</span> <span class="param-desc">— The TNAFlix pornstar profile URL (e.g. <code>https://www.tnaflix.com/profile/lyla-lei</code>)</span></li>
+            <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code> (default), fetches and extracts metadata immediately</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ Pornstar</span>
+    </div>
+
+    <!-- search -->
+    <span class="section-anchor" id="client-search"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Search Videos <code>search()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Queries TNAFlix video search and yields results as an asynchronous generator.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+    query: <span class="token-builtin">str</span>,
+    sorting_sort: <span class="token-builtin">str</span> | Sort = Sort.RECENT,
+    sorting_date: <span class="token-builtin">str</span> | SortDate = SortDate.ALL_TIME,
+    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search query term</span></li>
+            <li class="param-item"><span class="param-name">sorting_sort</span> <span class="param-type">str | Sort</span> <span class="param-desc">— Sort criteria enum (default: <code>Sort.RECENT</code>)</span></li>
+            <li class="param-item"><span class="param-name">sorting_date</span> <span class="param-type">str | SortDate</span> <span class="param-desc">— Date filtering enum (default: <code>SortDate.ALL_TIME</code>)</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | str</span> <span class="param-desc">— Number of search pages to parse (default: <code>2</code>) or <code>"all"</code></span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 iterator policy. Defaults to eagerly loading <code>html</code> source.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     VIDEO
+     ================================================================ -->
+<div class="section" id="video-section">
+    <span class="section-anchor" id="video"></span>
+    <h2><span class="section-icon">🎬</span> Video</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a TNAFlix video item with metadata extracted from HTML5 Plyr player configurations and JSON-LD structured data.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
+                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video identifier key</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Video description</td></tr>
+                <tr><td><code>thumbnail_url</code></td><td><code>str | None</code></td><td>Primary video cover image thumbnail URL</td></tr>
+                <tr><td><code>mosaic_url_template</code></td><td><code>str | None</code></td><td>Timeline storyboard mosaic image template URL</td></tr>
+                <tr><td><code>preview_video_url</code></td><td><code>str | None</code></td><td>Short teaser preview video clip URL</td></tr>
+                <tr><td><code>publish_date</code></td><td><code>str | None</code></td><td>Upload date (ISO string)</td></tr>
+                <tr><td><code>publish_date_relative</code></td><td><code>str | None</code></td><td>Relative upload time string</td></tr>
+                <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Duration in integer seconds</td></tr>
+                <tr><td><code>length</code></td><td><code>str | None</code></td><td>Formatted duration string (e.g. <code>12:34</code>)</td></tr>
+                <tr><td><code>author_name</code></td><td><code>str | None</code></td><td>Username of the uploader</td></tr>
+                <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>Profile URL of the author</td></tr>
+                <tr><td><code>author_verified</code></td><td><code>bool | None</code></td><td>Whether the author has a verified badge</td></tr>
+                <tr><td><code>pornstars</code></td><td><code>list[dict[str, str]] | None</code></td><td>Featured pornstars with name and URL</td></tr>
+                <tr><td><code>pornstars_urls</code></td><td><code>list[str] | None</code></td><td>Profile URLs of featured performers</td></tr>
+                <tr><td><code>categories</code></td><td><code>list[dict[str, str]] | None</code></td><td>List of category labels and URLs</td></tr>
+                <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>List of video tags</td></tr>
+                <tr><td><code>views</code></td><td><code>str | None</code></td><td>Formatted view count</td></tr>
+                <tr><td><code>likes</code></td><td><code>str | None</code></td><td>Like count</td></tr>
+                <tr><td><code>dislikes</code></td><td><code>str | None</code></td><td>Dislike count</td></tr>
+                <tr><td><code>rating</code></td><td><code>str | None</code></td><td>Rating score value</td></tr>
+                <tr><td><code>rating_percent</code></td><td><code>str | None</code></td><td>Rating percentage string</td></tr>
+                <tr><td><code>rating_votes</code></td><td><code>str | None</code></td><td>Total rating votes count</td></tr>
+                <tr><td><code>embed_url</code></td><td><code>str | None</code></td><td>Embeddable iframe player URL</td></tr>
+                <tr><td><code>direct_download_urls</code></td><td><code>dict[int, str] | None</code></td><td>Mapping of resolution height (e.g. 720, 1080) to direct signed progressive MP4 CDN URLs</td></tr>
+                <tr><td><code>video_qualities</code></td><td><code>list[int] | None</code></td><td>Available progressive video resolutions sorted ascending (e.g. <code>[360, 480, 720, 1080]</code>)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- video-download -->
+    <span class="section-anchor" id="video-download"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Download Video <code>download()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Downloads the video directly from CDN server using progressive multi-threaded range requests via <code>DownloadConfigRAW</code>.</div>
+        <div class="method-signature"><span class="token-keyword">await</span> video.download(
+    configuration: DownloadConfigRAW
+) -&gt; <span class="token-builtin">bool</span></div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigRAW</span> <span class="param-desc">— RAW download options. See <a href="#downloading">Downloading Options</a>.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ bool</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     CHANNEL
+     ================================================================ -->
+<div class="section" id="channel-section">
+    <span class="section-anchor" id="channel"></span>
+    <h2><span class="section-icon">📺</span> Channel</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents an official publisher studio or content creator channel on TNAFlix (e.g. <code>/channel/team-skeet</code>).</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Channel page URL</td></tr>
+                <tr><td><code>slug</code></td><td><code>str | None</code></td><td>Channel URL slug identifier</td></tr>
+                <tr><td><code>title</code></td><td><code>str | None</code></td><td>Studio or channel name</td></tr>
+                <tr><td><code>description</code></td><td><code>str | None</code></td><td>Official channel description text</td></tr>
+                <tr><td><code>avatar_url</code></td><td><code>str | None</code></td><td>Channel logo avatar picture URL</td></tr>
+                <tr><td><code>cover_url</code></td><td><code>str | None</code></td><td>Channel header banner cover image URL</td></tr>
+                <tr><td><code>verified</code></td><td><code>bool</code></td><td>Whether the channel is an officially verified partner</td></tr>
+                <tr><td><code>subscribers_count</code></td><td><code>str | None</code></td><td>Total channel subscribers count</td></tr>
+                <tr><td><code>total_videos_count</code></td><td><code>str | None</code></td><td>Total videos uploaded to this channel</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Cumulative video views across all channel videos</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- channel-videos -->
+    <span class="section-anchor" id="channel-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Channel Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Asynchronously yields video scrape results uploaded by this studio channel across listing pages.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.videos(
+    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | str</span> <span class="param-desc">— Number of pages to iterate (default: <code>2</code>) or <code>"all"</code></span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Per-iterator concurrency, source loading, ordering, retry, error-mode, and custom-handler settings.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     PROFILE
+     ================================================================ -->
+<div class="section" id="profile-section">
+    <span class="section-anchor" id="profile"></span>
+    <h2><span class="section-icon">👤</span> Profile</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>BaseMedia</code>. Represents a TNAFlix user profile page containing uploader statistics and community profile information.</p>
+
+    <h3>Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Profile page URL</td></tr>
+                <tr><td><code>username</code></td><td><code>str | None</code></td><td>Profile username</td></tr>
+                <tr><td><code>slug</code></td><td><code>str | None</code></td><td>Profile URL slug identifier</td></tr>
+                <tr><td><code>display_name</code></td><td><code>str | None</code></td><td>Display name or page title</td></tr>
+                <tr><td><code>avatar_url</code></td><td><code>str | None</code></td><td>Profile avatar image URL</td></tr>
+                <tr><td><code>cover_url</code></td><td><code>str | None</code></td><td>Profile header cover banner URL</td></tr>
+                <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Biography or description text</td></tr>
+                <tr><td><code>rank</code></td><td><code>str | None</code></td><td>Site ranking position</td></tr>
+                <tr><td><code>profile_views</code></td><td><code>str | None</code></td><td>Total profile views count</td></tr>
+                <tr><td><code>subscribers_count</code></td><td><code>str | None</code></td><td>Total subscriber count</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Cumulative views across all uploaded videos</td></tr>
+                <tr><td><code>total_videos_count</code></td><td><code>str | None</code></td><td>Total uploaded videos count</td></tr>
+                <tr><td><code>gender</code></td><td><code>str | None</code></td><td>Stated gender identity</td></tr>
+                <tr><td><code>interested_in</code></td><td><code>str | None</code></td><td>Sexual orientation preference</td></tr>
+                <tr><td><code>location</code></td><td><code>str | None</code></td><td>Geographical location</td></tr>
+                <tr><td><code>age</code></td><td><code>str | None</code></td><td>Age of the user</td></tr>
+                <tr><td><code>relationship_status</code></td><td><code>str | None</code></td><td>Relationship status</td></tr>
+                <tr><td><code>is_pornstar</code></td><td><code>bool</code></td><td>Whether this profile represents a recognized adult performer</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- profile-videos -->
+    <span class="section-anchor" id="profile-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Profile Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Asynchronously yields video scrape results uploaded by this user profile across listing pages.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> profile.videos(
+    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | str</span> <span class="param-desc">— Number of pages to iterate (default: <code>2</code>) or <code>"all"</code></span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Per-iterator concurrency, source loading, ordering, retry, error-mode, and custom-handler settings.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     PORNSTAR
+     ================================================================ -->
+<div class="section" id="pornstar-section">
+    <span class="section-anchor" id="pornstar"></span>
+    <h2><span class="section-icon">⭐</span> Pornstar</h2>
+    <p><span class="tag tag-dataclass">dataclass</span> Inherits from <code>Profile</code>. Represents a verified performer or pornstar on TNAFlix (found under <code>/profile/</code>). It shares all underlying profile fields while explicitly indicating an adult model entry with <code>is_pornstar=True</code>.</p>
+
+    <h3>Performer Fields</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>url</code></td><td><code>str</code></td><td>Pornstar profile page URL</td></tr>
+                <tr><td><code>display_name</code></td><td><code>str | None</code></td><td>Performer stage name</td></tr>
+                <tr><td><code>slug</code></td><td><code>str | None</code></td><td>Performer URL slug identifier</td></tr>
+                <tr><td><code>avatar_url</code></td><td><code>str | None</code></td><td>Performer portrait avatar picture URL</td></tr>
+                <tr><td><code>cover_url</code></td><td><code>str | None</code></td><td>Performer cover banner image URL</td></tr>
+                <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Biography or introduction text</td></tr>
+                <tr><td><code>rank</code></td><td><code>str | None</code></td><td>Site ranking position among pornstars</td></tr>
+                <tr><td><code>profile_views</code></td><td><code>str | None</code></td><td>Accumulated views on this pornstar profile</td></tr>
+                <tr><td><code>subscribers_count</code></td><td><code>str | None</code></td><td>Total followers and subscribers count</td></tr>
+                <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Cumulative video views across all starring videos</td></tr>
+                <tr><td><code>total_videos_count</code></td><td><code>str | None</code></td><td>Total count of videos featuring this performer</td></tr>
+                <tr><td><code>gender</code></td><td><code>str | None</code></td><td>Performer gender</td></tr>
+                <tr><td><code>interested_in</code></td><td><code>str | None</code></td><td>Sexual orientation preference</td></tr>
+                <tr><td><code>location</code></td><td><code>str | None</code></td><td>Country or city of origin</td></tr>
+                <tr><td><code>age</code></td><td><code>str | None</code></td><td>Age of the performer</td></tr>
+                <tr><td><code>relationship_status</code></td><td><code>str | None</code></td><td>Relationship status indicator</td></tr>
+                <tr><td><code>is_pornstar</code></td><td><code>bool</code></td><td>Always <code>True</code> for Pornstar instances</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Methods</h3>
+
+    <!-- pornstar-videos -->
+    <span class="section-anchor" id="pornstar-videos"></span>
+    <div class="method-card">
+        <div class="method-header-row">
+            <h3 class="method-title">Get Performer Videos <code>videos()</code></h3>
+            <div class="method-tags">
+                <span class="tag tag-async">async</span>
+            </div>
+        </div>
+        <div class="method-desc">Asynchronously yields video scrape results featuring or uploaded by this performer.</div>
+        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
+    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+        
+        <h4 class="method-section-title">Parameters</h4>
+        <ul class="param-list">
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | str</span> <span class="param-desc">— Number of pages to iterate (default: <code>2</code>) or <code>"all"</code></span></li>
+            <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Per-iterator concurrency, source loading, ordering, retry, error-mode, and custom-handler settings.</span></li>
+        </ul>
+        
+        <h4 class="method-section-title">Returns</h4>
+        <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
+    </div>
+</div>
+
+<!-- ================================================================
+     SEARCHING
+     ================================================================ -->
+<div class="section" id="searching-section">
+    <span class="section-anchor" id="searching"></span>
+    <h2><span class="section-icon">🔍</span> Search &amp; Filtering</h2>
+
+    <p>Perform advanced video searches on TNAFlix using the <code>client.search()</code> generator combined with sorting criteria:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> tnaflix_api <span class="token-keyword">import</span> Client
+<span class="token-keyword">from</span> tnaflix_api.modules.sorting <span class="token-keyword">import</span> Sort, SortDate
+
+client = <span class="token-class">Client</span>()
+
+<span class="token-comment"># Search for top-rated videos from the past month</span>
+<span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+    query=<span class="token-string">"blonde"</span>,
+    sorting_sort=Sort.TOP_RATED,
+    sorting_date=SortDate.THIS_MONTH,
+    pages=<span class="token-number">3</span>
+):
+    <span class="token-keyword">if</span> result.succeeded:
+        video = result.unwrap()
+        <span class="token-builtin">print</span>(video.title, video.url, video.length)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"Error: {result.error}"</span>)</code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     SORTING ENUMS
+     ================================================================ -->
+<div class="section" id="sorting-enums-section">
+    <span class="section-anchor" id="sorting-enums"></span>
+    <h2><span class="section-icon">📋</span> Sorting Enums</h2>
+
+    <p>The search interface accepts sorting options defined in <code>tnaflix_api.modules.sorting</code>:</p>
+
+    <h3>Sort (Order)</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Member</th><th>API String Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>Sort.RECENT</code></td><td><code>"recent"</code></td><td>Sort by latest upload date (default)</td></tr>
+                <tr><td><code>Sort.POPULAR</code></td><td><code>"popular"</code></td><td>Sort by most popular</td></tr>
+                <tr><td><code>Sort.TOP_RATED</code></td><td><code>"top_rated"</code></td><td>Sort by highest community rating</td></tr>
+                <tr><td><code>Sort.MOST_VIEWED</code></td><td><code>"most_viewed"</code></td><td>Sort by highest view counts</td></tr>
+                <tr><td><code>Sort.MOST_FAVORITED</code></td><td><code>"most_favorited"</code></td><td>Sort by most favorited</td></tr>
+                <tr><td><code>Sort.LONGEST</code></td><td><code>"longest"</code></td><td>Sort by video duration descending</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>SortDate (Period)</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Enum Member</th><th>API String Value</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>SortDate.ALL_TIME</code></td><td><code>"all_time"</code></td><td>All time historical search (default)</td></tr>
+                <tr><td><code>SortDate.TODAY</code></td><td><code>"today"</code></td><td>Videos uploaded today</td></tr>
+                <tr><td><code>SortDate.THIS_WEEK</code></td><td><code>"this_week"</code></td><td>Videos uploaded within this week</td></tr>
+                <tr><td><code>SortDate.THIS_MONTH</code></td><td><code>"this_month"</code></td><td>Videos uploaded within this month</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     DOWNLOADING OPTIONS
+     ================================================================ -->
+<div class="section" id="downloading-section">
+    <span class="section-anchor" id="downloading"></span>
+    <h2><span class="section-icon">⬇️</span> Downloading Options</h2>
+
+    <p>TNAFlix serves progressive direct MP4 streams with signed tokens. Downloads are configured via <code>DownloadConfigRAW</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> DownloadConfigRAW
+
+config = <span class="token-class">DownloadConfigRAW</span>(
+    quality=<span class="token-string">"best"</span>,            <span class="token-comment"># "best", "half", "worst", or height int (e.g. 720, 1080)</span>
+    path=<span class="token-string">"./downloads"</span>,        <span class="token-comment"># Destination directory or file path</span>
+    no_title=<span class="token-keyword">False</span>,            <span class="token-comment"># If False, automatically appends video title + ".mp4"</span>
+    allow_multipart=<span class="token-keyword">True</span>,      <span class="token-comment"># Enable multi-threaded byte-range chunk downloading</span>
+    max_workers=<span class="token-number">5</span>              <span class="token-comment"># Concurrent download workers</span>
+)
+
+success = <span class="token-keyword">await</span> video.download(configuration=config)</code></pre>
+    </div>
+
+    <p>For more options and configuration details, refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a>.</p>
+</div>
+
+<!-- ================================================================
+     SCRAPING RESULTS
+     ================================================================ -->
+<div class="section" id="scraping-results-section">
+    <span class="section-anchor" id="scraping-results"></span>
+    <h2><span class="section-icon">📊</span> Scraping Results</h2>
+    <p>Iterators yield <code>ScrapeResult</code> containers encapsulating item success or typed error details:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">"college"</span>, pages=<span class="token-number">2</span>):
+    <span class="token-keyword">if</span> result.succeeded:
+        video = result.unwrap()
+        <span class="token-builtin">print</span>(f<span class="token-string">"Found: {video.title}"</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-builtin">print</span>(f<span class="token-string">"Stage {result.stage} error: {result.error}"</span>)</code></pre>
+    </div>
+
+    <h3>ScrapeResult Attributes</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>succeeded</code></td><td><code>bool</code></td><td>Whether the scraping task succeeded</td></tr>
+                <tr><td><code>unwrap()</code></td><td><code>Video</code></td><td>Returns the parsed item or raises the underlying exception</td></tr>
+                <tr><td><code>item</code></td><td><code>Video | None</code></td><td>Parsed video object on success</td></tr>
+                <tr><td><code>error</code></td><td><code>ScrapeOperationError | None</code></td><td>Typed failure when unsuccessful</td></tr>
+                <tr><td><code>stage</code></td><td><code>ScrapeStage</code></td><td>Stage where execution occurred: <code>PAGE</code> or <code>ITEM</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     ERROR HANDLING
+     ================================================================ -->
+<div class="section" id="error-handling-section">
+    <span class="section-anchor" id="error-handling"></span>
+    <h2><span class="section-icon">⚠️</span> Error Handling</h2>
+
+    <p>Source loaders wrap low-level network errors into typed exceptions from <code>tnaflix_api.modules.errors</code>. Media-loading calls expose errors via <code>base_api.MediaLoadError</code>.</p>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Exception</th><th>Trigger Cause</th></tr></thead>
+            <tbody>
+                <tr><td><code>NotFound</code></td><td>Server returned HTTP 404 (e.g. video or profile removed)</td></tr>
+                <tr><td><code>NetworkError</code></td><td>Request failed due to connection error, exhausted retries, or HTTP status error</td></tr>
+                <tr><td><code>BotDetection</code></td><td>Cloudflare or anti-bot challenge block encountered</td></tr>
+                <tr><td><code>ProxyError</code></td><td>Proxy configuration error or proxy endpoint unavailable</td></tr>
+                <tr><td><code>UnknownNetworkError</code></td><td>Unrecognized networking exception</td></tr>
+                <tr><td><code>DownloadFailed</code></td><td>Download transfer or preparation failed with full cause retained in __cause__</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window">
+        <div class="code-header"><span>python</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError
+<span class="token-keyword">from</span> tnaflix_api.modules.errors <span class="token-keyword">import</span> NotFound, BotDetection
+
+<span class="token-keyword">try</span>:
+    video = <span class="token-keyword">await</span> client.get_video(url)
+<span class="token-keyword">except</span> <span class="token-class">MediaLoadError</span> <span class="token-keyword">as</span> error:
+    <span class="token-keyword">if</span> isinstance(error.original_error, NotFound):
+        <span class="token-builtin">print</span>(<span class="token-string">"This video does not exist!"</span>)
+    <span class="token-keyword">elif</span> isinstance(error.original_error, BotDetection):
+        <span class="token-builtin">print</span>(<span class="token-string">"Scraper was blocked by anti-bot measures."</span>)
+    <span class="token-keyword">else</span>:
+        <span class="token-keyword">raise</span></code></pre>
+    </div>
+</div>
+
+<!-- ================================================================
+     CHANGELOG
+     ================================================================ -->
+<div class="section" id="changelog-section">
+    <span class="section-anchor" id="changelog"></span>
+    <h2><span class="section-icon">📝</span> Changelog</h2>
+
+    <h3>1.0 — 2026-10-17</h3>
+    <ul>
+        <li>Initial production release of the unofficial TNAFlix asynchronous Python API wrapper.</li>
+        <li>Full extraction of Video metadata from HTML5 Plyr configurations, JSON-LD schemas, and video listing cards.</li>
+        <li>Direct progressive MP4 stream extraction and multi-threaded range downloading via <code>DownloadConfigRAW</code>.</li>
+        <li>Channel scraper implementation supporting official studio / publisher channel metadata and video streaming.</li>
+        <li>Profile and Pornstar scraper implementations supporting member statistics and video listing streaming.</li>
+        <li>Search engine integration with <code>Sort</code> and <code>SortDate</code> filters.</li>
+        <li>Complete CLI tool supporting direct and batch URL downloads.</li>
+        <li>Full compatibility with <code>eaf-base-api&gt;=4.2.2</code> networking engine.</li>
+    </ul>
+</div>
+
+<!-- ================================================================
+     CLI USAGE
+     ================================================================ -->
+<div class="section" id="cli-section">
+    <span class="section-anchor" id="cli"></span>
+    <h2><span class="section-icon">💻</span> CLI Usage</h2>
+
+    <p>TNAFlix API includes a command-line interface accessible via the <code>tnaflix_api</code> binary or <code>python -m tnaflix_api</code>:</p>
+
+    <div class="code-window">
+        <div class="code-header"><span>bash</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>tnaflix_api --download "https://www.tnaflix.com/hd-videos/example-video-12345" --quality best --output ./downloads
+
+python -m tnaflix_api --download "https://www.tnaflix.com/hd-videos/example-video-12345" --quality 720 --output ./downloads
+
+tnaflix_api --file urls.txt --quality best --output ./downloads --no-title False</code></pre>
+    </div>
+
+    <h3>CLI Options</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>--download URL</code></td><td>Video URL to download</td></tr>
+                <tr><td><code>--file FILE</code></td><td>Text file containing video URLs (newline-separated)</td></tr>
+                <tr><td><code>--quality QUALITY</code></td><td>Desired resolution quality (<code>best</code>, <code>half</code>, <code>worst</code>, or height integer)</td></tr>
+                <tr><td><code>--output DIR</code></td><td>Destination folder or file path</td></tr>
+                <tr><td><code>--no-title True/False</code></td><td>Skip auto-appending video title to output filename (default: <code>False</code>)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================================
+     PLATFORMS
+     ================================================================ -->
+<div class="section" id="platforms-section">
+    <span class="section-anchor" id="platforms"></span>
+    <h2><span class="section-icon">🖥️</span> Supported Platforms</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Platform</th><th>Architecture</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr><td>Windows 11</td><td>x64</td><td>✅ Tested</td></tr>
+                <tr><td>macOS Sequoia</td><td>x86_64 / arm64</td><td>✅ Tested</td></tr>
+                <tr><td>Linux (Arch / Debian / Ubuntu)</td><td>x86_64</td><td>✅ Tested</td></tr>
+                <tr><td>Android (Termux)</td><td>aarch64</td><td>✅ Tested</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- END:MAIN_CONTENT -->

@@ -11,9 +11,13 @@ keywords:
   - "Error reference"
   - "BaseScraperError"
   - "ScraperException"
+  - "NotFound"
+  - "NetworkError"
+  - "BotDetection"
+  - "ProxyError"
+  - "UnknownNetworkError"
   - "DownloadFailed"
-  - "DownloadCancelled"
-  - "__cause__"
+  - "VideoUnavailable"
   - "NetworkRequestError"
   - "HTTPStatusError"
   - "RateLimitError"
@@ -22,15 +26,6 @@ keywords:
   - "AccessDeniedError"
   - "InvalidProxy"
   - "ProxySSLError"
-  - "UnknownMediaFieldError"
-  - "FieldNotLoadableError"
-  - "DataNotLoadedError"
-  - "LoaderConfigurationError"
-  - "LoaderContractError"
-  - "MediaLoadError"
-  - "MediaLoadErrors"
-  - "PageFetchError"
-  - "ItemFetchError"
 ---
 
 # Error reference — eaf_base_api
@@ -39,57 +34,50 @@ Identifies documented eaf_base_api API errors, their meanings, and the safe hand
 
 Errors live in `base_api.modules.errors`; frequently used version 4 errors are also exported from `base_api`.
 
+The common provider errors derive from `ScraperException`, which now derives from `BaseScraperError`. Catch common failures from `base_api`: `DownloadFailed`, `NetworkError`, `NotFound`, `ProxyError`, `BotDetection`, `VideoUnavailable`, `LoginFailed`, and `RegionBlocked`. Existing provider imports remain valid. Pornhub retains its own classes: its common errors subclass both the corresponding shared type and `PornhubAPIError`, preserving both ways of catching them.
+
+Translated exceptions carry rich diagnostic attributes: `error.url`, `error.class_name`, and `error.api`. Provider request wrappers chain translated exceptions with `raise ... from original_error`, preserving lower-level causes in `__cause__`.
+
+Download operations now raise `DownloadFailed` on failure instead of returning `False`. Download wrappers cover preparation failures (metadata loading, quality selection, output path setup); `DownloadFailed` includes the video URL and retains the original error in `__cause__`. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped as `DownloadFailed` and without error logs. With `DownloadConfigHLS(return_report=True)`, incomplete or cancelled downloads still return their explicit `DownloadReport`.
+
 **Loader exceptions are wrapped**
 An exception raised by one source loader is exposed as `MediaLoadError`; inspect its `original_error` for a site package's `NotFound`, `RegionBlocked`, or similar exception. If several requested sources fail together, `MediaLoadErrors.errors` contains each failure. Helper item failures add one more typed `ItemFetchError` layer whose `original_error` is the media-load error.
 
-Provider request wrappers retain the original error through `raise ... from original_error`. Download wrappers also cover preparation failures, including metadata loading, quality selection, and output path setup. Their `DownloadFailed.__cause__` may therefore be a `MediaLoadError` or `MediaLoadErrors`, rather than a network or file error. Specific availability exceptions remain supported. Existing provider import paths remain valid.
-
-In version 4.2.0, provider and core exceptions are enriched with structured diagnostic attributes:
-- `error.url` — Target request URL or media URL
-- `error.class_name` — Qualified class name of the failing owner or caller
-- `error.api` — Top-level package / API name (e.g. `eporner_api`)
-
-Request, media source, iterator, download, and error-handler failures are logged with URL context and original tracebacks. See [Logging and cleanup](../guides/logging-and-cleanup.md) for application configuration and logging stored exceptions.
-
 ## BaseScraperError
 
-Shared base for core scraper errors and, through `ScraperException`, the common provider errors. Exposes `.url`, `.class_name`, and `.api` attributes.
+Family: Shared provider errors
 
 ## ScraperException
 
-Base for common provider errors; now inherits `BaseScraperError`. Existing `msg` values remain available. Pornhub's `PornhubAPIError` derives from this class, and its common errors also subclass the corresponding shared error, so both local and shared catches work.
+Family: Shared provider errors
 
 ## NotFound
 
-Remote resource was not found. Provider request wrappers translate HTTP 404 into this type, except YouPorn uses `VideoUnavailable`; HQPorner first tries its mobile fallback. XNXX now distinguishes HTTP 404 from access denial.
+Family: Shared provider errors
 
 ## NetworkError
 
-A provider request failed due to networking, exhausted request retries, or a non-404 `HTTPStatusError`. The original exception is retained in `__cause__`. Core request methods themselves continue to raise their documented low-level error types.
+Family: Shared provider errors
 
 ## BotDetection
 
-A provider wrapper translated `BotProtectionDetected`.
+Family: Shared provider errors
 
 ## ProxyError
 
-A provider wrapper translated `InvalidProxy`.
+Family: Shared provider errors
 
 ## UnknownNetworkError
 
-A provider wrapper translated `UnknownError`. Unexpected exceptions outside that category are logged and re-raised without reclassification by the request wrapper.
+Family: Shared provider errors
 
 ## DownloadFailed
 
-A provider download failed during preparation or transfer. The message includes the video URL, and `error.url`, `error.class_name`, and `error.api` are populated; `__cause__` retains the original exception. In version 4.2.0, `core.download()` raises `DownloadFailed` on failure rather than returning `False`.
-
-## DownloadCancelled
-
-Raised when a download operation is halted via its configured `stop_event`. Propagates cleanly without being wrapped in `DownloadFailed` and without logging error tracebacks.
+Family: Shared provider errors
 
 ## VideoUnavailable
 
-A provider reports unavailable media. HQPorner's `NotAvailable` subclasses this type and remains directly raised when there are no download qualities; Spankbang translates a `ResourceGone` raised during downloading into this type with the original cause.
+Family: Shared provider errors
 
 ## NetworkRequestError
 
@@ -165,7 +153,7 @@ Family: Scrape operations
 
 ## DownloadCancelled
 
-Family: Downloads/playlists. Provider wrappers let an explicit `DownloadCancelled` propagate unchanged, as they do `asyncio.CancelledError`; neither is wrapped as `DownloadFailed`. Some base download paths instead report cancellation with `False` or `DownloadReport.status == "cancelled"`.
+Family: Downloads/playlists
 
 ## SegmentError
 
@@ -185,7 +173,7 @@ Family: Downloads/playlists
 
 ## MetadataWriteError
 
-Family: Downloads/playlists. Raised when standalone MP4 metadata/cover-art tagging (`write_metadata_tags`) fails or when `ffmpeg` cannot be located.
+Family: Downloads/playlists
 
 ## BotProtectionDetected
 

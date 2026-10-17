@@ -145,7 +145,7 @@ Type: str | None; Description: Uploader numeric account ID
 
 ## author_type
 
-Type: str | None; Description: Author membership type (e.g. "Mpp")
+Type: str | None; Description: Author membership type (e.g. "Mpp" )
 
 ## external_link
 

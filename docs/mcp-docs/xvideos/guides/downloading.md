@@ -13,6 +13,9 @@ keywords:
   - "callback"
   - "stop_event"
   - "remux"
+  - "metadata"
+  - "thumbnail"
+  - "metadata_written"
   - "start_segment"
   - "segment_state_path"
   - "segment_dir"
@@ -20,9 +23,6 @@ keywords:
   - "cleanup_on_stop"
   - "keep_segment_dir"
   - "ios_support"
-  - "metadata"
-  - "thumbnail"
-  - "metadata_written"
 ---
 
 # Downloading — XVideos API

@@ -17,10 +17,6 @@ keywords:
 
 Explains how to install, configure, and make a first asynchronous request with the Beeg API.
 
-> **⚡ Official MCP Server:**
-> Connect your AI coding assistant (Cursor, VS Code, Claude, Windsurf, Zed) to our official, free MCP server at `https://mcp.echteralsfake.me/mcp` (No auth, no strict rate limits, completely anonymous, covers all 16 APIs). Using MCP + AI in your workflow is absolutely the recommended way to work on the projects. See the [Official MCP Server Guide](../official-mcp-server.md).
-
-
 ## Installation
 
 Install from PyPI using pip:
@@ -29,7 +25,7 @@ Install from PyPI using pip:
 pip install unofficial-api-for-beeg
 ```
 
-For **TS→MP4 remuxing** and single-pass MP4 metadata tagging (recommended for HLS downloads), ensure `ffmpeg` is installed on your `PATH` or configured via `RuntimeConfig.ffmpeg_path`.
+For **TS→MP4 remuxing** and metadata tagging support (recommended for HLS downloads with `remux=True`), ensure `ffmpeg` is installed on your system `PATH` (or set `RuntimeConfig.ffmpeg_path`).
 
 **Note**
 Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.2.2` is installed automatically as a dependency.
@@ -82,23 +78,8 @@ client = Client(core=core)
 **eaf_base_api 4**
 Version 1.7.3 uses the v4 request and source-aware media contracts. `RuntimeConfig.proxy` is a single proxy URL (the old `proxies` mapping was removed), and request retries are configured with `request_attempts` plus the `request_retry_*` settings.
 
-## Command-Line Interface (CLI)
-
-The package includes a command-line interface executable via `beeg_api` or `python -m beeg_api`:
-
-```bash
-# Download a video
-beeg_api --download "https://beeg.com/1234567" --quality best --output ./downloads
-
-# Or invoke as a Python module
-python -m beeg_api --download "https://beeg.com/1234567" --quality best --output ./downloads
-```
-
-See the [CLI Reference](reference/cli.md) for full options.
-
 ## Related MCP documents
 
-- [CLI reference — Beeg API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — Beeg API](troubleshooting/errors.md)

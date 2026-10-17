@@ -31,7 +31,7 @@ keywords:
 
 Documents Video behavior, signatures, fields, constraints, and examples for the Eporner API.
 
-dataclass Inherits from `BaseMedia`. Represents a single video with details extracted from API endpoints and HTML elements.
+dataclass Inherits from `BaseMedia`. Represents a single video with details extracted from API endpoints and HTML elements. If a video has been deleted or removed by the platform, a `ResourceGone` error is raised cleanly.
 
 ## Attributes
 
@@ -45,15 +45,15 @@ Type: str | None; Description: Unique video key ID
 
 ## keywords
 
-Type: list | None; Description: List of tags
+Type: list[str] | None; Description: List of tags
 
 ## title
 
-Type: str | None; Description: Video title
+Type: str | None; Description: Video title (loadable from both API and HTML)
 
 ## views
 
-Type: int | None; Description: Number of views
+Type: int | None; Description: Number of views (loadable from both API and HTML)
 
 ## rate
 
@@ -73,11 +73,11 @@ Type: str | None; Description: Duration in minutes (e.g. 12:34 )
 
 ## embed_url
 
-Type: str | None; Description: Embed player path
+Type: str | None; Description: Embed player path (loadable from both API and HTML)
 
 ## thumbnail
 
-Type: str | None; Description: Default cover image thumbnail URL
+Type: str | None; Description: Default cover image thumbnail URL (loadable from both API and HTML)
 
 ## rating_value
 
@@ -105,7 +105,7 @@ Type: str | None; Description: Family friendly flag
 
 ## thumbnails
 
-Type: list[str] | None; Description: List of alternative thumbs
+Type: list[str] | None; Description: List of alternative thumbs (loadable from both API and HTML)
 
 ## content_url
 
@@ -170,7 +170,7 @@ video.get_url_by_quality(
 
 ## download
 
-Downloads the video directly from CDN server using `DownloadConfigRAW`.
+Downloads the video directly from CDN server using `DownloadConfigRAW`. Failure raises `DownloadFailed` with full context and chained cause.
 
 ```python
 await video.download(

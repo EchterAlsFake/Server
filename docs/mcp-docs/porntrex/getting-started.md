@@ -17,10 +17,6 @@ keywords:
 
 Explains how to install, configure, and make a first asynchronous request with the Porntrex API.
 
-> **⚡ Official MCP Server:**
-> Connect your AI coding assistant (Cursor, VS Code, Claude, Windsurf, Zed) to our official, free MCP server at `https://mcp.echteralsfake.me/mcp` (No auth, no strict rate limits, completely anonymous, covers all 16 APIs). Using MCP + AI in your workflow is absolutely the recommended way to work on the projects. See the [Official MCP Server Guide](../official-mcp-server.md).
-
-
 ## Installation
 
 Install from PyPI using pip:
@@ -109,23 +105,8 @@ async for result in client.search("college", iterator_config=iterator_config):
     print(result.unwrap().title if result.succeeded else result.error)
 ```
 
-## Command-Line Interface (CLI)
-
-The package includes a command-line interface executable via `porntrex_api` or `python -m porntrex_api`:
-
-```bash
-# Download a video
-porntrex_api --download "https://www.porntrex.com/video/12345/video-title" --quality best --output ./downloads
-
-# Or invoke as a Python module
-python -m porntrex_api --download "https://www.porntrex.com/video/12345/video-title" --quality best --output ./downloads
-```
-
-See the [CLI Reference](reference/cli.md) for full options.
-
 ## Related MCP documents
 
-- [CLI reference — Porntrex API](reference/cli.md)
 - [RuntimeConfig — eaf_base_api](../eaf-base-api/configuration/runtime-config.md)
 - [IteratorConfig — eaf_base_api](../eaf-base-api/configuration/iterator-config.md)
 - [Errors and troubleshooting — Porntrex API](troubleshooting/errors.md)

@@ -57,7 +57,7 @@ Type: str | None; Description: Cover image thumbnail URL (from og:image )
 
 ## download
 
-Downloads the video via HLS streaming using the reconstructed M3U8 playlist URL. Appends the video title to the output path unless `no_title=True`.
+Downloads the video via HLS streaming using the reconstructed M3U8 playlist URL. Appends the video title to the output path unless `no_title=True`. Ordinary failures raise `DownloadFailed` with full diagnostic context and chained cause.
 
 ```python
 await video.download(

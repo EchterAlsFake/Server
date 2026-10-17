@@ -9,30 +9,29 @@ keywords:
   - "Pornstar"
   - "videos"
   - "url"
+  - "name"
   - "subscribers"
   - "picture"
-  - "total_pages"
-  - "name"
-  - "photos_amount"
   - "video_amount"
+  - "total_pages"
+  - "video_views"
+  - "websites"
+  - "pornstar_id"
+  - "photos_amount"
   - "pornstar_rank"
   - "profile_views"
-  - "video_views"
   - "photo_views"
   - "country"
   - "age"
   - "ethnicity"
   - "eye_color"
-  - "hair_color"
-  - "height"
-  - "weight"
 ---
 
 # Pornstar — Eporner API
 
 Documents Pornstar behavior, signatures, fields, constraints, and examples for the Eporner API.
 
-dataclass Inherits from `BaseProfile` -> `BaseMedia`. Represents an Eporner model profile with parsed statistics and biography properties.
+dataclass Inherits from `BaseProfile` → `BaseMedia`. Represents an Eporner model profile with parsed statistics, bio, and video streams.
 
 ## Attributes
 
@@ -40,37 +39,41 @@ dataclass Inherits from `BaseProfile` -> `BaseMedia`. Represents an Eporner mode
 
 Type: str; Description: Profile URL
 
+## name
+
+Type: str | None; Description: Name of the pornstar (from BaseProfile )
+
 ## subscribers
 
-Type: str | None; Description: Number of subscribers
-
-## pornstar_id
-
-Type: str | None; Description: Unique numeric pornstar ID.
-
-## websites
-
-Type: dict[str, str] | None; Description: External links and social pages from BaseProfile.
-
-## total_pages
-
-Type: int | None; Description: Page count discovered from HTML pagination links (from BaseProfile).
+Type: str | None; Description: Number of subscribers (from BaseProfile )
 
 ## picture
 
-Type: str | None; Description: Cover avatar picture URL
+Type: str | None; Description: Cover avatar picture URL (from BaseProfile )
 
-## name
+## video_amount
 
-Type: str | None; Description: Name of the pornstar
+Type: str | None; Description: Number of uploaded/starring videos (from BaseProfile )
+
+## total_pages
+
+Type: int | None; Description: Page count discovered from HTML pagination links (from BaseProfile )
+
+## video_views
+
+Type: str | None; Description: Accumulated views on videos (from BaseProfile )
+
+## websites
+
+Type: dict[str, str] | None; Description: External links and social pages (from BaseProfile )
+
+## pornstar_id
+
+Type: str | None; Description: Unique numeric pornstar ID
 
 ## photos_amount
 
 Type: str | None; Description: Number of photos
-
-## video_amount
-
-Type: str | None; Description: Number of uploaded/starring videos
 
 ## pornstar_rank
 
@@ -79,10 +82,6 @@ Type: str | None; Description: Eporner site rank
 ## profile_views
 
 Type: str | None; Description: Total views of this profile
-
-## video_views
-
-Type: str | None; Description: Accumulated views on videos
 
 ## photo_views
 
@@ -130,13 +129,13 @@ Type: str | None; Description: Biography paragraph description
 
 ## aliases
 
-Type: list | None; Description: List of alternate names
+Type: list[str] | None; Description: List of alternate names
 
 ## Methods
 
 ## videos
 
-Yields video scrape results associated with this pornstar.
+Yields video scrape results associated with this pornstar. Inherited from `BaseProfile`.
 
 ```python
 async for result in pornstar.videos(
@@ -147,7 +146,7 @@ async for result in pornstar.videos(
 
 ### Parameters
 - pages int — Pages to load (if `0`, uses `total_pages` discovered from HTML pagination links)
-- iterator_config IteratorConfig | None — Concurrency, source loading, ordering, retry, and error policy; defaults to Eporner's API+HTML configuration
+- iterator_config IteratorConfig | None — Concurrency, source loading, ordering, retry, and error policy
 
 ### Returns
 

@@ -17,22 +17,6 @@ keywords:
 
 Introduces the EAF asynchronous Python API ecosystem, its shared base engine, wrapper packages, and common capabilities.
 
-## Official Model Context Protocol (MCP) Server
-
-**⚡ Recommended AI Workflow:** Using our official MCP server with your AI coding assistant (Cursor, VS Code / GitHub Copilot, Claude Desktop, Windsurf, Zed, Antigravity) will greatly improve how you can work with these APIs and is **absolutely the recommended way to work on the projects**.
-
-### Server Endpoint
-`https://mcp.echteralsfake.me/mcp`
-
-### Key Highlights
-- **No authentication required** — Plug-and-play without API keys or accounts
-- **No strict rate limits** — Fluid pair programming and rapid iteration
-- **Covers all 16 APIs + eaf_base_api** — Complete real-time documentation for the entire ecosystem
-- **Always up to date** — Automatically synchronized with upstream code changes and releases
-- **Completely anonymous** — Zero IP logs, zero user tracking, zero profiling
-
-See the [Official MCP Server Setup Guide](official-mcp-server.md) for complete copy-paste configurations for Cursor, VS Code, Claude Desktop, Windsurf, Zed, and Antigravity.
-
 ## Core engine
 
 The shared request, media-loading, iteration, caching, and download runtime used by every wrapper.
@@ -41,7 +25,7 @@ The shared request, media-loading, iteration, caching, and download runtime used
 
 v4.2.2
 
-The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, provider helpers, and HLS/RAW downloads.
+The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads.
 
 ## API wrappers
 
@@ -53,11 +37,17 @@ v1.7.3
 
 A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metadata by parsing external API endpoints, and download streams via HLS. Powered by the eaf_base_api networking engine.
 
+### [EMPFlix API](empflix/getting-started.md)
+
+v1.0
+
+A fully asynchronous Python API wrapper and scraper for empflix.com. Extract full video metadata, user profiles, and pornstars, run search queries, and download high-definition progressive MP4 media. Powered by the eaf_base_api networking engine.
+
 ### [Eporner API](eporner/getting-started.md)
 
 v2.4.3
 
-A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies and channel profiles. Powered by the eaf_base_api networking engine.
+A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine.
 
 ### [HQPorner API](hqporner/getting-started.md)
 
@@ -100,6 +90,12 @@ A fully asynchronous Python API wrapper and scraper for SpankBang. Fetch videos,
 v1.4.2
 
 A fully asynchronous Python API wrapper and scraper for Thumbzilla. Fetch video metadata, playlists, pornstar biographies, amateur profiles, and studio channels. Stream downloads via HLS with auto-constructed master playlists. Powered by the eaf_base_api networking engine.
+
+### [TNAFlix API](tnaflix/getting-started.md)
+
+v1.0
+
+A fully asynchronous Python API wrapper and scraper for tnaflix.com. Extract full video metadata, publisher channels, user profiles, and pornstars, run search queries, and download high-definition progressive MP4 media. Powered by the eaf_base_api networking engine.
 
 ### [Tube8 API](tube8/getting-started.md)
 

@@ -22,6 +22,8 @@ keywords:
 
 Documents Iteration and ScrapeResult behavior, signatures, fields, constraints, and examples for the Tube8 API.
 
+A missing main video container raises `ValueError` instead of returning an empty successful extraction. During iteration, `Helper` logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a `PageFetchError` when raised or yielded. An existing container with no matching videos can still produce an empty result.
+
 All concurrently iterated methods accept one `IteratorConfig` policy and yield immutable `ScrapeResult[Video]` values. Tube8's package default loads the `html` source, skips terminal page failures, and uses `RetryPolicy(max_attempts=3)` for both page and item stages. A supplied configuration replaces that default, so preserve the HTML source, page error mode, and desired retry policies explicitly; the example in this document deliberately opts into yielding page failures.
 
 ```python
@@ -93,8 +95,6 @@ Type: bool; Description: True when the result contains an item
 ## unwrap
 
 Type: Video; Description: Returns the item or raises its terminal error
-
-A missing main video container raises `ValueError` instead of returning an empty successful extraction. During iteration, `Helper` logs the page URL and traceback, then applies the page retry/error policy; a terminal failure is a `PageFetchError` when raised or yielded. An existing container with no matching videos can still produce an empty result.
 
 ## Related MCP documents
 

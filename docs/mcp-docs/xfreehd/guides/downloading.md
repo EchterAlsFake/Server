@@ -13,6 +13,8 @@ keywords:
 
 Explains the documented download configuration and download procedure for the XFreeHD API.
 
+`Video.download()` returns `True` when the RAW downloader completes. On an exception it raises `DownloadFailed` with the video URL and original cause; it no longer returns an exception object. Replace checks such as `isinstance(result, DownloadFailed)` with `try`/`except DownloadFailed`.
+
 XFreeHD video files are direct MP4 assets on CDNs. Configure downloads using `DownloadConfigRAW`:
 
 ```python
@@ -30,8 +32,6 @@ success = await video.download(configuration=config)
 ```
 
 For full details on RAW download parameters, see the reference in [eaf_base_api Documentation](../../eaf-base-api/overview.md).
-
-`Video.download()` returns `True` when the RAW downloader completes. On an exception it raises `DownloadFailed` with the video URL and original cause; it no longer returns an exception object. Replace checks such as `isinstance(result, DownloadFailed)` with `try`/`except DownloadFailed`.
 
 ## Related MCP documents
 

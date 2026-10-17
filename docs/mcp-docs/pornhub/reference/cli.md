@@ -16,9 +16,11 @@ Documents the command-line interface, arguments, and examples for the PornHub AP
 
 ## phub
 
-`phub` can be invoked directly as `phub`, as `pornhub_api`, or via `python -m pornhub_api`.
+`phub` uses the shared behavior documented in this reference.
 
-The PornHub API package includes a built-in CLI accessible via the `phub` command:
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+The PornHub API package includes a built-in CLI accessible via `phub`, `pornhub_api`, or `python -m pornhub_api`:
 
 ```bash
 # Download a single video
@@ -51,10 +53,6 @@ Flag| Description
 `--liked`| Download liked/favorite videos (requires login)
 `--recommended`| Download recommended videos (requires login)
 `--watched`| Download watched/history videos (requires login)
-
-The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
-
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
 
 ## Related MCP documents
 

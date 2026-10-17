@@ -24,9 +24,7 @@ from base_api import DownloadConfigHLS
 
 config = DownloadConfigHLS(
     quality="best",
-    path="./downloads",
-    remux=True,
-    metadata=video,  # Optional: write MP4 metadata tags in a single remux pass
+    path="./downloads"
 )
 success = await video.download(configuration_hls=config, use_hls=True)
 ```

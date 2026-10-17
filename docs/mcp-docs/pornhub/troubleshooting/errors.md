@@ -29,17 +29,17 @@ Identifies documented PornHub API errors, their meanings, and the safe handling 
 
 All custom exceptions inherit from `PornhubAPIError`, which inherits from the shared `ScraperException` and `BaseScraperError`. Source loaders translate request failures into these library exceptions. Calls that load media expose ordinary loader failures through `base_api.MediaLoadError` (or `MediaLoadErrors` for several sources); inspect `original_error`/`errors` as shown. Operations outside media loading, such as login, raise package or core exceptions directly.
 
-Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in `__cause__` and carry structured diagnostic attributes (`url`, `class_name`, `api`). Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in `DownloadFailed`; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped in `DownloadFailed`. In version 4.2.0, failed downloads raise `DownloadFailed` rather than returning `False`.
+Request and download failures are logged with the operation, target URL, and full original traceback. Translated exceptions retain the original error in `__cause__`. Download preparation failures (including metadata loading, quality selection, and output path setup) are also wrapped in `DownloadFailed`; inspect its cause when diagnosing a failure. The specific availability exceptions listed below remain supported. An explicit `DownloadCancelled` or `asyncio.CancelledError` propagates without being wrapped in `DownloadFailed`. Base downloader `False` and `DownloadReport` results remain supported; inspect the result as well as handling exceptions.
 
 The common provider errors `NotFound`, `NetworkError`, `BotDetection`, `ProxyError`, `UnknownNetworkError`, and `DownloadFailed` are catchable through `base_api.modules.errors`. They derive from `ScraperException`, which now derives from `BaseScraperError`. Existing provider import paths remain valid.
 
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
+See [Logging & Cleanup](../../eaf-base-api/overview.md) for application logging setup.
 
 Pornhub retains its own exception classes: each common error also subclasses the corresponding shared error. For example, `pornhub_api.modules.errors.DownloadFailed` can be caught as either `PornhubAPIError` or `base_api.modules.errors.DownloadFailed`.
 
 ## PornhubAPIError
 
-When Raised: Base exception class for PornHub API errors; inherits from `ScraperException`
+When Raised: Base exception class for PornHub API errors; inherits from ScraperException
 
 ## NotFound
 
@@ -47,7 +47,7 @@ When Raised: Server returned HTTP 404
 
 ## NetworkError
 
-When Raised: Request failed due to a network error, exhausted request retries, or a non-404 `HTTPStatusError`
+When Raised: Request failed due to a network error, exhausted request retries, or a non-404 HTTPStatusError
 
 ## BotDetection
 
@@ -63,7 +63,7 @@ When Raised: Unexpected network errors
 
 ## DownloadFailed
 
-When Raised: Download preparation or transfer failed; includes `.url`, `.class_name`, `.api`, and `__cause__` retains the original exception. Failed downloads raise `DownloadFailed` rather than returning `False`.
+When Raised: Download preparation or transfer failed; the video URL is included and __cause__ retains the original exception
 
 ## LoginFailed
 

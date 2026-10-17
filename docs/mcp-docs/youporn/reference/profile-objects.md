@@ -8,56 +8,40 @@ keywords:
   - "YouPorn"
   - "Profile objects"
   - "videos"
-  - "Channel"
-  - "Collection"
-  - "Pornstar"
+  - "url"
+  - "name"
+  - "avatar"
+  - "banner"
+  - "description"
 ---
 
 # Profile objects — YouPorn API
 
 Documents Profile objects behavior, signatures, fields, constraints, and examples for the YouPorn API.
 
-## BaseProfile
+`BaseProfile` inherits from `BaseMedia` and provides the common header properties (`name`, `avatar`, `banner`, and `description`) shared by both `Channel` and `Pornstar` profiles. Scrapers representing publisher channels, custom collections, and pornstar profile pages provide listing iterators via `videos()`.
 
-Shared base dataclass inheriting from `BaseMedia`. Implements common profile header metadata and video pagination for `Channel`, `Collection`, `Pornstar`, and `User`.
+## BaseProfile Attributes
 
-### Shared Attributes
+## url
 
-### url
+Type: str; Description: Profile page URL
 
-Type: str; Description: Profile URL.
+## name
 
-### name
+Type: str | None; Description: Profile display name
 
-Type: str | None; Description: Profile or channel name.
+## avatar
 
-### avatar
+Type: str | None; Description: Avatar image URL
 
-Type: str | None; Description: Profile avatar image URL.
+## banner
 
-### banner
+Type: str | None; Description: Profile header banner image URL
 
-Type: str | None; Description: Channel or profile header banner image URL.
+## description
 
-### description
-
-Type: str | None; Description: Bio or description text.
-
-## Channel
-
-`Channel` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
-
-## Collection
-
-`Collection` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
-
-## Pornstar
-
-`Pornstar` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
-
-## User
-
-`User` inherits from `BaseProfile` and uses the shared behavior documented in this reference.
+Type: str | None; Description: Profile bio description
 
 ## Methods
 

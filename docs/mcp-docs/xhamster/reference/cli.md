@@ -16,7 +16,11 @@ Documents the command-line interface, arguments, and examples for the xHamster A
 
 ## xhamster_api
 
-`xhamster_api` can be executed as a console command or via `python -m xhamster_api`:
+`xhamster_api` uses the shared behavior documented in this reference.
+
+The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
+
+xHamster API includes a command-line interface accessible via `xhamster_api` or `python -m xhamster_api`:
 
 ```bash
 # Download a single video
@@ -25,7 +29,7 @@ xhamster_api --download "https://xhamster.com/videos/sample-title-12345" --quali
 # Or invoke via python -m
 python -m xhamster_api --download "https://xhamster.com/videos/sample-title-12345" --quality best --output ./downloads --no-title False
 
-# Download from a line-separated text file of URLs
+# Download from a line-separated file of URLs
 xhamster_api --file urls.txt --quality best --output ./downloads --no-title False
 ```
 
@@ -34,14 +38,10 @@ xhamster_api --file urls.txt --quality best --output ./downloads --no-title Fals
 Flag| Description
 ---|---
 `--download URL`| Video URL to download
-`--file FILE`| Text file with URLs (one per line)
+`--file FILE`| Text file with URLs (separated by newlines)
 `--quality QUALITY`| Video quality: `best`, `half`, `worst`
-`--output DIR`| Destination file or directory path
+`--output DIR`| Destination directory or output file path
 `--no-title True/False`| Skip auto-appending video title to output filename (default: `False`)
-
-The CLI entry point configures console logging at INFO level. Caught per-URL failures include the URL and full traceback; the default log format shows the logger, file, line, and function. Library applications should configure logging once at startup.
-
-See [Logging and cleanup](../../eaf-base-api/guides/logging-and-cleanup.md) for application logging setup.
 
 ## Related MCP documents
 
