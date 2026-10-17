@@ -17,6 +17,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the Porntrex API.
 
+## URL handling in 1.8.2
+
+This version requires `eaf-base-api>=4.2.2`. Model pagination starts at page `01` and continues with `02`, avoiding the duplicate page `00`. Existing sorting and filter parameters are retained, and AJAX requests no longer contain a fixed timestamp.
+
 The main class to interact with the Porntrex scraper ecosystem.
 
 ```python

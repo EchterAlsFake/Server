@@ -18,6 +18,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the YouPorn API.
 
+## URL handling in 1.8.2
+
+This version requires `eaf-base-api>=4.2.2`. Profile and collection pagination updates the page query key while retaining other filters and removing fragments. Known embed links are normalized to watch links; individual profile URLs are required by profile constructors.
+
 Main class serving as the core interface wrapper.
 
 ```python

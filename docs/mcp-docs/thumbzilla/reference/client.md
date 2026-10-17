@@ -19,6 +19,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the Thumbzilla API.
 
+## URL handling in 1.4.2
+
+This version requires `eaf-base-api>=4.2.2`. Profile pagination replaces the page query key while preserving filters and the resolved localized host. Relative video links use the listing origin. Profile constructors require an individual resource URL, and a configured `Accept-Language` header is preserved.
+
 Main entry point class to execute searches and load resource models.
 
 ```python

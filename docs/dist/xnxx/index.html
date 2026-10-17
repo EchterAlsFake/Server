@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">XNXX API</span>
                 </a>
-                <span class="sidebar-version">v2.4.1</span>
+                <span class="sidebar-version">v2.4.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -96,7 +96,7 @@
                             <span aria-hidden="true">/</span>
                             <span>XNXX API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.1</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.3</div>
                         <h1>XNXX API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for XNXX. Fetch videos, metadata, search with complex filters, and iterate over user uploads — all powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -170,7 +170,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
     </div>
 </div>
 
@@ -209,7 +209,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>The API uses <code>eaf_base_api ≥ 4.0.0</code>. Configure its singular proxy, bounded request attempts, timeouts, and other runtime behavior through a custom <code>BaseCore</code>.</p>
+    <p>The API uses <code>eaf_base_api ≥ 4.2.2</code>. Configure its singular proxy, bounded request attempts, timeouts, and other runtime behavior through a custom <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
 
     <div class="code-window">
@@ -235,6 +235,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 2.4.3</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile tab/page suffixes are removed before listing requests while preserving the host and profile slug. Profile AJAX responses are parsed as JSON; canonical video links use the returned <code>eid</code> and slug rather than tracking IDs. <code>videos(pages=0)</code> iterates all known pages. View-count extraction supports localized labels.</p>
     <p>The <code>Client</code> class is the entry point for all API requests. It initializes and manages sessions to retrieve videos, fetch user data, and execute paginated search queries.</p>
 
     <div class="code-window">

@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = xHamster API -->
 <!-- SLOT:HERO_TITLE = xHamster API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for xHamster. Fetch video details, shorts, channel information, pornstar metadata, or log into user accounts. Stream downloads via HLS. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.6.2 -->
+<!-- SLOT:VERSION = 2.6.3 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xhamster -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xhamster -->
 
@@ -118,7 +118,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.6.2 uses <code>eaf_base_api ≥ 4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.6.3 uses <code>eaf_base_api ≥ 4.2.2</code>, which is installed automatically.
     </div>
 </div>
 
@@ -182,6 +182,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 2.6.3</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile pagination preserves the selected tab and query filters, replaces an existing numeric page suffix, and uses the resolved site host. Relative video links are resolved against that host. Account playlist pagination updates the page query key without duplicating it.</p>
     <p>The entry point for retrieving all resources from xHamster.</p>
 
     <div class="code-window">

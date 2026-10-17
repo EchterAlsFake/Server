@@ -71,7 +71,7 @@ async with stream:
         media = result.unwrap()
 ```
 
-## ScrapeResult Attributes
+## ScrapeResult
 
 Every yielded item in a scrape stream is an immutable `ScrapeResult[T]` instance with the following fields:
 

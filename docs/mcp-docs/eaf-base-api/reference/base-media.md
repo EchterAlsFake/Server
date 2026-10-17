@@ -15,6 +15,8 @@ keywords:
 
 Documents BaseMedia behavior, signatures, fields, constraints, and examples for the eaf_base_api API.
 
+Since 4.2.2, `resolved_url: str | None` records the final same-site response URL when a provider loads the object's main URL through `fetch_content`. It starts as `None` and is transport metadata, separate from lazy fields; `url` retains the input URL. Response identity survives the text cache, so pagination can use the resolved localized host or alias.
+
 Remote fields are declared with `media_field()`. The first source has highest precedence. A loader is async, returns a complete mapping, and never mutates the object directly; results are validated and committed atomically.
 
 ```python

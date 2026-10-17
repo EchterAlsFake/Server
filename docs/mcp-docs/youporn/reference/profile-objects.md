@@ -22,10 +22,26 @@ Documents Profile objects behavior, signatures, fields, constraints, and example
 Shared base dataclass inheriting from `BaseMedia`. Implements common profile header metadata and video pagination for `Channel`, `Collection`, `Pornstar`, and `User`.
 
 ### Shared Attributes
-- `name: str | None` — Profile or channel name
-- `avatar: str | None` — Profile avatar image URL
-- `banner: str | None` — Channel or profile header banner image URL
-- `description: str | None` — Bio or description text
+
+### url
+
+Type: str; Description: Profile URL.
+
+### name
+
+Type: str | None; Description: Profile or channel name.
+
+### avatar
+
+Type: str | None; Description: Profile avatar image URL.
+
+### banner
+
+Type: str | None; Description: Channel or profile header banner image URL.
+
+### description
+
+Type: str | None; Description: Bio or description text.
 
 ## Channel
 

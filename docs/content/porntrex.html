@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Porntrex API -->
 <!-- SLOT:HERO_TITLE = Porntrex API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Porntrex. Fetch video metadata, channel information, and model profiles, run search queries, and download media via direct CDN links. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.8 -->
+<!-- SLOT:VERSION = 1.8.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-porntrex -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-porntrex -->
 
@@ -104,7 +104,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.0.0</code>. The compatible networking core is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.2</code>. The compatible networking core is installed automatically.
     </div>
 </div>
 
@@ -200,6 +200,9 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 1.8.2</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Model pagination starts at page <code>01</code> and continues with <code>02</code>, avoiding the duplicate page <code>00</code>. Existing sorting and filter parameters are retained, and AJAX requests no longer contain a fixed timestamp.</p>
     <p>The main class to interact with the Porntrex scraper ecosystem.</p>
 
     <div class="code-window">

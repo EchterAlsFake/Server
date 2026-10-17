@@ -20,6 +20,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the xHamster API.
 
+## URL handling in 2.6.3
+
+This version requires `eaf-base-api>=4.2.2`. Profile pagination preserves the selected tab and query filters, replaces an existing numeric page suffix, and uses the resolved site host. Relative video links are resolved against that host. Account playlist pagination updates the page query key without duplicating it.
+
 The entry point for retrieving all resources from xHamster.
 
 ```python

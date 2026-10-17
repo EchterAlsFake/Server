@@ -16,6 +16,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the XNXX API.
 
+## URL handling in 2.4.3
+
+This version requires `eaf-base-api>=4.2.2`. Profile tab/page suffixes are removed before listing requests while preserving the host and profile slug. Profile AJAX responses are parsed as JSON; canonical video links use the returned `eid` and slug rather than tracking IDs. `videos(pages=0)` iterates all known pages. View-count extraction supports localized labels.
+
 The `Client` class is the entry point for all API requests. It initializes and manages sessions to retrieve videos, fetch user data, and execute paginated search queries.
 
 ```python

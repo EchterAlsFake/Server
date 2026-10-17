@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Redtube API</span>
                 </a>
-                <span class="sidebar-version">v1.4.1</span>
+                <span class="sidebar-version">v1.4.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -116,7 +116,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Redtube API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.4.1</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.4.3</div>
                         <h1>Redtube API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Redtube. Fetch video details, custom playlists, publishers channels, users, and pornstars. Stream downloads via HLS. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -190,7 +190,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically.
     </div>
 </div>
 
@@ -226,7 +226,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>Redtube API uses <code>eaf_base_api ≥ 4.0.0</code>. Its singular proxy, request attempts, timeouts, and other networking behavior are configured through <code>RuntimeConfig</code> passed to <code>BaseCore</code>.</p>
+    <p>Redtube API uses <code>eaf_base_api ≥ 4.2.2</code>. Its singular proxy, request attempts, timeouts, and other networking behavior are configured through <code>RuntimeConfig</code> passed to <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for details.</p>
 
     <div class="code-window">
@@ -252,6 +252,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 1.4.3</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile pagination retains query filters and the resolved localized host. Relative video links use the listing origin, and user playlist URLs retain the user slug and host. Channel lookups accept singular and plural channel paths. A configured <code>Accept-Language</code> header is preserved.</p>
     <p>Main entry point class to execute searches and load resource models.</p>
 
     <div class="code-window">

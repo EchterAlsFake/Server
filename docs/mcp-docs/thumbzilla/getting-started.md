@@ -32,7 +32,7 @@ pip install unofficial-api-for-thumbzilla
 For **TS→MP4 remuxing** and single-pass MP4 metadata tagging (recommended for HLS downloads), ensure `ffmpeg` is installed on your `PATH` or configured via `RuntimeConfig.ffmpeg_path`.
 
 **Note**
-Requires **Python ≥ 3.12**. Version 1.4 uses `eaf_base_api ≥ 4.0.0`, which is installed automatically.
+Requires **Python ≥ 3.12**. Version 1.4.2 uses `eaf_base_api ≥ 4.2.2`, which is installed automatically.
 
 ## Quick Start
 

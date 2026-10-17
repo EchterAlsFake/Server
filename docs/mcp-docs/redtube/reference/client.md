@@ -20,6 +20,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the Redtube API.
 
+## URL handling in 1.4.3
+
+This version requires `eaf-base-api>=4.2.2`. Profile pagination retains query filters and the resolved localized host. Relative video links use the listing origin, and user playlist URLs retain the user slug and host. Channel lookups accept singular and plural channel paths. A configured `Accept-Language` header is preserved.
+
 Main entry point class to execute searches and load resource models.
 
 ```python

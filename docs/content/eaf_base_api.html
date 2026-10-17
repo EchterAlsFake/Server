@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Base API -->
 <!-- SLOT:HERO_TITLE = eaf_base_api -->
 <!-- SLOT:HERO_SUBTITLE = The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads. -->
-<!-- SLOT:VERSION = 4.2.0 -->
+<!-- SLOT:VERSION = 4.2.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/eaf_base_api -->
 <!-- SLOT:PYPI_PACKAGE = eaf_base_api -->
 
@@ -245,6 +245,8 @@ runtime.verify_ssl = <span class="token-keyword">False</span></code></pre>
 <div class="section" id="base-media-section">
     <span class="section-anchor" id="base-media"></span>
     <h2><span class="section-icon">🧩</span> Source-aware BaseMedia</h2>
+
+    <p>Since 4.2.2, <code>resolved_url: str | None</code> records the final same-site response URL when a provider loads the object's main URL through <code>fetch_content</code>. It starts as <code>None</code> and is transport metadata, separate from lazy fields; <code>url</code> retains the input URL. Response identity survives the text cache, so pagination can use the resolved localized host or alias.</p>
 
     <p>Remote fields are declared with <code>media_field()</code>. The first source has highest precedence. A loader is async, returns a complete mapping, and never mutates the object directly; results are validated and committed atomically.</p>
     <div class="code-window">
@@ -523,6 +525,18 @@ logger = get_logger(__name__)
 <div class="section" id="utilities-section">
     <span class="section-anchor" id="utilities"></span>
     <h2><span class="section-icon">🛠️</span> Shared Utilities</h2>
+
+    <h3>URL helpers (since 4.2.2)</h3>
+    <p>Import these helpers directly from <code>base_api</code>. Provider adapters choose the resource depth and any additional provider-specific normalization.</p>
+    <div class="table-wrapper"><table>
+        <thead><tr><th>Function</th><th>Signature</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td><code>update_url_query</code></td><td><code>(url: str, **changes: str | int | None) -&gt; str</code></td><td>Replace named query keys, remove keys assigned None, retain other query parameters, and remove the fragment.</td></tr>
+            <tr><td><code>replace_url_path</code></td><td><code>(url: str, path: str) -&gt; str</code></td><td>Replace the path while retaining the host and query parameters and removing the fragment.</td></tr>
+            <tr><td><code>append_url_path</code></td><td><code>(url: str, *parts: str | int) -&gt; str</code></td><td>Append path components before the query string, avoiding duplicate separators at component boundaries.</td></tr>
+            <tr><td><code>profile_base_url</code></td><td><code>(url: str, *, depth: int = 2) -&gt; str</code></td><td>Keep the first depth path components, remove page and tab suffixes and the page query key, and retain the host, slug spelling, and other filters. Raise ValueError if fewer than depth components are present.</td></tr>
+        </tbody>
+    </table></div>
 
     <p><code>base_api</code> exports standardized parsing, sanitization, FFmpeg remuxing/tagging, and helper functions used across scrapers:</p>
 

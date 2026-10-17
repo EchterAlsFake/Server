@@ -93,6 +93,8 @@ def section_map(package: str, section_id: str) -> str:
             "error-policy": "eaf-base-api/guides/retry-and-error-handling.md",
             "scrape-results": "eaf-base-api/reference/scrape-stream-and-result.md",
             "downloads": "eaf-base-api/configuration/downloads.md",
+            "provider-helpers": "eaf-base-api/reference/provider-helpers.md",
+            "utilities": "eaf-base-api/reference/utilities.md",
             "logging": "eaf-base-api/guides/logging-and-cleanup.md",
             "migration": "eaf-base-api/migration/from-3x.md",
             "base-errors": "eaf-base-api/troubleshooting/errors.md",

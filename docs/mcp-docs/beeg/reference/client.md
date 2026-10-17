@@ -14,6 +14,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the Beeg API.
 
+## URL handling in 1.7.3
+
+This version requires `eaf-base-api>=4.2.2`. The numeric video ID is extracted only from the URL path. Leading signs and padding are normalized, while meaningful trailing zeros are preserved. Trailing slashes, query parameters, and fragments do not become part of the ID.
+
 The `Client` class is the entry point for all API requests. It initializes and manages the networking core to request video information pages.
 
 ```python

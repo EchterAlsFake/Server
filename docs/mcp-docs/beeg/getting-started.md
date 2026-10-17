@@ -32,7 +32,7 @@ pip install unofficial-api-for-beeg
 For **TS→MP4 remuxing** and single-pass MP4 metadata tagging (recommended for HLS downloads), ensure `ffmpeg` is installed on your `PATH` or configured via `RuntimeConfig.ffmpeg_path`.
 
 **Note**
-Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.0.0` is installed automatically as a dependency.
+Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.2.2` is installed automatically as a dependency.
 
 ## Quick Start
 
@@ -80,7 +80,7 @@ client = Client(core=core)
 ```
 
 **eaf_base_api 4**
-Version 1.7 uses the v4 request and source-aware media contracts. `RuntimeConfig.proxy` is a single proxy URL (the old `proxies` mapping was removed), and request retries are configured with `request_attempts` plus the `request_retry_*` settings.
+Version 1.7.3 uses the v4 request and source-aware media contracts. `RuntimeConfig.proxy` is a single proxy URL (the old `proxies` mapping was removed), and request retries are configured with `request_attempts` plus the `request_retry_*` settings.
 
 ## Command-Line Interface (CLI)
 

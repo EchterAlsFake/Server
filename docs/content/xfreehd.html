@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = XFreeHD API -->
 <!-- SLOT:HERO_TITLE = XFreeHD API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.7.1 -->
+<!-- SLOT:VERSION = 1.7.3 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xfreehd -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xfreehd -->
 
@@ -98,7 +98,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.0.0</code>. The compatible networking core is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.2</code>. The compatible networking core is installed automatically.
     </div>
 </div>
 
@@ -199,6 +199,9 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 1.7.3</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Album pagination replaces an existing page query key and removes fragments while retaining other query parameters. An input that already contains <code>page</code> does not produce duplicate page parameters.</p>
     <p>The main class to interact with the XFreeHD scraper ecosystem.</p>
 
     <div class="code-window">

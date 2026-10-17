@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">SpankBang API</span>
                 </a>
-                <span class="sidebar-version">v2.4.1</span>
+                <span class="sidebar-version">v2.4.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -98,7 +98,7 @@
                             <span aria-hidden="true">/</span>
                             <span>SpankBang API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.1</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.3</div>
                         <h1>SpankBang API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for SpankBang. Fetch videos, metadata, search, and iterate over channels, creators, or pornstars. Download content using HLS or direct RAW MP4 downloads. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -172,7 +172,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
     </div>
 </div>
 
@@ -211,7 +211,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>The API uses <code>eaf_base_api ≥ 4.0.0</code>. Configure its singular proxy, bounded request attempts, timeouts, and other runtime behavior through the <code>BaseCore</code> passed to <code>Client</code>.</p>
+    <p>The API uses <code>eaf_base_api ≥ 4.2.2</code>. Configure its singular proxy, bounded request attempts, timeouts, and other runtime behavior through the <code>BaseCore</code> passed to <code>Client</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
     <p>The current client sets <code>RuntimeConfig.http_version</code> to <code>"v3"</code> before initializing its session and installs SpankBang's required Origin/Referer headers. Pass a core whose session has not already been initialized so the HTTP/3 setting takes effect.</p>
 
@@ -238,6 +238,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 2.4.3</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile pagination preserves filters and removes stale page query keys without adding duplicate slashes. <code>pages</code> is the total number of pages to fetch; <code>0</code> retains the first-page-only default. Embed and play links normalize to video links. A configured <code>Accept-Language</code> header is preserved.</p>
     <p>The <code>Client</code> class manages the network session, cookies, and HTTP headers to interact with SpankBang. It serves as the primary entry point to retrieve video details, explore profile channels/pornstars/creators, and run search queries.</p>
 
     <div class="code-window">
@@ -504,7 +507,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
-            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Number of extra pages to fetch (0 means only the main page URL)</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Total number of pages to fetch (0 keeps the first-page-only default)</span></li>
             <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 iterator policy. The default eagerly loads each video's <code>html</code> source.</span></li>
         </ul>
 

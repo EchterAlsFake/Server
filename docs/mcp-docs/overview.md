@@ -39,7 +39,7 @@ The shared request, media-loading, iteration, caching, and download runtime used
 
 ### [Base API](eaf-base-api/overview.md)
 
-v4.2.0
+v4.2.2
 
 The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, provider helpers, and HLS/RAW downloads.
 
@@ -49,13 +49,13 @@ Site-specific packages with a consistent async interface and typed media objects
 
 ### [Beeg API](beeg/getting-started.md)
 
-v1.7
+v1.7.3
 
 A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metadata by parsing external API endpoints, and download streams via HLS. Powered by the eaf_base_api networking engine.
 
 ### [Eporner API](eporner/getting-started.md)
 
-v2.4.1
+v2.4.3
 
 A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies and channel profiles. Powered by the eaf_base_api networking engine.
 
@@ -73,67 +73,67 @@ A fully asynchronous Python API wrapper and scraper for MissAV. Fetch JAV video 
 
 ### [PornHub API](pornhub/getting-started.md)
 
-v5.4.3
+v5.4.5
 
 A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine.
 
 ### [Porntrex API](porntrex/getting-started.md)
 
-v1.8
+v1.8.2
 
 A fully asynchronous Python API wrapper and scraper for Porntrex. Fetch video metadata, channel information, and model profiles, run search queries, and download media via direct CDN links. Powered by the eaf_base_api networking engine.
 
 ### [Redtube API](redtube/getting-started.md)
 
-v1.4.1
+v1.4.3
 
 A fully asynchronous Python API wrapper and scraper for Redtube. Fetch video details, custom playlists, publishers channels, users, and pornstars. Stream downloads via HLS. Powered by the eaf_base_api networking engine.
 
 ### [SpankBang API](spankbang/getting-started.md)
 
-v2.4.1
+v2.4.3
 
 A fully asynchronous Python API wrapper and scraper for SpankBang. Fetch videos, metadata, search, and iterate over channels, creators, or pornstars. Download content using HLS or direct RAW MP4 downloads. Powered by the eaf_base_api networking engine.
 
 ### [Thumbzilla API](thumbzilla/getting-started.md)
 
-v1.4
+v1.4.2
 
 A fully asynchronous Python API wrapper and scraper for Thumbzilla. Fetch video metadata, playlists, pornstar biographies, amateur profiles, and studio channels. Stream downloads via HLS with auto-constructed master playlists. Powered by the eaf_base_api networking engine.
 
 ### [Tube8 API](tube8/getting-started.md)
 
-v1.3
+v1.3.2
 
 A fully asynchronous Python API wrapper and scraper for Tube8. Fetch video metadata, pornstar biographies, amateur profiles, and studio channels. Stream downloads via HLS with auto-constructed master playlists. Powered by the eaf_base_api networking engine.
 
 ### [XFreeHD API](xfreehd/getting-started.md)
 
-v1.7.1
+v1.7.3
 
 A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine.
 
 ### [xHamster API](xhamster/getting-started.md)
 
-v2.6
+v2.6.3
 
 A fully asynchronous Python API wrapper and scraper for xHamster. Fetch video details, shorts, channel information, pornstar metadata, or log into user accounts. Stream downloads via HLS. Powered by the eaf_base_api networking engine.
 
 ### [XNXX API](xnxx/getting-started.md)
 
-v2.4.1
+v2.4.3
 
 A fully asynchronous Python API wrapper and scraper for XNXX. Fetch videos, metadata, search with complex filters, and iterate over user uploads — all powered by the eaf_base_api networking engine.
 
 ### [XVideos API](xvideos/getting-started.md)
 
-v2.5
+v2.5.2
 
 A fully asynchronous Python API wrapper and scraper for XVideos. Fetch videos, metadata, pornstar profiles, channels, playlists, and download content — all powered by the eaf_base_api networking engine.
 
 ### [YouPorn API](youporn/getting-started.md)
 
-v1.8
+v1.8.2
 
 A fully asynchronous high-speed Python API wrapper and scraper for YouPorn. Fetch video details, custom collections, publisher channels, user uploads, and pornstar metadata. Supports dual streaming modes (HLS and raw MP4). Powered by the eaf_base_api networking engine.
 

@@ -77,7 +77,7 @@ async for result in profile.videos(
 ```
 
 ### Parameters
-- pages int — Number of extra pages to fetch (0 means only the main page URL)
+- pages int — Total number of pages to fetch (0 keeps the first-page-only default)
 - iterator_config IteratorConfig | None — Optional v4 iterator policy. The default eagerly loads each video's `html` source.
 
 ### Returns

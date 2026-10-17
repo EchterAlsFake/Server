@@ -19,6 +19,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the XVideos API.
 
+## URL handling in 2.5.2
+
+This version requires `eaf-base-api>=4.2.2`. Profile AJAX responses are parsed as JSON. Model aliases normalize only the leading path component to `/pornstars/`; profile tab/page suffixes are removed without changing the slug or mirror host. Relative video links retain the listing origin. Quickies are not supported by the video profile iterator.
+
 The `Client` class is your **entry point** for all interactions. It manages the session and provides methods to fetch videos, search, and access channels/pornstars.
 
 ## Methods

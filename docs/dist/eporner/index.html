@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Eporner API</span>
                 </a>
-                <span class="sidebar-version">v2.4.1</span>
+                <span class="sidebar-version">v2.4.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -107,7 +107,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Eporner API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.1</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.3</div>
                         <h1>Eporner API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -185,7 +185,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.4.1 depends on <code>eaf-base-api&gt;=4.2.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.4.3 depends on <code>eaf-base-api&gt;=4.2.2</code>, which is installed automatically.
     </div>
 </div>
 
@@ -276,6 +276,9 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 2.4.3</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Video IDs are read from the URL path, excluding query parameters and fragments; embed links are normalized to full video pages. Pornstar and channel objects expose <code>total_pages</code> from HTML pagination links. Their <code>videos(pages=0)</code> iterates the discovered pages instead of using a fixed page count.</p>
     <p>Scraper instance to orchestrate requests and retrieve media objects.</p>
 
     <div class="code-window">
@@ -584,6 +587,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Number of subscribers (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>picture</code></td><td><code>str | None</code></td><td>Cover avatar picture URL (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>video_amount</code></td><td><code>str | None</code></td><td>Number of uploaded/starring videos (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>total_pages</code></td><td><code>int | None</code></td><td>Page count discovered from HTML pagination links (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Accumulated views on videos (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>websites</code></td><td><code>dict[str, str] | None</code></td><td>External links and social pages (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>pornstar_id</code></td><td><code>str | None</code></td><td>Unique numeric pornstar ID</td></tr>
@@ -625,7 +629,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
-            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, automatically calculates pages based on total <code>video_amount</code>)</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, uses <code>total_pages</code> discovered from HTML pagination links)</span></li>
             <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy</span></li>
         </ul>
 
@@ -653,6 +657,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>name</code></td><td><code>str | None</code></td><td>Channel name (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>subscribers</code></td><td><code>str | None</code></td><td>Subscriber count (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>video_amount</code></td><td><code>str | None</code></td><td>Total uploaded videos count (from <code>BaseProfile</code>)</td></tr>
+                <tr><td><code>total_pages</code></td><td><code>int | None</code></td><td>Page count discovered from HTML pagination links (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Accumulated video views count (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>picture</code></td><td><code>str | None</code></td><td>Profile/logo picture URL (from <code>BaseProfile</code>)</td></tr>
                 <tr><td><code>channel_id</code></td><td><code>str | None</code></td><td>Unique numeric channel ID</td></tr>
@@ -682,7 +687,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
-            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, automatically calculates pages based on total <code>video_amount</code>)</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load (if <code>0</code>, uses <code>total_pages</code> discovered from HTML pagination links)</span></li>
             <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Concurrency, source loading, ordering, retry, and error policy</span></li>
         </ul>
 

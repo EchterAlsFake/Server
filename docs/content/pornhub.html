@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = PornHub API -->
 <!-- SLOT:HERO_TITLE = PornHub API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 5.4.3 -->
+<!-- SLOT:VERSION = 5.4.5 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-pornhub -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-pornhub -->
 
@@ -179,7 +179,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
     </div>
 </div>
 
@@ -218,7 +218,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>The API uses <code>eaf_base_api ≥ 4.0.0</code> for networking. Configure its singular <code>proxy</code>, bounded request attempts, timeouts, and other runtime behavior through a custom <code>BaseCore</code>.</p>
+    <p>The API uses <code>eaf_base_api ≥ 4.2.2</code> for networking. Configure its singular <code>proxy</code>, bounded request attempts, timeouts, and other runtime behavior through a custom <code>BaseCore</code>.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
 
     <div class="code-window">
@@ -244,6 +244,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 5.4.5</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile and channel tab URLs are normalized before pagination. For models, pornstars, and users, use <code>get_uploads()</code> for uploaded videos and <code>get_videos()</code> for featured videos. Embed URLs are normalized to watch URLs. Listing requests and relative video links retain the resolved site host; a configured <code>Accept-Language</code> header is preserved.</p>
     <p>The <code>Client</code> class is your <strong>entry point</strong> for all interactions. It manages the session, headers, cookies, and authentication — providing methods to fetch individual resources, search, and access account features.</p>
 
     <div class="code-window">

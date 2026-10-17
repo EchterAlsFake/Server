@@ -18,6 +18,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the SpankBang API.
 
+## URL handling in 2.4.3
+
+This version requires `eaf-base-api>=4.2.2`. Profile pagination preserves filters and removes stale page query keys without adding duplicate slashes. `pages` is the total number of pages to fetch; `0` retains the first-page-only default. Embed and play links normalize to video links. A configured `Accept-Language` header is preserved.
+
 The `Client` class manages the network session, cookies, and HTTP headers to interact with SpankBang. It serves as the primary entry point to retrieve video details, explore profile channels/pornstars/creators, and run search queries.
 
 ```python

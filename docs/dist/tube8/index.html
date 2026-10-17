@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Tube8 API</span>
                 </a>
-                <span class="sidebar-version">v1.3</span>
+                <span class="sidebar-version">v1.3.2</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -104,7 +104,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Tube8 API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.3</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.3.2</div>
                         <h1>Tube8 API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Tube8. Fetch video metadata, pornstar biographies, amateur profiles, and studio channels. Stream downloads via HLS with auto-constructed master playlists. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -175,7 +175,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 1.3 uses <code>eaf_base_api ≥ 4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 1.3.2 uses <code>eaf_base_api ≥ 4.2.2</code>, which is installed automatically.
     </div>
 </div>
 
@@ -234,6 +234,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 1.3.2</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile pagination replaces the page query key while preserving filters and the resolved localized host. Relative video links use the listing origin. Profile constructors require an individual resource URL, and a configured <code>Accept-Language</code> header is preserved.</p>
     <p>Main entry point class to execute searches and load resource models.</p>
 
     <div class="code-window">

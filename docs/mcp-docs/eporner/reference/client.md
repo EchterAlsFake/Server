@@ -17,6 +17,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the Eporner API.
 
+## URL handling in 2.4.3
+
+This version requires `eaf-base-api>=4.2.2`. Video IDs are read from the URL path, excluding query parameters and fragments; embed links are normalized to full video pages. Pornstar and channel objects expose `total_pages` from HTML pagination links. Their `videos(pages=0)` iterates the discovered pages instead of using a fixed page count.
+
 Scraper instance to orchestrate requests and retrieve media objects.
 
 ```python

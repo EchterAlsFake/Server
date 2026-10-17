@@ -32,7 +32,7 @@ pip install unofficial-api-for-pornhub
 For **TS→MP4 remuxing** and single-pass MP4 metadata tagging (recommended for HLS downloads), ensure `ffmpeg` is installed on your `PATH` or configured via `RuntimeConfig.ffmpeg_path`.
 
 **Note**
-Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.0.0` is installed automatically as a dependency.
+Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.2.2` is installed automatically as a dependency.
 
 ## Quick Start
 
@@ -63,7 +63,7 @@ asyncio.run(main())
 
 ## Configuration
 
-The API uses `eaf_base_api ≥ 4.0.0` for networking. Configure its singular `proxy`, bounded request attempts, timeouts, and other runtime behavior through a custom `BaseCore`.
+The API uses `eaf_base_api ≥ 4.2.2` for networking. Configure its singular `proxy`, bounded request attempts, timeouts, and other runtime behavior through a custom `BaseCore`.
 
 Please refer to the [eaf_base_api Documentation](../eaf-base-api/overview.md) for the complete reference on how to set up `RuntimeConfig` and properly integrate it with this API.
 

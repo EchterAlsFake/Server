@@ -11,6 +11,7 @@ keywords:
   - "url"
   - "subscribers"
   - "picture"
+  - "total_pages"
   - "name"
   - "photos_amount"
   - "video_amount"
@@ -42,6 +43,18 @@ Type: str; Description: Profile URL
 ## subscribers
 
 Type: str | None; Description: Number of subscribers
+
+## pornstar_id
+
+Type: str | None; Description: Unique numeric pornstar ID.
+
+## websites
+
+Type: dict[str, str] | None; Description: External links and social pages from BaseProfile.
+
+## total_pages
+
+Type: int | None; Description: Page count discovered from HTML pagination links (from BaseProfile).
 
 ## picture
 
@@ -133,7 +146,7 @@ async for result in pornstar.videos(
 ```
 
 ### Parameters
-- pages int — Pages to load (if `0`, automatically calculates pages based on total `video_amount`)
+- pages int — Pages to load (if `0`, uses `total_pages` discovered from HTML pagination links)
 - iterator_config IteratorConfig | None — Concurrency, source loading, ordering, retry, and error policy; defaults to Eporner's API+HTML configuration
 
 ### Returns

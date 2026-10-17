@@ -16,6 +16,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the XFreeHD API.
 
+## URL handling in 1.7.3
+
+This version requires `eaf-base-api>=4.2.2`. Album pagination replaces an existing page query key and removes fragments while retaining other query parameters. An input that already contains `page` does not produce duplicate page parameters.
+
 The main class to interact with the XFreeHD scraper ecosystem.
 
 ```python

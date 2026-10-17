@@ -12,6 +12,7 @@ keywords:
   - "name"
   - "subscribers"
   - "video_amount"
+  - "total_pages"
   - "video_views"
   - "picture"
   - "channel_id"
@@ -43,6 +44,10 @@ Type: str | None; Description: Subscriber count (from `BaseProfile`)
 ## video_amount
 
 Type: str | None; Description: Total uploaded videos count (from `BaseProfile`)
+
+## total_pages
+
+Type: int | None; Description: Page count discovered from HTML pagination links (from BaseProfile )
 
 ## video_views
 
@@ -82,7 +87,7 @@ async for result in channel.videos(
 ```
 
 ### Parameters
-- pages int — Pages to load (if `0`, automatically calculates pages based on total `video_amount`)
+- pages int — Pages to load (if `0`, uses `total_pages` discovered from HTML pagination links)
 - iterator_config IteratorConfig | None — Concurrency, source loading, ordering, retry, and error policy
 
 ### Returns

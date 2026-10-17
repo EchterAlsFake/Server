@@ -27,6 +27,10 @@ keywords:
 
 Documents Client behavior, signatures, fields, constraints, and examples for the PornHub API.
 
+## URL handling in 5.4.5
+
+This version requires `eaf-base-api>=4.2.2`. Profile and channel tab URLs are normalized before pagination. For models, pornstars, and users, use `get_uploads()` for uploaded videos and `get_videos()` for featured videos. Embed URLs are normalized to watch URLs. Listing requests and relative video links retain the resolved site host; a configured `Accept-Language` header is preserved.
+
 The `Client` class is your **entry point** for all interactions. It manages the session, headers, cookies, and authentication — providing methods to fetch individual resources, search, and access account features.
 
 ```python

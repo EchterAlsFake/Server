@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">XVideos API</span>
                 </a>
-                <span class="sidebar-version">v2.5</span>
+                <span class="sidebar-version">v2.5.2</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -119,7 +119,7 @@
                             <span aria-hidden="true">/</span>
                             <span>XVideos API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.5</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.5.2</div>
                         <h1>XVideos API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for XVideos. Fetch videos, metadata, pornstar profiles, channels, playlists, and download content — all powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -194,7 +194,7 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.0.0</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
     </div>
 </div>
 
@@ -233,7 +233,7 @@ asyncio.run(main())</code></pre>
     <span class="section-anchor" id="configuration"></span>
     <h2><span class="section-icon">⚙️</span> Configuration</h2>
 
-    <p>The API uses <code>eaf_base_api ≥ 4.0.0</code>. Pass a custom <code>BaseCore</code> to configure its singular proxy, bounded request attempts, timeouts, and other networking behavior.</p>
+    <p>The API uses <code>eaf_base_api ≥ 4.2.2</code>. Pass a custom <code>BaseCore</code> to configure its singular proxy, bounded request attempts, timeouts, and other networking behavior.</p>
     <p>Please refer to the <a href="../eaf_base_api/index.html" style="font-weight: 600;">eaf_base_api Documentation</a> for the complete reference on how to set up <code>RuntimeConfig</code> and properly integrate it with this API.</p>
 
     <div class="code-window">
@@ -256,6 +256,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
 <div class="section" id="client-section">
     <span class="section-anchor" id="client"></span>
     <h2><span class="section-icon">🔌</span> Client</h2>
+
+    <h3>URL handling in 2.5.2</h3>
+    <p>This version requires <code>eaf-base-api&gt;=4.2.2</code>. Profile AJAX responses are parsed as JSON. Model aliases normalize only the leading path component to <code>/pornstars/</code>; profile tab/page suffixes are removed without changing the slug or mirror host. Relative video links retain the listing origin. Quickies are not supported by the video profile iterator.</p>
     <p>The <code>Client</code> class is your <strong>entry point</strong> for all interactions. It manages the session and provides methods to fetch videos, search, and access channels/pornstars.</p>
 
     <h3>Methods</h3>
