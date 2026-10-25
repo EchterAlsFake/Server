@@ -4,6 +4,25 @@
   const root = document.querySelector('#payment-tracker');
   if (!root) return;
   const sessionId = root.dataset.sessionId;
+  const accessQuery = root.dataset.accessQuery || `session_id=${encodeURIComponent(sessionId)}`;
+  const recoveryLink = document.querySelector('#recovery-link');
+  const expiry = document.querySelector('#recovery-expiry');
+  function renderExpiry(value, ready = false) {
+    if (!expiry || !value) return;
+    const time = new Date(value);
+    if (!Number.isNaN(time.getTime())) expiry.textContent = ready ? `Recovery access expires: ${time.toLocaleString()}. Save your license and invoice before then.` : `Current recovery deadline: ${time.toLocaleString()}. Once your license is ready, you have six hours to save it.`;
+  }
+  renderExpiry(expiry?.dataset.expiresAt);
+  document.querySelector('#copy-recovery-link')?.addEventListener('click', async () => {
+    const status = document.querySelector('#recovery-copy-status');
+    try {
+      await navigator.clipboard.writeText(recoveryLink.value);
+      status.textContent = 'Recovery link copied. Keep it somewhere private.';
+    } catch (_) {
+      recoveryLink.focus(); recoveryLink.select();
+      status.textContent = 'Link selected. Copy it manually, or save the recovery file.';
+    }
+  });
   const refresh = document.querySelector('#refresh-progress');
   const note = document.querySelector('#provider-status-note');
   const heading = document.querySelector('#payment-progress-title');
@@ -63,13 +82,14 @@
     clearTimeout(timer);
     busy = true; refresh.disabled = true;
     try {
-      const response = await fetch(`/check-payment-status?session_id=${encodeURIComponent(sessionId)}`, {cache: 'no-store'});
-      const data = await response.json();
+      const response = await fetch(`/check-payment-status?${accessQuery}`, {cache: 'no-store'});
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        if ([400, 404].includes(response.status)) { heading.textContent = 'Payment session not found'; message.textContent = 'Use your saved checkout URL or contact support with your session ID.'; stop = true; }
+        if ([400, 404, 410].includes(response.status)) { heading.textContent = response.status === 410 ? 'Recovery link expired or unavailable' : 'Payment session not found'; message.textContent = 'If you paid, contact support with your payment transaction hash or invoice reference. Do not pay again.'; stop = true; }
         else throw new Error(data.error || 'Payment status is temporarily unavailable.');
       } else {
         renderProgress(data.progress);
+        renderExpiry(data.recovery_expires_at, data.status === 'finished');
         if (data.status === 'finished') renderLicense(data);
       }
     } catch (e) {

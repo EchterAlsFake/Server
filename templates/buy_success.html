@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Track your payment — Porn Fetch{% endblock %}
 {% block content %}
-<div class="payment-tracking-page" id="payment-tracker" data-session-id="{{ session_id or '' }}" data-card="{{ 'true' if is_card_checkout else 'false' }}">
+<div class="payment-tracking-page" id="payment-tracker" data-session-id="{{ session_id or '' }}" data-access-query="{{ access_query }}" data-card="{{ 'true' if is_card_checkout else 'false' }}">
     <a href="/porn_fetch" class="text-link">← Payment methods</a>
     <header class="crypto-heading"><p class="eyebrow">Every step, in view.</p><h1>Your payment, on its way.</h1></header>
     <section class="tracking-card" aria-labelledby="payment-progress-title">
@@ -11,11 +11,23 @@
         <ol id="payment-progress-steps" class="payment-timeline" aria-label="Payment progress"></ol>
         <p id="provider-status-note" class="provider-status-note" role="status"></p>
         <div class="tracking-tools"><p id="progress-updated">Waiting for the first update.</p><button type="button" id="refresh-progress" class="inline-help">Refresh status</button></div>
+        {% if session_id %}
+        <section class="tracking-recovery" aria-labelledby="recovery-heading">
+            <h2 id="recovery-heading">Save your private recovery link before paying</h2>
+            <p>Use this link to return if you close your browser or lose your connection. No email address is needed to use it. Anyone with the link can access your license and invoice, so keep it private.</p>
+            {% if recovery_token %}<p>Available while payment is pending (up to seven days), then for <strong>six hours after your license is ready</strong>. Download your license and invoice before recovery access expires. Your license itself stays valid.</p>{% endif %}
+            <label for="recovery-link">Private recovery link</label>
+            <input id="recovery-link" type="url" value="{{ recovery_url }}" readonly spellcheck="false" autocomplete="off" style="width:100%;box-sizing:border-box">
+            <div class="checkout-actions"><button id="copy-recovery-link" type="button" class="btn btn-secondary">Copy recovery link</button><a href="/download-recovery?{{ access_query }}" class="btn btn-secondary">Save recovery file</a></div>
+            <p id="recovery-copy-status" role="status"></p>
+            <p id="recovery-expiry" class="widget-delivery-note" data-expires-at="{{ recovery_expires_at or '' }}"></p>
+        </section>
+        {% endif %}
         <div id="payment-launch"{% if not payment_url %} hidden{% endif %}>
             {% if payment_url %}
                 {% if is_card_checkout %}
                     <p>Estimated funding amount: <strong>USD {{ charge_amount }}</strong>, including the Onramp Pay fee. Banxa may apply additional provider or network costs; review the final total before paying. Currency conversion may apply.</p>
-                    <a href="{{ url_for('pages.payment_preview', method='banxa', session_id=session_id) }}" data-payment-preview="banxa" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open Banxa payment in a new tab</a>
+                    <a href="/payment-preview/banxa?{{ access_query }}" data-payment-preview="banxa" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open Banxa payment in a new tab</a>
                 {% else %}
                     <a href="{{ payment_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open NOWPayments checkout <span aria-hidden="true">↗</span></a>
                 {% endif %}
@@ -29,7 +41,7 @@
     <section class="tracking-card license-ready-card" id="success-container" hidden aria-labelledby="payment-success-heading">
         <p class="eyebrow">Payment verified</p><h2 id="payment-success-heading" tabindex="-1">Your license is ready.</h2><p>Save your license file and invoice safely.</p>
         <p class="invoice-reference">Invoice <strong id="invoice-display"></strong></p>
-        <div class="checkout-actions"><a href="/download_license?session_id={{ session_id }}" class="btn btn-primary">Download License Key File</a><a href="/download_invoice?session_id={{ session_id }}" class="btn btn-secondary">Download Invoice</a></div>
+        <div class="checkout-actions"><a href="/download_license?{{ access_query }}" class="btn btn-primary">Download License Key File</a><a href="/download_invoice?{{ access_query }}" class="btn btn-secondary">Download Invoice</a></div>
         {% if is_card_checkout %}<p id="card-delivery-status" role="status"></p><code id="card-license-key" aria-label="Your signed license" class="signed-license"></code>{% else %}<div class="crypto-license-result"><label for="crypto-license-key">Your signed license key</label><textarea id="crypto-license-key" readonly rows="4"></textarea><p id="crypto-delivery-status" role="status"></p></div>{% endif %}
         <details class="activation-instructions"><summary>How to activate Porn Fetch</summary><ol><li>Download the <code>porn_fetch.license</code> file above.</li><li>Open settings in the app.</li><li>Choose <strong>Activate License</strong> and select your downloaded file.</li><li>Your year of updates starts at first activation. Eligible versions remain usable afterwards, subject to normal validation.</li></ol></details>
     </section>

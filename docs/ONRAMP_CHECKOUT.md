@@ -217,3 +217,28 @@ their existing full-payment checks. Overpayments have no upper rejection boundar
 and still issue only one license. Do not change the merchant payout destination
 when integrating: NOWPayments' non-custodial payout to the configured Kraken
 Polygon USDC wallet is separate from the per-order incoming payment addresses.
+
+## Private checkout recovery links
+
+New crypto and card checkouts return `/buy_success?token=…`, containing a 22-character
+cryptographically random bearer token (128 bits). The recovery panel appears before
+the provider link and supports copying the URL or downloading a plain-text recovery
+file. Email requirements are unchanged; ordinary crypto checkout still supports
+no-email delivery. The signed browser cookie remembers up to eight recent tokens
+for same-browser refresh and provider-return compatibility. No token plaintext is
+stored in the database: `checkout_recovery` stores only SHA-256 digests and issue
+timestamps linked to existing order IDs.
+
+Tokens remain usable during pending payment for at most seven days. On fulfillment
+within that window, access expires six hours after `Transaction.finished_at`.
+Expiry is checked on every status, license, invoice, recovery-file and card-launch
+request. The receipt worker clears expired hashes; order tombstones remain to block
+a raw-ID bypass after cleanup. Existing pre-migration orders retain their previous
+links. No new account, IP record, mandatory email, or localStorage identifier is
+introduced. Private responses use no-store, no-referrer and noindex headers.
+
+The license itself remains valid when recovery access ends. Save the downloaded
+license and invoice. Manual support should request the payment transaction hash or
+invoice reference plus approximate time; a timestamp alone does not prove ownership.
+The constants are in `pf_server/checkout_recovery.py`; migrations and encrypted
+database backups preserve active token hashes through normal service restarts.

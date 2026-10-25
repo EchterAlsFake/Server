@@ -26,6 +26,7 @@ from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
     PaymentProgress,
     PaymentReceipt,
+    CheckoutRecovery,
     CryptoLicenseDelivery,
     Checklist,
     CiStatus,
@@ -71,6 +72,7 @@ class ServerTestCase(unittest.TestCase):
             for model in (
                 PaymentProgress,
                 PaymentReceipt,
+                CheckoutRecovery,
                 CryptoLicenseDelivery,
                 Checklist,
                 LicenseRenewal,

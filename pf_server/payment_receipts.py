@@ -126,4 +126,6 @@ def process_receipts(limit=25):
         PaymentReceipt.updated_at < (now() - timedelta(days=30)).isoformat(),
     ))
     db.session.commit()
+    from .checkout_recovery import expire_tokens
+    expire_tokens()
     return processed

@@ -150,3 +150,12 @@ class PaymentReceipt(db.Model):
     lease_token = db.Column(db.String(64), nullable=True)
     lease_expires_at = db.Column(db.String(40), nullable=True)
     attempts = db.Column(db.Integer, nullable=False, default=0)
+
+
+class CheckoutRecovery(db.Model):
+    """Hashed bearer token; retain an expired tombstone to prevent ID bypass."""
+
+    __tablename__ = "checkout_recovery"
+    session_id = db.Column(db.String(64), primary_key=True)
+    token_digest = db.Column(db.String(64), unique=True, nullable=True)
+    created_at = db.Column(db.String(40), nullable=False)

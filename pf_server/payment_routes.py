@@ -18,6 +18,7 @@ from flask import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
+from .checkout_recovery import issue as issue_recovery, resolve_session_id, view_context
 from .config import DEFAULT_RATE_LIMIT
 from .countries import COUNTRY_OPTIONS
 from .country_service import CheckoutCountryDecision, checkout_country_decision
@@ -121,7 +122,8 @@ def buy_license():
 
 @payments_bp.route("/buy_success", methods=["GET"])
 def buy_success():
-    checkout = db.session.get(OnrampCheckout, request.args.get("session_id", ""))
+    session_id = resolve_session_id()
+    checkout = db.session.get(OnrampCheckout, session_id)
     transaction = db.session.get(Transaction, checkout.session_id) if checkout else None
     payment_url = None
     progress = db.session.get(PaymentProgress, checkout.session_id) if checkout else None
@@ -132,14 +134,32 @@ def buy_success():
         from .onramp_service import decrypt
         payment_url = decrypt(checkout.checkout_encrypted)
     if not checkout:
-        transaction = db.session.get(Transaction, request.args.get("session_id", ""))
+        transaction = db.session.get(Transaction, session_id)
         progress = db.session.get(PaymentProgress, transaction.session_id) if transaction else None
         if transaction and transaction.status == "pending" and progress and progress.nowpayments_state == "waiting":
             payment_url = hosted_checkout_url(progress.checkout_url)
     return render_template(
-        "buy_success.html", session_id=request.args.get("session_id"), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
+        "buy_success.html", session_id=session_id, **view_context(session_id), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
         payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
     )
+
+
+@payments_bp.get("/download-recovery")
+@limiter.limit("30 per minute")
+def download_recovery():
+    session_id = resolve_session_id()
+    if not session_id or db.session.get(Transaction, session_id) is None:
+        abort(404)
+    context = view_context(session_id)
+    content = (
+        "Porn Fetch private payment recovery link\n\n" + context["recovery_url"]
+        + "\n\nAnyone with this link can access your license and invoice. Keep it private.\n"
+        + "For new orders: valid while payment is pending (up to seven days), then for six hours after your license is ready.\n"
+        + "Save the license and invoice before access expires. Your license itself does not expire with this link.\n"
+        + "Support: support@echteralsfake.me. Keep your payment transaction hash or invoice reference.\n"
+    )
+    return send_file(BytesIO(content.encode()), as_attachment=True,
+        download_name="porn-fetch-recovery.txt", mimetype="text/plain")
 
 
 @payments_bp.route("/buy_cancel", methods=["GET"])
@@ -150,7 +170,7 @@ def buy_cancel():
 @payments_bp.route("/download_license", methods=["GET"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
 def download_license():
-    session_id = request.args.get("session_id", "")
+    session_id = resolve_session_id()
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
@@ -181,7 +201,7 @@ def check_license():
 @payments_bp.route("/check-payment-status", methods=["GET"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
 def check_payment_status():
-    session_id = request.args.get("session_id", "")
+    session_id = resolve_session_id()
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
@@ -193,7 +213,7 @@ def check_payment_status():
         refresh_providers(transaction)
         progress = public_progress(transaction, checkout)
         status = progress["provider_state"] if progress["provider_state"] in {"partially_paid", "failed", "expired", "refunded", "wrong_asset_confirmed"} else "pending"
-        result = {"status": status, "progress": progress}
+        result = {"status": status, "progress": progress, "recovery_expires_at": view_context(session_id)["recovery_expires_at"]}
         if checkout:
             result.update(payment_state=progress["provider_state"], payment_method="banxa", beta=checkout.beta)
         return jsonify(result), 200
@@ -208,7 +228,7 @@ def check_payment_status():
         )
         invoice = None
     invoice_number = invoice.get("Invoice Number", "N/A") if invoice else "N/A"
-    result = {"status": "finished", "invoice_num": invoice_number}
+    result = {"status": "finished", "invoice_num": invoice_number, "recovery_expires_at": view_context(session_id)["recovery_expires_at"]}
     checkout = db.session.get(OnrampCheckout, session_id)
     if checkout:
         license_record = License.query.filter_by(issuance_reference=transaction.provider_payment_id).first()
@@ -231,7 +251,7 @@ def check_payment_status():
 @payments_bp.route("/download_invoice", methods=["GET"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
 def download_invoice():
-    session_id = request.args.get("session_id", "")
+    session_id = resolve_session_id()
     if not session_id:
         return jsonify({"error": "Missing session_id"}), 400
 
@@ -268,6 +288,7 @@ def simulate_payment_success():
     session_id = data.get("session_id") if isinstance(data, dict) else None
     if not isinstance(session_id, str) or not session_id:
         return jsonify({"error": "Missing session_id"}), 400
+    session_id = resolve_session_id(session_id)
     transaction = db.session.get(Transaction, session_id)
     if transaction is None:
         return jsonify({"error": "Session not found"}), 404
@@ -342,7 +363,9 @@ def create_crypto_payment():
     except (PaymentProviderError, SQLAlchemyError):
         current_app.logger.exception("NOWPayments invoice creation failed")
         return jsonify({"error": "Failed to generate crypto payment"}), 500
-    result["status_url"] = "/buy_success?session_id=" + result["session_id"]
+    token = issue_recovery(result["session_id"])
+    result["status_url"] = "/buy_success?token=" + token
+    result["recovery_url"] = current_app.config["APP_DOMAIN"] + result["status_url"]
     return jsonify(result), 200
 
 

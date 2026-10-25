@@ -6,6 +6,7 @@
   const error = document.querySelector('#checkout-error');
   const dialog = document.querySelector('#no-email-dialog');
   let sessionId = null;
+  let statusUrl = null;
   let busy = false;
   const showError = (element, message) => { element.textContent = message; element.focus(); };
   async function post(url, body) {
@@ -20,6 +21,7 @@
     try {
       const data = await post('/create-crypto-payment', {country: root.dataset.country, age_confirmed: true, terms_accepted: true, withdrawal_accepted: true, test_acknowledged: true, delivery_email: email.value.trim(), no_email_acknowledged: noEmailAcknowledged});
       sessionId = data.session_id;
+      statusUrl = data.status_url;
       email.value = '';
       if (data.invoice_url.startsWith('local-sim:')) {
         document.querySelector('#checkout-form-container').hidden = true;
@@ -43,7 +45,7 @@
     button.disabled = true;
     try {
       await post('/simulate-payment-success', {session_id: sessionId});
-      location.assign(`/buy_success?session_id=${encodeURIComponent(sessionId)}`);
+      location.assign(statusUrl || `/buy_success?session_id=${encodeURIComponent(sessionId)}`);
     } catch (e) { showError(document.querySelector('#simulation-error'), e.message); button.disabled = false; }
   });
   document.querySelector('#checkout-js-help').hidden = true;

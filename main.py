@@ -137,10 +137,12 @@ def create_app(
         if request.path in {
             "/buy_card", "/buy_success", "/download_license", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
-            "/onramp-callback",
+            "/onramp-callback", "/download-recovery", "/create-crypto-payment",
+            "/payment-preview/banxa",
         }:
             response.headers["Cache-Control"] = "no-store"
             response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["X-Robots-Tag"] = "noindex, nofollow"
         return response
     application.register_error_handler(429, ratelimit_handler)
     application.register_error_handler(413, payload_too_large)

@@ -127,7 +127,7 @@ def run(browser_name="chromium"):
             expect(page.locator("#kyc-continue")).to_be_enabled(timeout=8000)
             page.screenshot(path="/tmp/onramp-disclosure.png", full_page=True)
             page.locator("#kyc-continue").click()
-            page.wait_for_url("**/buy_success?session_id=*")
+            page.wait_for_url("**/buy_success?token=*")
             expect(page.get_by_text("Estimated funding amount:")).to_be_visible()
             original_url = page.url
             page.get_by_role("link", name="Open Banxa payment in a new tab").click()

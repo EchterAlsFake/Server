@@ -201,10 +201,8 @@ class PaymentProgressTests(ServerTestCase):
                 },
             )
         self.assertEqual(result.status_code, 200)
-        self.assertEqual(
-            result.json["status_url"],
-            "/buy_success?session_id=" + result.json["session_id"],
-        )
+        self.assertTrue(result.json["status_url"].startswith("/buy_success?token="))
+        self.assertNotIn(result.json["session_id"], result.json["status_url"])
         page = self.client.get(result.json["status_url"]).data
         self.assertIn(b"Open NOWPayments checkout", page)
         self.assertIn(b"https://nowpayments.io/payment/?iid=hosted-invoice", page)

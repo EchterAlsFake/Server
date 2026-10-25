@@ -169,6 +169,8 @@ def payment_preview(method):
         if method == "patreon" else url_for("onramp.buy_card")
     )
     if method == "banxa":
+        from .checkout_recovery import resolve_session_id
+        session_id = resolve_session_id()
         from .extensions import db
         from .models import OnrampCheckout, PaymentProgress, Transaction
         from .onramp_service import decrypt
@@ -199,7 +201,7 @@ def payment_preview(method):
         error = "Confirm that you will not send money or start a paid membership while testing."
     response = make_response(render_template(
         "payment_preview.html", provider=provider, method=method,
-        session_id=session_id, error=error,
+        session_id=session_id, recovery_token=request.values.get("token"), error=error,
     ), 400 if error else 200)
     response.headers["Cache-Control"] = "private, no-store"
     return response

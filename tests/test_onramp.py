@@ -392,6 +392,20 @@ class OnrampTests(ServerTestCase):
             self.assertEqual(db.session.get(Transaction, session_id).status, "finished")
             self.assertEqual(License.query.count(), 1)
 
+    def test_saved_card_recovery_link_authorizes_launch_in_a_new_browser(self):
+        response, session_id, _ = self.create()
+        from urllib.parse import parse_qs
+        from pf_server import checkout_recovery as recovery
+        token = parse_qs(urlsplit(response.json["status_url"]).query)["token"][0]
+        other = main.app.test_client()
+        self.assertEqual(other.get("/payment-preview/banxa", query_string={"token": token}).status_code, 200)
+        self.assertEqual(other.post("/payment-preview/banxa", data={
+            "token": token, "confirm_no_payment": "yes"
+        }).status_code, 200)
+        self.assertEqual(other.get("/payment-preview/banxa", query_string={"session_id": session_id}).status_code, 410)
+        with patch.object(recovery, "now", return_value=recovery.now() + timedelta(days=8)):
+            self.assertEqual(other.get("/payment-preview/banxa", query_string={"token": token}).status_code, 410)
+
     def test_forged_or_mismatched_ipn_never_issues(self):
         _, session_id, _ = self.create()
         self.assertEqual(

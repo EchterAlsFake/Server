@@ -16,6 +16,7 @@ from flask import (
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 from sqlalchemy.exc import SQLAlchemyError
 
+from .checkout_recovery import issue as issue_recovery
 from .countries import COUNTRY_OPTIONS
 from .extensions import csrf, db, limiter
 from .licensing import normalize_recipient_email
@@ -142,10 +143,12 @@ def create_payment():
             return jsonify(
                 error="Could not create the Banxa checkout. No payment link has been issued. Reopen the disclosure to try again."
             ), 503
+    recovery_token = issue_recovery(checkout.session_id)
     return jsonify(
         session_id=checkout.session_id,
         checkout_url=service.decrypt(checkout.checkout_encrypted),
-        status_url="/buy_success?session_id=" + checkout.session_id,
+        status_url="/buy_success?token=" + recovery_token,
+        recovery_url=current_app.config["APP_DOMAIN"] + "/buy_success?token=" + recovery_token,
         charge_amount=checkout.charge_amount,
         charge_currency=checkout.charge_currency,
         beta=checkout.beta,
