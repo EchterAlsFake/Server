@@ -227,3 +227,7 @@ __marimo__/
 
 # Local immutable website releases and private CI staging
 website-releases/
+
+# Keygen credentials
+deploy/keygen/credentials/
+

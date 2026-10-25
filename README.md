@@ -254,6 +254,17 @@ New licenses include one year of updates from first activation, with continued a
 The purchase service no longer holds an Ed25519 private key. Configure `KEYGEN_PRODUCT_TOKEN`
 and `KEYGEN_POLICY_ID` before enabling fulfillment. The old `/check_license` route returns 410.
 
+Commercial MSI licensing uses a perpetual fallback with one calendar year of updates
+from first activation. Renewal checkout accepts `renewal_license_key` in the existing
+`POST /create-crypto-payment` JSON body; the server proves key possession and binds
+the resulting license UUID before payment. Verified renewal callbacks preserve the
+key, with atomic deduplication in Keygen and a durable provider-charge binding locally.
+NOWPayments remains sandboxed. Patreon requires explicit `PATREON_PAYMENTS_ENABLED=true`
+and a configured qualifying tier (minimum 1999 cents); it is disabled on MSI. Its
+`renew_verified_patreon_charge` adapter is internal, for a provider-verified annual
+renewal charge, and is deliberately not invoked by repeat membership updates.
+Desktop builds must supply their immutable `build_release_date` to `LicenseClient`.
+
 ## Website presentation and verification
 
 Shared presentation lives in `templates/base.html`, `static/site.css` and `static/site.js`; existing transactional styles and payment logic are retained. Impressum, privacy and terms display full English sections followed by German sections, with language anchors. `/datenschutz` redirects to `/privacy_policy#de`. Bilingual document bodies live in `templates/partials/`. The privacy policy describes the necessary session cookie.
@@ -314,3 +325,4 @@ or submit real identity documents. They do not falsely label live provider pages
 sandboxes. A local launch page performs external navigation after acknowledged POSTs
 so the site's same-origin `form-action` CSP remains intact. Without JavaScript, the
 same server-rendered warning and an explicit provider link remain available.
+

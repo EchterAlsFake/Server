@@ -13,6 +13,28 @@ from pf_server.models import License, Transaction
 
 
 class PaymentTests(ServerTestCase):
+    def test_verified_renewal_replay_and_download_keep_same_license(self):
+        from license_fixtures import LICENSE, signed_key
+        self.add_transaction('NP-renewal', 'invoice-renewal')
+        with main.app.app_context():
+            transaction = main.db.session.get(Transaction, 'NP-renewal')
+            transaction.renewal_license_id = LICENSE
+            main.db.session.commit()
+        payload = {'order_id': 'NP-renewal', 'invoice_id': 'invoice-renewal',
+                   'payment_id': 'payment-renewal', 'payment_status': 'finished',
+                   'price_amount': 19.99, 'price_currency': 'eur'}
+        with patch.object(licensing, 'renew_verified_payment', return_value={
+                'attributes': {'key': signed_key()}}) as renew:
+            self.assertEqual(self.post_nowpayments(payload).status_code, 200)
+            self.assertEqual(self.post_nowpayments(payload).status_code, 200)
+            self.assertEqual(renew.call_count, 1)
+            response = self.client.get('/download_license?session_id=NP-renewal')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.data)['license_key'], signed_key())
+            self.assertEqual(renew.call_args_list[0], renew.call_args_list[1])
+        with main.app.app_context():
+            self.assertEqual(License.query.count(), 0)
+
     def test_checkout_requires_explicit_terms_acceptance(self):
         with patch.dict(main.app.config, {"NOWPAYMENTS_API_KEY": "test-api-key"}):
             for route in ("/create-crypto-payment",):

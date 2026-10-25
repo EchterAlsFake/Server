@@ -16,22 +16,22 @@ NOW = 1788696000.0
 def iso(value):
     return datetime.fromtimestamp(value, timezone.utc).isoformat()
 
-def signed_key(license_id=LICENSE):
+def signed_key(license_id=LICENSE, duration=None):
     claims = {"account": {"id": ACCOUNT}, "product": {"id": PRODUCT},
-              "policy": {"id": POLICY, "duration": None}, "user": None,
+              "policy": {"id": POLICY, "duration": duration}, "user": None,
               "license": {"id": license_id, "created": iso(NOW), "expiry": None}}
     encoded = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode()
     message = "key/" + encoded
     return message + "." + base64.urlsafe_b64encode(PRIVATE.sign(message.encode())).decode()
 
-def issuance(license_id):
+def issuance(license_id, **kwargs):
     return {"id": license_id, "attributes": {"key": signed_key(license_id), "scheme": "ED25519_SIGN"},
             "relationships": {"policy": {"data": {"id": POLICY}}}}
 
-def permit(fingerprint, now=NOW, ttl=604800, **changes):
+def permit(fingerprint, now=NOW, ttl=604800, updates_end=None, **changes):
     license_data = issuance(LICENSE)
     license_data.update(type="licenses")
-    license_data["attributes"].update(suspended=False, expiry=None)
+    license_data["attributes"].update(suspended=False, expiry=iso(updates_end) if updates_end is not None else None)
     data = {"meta": {"issued": iso(now), "expiry": iso(now+ttl), "ttl": ttl},
             "data": {"type": "machines", "id": MACHINE, "attributes": {"fingerprint": fingerprint},
                      "relationships": {name: {"data": {"id": value}} for name,value in

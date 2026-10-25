@@ -78,6 +78,7 @@ def _store_pending_transaction(
     expected_pay_currency: str | None = None,
     delivery_recipient_encrypted: str | None = None,
     hosted_url: str | None = None,
+    renewal_license_id: str | None = None,
 ) -> None:
     db.session.add(
         Transaction(
@@ -96,6 +97,7 @@ def _store_pending_transaction(
             expected_pay_currency=expected_pay_currency,
             status="pending",
             created_at=created_at,
+            renewal_license_id=renewal_license_id,
         )
     )
     from .payment_progress import hosted_checkout_url
@@ -113,7 +115,9 @@ def create_crypto_invoice(
     customer_country: str,
     country_evidence: str,
     geolocation_database: str,
-    *, delivery_recipient_encrypted: str | None = None,
+    *,
+    delivery_recipient_encrypted: str | None = None,
+    renewal_license_id: str | None = None,
 ) -> dict[str, str]:
     session_id, created_at = _new_session()
     payload = {
@@ -160,6 +164,7 @@ def create_crypto_invoice(
             country_evidence=country_evidence,
             geolocation_database=geolocation_database,
             delivery_recipient_encrypted=delivery_recipient_encrypted,
+            renewal_license_id=renewal_license_id,
         )
         return {
             "session_id": session_id,
@@ -178,6 +183,7 @@ def create_crypto_invoice(
         geolocation_database=geolocation_database,
         delivery_recipient_encrypted=delivery_recipient_encrypted,
         hosted_url=invoice_url,
+        renewal_license_id=renewal_license_id,
     )
     return {"session_id": session_id, "invoice_url": invoice_url}
 
@@ -284,6 +290,8 @@ def complete_payment(webhook: NowPaymentsWebhook) -> CompletionResult:
         return CompletionResult(claim_state)
 
     try:
+        from .licensing import fulfill_transaction_license
+        fulfill_transaction_license(transaction)
         invoice = load_invoice(webhook.order_id)
         if invoice is None:
             crypto_amount = webhook.actually_paid or webhook.pay_amount or Decimal(0)

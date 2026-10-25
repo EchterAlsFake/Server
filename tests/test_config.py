@@ -205,6 +205,11 @@ class ConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "require HTTPS"):
                 load_environment_config(directory, {"SECRET_KEY": "secret", "KEYGEN_INTERNAL_URL": "http://remote.example"})
 
+    def test_internal_container_keygen_allows_http(self):
+        with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
+            config = load_environment_config(directory, {"SECRET_KEY": "secret", "KEYGEN_INTERNAL_URL": "http://keygen-api:3000"})
+            self.assertEqual(config["KEYGEN_INTERNAL_URL"], "http://keygen-api:3000")
+
     def test_generated_secret_is_private_and_stable(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
             first = load_environment_config(directory, {})

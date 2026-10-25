@@ -628,19 +628,13 @@ class OnrampConfigTests(ServerTestCase):
             {"SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:", "TESTING": True}
         )
         with isolated.app_context():
+            import sqlalchemy as sa
             upgrade(revision="2f3c6a91d4b8")
             upgrade(revision="34ddbc4909f1")
-            db.session.add(
-                Transaction(
-                    session_id="NP-existing",
-                    provider_payment_id="existing",
-                    provider_reference_type="invoice",
-                    expected_price_amount="19.99",
-                    expected_price_currency="eur",
-                    customer_country="Germany",
-                    country_evidence="local",
-                    geolocation_database="test",
-                    created_at="2026-10-01T00:00:00+00:00",
+            db.session.execute(
+                sa.text(
+                    "INSERT INTO \"transaction\" (session_id, provider_payment_id, provider_reference_type, environment, expected_price_amount, expected_price_currency, customer_country, country_evidence, geolocation_database, status, created_at) "
+                    "VALUES ('NP-existing', 'existing', 'invoice', 'production', '19.99', 'eur', 'Germany', 'local', 'test', 'pending', '2026-10-01T00:00:00+00:00')"
                 )
             )
             db.session.commit()

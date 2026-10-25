@@ -21,6 +21,22 @@ from .time_utils import rfc3339_utc
 from .webhook_models import PatreonMember, PatreonWebhook
 
 
+def renew_verified_patreon_charge(member_id: str, charge_reference: str) -> dict:
+    """Prepared adapter; invoke only after verifying a qualifying renewal charge.
+
+    Membership update event IDs are NOT charge IDs. Deliberately not called by
+    membership webhooks until the annual EUR tier/charge mapping is configured.
+    """
+    from .keygen_service import renew_verified_payment
+    delivery = db.session.get(PatreonLicenseDelivery, member_id)
+    if delivery is None or delivery.status != 'sent' or not delivery.license_key:
+        raise ValueError('Member has no delivered license')
+    record = db.session.get(License, delivery.license_key)
+    if record is None or not record.keygen_id:
+        raise ValueError('Member has no Keygen license')
+    return renew_verified_payment('patreon', 'production', charge_reference, record.keygen_id)
+
+
 def calculate_patreon_signature(secret: str, request_body: bytes) -> str:
     """Implement Patreon's protocol-mandated HMAC-MD5 signature exactly."""
 
@@ -56,7 +72,7 @@ def extract_patreon_email(payload: PatreonWebhook) -> str | None:
 def patreon_member_has_license_tier(member: PatreonMember) -> bool:
     allowed_tier_ids = current_app.config.get("PATREON_LICENSE_TIER_IDS") or frozenset()
     if not allowed_tier_ids:
-        return True
+        return False
     tiers_relationship = member.relationships.get("currently_entitled_tiers", {})
     tier_data = (
         tiers_relationship.get("data", [])
@@ -80,7 +96,7 @@ def patreon_member_is_paid_and_entitled(member: PatreonMember) -> bool:
     return (
         attributes.patron_status == "active_patron"
         and (attributes.last_charge_status or "").casefold() == "paid"
-        and (attributes.currently_entitled_amount_cents or 0) > 0
+        and (attributes.currently_entitled_amount_cents or 0) >= 1999
         # Patreon documents every member attribute as optional.  Absence cannot
         # be treated as evidence that a membership is neither trial nor gifted.
         and attributes.is_free_trial is False

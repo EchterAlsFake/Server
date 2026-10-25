@@ -35,6 +35,8 @@ class Transaction(db.Model):
     finished_at = db.Column(db.String(40), nullable=True)
     created_at = db.Column(db.String, nullable=False)
 
+    renewal_license_id = db.Column(db.String(36), nullable=True)
+
 
 class Checklist(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -126,3 +128,10 @@ class PaymentProgress(db.Model):
     poll_lease_until = db.Column(db.String(40), nullable=True)
     poll_token = db.Column(db.String(64), nullable=True)
     refresh_unavailable = db.Column(db.Boolean, nullable=False, default=False)
+
+
+class LicenseRenewal(db.Model):
+    """A verified provider charge can only ever target one license."""
+    reference_hash = db.Column(db.String(64), primary_key=True)
+    keygen_id = db.Column(db.String(36), nullable=False)
+    completed = db.Column(db.Boolean, nullable=False, default=False)
