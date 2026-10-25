@@ -31,6 +31,7 @@ from .nowpayments_service import (
 CONSENT_VERSION = "banxa-annual-v1"
 API_BASE = "https://api.onramp-pay.com"
 CHECKOUT_BASE = "https://checkout.onramp-pay.com/process-payment.php"
+POLYGON_USDC_CONTRACT = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
 
 
 def now() -> datetime:
@@ -115,7 +116,7 @@ def create_checkout(
         with httpx.Client(
             timeout=15, follow_redirects=False, trust_env=False
         ) as client:
-            directory = _get_json(client, API_BASE + "/control/provider-status")
+            directory = _get_json(client, API_BASE + "/control/provider-status/")
             providers = directory.get("providers")
             if not isinstance(providers, list):
                 raise ValueError("Invalid provider directory")
@@ -134,6 +135,21 @@ def create_checkout(
             ):
                 raise PaymentProviderError("Banxa is currently unavailable")
             minimum = positive_decimal(banxa.get("minimum_amount"))
+            currencies = _get_json(
+                client, config["NOWPAYMENTS_API_URL"] + "/full-currencies",
+                headers=_headers(),
+            ).get("currencies")
+            if not isinstance(currencies, list):
+                raise ValueError("Missing payment currency metadata")
+            asset = next((row for row in currencies if isinstance(row, dict)
+                and str(row.get("code", "")).lower() == "usdcmatic"), None)
+            if not asset or (
+                str(asset.get("smart_contract", "")).lower() != POLYGON_USDC_CONTRACT
+                or str(asset.get("network", "")).lower() not in {"matic", "polygon"}
+                or asset.get("enable") is not True
+                or asset.get("available_for_payment") is not True
+            ):
+                raise PaymentProviderError("Native Polygon USDC deposits are unavailable")
             response = client.post(
                 config["NOWPAYMENTS_API_URL"] + "/payment",
                 headers=_headers(),

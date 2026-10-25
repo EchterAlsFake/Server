@@ -60,9 +60,11 @@ encrypted `address_in` returned by wallet creation. No affiliate endpoint is
 used. Ambiguous creation failures are not retried automatically.
 
 Onramp's GET callback stores only a receipt timestamp, ignoring all payment
-fields. It cannot fulfill orders. Signed NOWPayments `finished` events must
+fields. It cannot fulfill orders. Signed NOWPayments `finished` or settled `partially_paid` events must
 match the stored payment ID, €19.99 price and currencies and report at least
-95% of the original crypto amount. Overpayments issue one license. Lower
+90% of the original quoted crypto amount. The stored €19.99 order price must
+still match exactly; the tolerance applies to actual crypto received, not to
+replacement order metadata. Overpayments issue one license. Lower
 payments, failures and expiry are displayed for support review. Direct crypto
 payments retain their existing full-payment validation.
 
@@ -166,7 +168,7 @@ the display between provider reads. No background progress job is required.
 
 **API observations and unsigned Onramp callbacks never approve payment or issue
 licenses.** Only the signed, fully matched NOWPayments receipt goes through the
-existing fulfillment checks. Completion reported by an API alone remains pending.
+existing fulfillment checks and the durable receipt worker. Completion reported by an API alone remains pending.
 Provider launch links are hidden/blocked once receipt or forwarding is observed,
 to reduce accidental duplicate payments. Partial, failed, expired and wrong-asset
 payments show support instructions instead of a successful purchase.
@@ -181,3 +183,37 @@ The card page presents Express verification conditionally, offers a Patreon
 alternative for customers without a Tax ID, and distinguishes the 10-minute
 expectation from Banxa's published 90-minute typical processing window. Connection
 advice is the merchant's precaution; it cannot guarantee Express eligibility.
+
+## Durable receipt worker and deployment
+
+Apply `flask --app main:app db upgrade head` before running the updated webhook.
+Signature and schema verification precede persistence. Native Polygon USDC
+metadata (network, exact contract and deposit availability) is checked before
+creating an Onramp payment. Final receipts are normalized
+to payment fields only and committed to `payment_receipts` before HTTP 200; no
+Keygen or SMTP request runs in the HTTP acknowledgment path. Persistence failures
+return HTTP 503 so the provider can redeliver.
+
+Run `flask --app main:app process-nowpayments-receipts` every 15 seconds. Atomic
+ten-minute leases prevent concurrent processing; interrupted work is recovered
+after lease expiry. Failures retry with 30-second to five-minute backoff without
+requiring another webhook. Duplicate receipts and stable license issuance IDs
+prevent duplicate fulfillment. Terminal receipts are removed after 30 days;
+pending receipts are retained. Database/configuration backups preserve this queue.
+
+Keep the minute crypto-email and five-minute Onramp-email retry/retention jobs
+running independently. All jobs must use the web application's credentials and
+database. Rootless Podman definitions live in the infrastructure repository at
+`ops/user-systemd/pornfetch-{receipts,crypto-deliveries,onramp-deliveries}.*`.
+
+The provider directory request uses HTTPS `/control/provider-status/` including
+the trailing slash. Keep the redirect allowlist: the slashless endpoint has been
+observed redirecting to HTTP with affiliate parameters, which must be rejected.
+Native Polygon USDC compatibility and supported forwarding still need provider
+confirmation before enabling live checkout.
+
+The 90% floor applies to the Onramp route; ordinary direct crypto payments retain
+their existing full-payment checks. Overpayments have no upper rejection boundary
+and still issue only one license. Do not change the merchant payout destination
+when integrating: NOWPayments' non-custodial payout to the configured Kraken
+Polygon USDC wallet is separate from the per-order incoming payment addresses.

@@ -135,3 +135,18 @@ class LicenseRenewal(db.Model):
     reference_hash = db.Column(db.String(64), primary_key=True)
     keygen_id = db.Column(db.String(36), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
+
+
+class PaymentReceipt(db.Model):
+    """Minimal authenticated receipt, committed before webhook acknowledgment."""
+
+    __tablename__ = "payment_receipts"
+    receipt_id = db.Column(db.String(64), primary_key=True)
+    payload = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(16), nullable=False, default="pending")
+    created_at = db.Column(db.String(40), nullable=False)
+    updated_at = db.Column(db.String(40), nullable=False)
+    next_attempt_at = db.Column(db.String(40), nullable=False)
+    lease_token = db.Column(db.String(64), nullable=True)
+    lease_expires_at = db.Column(db.String(40), nullable=True)
+    attempts = db.Column(db.Integer, nullable=False, default=0)

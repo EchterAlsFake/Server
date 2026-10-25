@@ -171,6 +171,12 @@ def create_app(
             raise click.ClickException("Could not verify the annual policy and client configuration") from None
         click.echo("Verified: one year from first activation, continued access, ten installations; client policy matches.")
 
+    @application.cli.command("process-nowpayments-receipts")
+    def process_nowpayments_receipts_command():
+        """Fulfill durable signed payment receipts outside the webhook request."""
+        from pf_server.payment_receipts import process_receipts
+        click.echo(f"Processed {process_receipts()} authenticated payment receipts.")
+
     @application.cli.command("retry-crypto-deliveries")
     def retry_crypto_deliveries_command():
         """Retry optional crypto license email and purge expired delivery data."""

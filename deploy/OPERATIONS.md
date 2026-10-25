@@ -181,3 +181,12 @@ release directory and publisher secret as described in
 CI publishing, immutable storage, recovery, old-host redirects and SEO cutover.
 Do not blanket-redirect existing payment/session, API, documentation or licensing
 routes when moving public product pages.
+
+### NOWPayments receipt acknowledgment
+
+The webhook now commits authenticated final receipts before responding, and
+fulfillment runs in `flask --app main:app process-nowpayments-receipts`. Schedule
+it every 15 seconds using the same database and credentials as the web service.
+The rootless deployment supplies dedicated systemd user timers in the infrastructure
+repository. Keep both email retry jobs enabled independently. See
+[Onramp operations](../docs/ONRAMP_CHECKOUT.md#durable-receipt-worker-and-deployment).

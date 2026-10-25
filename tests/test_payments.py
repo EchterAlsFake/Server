@@ -5,7 +5,7 @@ import os
 import string
 from unittest.mock import MagicMock, patch
 
-from _support import ServerTestCase, main
+from _support import ServerTestCase, main, drain_payment_receipts
 
 import pf_server.licensing as licensing
 import pf_server.nowpayments_service as nowpayments_service
@@ -99,12 +99,14 @@ class PaymentTests(ServerTestCase):
             main.db.session.commit()
 
     def post_nowpayments(self, payload: dict):
-        return self.client.post(
+        response = self.client.post(
             "/nowpayments-ipn",
             data=json.dumps(payload),
             headers={"x-nowpayments-sig": self.nowpayments_signature(payload)},
             base_url="https://api.echteralsfake.me",
         )
+        drain_payment_receipts()
+        return response
 
     def test_payment_webhooks_are_available_only_on_api_subdomain(self):
         wrong_host = self.post_patreon(
@@ -279,7 +281,7 @@ class PaymentTests(ServerTestCase):
                     transaction = main.db.session.get(Transaction, session_id)
                     self.assertEqual(transaction.status, "pending")
 
-    def test_unknown_and_busy_finished_payments_request_provider_retry(self):
+    def test_unknown_and_busy_finished_payments_are_durably_queued(self):
         payload = {
             "order_id": "NP-not-stored-yet",
             "payment_id": "payment-unknown",
@@ -302,8 +304,7 @@ class PaymentTests(ServerTestCase):
         busy = self.post_nowpayments(busy_payload)
 
         for response in (unknown, busy):
-            self.assertEqual(response.status_code, 503)
-            self.assertEqual(response.headers["Retry-After"], "30")
+            self.assertEqual(response.status_code, 200)
 
     def test_stale_payment_processing_lease_is_recovered(self):
         self.add_transaction(
@@ -357,8 +358,7 @@ class PaymentTests(ServerTestCase):
 
         retried = self.post_nowpayments(payload)
 
-        self.assertEqual(failed.status_code, 503)
-        self.assertEqual(failed.headers["Retry-After"], "30")
+        self.assertEqual(failed.status_code, 200)
         self.assertEqual(retried.status_code, 200)
         with main.app.app_context():
             transaction = main.db.session.get(Transaction, "NP-storage-retry")

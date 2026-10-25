@@ -8,7 +8,7 @@ from unittest.mock import patch
 from cryptography.fernet import Fernet
 import httpx
 
-from _support import ServerTestCase, main
+from _support import ServerTestCase, main, drain_payment_receipts
 from pf_server import crypto_delivery, nowpayments_service
 from pf_server.checkout_consent import CONSENT_VERSION
 from pf_server.models import CryptoLicenseDelivery, License, Transaction
@@ -183,7 +183,7 @@ class CheckoutRefreshTests(ServerTestCase):
             actually_paid=0.01,
             pay_currency="btc",
         )
-        return self.client.post(
+        response = self.client.post(
             "/nowpayments-ipn",
             data=json.dumps(payload),
             headers={
@@ -193,6 +193,8 @@ class CheckoutRefreshTests(ServerTestCase):
             },
             base_url="https://api.echteralsfake.me",
         )
+        drain_payment_receipts()
+        return response
 
     def test_no_email_checkout_stores_no_recipient_and_shows_signed_license(self):
         session_id = self.create_invoice()

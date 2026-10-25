@@ -42,9 +42,7 @@ from .payment_progress import hosted_checkout_url, public_progress, record_nowpa
 from .crypto_delivery import deliver_crypto_license, encrypt_recipient
 from .keygen_service import KeygenUnavailable, renewal_target
 from .nowpayments_service import (
-    CompletionState,
     PaymentProviderError,
-    complete_payment,
     create_crypto_invoice,
     verify_ipn_signature,
 )
@@ -387,56 +385,20 @@ def nowpayments_ipn():
         )
         return "Ignored repeated deposit", 200
 
-    from .onramp_service import deliver_license, record_payment_state
+    from .onramp_service import record_payment_state
     record_payment_state(webhook)
     record_nowpayments(webhook)
 
-    if payment_status.casefold() == "finished":
+    if payment_status.casefold() in {"finished", "partially_paid"}:
+        from .payment_receipts import enqueue
         try:
-            result = complete_payment(webhook)
-        except Exception:
+            enqueue(webhook)
+        except SQLAlchemyError:
             db.session.rollback()
-            current_app.logger.exception(
-                "NOWPayments fulfillment failed (reference=%s)", reference
-            )
-            response = jsonify({"error": "fulfillment_failed"})
+            current_app.logger.error("Could not persist authenticated payment receipt")
+            response = jsonify({"error": "receipt_storage_unavailable"})
             response.headers["Retry-After"] = "30"
             return response, 503
-        if result.state in {CompletionState.UNKNOWN, CompletionState.BUSY}:
-            current_app.logger.warning(
-                "NOWPayments fulfillment is temporarily unavailable "
-                "(reference=%s, state=%s)",
-                reference,
-                result.state,
-            )
-            response = jsonify({"error": result.state})
-            response.headers["Retry-After"] = "30"
-            return response, 503
-        if result.state == CompletionState.REJECTED:
-            checkout = db.session.get(OnrampCheckout, webhook.order_id)
-            if checkout and result.reason == "insufficient_actual_payment":
-                checkout.payment_state = "partially_paid"
-                db.session.commit()
-            current_app.logger.warning(
-                "Rejected NOWPayments fulfillment (reference=%s, reason=%s)",
-                reference,
-                result.reason,
-            )
-            return "Ignored invalid payment", 200
-        if result.state == CompletionState.COMPLETED:
-            current_app.logger.info(
-                "NOWPayments fulfillment completed (reference=%s, invoice=%s)",
-                reference,
-                safe_log_reference(result.invoice_number),
-            )
-        if result.state in {CompletionState.COMPLETED, CompletionState.ALREADY_FINISHED}:
-            # Delivery errors must never roll back or conceal a confirmed payment.
-            try:
-                deliver_license(webhook.order_id)
-                deliver_crypto_license(webhook.order_id)
-            except Exception:
-                db.session.rollback()
-                current_app.logger.warning("Onramp email delivery deferred to retry job")
     return "OK", 200
 
 

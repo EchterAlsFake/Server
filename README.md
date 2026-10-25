@@ -328,3 +328,9 @@ sandboxes. A local launch page performs external navigation after acknowledged P
 so the site's same-origin `form-action` CSP remains intact. Without JavaScript, the
 same server-rendered warning and an explicit provider link remain available.
 
+
+NOWPayments final receipts are acknowledged after durable database persistence.
+Run `flask --app main:app process-nowpayments-receipts` every 15 seconds and apply
+migrations before starting the updated web service. Keygen and SMTP run outside
+the webhook request; email outboxes retain their independent retry schedules.
+See [checkout operations](docs/ONRAMP_CHECKOUT.md#durable-receipt-worker-and-deployment).

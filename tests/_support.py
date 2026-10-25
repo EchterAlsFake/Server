@@ -25,6 +25,7 @@ from pf_server.country_service import CountryEvidence  # noqa: E402
 from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
     PaymentProgress,
+    PaymentReceipt,
     CryptoLicenseDelivery,
     Checklist,
     CiStatus,
@@ -69,6 +70,7 @@ class ServerTestCase(unittest.TestCase):
         with main.app.app_context():
             for model in (
                 PaymentProgress,
+                PaymentReceipt,
                 CryptoLicenseDelivery,
                 Checklist,
                 LicenseRenewal,
@@ -151,3 +153,9 @@ class ServerTestCase(unittest.TestCase):
             canonical_body,
             hashlib.sha512,
         ).hexdigest()
+
+
+def drain_payment_receipts():
+    from pf_server.payment_receipts import process_receipts
+    with main.app.app_context():
+        process_receipts()

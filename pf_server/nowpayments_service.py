@@ -237,7 +237,7 @@ def _validate_finished_payment(
         except InvalidOperation:
             return "invalid_stored_pay_amount"
         if db.session.get(OnrampCheckout, transaction.session_id) is not None:
-            expected_paid *= Decimal("0.95")
+            expected_paid *= Decimal("0.90")
         if webhook.actually_paid is None or webhook.actually_paid < expected_paid:
             return "insufficient_actual_payment"
     return None

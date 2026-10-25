@@ -8,7 +8,7 @@ from unittest.mock import patch
 import httpx
 from cryptography.fernet import Fernet
 
-from _support import ServerTestCase, main
+from _support import ServerTestCase, main, drain_payment_receipts
 from pf_server import payment_progress as service
 from pf_server.onramp_service import encrypt
 from pf_server.models import License, OnrampCheckout, PaymentProgress, Transaction
@@ -108,7 +108,7 @@ class PaymentProgressTests(ServerTestCase):
         )
 
     def ipn(self, payload, signed=True):
-        return self.client.post(
+        response = self.client.post(
             "/nowpayments-ipn",
             data=json.dumps(payload),
             headers={
@@ -118,6 +118,8 @@ class PaymentProgressTests(ServerTestCase):
             },
             base_url="https://api.echteralsfake.me",
         )
+        drain_payment_receipts()
+        return response
 
     def status(self):
         return self.client.get("/check-payment-status?session_id=NP-test")

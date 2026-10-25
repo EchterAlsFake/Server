@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlsplit
 import httpx
 from cryptography.fernet import Fernet
 
-from _support import ServerTestCase, main
+from _support import ServerTestCase, main, drain_payment_receipts
 from pf_server import onramp_service as service
 from pf_server.config import load_environment_config
 from pf_server.extensions import db
@@ -44,6 +44,7 @@ class OnrampTests(ServerTestCase):
         }
         self.wallet_error = False
         self.malformed_payment = False
+        self.asset_contract = service.POLYGON_USDC_CONTRACT
         self.http_patch = patch.object(
             service.httpx,
             "Client",
@@ -56,8 +57,14 @@ class OnrampTests(ServerTestCase):
 
     def provider_request(self, request):
         self.requests.append(request)
-        if request.url.path == "/control/provider-status":
+        if request.url.path == "/control/provider-status/":
             return httpx.Response(200, json={"providers": [self.provider]})
+        if request.url.path == "/v1/full-currencies":
+            return httpx.Response(200, json={"currencies": [{
+                "code": "USDCMATIC", "network": "matic",
+                "smart_contract": self.asset_contract, "enable": True,
+                "available_for_payment": True,
+            }]})
         if request.url.path == "/v1/payment":
             payload = json.loads(request.content)
             return httpx.Response(
@@ -144,7 +151,7 @@ class OnrampTests(ServerTestCase):
         )
 
     def post_ipn(self, payload, valid=True):
-        return self.client.post(
+        response = self.client.post(
             "/nowpayments-ipn",
             json=payload,
             headers={
@@ -154,6 +161,8 @@ class OnrampTests(ServerTestCase):
             },
             base_url="https://api.echteralsfake.me",
         )
+        drain_payment_receipts()
+        return response
 
     def test_disabled_and_sandbox_never_contact_providers(self):
         for settings in (
@@ -166,6 +175,12 @@ class OnrampTests(ServerTestCase):
                     response = self.client.post(endpoint, json={}, base_url=BASE)
                     self.assertEqual(response.status_code, 503)
         self.assertEqual(self.requests, [])
+
+    def test_wrong_usdc_contract_is_rejected_before_creating_any_payment(self):
+        self.asset_contract = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
+        response, _, _ = self.create()
+        self.assertEqual(response.status_code, 503)
+        self.assertFalse(any(r.url.path == "/v1/payment" for r in self.requests))
 
     def test_five_second_timer_and_browser_binding(self):
         token, session_id = self.acknowledge()
@@ -307,9 +322,9 @@ class OnrampTests(ServerTestCase):
             )
             self.assertEqual(License.query.count(), 0)
 
-    def test_exact_95_percent_receipt_delivers_same_license_once(self):
+    def test_exact_90_percent_receipt_delivers_same_license_once(self):
         _, session_id, _ = self.create()
-        payload = self.webhook(session_id, paid=22.8)
+        payload = self.webhook(session_id, paid=21.6)
         with patch.object(service, "send_license_email") as send:
             self.assertEqual(self.post_ipn(payload).status_code, 200)
             self.assertEqual(self.post_ipn(payload).status_code, 200)
@@ -335,7 +350,7 @@ class OnrampTests(ServerTestCase):
         _, session_id, _ = self.create()
         with patch.object(service, "send_license_email") as send:
             self.assertEqual(
-                self.post_ipn(self.webhook(session_id, paid=22.7999)).status_code, 200
+                self.post_ipn(self.webhook(session_id, paid=21.5999)).status_code, 200
             )
             self.assertEqual(send.call_count, 0)
             self.assertEqual(
@@ -358,6 +373,23 @@ class OnrampTests(ServerTestCase):
                 self.post_ipn(self.webhook(session_id, paid=50)).status_code, 200
             )
         with main.app.app_context():
+            self.assertEqual(License.query.count(), 1)
+
+    def test_signed_partial_settlement_at_90_percent_issues_once(self):
+        _, session_id, _ = self.create()
+        with patch.object(service, "send_license_email") as send:
+            self.assertEqual(self.post_ipn(self.webhook(
+                session_id, paid=21.5999, payment_status="partially_paid"
+            )).status_code, 200)
+            send.assert_not_called()
+            self.assertEqual(self.post_ipn(self.webhook(
+                session_id, paid=21.6, payment_status="partially_paid"
+            )).status_code, 200)
+            self.assertEqual(send.call_count, 1)
+            self.post_ipn(self.webhook(session_id, paid=24))
+            self.assertEqual(send.call_count, 1)
+        with main.app.app_context():
+            self.assertEqual(db.session.get(Transaction, session_id).status, "finished")
             self.assertEqual(License.query.count(), 1)
 
     def test_forged_or_mismatched_ipn_never_issues(self):
@@ -395,7 +427,7 @@ class OnrampTests(ServerTestCase):
         with patch(
             "pf_server.licensing.build_license_file", side_effect=KeygenUnavailable()
         ):
-            self.assertEqual(self.post_ipn(self.webhook(session_id)).status_code, 503)
+            self.assertEqual(self.post_ipn(self.webhook(session_id)).status_code, 200)
         with patch.object(service, "send_license_email"):
             self.assertEqual(self.post_ipn(self.webhook(session_id)).status_code, 200)
         with main.app.app_context():
