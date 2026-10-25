@@ -1,0 +1,6 @@
+{% macro screenshot(name, alt, width, height) -%}
+<picture>
+    <source type="image/webp" srcset="{{ url_for('static', filename='media/web/' ~ name ~ '-480.webp') }} 480w, {{ url_for('static', filename='media/web/' ~ name ~ '-960.webp') }} 960w" sizes="(max-width: 540px) calc(100vw - 40px), (max-width: 800px) calc(100vw - 48px), 700px">
+    <img src="{{ url_for('static', filename='media/' ~ name ~ '.png') }}" alt="{{ alt }}" width="{{ width }}" height="{{ height }}" loading="lazy" decoding="async">
+</picture>
+{%- endmacro %}

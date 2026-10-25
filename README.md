@@ -11,7 +11,8 @@ For a human-readable explanation of the refactor, its design decisions, and the 
 
 Production addresses:
 
-- Website: <https://echteralsfake.me>
+- Product website: <https://pornfetch.to>
+- Personal website: <https://echteralsfake.me>
 - Documentation: <https://docs.echteralsfake.me>
 - Payment webhooks: <https://api.echteralsfake.me>
 - Onion service: <http://i3vtbgg6dufszjzbccyzd3wk4v2on3k6ljzjpg2ppzapgqmjmsxlvkid.onion/>
@@ -131,6 +132,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `GEOIP_DATABASE_LABEL` | Optional retained release/source label | Derived from MMDB build date |
 | `GITHUB_TOKEN` | Raises the GitHub release API rate limit | Unset |
 | `LICENSE_PRIVATE_KEY_B64` | Base64-encoded raw 32-byte Ed25519 private key | Unset |
+| `SEO_INDEXING_ENABLED` | Index public product pages and guides; disable on staging independently of payments | `true` |
 | `APP_DOMAIN` | Canonical product origin used for links and payment redirects | `https://pornfetch.to` |
 | `API_DOMAIN` | Public origin dedicated to payment webhooks | `https://api.echteralsfake.me` |
 | `NOWPAYMENTS_SANDBOX` | Uses the sandbox API and enables local payment simulation | `true` |
@@ -153,7 +155,7 @@ The product token is a server-side credential and must not be shipped with the a
 
 ## HTTP surface
 
-Public pages include `/porn_fetch`, `/donation`, `/stats`, `/impress`, `/terms`, `/refund_policy`, `/privacy_policy`, `/datenschutz`, and `/legal-statement`. `/` serves the v3.9 marketing homepage, with the official logo, product tour, screenshots, platform requirements and website capability table. Product information, downloads, About and setup/help pages are public. Purchase and donation entry pages retain the age-confirmation dialog and secure browser-session cookie. Confirmation reveals the page in place; the CSRF-protected HTML form also works without JavaScript. `/porn_fetch` and checkout entry pages use the same confirmation state; legal documents remain readable before confirmation. `/leave` clears confirmation and displays a neutral exit page. `/download` uses a local release catalog and platform cards, with direct files served by Caddy and local guides, release history, About and help. It does not contact GitHub. See [website distribution and SEO operations](docs/WEBSITE_DOWNLOADS.md). This does not require `CHECKLIST_AUTH`; the old `/access` URL redirects to `/`. Checklist editing has its own login. On the commercial host, `/robots.txt` and `/sitemap.xml` expose the product, download guides, About/help and published release notes when sandbox mode is off. Canonical URLs use `APP_DOMAIN` (default `https://pornfetch.to`). Sandbox pages carry `noindex` and the sandbox sitemap is unavailable.
+Public pages include `/porn_fetch`, `/donation`, `/stats`, `/impress`, `/terms`, `/refund_policy`, `/privacy_policy`, `/datenschutz`, and `/legal-statement`. `/` serves the v3.9 marketing homepage, with the official logo, product tour, screenshots, platform requirements and website capability table. Product information, downloads, About and setup/help pages are public. Purchase and donation entry pages retain the age-confirmation dialog and secure browser-session cookie. Confirmation reveals the page in place; the CSRF-protected HTML form also works without JavaScript. `/porn_fetch` and checkout entry pages use the same confirmation state; legal documents remain readable before confirmation. `/leave` clears confirmation and displays a neutral exit page. `/download` uses a local release catalog and platform cards, with direct files served by Caddy and local guides, release history, About and help. It does not contact GitHub. See [website distribution and SEO operations](docs/WEBSITE_DOWNLOADS.md). This does not require `CHECKLIST_AUTH`; the old `/access` URL redirects to `/`. Checklist editing has its own login. On the commercial host, `/robots.txt` and `/sitemap.xml` expose the product, download guides, About/help and published release notes when `SEO_INDEXING_ENABLED=true` (the default), independently of payment sandbox mode. Canonical URLs use `APP_DOMAIN` (default `https://pornfetch.to`). Set `SEO_INDEXING_ENABLED=false` on staging to send `noindex` and disable the sitemap. Public guides at `/guides` cover all 15 supported app websites; purchase and private flows remain unindexed. See [SEO research and launch operations](docs/SEO.md) for source checks, rollout, and Search Console setup.
 
 The commercial host returns a plain 403 page when the request's `Referer` has the exact HTTPS origin `vplan.echteralsfake.me`. It sets a host-only, secure, HTTP-only browser marker signed by a random key held only in the current app process. The marker stays effective while the process runs and the browser retains the cookie; a restart invalidates it. The `/docs/` and `/dashboard/` routes and non-commercial hosts are excluded. The VPlan Caddy host overrides its upstream `no-referrer` policy with `strict-origin` so normal HTTPS navigation supplies the source origin without revealing the plan path. This mechanism depends on a browser sending the `Referer` header and retaining its cookie; it cannot identify someone who suppresses either signal. The deployed Gunicorn service uses one worker; multiple workers would need shared signing state.
 

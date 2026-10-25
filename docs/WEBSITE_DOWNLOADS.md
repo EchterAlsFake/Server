@@ -122,8 +122,9 @@ Checksums detect corruption; they do not claim a new code-signing identity.
 
 Public product pages and guides are readable without the age dialog. Purchase
 pages retain the existing age/terms/withdrawal confirmations. Test/sandbox pages
-remain noindex; use live mode only with the already required production payment
-configuration. Canonical URLs derive from `APP_DOMAIN`, not request headers.
+can be indexed independently of payment mode using `SEO_INDEXING_ENABLED=true`
+(the default). Set it to `false` on staging. Purchase and private flows remain
+noindex. See [SEO research and launch operations](SEO.md). Canonical URLs derive from `APP_DOMAIN`, not request headers.
 
 The sitemap includes the product, downloads, substantive guides, About/help and
 published release notes. It excludes purchases, binary files and API endpoints.

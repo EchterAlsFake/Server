@@ -1,0 +1,5 @@
+{% if page_meta and page_meta.breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+    <ol>{% for crumb in page_meta.breadcrumbs %}<li>{% if loop.last %}<span aria-current="page">{{ crumb.name }}</span>{% else %}<a href="{{ crumb.url }}">{{ crumb.name }}</a>{% endif %}</li>{% endfor %}</ol>
+</nav>
+{% endif %}

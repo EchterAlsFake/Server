@@ -49,7 +49,7 @@ class MarketingTests(ServerTestCase):
     def test_homepage_lists_all_fifteen_providers_and_factual_controls(self):
         page = self.client.get('/').data
         for website in product_catalog.WEBSITES:
-            self.assertIn(f'<th scope="row">{website[0]}</th>'.encode(), page)
+            self.assertIn(f'<th scope="row"><a href="/guides/download-{website[0].lower()}-videos">{website[0]}</a></th>'.encode(), page)
         self.assertEqual(page.count(b'<th scope="row">'), 15)
         self.assertIn(b'not affiliated with', page)
         self.assertIn(b'Introducing v3.9', page)

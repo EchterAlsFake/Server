@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
-    <title>{% block title %}Porn Fetch — Your videos, on your device{% endblock %}</title>
-    {% if config.NOWPAYMENTS_SANDBOX %}
-    <meta name="robots" content="noindex, nofollow">
-    {% else %}
-    {% block robots %}<meta name="robots" content="{{ 'index, follow' if page_meta else 'noindex' }}">{% endblock %}
-    {% endif %}
+    <title>{% if page_meta %}{{ page_meta.title }}{% else %}{% block title %}Porn Fetch — Your videos, on your device{% endblock %}{% endif %}</title>
+    <meta name="robots" content="{{ robots_directive }}">
     {% block seo_head %}{% include "partials/seo_head.html" %}{% endblock %}
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='media/porn-fetch-logo.png') }}">
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='media/web/logo.webp') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
-    {% if page_meta %}<link rel="stylesheet" href="{{ url_for('static', filename='downloads.css') }}">{% endif %}
+    {% if page_meta and request.path != '/' %}<link rel="stylesheet" href="{{ url_for('static', filename='downloads.css') }}">{% endif %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ url_for('static', filename='site.js') }}" defer></script>
     {% block extra_head %}{% endblock %}
@@ -30,7 +26,7 @@
         <header class="site-header">
             <div class="header-inner">
                 <a class="brand" href="/" aria-label="Porn Fetch home">
-                    <span class="brand-mark"><img src="{{ url_for('static', filename='media/porn-fetch-logo.png') }}" alt="" width="72" height="48"></span>
+                    <span class="brand-mark"><img src="{{ url_for('static', filename='media/web/logo.webp') }}" alt="" width="384" height="216"></span>
                     <span class="brand-name">Porn Fetch</span>
                 </a>
                 <details class="site-menu" open>
@@ -43,6 +39,7 @@
                         <a href="/#platforms">Supported Platforms</a>
                         <a href="/#websites">Supported Websites</a>
                         <a href="/download"{% if request.path.startswith('/download') %} aria-current="page"{% endif %}>Download</a>
+                        <a href="/guides"{% if request.path.startswith('/guides') %} aria-current="page"{% endif %}>Guides</a>
                         <a href="https://github.com/EchterAlsFake/Porn_Fetch" class="github-nav" target="_blank" rel="noopener noreferrer">{% include "partials/github.svg" %} GitHub <span aria-hidden="true">↗</span></a>
                     </nav>
                 </details>
@@ -58,7 +55,7 @@
                 <a href="{{ config.ONION_ORIGIN }}/" target="_blank" rel="noopener noreferrer" class="onion-link">{{ 'Onion service' if is_onion else 'Also on Tor' }} <span aria-hidden="true">↗</span></a>
             </div>
             <nav class="footer-links" aria-label="Legal and project links">
-                <a href="/download">Download</a><a href="/help">Help</a><a href="/releases">Release notes</a><a href="/about">About</a><a href="/impress">Impress / Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">ToS / AGB</a><a href="/refund_policy">Refund policy</a><a href="/legal-statement">Legal statement</a><a href="/transparency">AI Transparency</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">App source ↗</a><a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">Open-source server ↗</a><a href="/static/notices/github-octicons.txt">Icon attribution</a>
+                <a href="/download">Download</a><a href="/guides">Guides</a><a href="/help">Help</a><a href="/releases">Release notes</a><a href="/about">About</a><a href="/impress">Impress / Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">ToS / AGB</a><a href="/refund_policy">Refund policy</a><a href="/legal-statement">Legal statement</a><a href="/transparency">AI Transparency</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">App source ↗</a><a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">Open-source server ↗</a><a href="/static/notices/github-octicons.txt">Icon attribution</a>
             </nav>
             {% include "partials/platform_credits.html" %}
             <div class="footer-bottom"><span>© 2023–2026 Johannes Habel</span><span>Source available under the published license. Earlier GPL copies retain their rights.</span><span>For adults 18+.</span></div>

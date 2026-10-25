@@ -26,6 +26,7 @@ class ConfigurationTests(unittest.TestCase):
             )
 
         self.assertEqual(config["APP_DOMAIN"], "https://public.example")
+        self.assertTrue(config["SEO_INDEXING_ENABLED"])
         self.assertEqual(config["API_DOMAIN"], "https://API.EXAMPLE")
         self.assertEqual(config["API_PUBLIC_HOST"], "api.example")
         self.assertFalse(config["NOWPAYMENTS_SANDBOX"])
@@ -56,6 +57,7 @@ class ConfigurationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
             for variable in (
                 "NOWPAYMENTS_SANDBOX",
+                "SEO_INDEXING_ENABLED",
                 "LICENSE_SMTP_SSL",
                 "LICENSE_SMTP_STARTTLS",
             ):
@@ -65,6 +67,14 @@ class ConfigurationTests(unittest.TestCase):
                             directory,
                             {"SECRET_KEY": "secret", variable: "treu"},
                         )
+
+    def test_staging_can_disable_indexing_without_changing_payment_mode(self):
+        with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
+            config = load_environment_config(directory, {
+                "SECRET_KEY": "secret", "SEO_INDEXING_ENABLED": "false",
+            })
+        self.assertFalse(config["SEO_INDEXING_ENABLED"])
+        self.assertTrue(config["NOWPAYMENTS_SANDBOX"])
 
     def test_invalid_log_levels_fail_fast(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:

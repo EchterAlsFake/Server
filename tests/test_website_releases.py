@@ -322,7 +322,7 @@ class WebsiteReleaseTests(ServerTestCase):
             self.assertIn(b"/releases/3.9.66", sitemap)
             self.assertNotIn(b"/buy_card", sitemap)
             self.assertNotIn(b"/downloads/", sitemap)
-            self.assertIn(b'content="noindex"', self.client.get("/buy_card").data)
+            self.assertIn(b'content="noindex"', self.client.get("/buy_card", base_url="https://pornfetch.to").data)
         self.assertIn(b'content="noindex, nofollow"', self.client.get("/download").data)
 
     def test_upload_limit_is_scoped_and_cannot_hide_existing_releases(self):

@@ -63,7 +63,7 @@ class ApplicationTests(ServerTestCase):
         self.assertIn(b"Sitemap: https://echteralsfake.me/sitemap.xml", robots.data)
         self.assertEqual(docs_sitemap.status_code, 404)
 
-        with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": True}):
+        with patch.dict(main.app.config, {"SEO_INDEXING_ENABLED": False}):
             test_product = self.client.get("/", base_url=commercial_host)
             test_sitemap = self.client.get("/sitemap.xml", base_url=commercial_host)
         self.assertIn(b'<meta name="robots" content="noindex, nofollow">', test_product.data)

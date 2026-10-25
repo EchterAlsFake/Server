@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-25",
+  "lighthouse_version": "13.5.0",
+  "baseline_commit": "ec0fdb9",
+  "environment": "Local Flask preview, Lighthouse default mobile simulated throttling, Chromium 156; empty release catalog and payment sandbox enabled. Analytics script replaced by an empty local response for both before and after. No production proxy compression; not field data.",
+  "results": [
+    {
+      "run": "before",
+      "path": "/",
+      "scores": {
+        "performance": 93,
+        "accessibility": 97,
+        "seo": 69
+      },
+      "lcp_ms": 3107,
+      "cls": 0,
+      "tbt_ms": 0,
+      "transfer_bytes": 811357
+    },
+    {
+      "run": "after-home",
+      "path": "/",
+      "scores": {
+        "performance": 98,
+        "accessibility": 100,
+        "seo": 100
+      },
+      "lcp_ms": 2148,
+      "cls": 0,
+      "tbt_ms": 0,
+      "transfer_bytes": 179459
+    },
+    {
+      "run": "after-guides",
+      "path": "/guides",
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "seo": 100
+      },
+      "lcp_ms": 1825,
+      "cls": 0,
+      "tbt_ms": 0,
+      "transfer_bytes": 123657
+    },
+    {
+      "run": "after-pornhub",
+      "path": "/guides/download-pornhub-videos",
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "seo": 100
+      },
+      "lcp_ms": 1824,
+      "cls": 0,
+      "tbt_ms": 0,
+      "transfer_bytes": 127659
+    },
+    {
+      "run": "after-download",
+      "path": "/download",
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "seo": 100
+      },
+      "lcp_ms": 1823,
+      "cls": 0,
+      "tbt_ms": 0,
+      "transfer_bytes": 260409
+    }
+  ]
+}

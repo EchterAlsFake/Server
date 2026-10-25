@@ -14,7 +14,7 @@ echteralsfake.me, docs.echteralsfake.me, api.echteralsfake.me {
     @product_marketing {
         host echteralsfake.me
         method GET HEAD
-        path / /download /download/* /about /help /releases /releases/*
+        path / /download /download/* /about /help /releases /releases/* /guides /guides/*
     }
     redir @product_marketing https://pornfetch.to{uri} 308
 

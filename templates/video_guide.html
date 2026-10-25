@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='guides.css') }}">{% endblock %}
+{% block content %}
+<article class="product-document video-guide">
+    {% include "partials/breadcrumbs.html" %}
+    <header class="page-heading">
+        <p class="eyebrow">{{ guide.name }} · Porn Fetch {{ guide_version }}</p>
+        <h1>How to download {{ guide.name }} videos</h1>
+        <p>{{ guide.intro }}</p>
+        <p class="guide-byline">By <a href="/about">Johannes Habel</a> · Updated <time datetime="{{ guide_date }}">{{ guide_date_label }}</time></p>
+    </header>
+    <p class="guide-version">This guide describes the {{ guide_version }} app. {% if catalog_unavailable %}The release catalog is temporarily unavailable; <a href="/download?channel=beta">check downloads again shortly</a>.{% elif not releases_available %}The first website-hosted packages are being prepared. <a href="/download?channel=beta">Check beta availability</a>; there may not be a build for your device yet.{% else %}<a href="/download?channel=beta">Check published beta builds</a> for your device.{% endif %} Older releases can have different features.</p>
+    <nav class="guide-toc" aria-label="On this page">
+        <a href="#download-steps">Desktop steps</a><a href="#android">Android</a><a href="#site-details">{{ guide.name }} details</a><a href="#cli">CLI</a><a href="#troubleshooting">Troubleshooting</a>
+    </nav>
+    <section id="download-steps" aria-labelledby="steps-title">
+        <h2 id="steps-title">Download a {{ guide.name }} video on your computer</h2>
+        <ol class="guide-steps">
+            <li><strong>Install Porn Fetch.</strong> Choose your <a href="/download/windows">Windows</a>, <a href="/download/macos">macOS</a>, or <a href="/download/linux">Linux</a> package. Follow that platform’s installation guide and open the app.</li>
+            <li><strong>Copy the video’s page URL.</strong> Open the individual {{ guide.name }} video you are authorized to save in your browser and copy the complete page address.</li>
+            <li><strong>Fetch the video.</strong> In the app’s Downloads page, paste the address into <strong>Video URL</strong> and choose <strong>Get Video</strong>. Wait for its details to appear in the list.</li>
+            <li><strong>Choose a quality and folder.</strong> Use the video row’s quality control to select an available stream. Check <strong>Output Path</strong> in Settings before starting. Free downloads are limited to available qualities up to 720p.</li>
+            <li><strong>Start the download.</strong> Choose <strong>Download</strong> on the video row and wait for completion. Open your configured output folder to find the saved file.</li>
+        </ol>
+        <p>Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use <strong>Download Selected</strong>.</p>
+    </section>
+    <section id="android" aria-labelledby="android-title">
+        <h2 id="android-title">Downloading on Android</h2>
+        <p>Install a compatible APK from the <a href="/download/android">Android downloads page</a>. Open <strong>Add videos</strong>, choose <strong>Video URL</strong>, paste the complete {{ guide.name }} address, and tap <strong>Get Video</strong>.</p>
+        <p>Choose a quality on the returned video card and tap <strong>Download</strong>. The add-video panel shows <strong>Save to</strong> and a <strong>Choose folder</strong> control. A completed card also has a <strong>Save</strong> action for exporting the downloaded file through Android’s file picker.</p>
+    </section>
+    <div id="site-details">
+        {% for heading, paragraphs in guide.sections %}
+        <section aria-labelledby="site-section-{{ loop.index }}"><h2 id="site-section-{{ loop.index }}">{{ heading }}</h2>{% for paragraph in paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</section>
+        {% endfor %}
+    </div>
+    <section id="cli" aria-labelledby="cli-title">
+        <h2 id="cli-title">Using the command line</h2>
+        <p>Set up the <a href="/download/cli">Porn Fetch CLI</a> for your system and open its interactive menu. Choose <strong>Download Single URL</strong> for an individual video, paste its full address, and follow the prompts. Use <strong>Settings &amp; Configuration</strong> to check your output folder and preferred quality.</p>
+        {% if supports_profiles %}<p>For supported profiles or public playlists, choose <strong>Scrape Profile / Playlist</strong> instead. Provider-specific restrictions above still apply.</p>{% endif %}<p>Android CLI setup uses Termux; iOS requires the <a href="/download/ios">restricted jailbreak setup</a> and has no graphical app.</p>
+    </section>
+    <section id="troubleshooting" aria-labelledby="troubleshooting-title">
+        <h2 id="troubleshooting-title">If the download does not work</h2>
+        <h3>{{ guide.question }}</h3><p>{{ guide.answer }}</p>
+        <h3>The video loads, but I cannot choose the quality I want</h3>
+        <p>Choose from the streams returned for that video. Qualities above 720p require a valid Porn Fetch license, and the source must expose a usable stream. Premium does not upscale videos or remove website-side restrictions. <a href="/help">Read the license activation guide</a> if your purchased entitlement is not active.</p>
+        {% if supports_profiles %}<h3>A profile or playlist is empty</h3>
+        <p>Check the URL type, <strong>Max Result Limit</strong> in Settings, and any filters in <strong>Advanced Configuration</strong>. Duration, quality, date, and text filters can remove entries. Some pages also depend on region or account access. Only use the profile and playlist workflows supported for {{ guide.name }}.</p>
+        {% endif %}
+        <h3>The video still fails</h3>
+        <p>Check your app version against the <a href="/releases">release notes</a>, confirm that the page is accessible in your browser, and try fetching it again. Website changes can break support. If it continues, <a href="/help">contact support</a> with the app version, operating system, and exact error. Keep passwords, session tokens, and cookies out of your message.</p>
+    </section>
+    <section aria-labelledby="use-title">
+        <h2 id="use-title">Access and responsible use</h2>
+        <p>For adults 18+. Download only content you are authorized to save and respect the source website’s terms and applicable law. A Porn Fetch license does not grant rights to third-party content or access to a website account.</p>
+        <p>Porn Fetch is an independent project and is not affiliated with {{ guide.name }}. Downloads run on your device; network, website, and account services still have their own data handling. See the <a href="/privacy_policy">privacy policy</a> and <a href="/legal-statement">legal statement</a>.</p>
+    </section>
+    <aside class="guide-related" aria-labelledby="related-title">
+        <h2 id="related-title">More download guides</h2>
+        <ul>{% for key, related in guides.items() %}{% if loop.index <= 5 and key != provider %}<li><a href="/guides/download-{{ key }}-videos">{{ related.name }} videos</a></li>{% endif %}{% endfor %}</ul>
+        <a href="/guides">All 15 supported website guides →</a>
+    </aside>
+</article>
+{% endblock %}

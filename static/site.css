@@ -580,3 +580,10 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 #kyc-dialog.information-dialog { width: calc(100% - 32px); padding: 32px; background: #19171d; border: 1px solid #ffffff30; border-radius: 14px; }
 #kyc-dialog.information-dialog::backdrop { background: #08060cbd; backdrop-filter: blur(8px); }
 @media (max-width: 480px) { #kyc-dialog.information-dialog { padding: 24px; } }
+
+.home-guides ul { display: flex; flex-wrap: wrap; gap: 16px 30px; list-style: none; padding: 0; margin: 24px 0; font-size: var(--text-body); line-height: 1.8; }
+
+/* Five supported systems, without squeezing a fifth desktop column. */
+.platform-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+.hero-platforms a { color: inherit; text-decoration: underline; }
+@media (max-width: 540px) { .platform-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-list > div:last-child { grid-column: 1 / -1; border-bottom: 0; } }

@@ -30,6 +30,7 @@ from pf_server.payment_routes import payments_bp
 from pf_server.onramp_routes import onramp_bp
 from pf_server.referral_guard import block_vplan_referrals
 from pf_server.seo_routes import seo_bp
+from pf_server.guide_routes import guides_bp
 from pf_server.tax_service import country_transaction_summary
 from pf_server.update_routes import updates_bp
 from pf_server.website_releases import releases_bp
@@ -114,6 +115,7 @@ def create_app(
         payments_bp,
         onramp_bp,
         seo_bp,
+        guides_bp,
         docs_bp,
         updates_bp,
         operations_bp,

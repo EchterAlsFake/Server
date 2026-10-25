@@ -49,7 +49,3 @@
 @media (max-width: 1000px) { .download-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .platform-download-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; } }
 @media (max-width: 540px) { .download-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; } .download-card { padding: 22px; } .downloads-page .page-heading h1, .product-document h1 { font-size: 39px; } .downloads-page .page-heading > p:last-child { font-size: var(--text-body); } .platform-list { grid-template-columns: minmax(0, 1fr); } }
-/* Five supported systems, without squeezing a fifth desktop column. */
-.platform-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
-.hero-platforms a { color: inherit; text-decoration: none; }
-@media (max-width: 540px) { .platform-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-list > div:last-child { grid-column: 1 / -1; border-bottom: 0; } }

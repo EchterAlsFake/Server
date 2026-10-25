@@ -13,6 +13,7 @@ from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent
 from .countries import COUNTRY_OPTIONS
 from .http import normalized_hostname
 from .product_catalog import WEBSITES
+from .guide_content import GUIDES, guide_path
 from .download_pages import render_download_page
 
 pages_bp = Blueprint("pages", __name__)
@@ -55,7 +56,11 @@ def landing_page():
         error = "Confirm that you are at least 18 years old to continue."
         if request.accept_mimetypes.best == "application/json":
             return jsonify({"error": error}), 400
-    return make_response(render_template("index.html", websites=WEBSITES, age_error=error), 400 if error else 200)
+    return make_response(render_template(
+        "index.html", websites=WEBSITES,
+        guide_links={guide["name"]: guide_path(key) for key, guide in GUIDES.items()},
+        featured_guides=dict(list(GUIDES.items())[:5]), age_error=error,
+    ), 400 if error else 200)
 
 
 @pages_bp.route("/leave", methods=["GET"])

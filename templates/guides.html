@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='guides.css') }}">{% endblock %}
+{% block content %}
+<div class="guides-page">
+    {% include "partials/breadcrumbs.html" %}
+    <header class="page-heading">
+        <p class="eyebrow">Using Porn Fetch</p>
+        <h1>Video download guides.</h1>
+        <p>Find your website below. Each guide explains which links work in Porn Fetch, how to save a video, and where the app’s support stops.</p>
+    </header>
+    <p class="guide-intro">These guides cover the <strong>3.9 beta</strong> workflow. <a href="/download?channel=beta">Check available beta downloads</a> and <a href="/releases">release notes</a> before getting started. Older releases can work differently.</p>
+    <section aria-labelledby="start-title">
+        <h2 id="start-title">Start here</h2>
+        <div class="guide-grid">
+        {% for provider, guide in guides.items() %}{% if loop.index <= 5 %}
+            <article class="guide-card"><h3><a href="/guides/download-{{ provider }}-videos">How to download {{ guide.name }} videos</a></h3><p>{{ guide.summary }}</p></article>
+        {% endif %}{% endfor %}
+        </div>
+    </section>
+    <section aria-labelledby="more-title">
+        <h2 id="more-title">More supported websites</h2>
+        <div class="guide-grid guide-grid-compact">
+        {% for provider, guide in guides.items() %}{% if loop.index > 5 %}
+            <article class="guide-card"><h3><a href="/guides/download-{{ provider }}-videos">{{ guide.name }} download guide</a></h3><p>{{ guide.summary }}</p></article>
+        {% endif %}{% endfor %}
+        </div>
+    </section>
+    <section class="guide-basics" aria-labelledby="basics-title">
+        <h2 id="basics-title">Before your first download</h2>
+        <p>Install the app for <a href="/download/windows">Windows</a>, <a href="/download/linux">Linux</a>, <a href="/download/macos">macOS</a>, or <a href="/download/android">Android</a>. A <a href="/download/cli">command-line interface</a> is also available. iPhone support is limited to the <a href="/download/ios">jailbroken iPhone CLI setup</a>.</p>
+        <p>The free tier downloads available qualities up to 720p. Higher qualities need a Porn Fetch license and an available source stream. Some YouPorn MP4-only videos also require a license because their resolution is unknown. Keyword search is unavailable: use a full supported page URL.</p>
+        <p>For adults 18+. Only save content you are authorized to download. Porn Fetch is independent of the listed websites; support can change when a website changes.</p>
+        <a class="text-link" href="/help">Installation, license, and support help →</a>
+    </section>
+</div>
+{% endblock %}

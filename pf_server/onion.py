@@ -20,8 +20,8 @@ def before_onion_request():
     if request.path in PURCHASE_PATHS:
         return render_template("onion_checkout.html")
     allowed = {"/", "/about", "/help", "/impress", "/privacy_policy", "/terms", "/refund_policy",
-               "/legal-statement", "/transparency", "/download", "/releases", "/robots.txt", "/sitemap.xml"}
-    if request.path not in allowed and not request.path.startswith(("/static/", "/docs/", "/download/", "/downloads/", "/releases/", "/repo/android/")):
+               "/legal-statement", "/transparency", "/download", "/releases", "/guides", "/robots.txt", "/sitemap.xml"}
+    if request.path not in allowed and not request.path.startswith(("/static/", "/docs/", "/guides/", "/download/", "/downloads/", "/releases/", "/repo/android/")):
         abort(404)
     return None
 
@@ -31,8 +31,8 @@ def onion_headers(response):
         response.headers["X-Robots-Tag"] = "noindex, follow"
         response.headers.pop("Strict-Transport-Security", None)
     elif request.is_secure and request.method in {"GET", "HEAD"} and request.path not in PURCHASE_PATHS and (
-        request.path in {"/", "/about", "/help", "/download", "/releases"}
-        or request.path.startswith(("/download/", "/releases/", "/docs/"))
+        request.path in {"/", "/about", "/help", "/download", "/releases", "/guides"}
+        or request.path.startswith(("/download/", "/releases/", "/guides/", "/docs/"))
     ):
         response.headers["Onion-Location"] = current_app.config["ONION_ORIGIN"] + request.path
     return response
