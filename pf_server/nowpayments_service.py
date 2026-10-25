@@ -149,7 +149,8 @@ def create_crypto_invoice(
         ):
             raise ValueError("NOWPayments invoice response was incomplete")
     except (httpx.HTTPError, TypeError, ValueError) as error:
-        if not current_app.config.get("NOWPAYMENTS_SANDBOX"):
+        if (not current_app.config.get("NOWPAYMENTS_SANDBOX")
+            or not current_app.config.get("NOWPAYMENTS_LOCAL_SIMULATION_ENABLED")):
             raise PaymentProviderError("Failed to create crypto payment") from error
         current_app.logger.info("Falling back to local payment simulation")
         invoice_id = "mock-" + secrets.token_hex(8)
@@ -198,6 +199,28 @@ def verify_ipn_signature(payload: object, received_signature: str, secret: str) 
         hashlib.sha512,
     ).hexdigest()
     return hmac.compare_digest(received_signature.lower(), calculated_signature)
+
+
+def request_sandbox_invoice_payment(session_id: str) -> None:
+    """Operator-only provider emulation; only its signed IPN may fulfill an order."""
+    config = current_app.config
+    if (not config.get("NOWPAYMENTS_SANDBOX")
+        or config.get("NOWPAYMENTS_LOCAL_SIMULATION_ENABLED")
+        or config.get("NOWPAYMENTS_API_URL") != "https://api-sandbox.nowpayments.io/v1"):
+        raise PaymentProviderError("Enable strict NOWPayments sandbox mode first")
+    transaction = db.session.get(Transaction, session_id)
+    if (not transaction or transaction.environment != "sandbox"
+        or transaction.status != "pending" or transaction.provider_reference_type != "invoice"
+        or transaction.provider_payment_id.startswith("mock-")):
+        raise PaymentProviderError("Choose a pending invoice created by the NOWPayments sandbox")
+    identifier = transaction.provider_payment_id
+    try:
+        response = httpx.post(config["NOWPAYMENTS_API_URL"] + "/invoice-payment",
+            headers=_headers(), json={"iid": int(identifier) if identifier.isdigit() else identifier,
+                "pay_currency": "btc", "case": "success"}, timeout=20, trust_env=False)
+        response.raise_for_status()
+    except httpx.HTTPError:
+        raise PaymentProviderError("Sandbox request failed; check the provider dashboard before retrying") from None
 
 
 def _validate_finished_payment(
@@ -300,6 +323,7 @@ def complete_payment(webhook: NowPaymentsWebhook) -> CompletionResult:
                 crypto_amount=float(crypto_amount),
                 pay_currency=webhook.pay_currency or "",
                 transaction_hash=webhook.payin_hash or webhook.hash or "N/A",
+                environment=transaction.environment,
             )
             save_invoice(webhook.order_id, invoice)
         if db.session.get(OnrampCheckout, webhook.order_id) is not None:

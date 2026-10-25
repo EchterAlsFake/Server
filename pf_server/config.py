@@ -144,6 +144,9 @@ def load_environment_config(
         raise ValueError("Remote Keygen connections require HTTPS")
 
     nowpayments_sandbox = _boolean(source, "NOWPAYMENTS_SANDBOX", True)
+    local_simulation = _boolean(source, "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED", False)
+    if local_simulation and not nowpayments_sandbox:
+        raise ValueError("NOWPAYMENTS_LOCAL_SIMULATION_ENABLED requires sandbox mode")
     nowpayments_api_key = source.get("NOWPAYMENTS_API_KEY")
     nowpayments_ipn_secret = source.get("NOWPAYMENTS_IPN_SECRET")
     if not nowpayments_sandbox and (
@@ -248,6 +251,7 @@ def load_environment_config(
         "NOWPAYMENTS_API_KEY": nowpayments_api_key,
         "NOWPAYMENTS_IPN_SECRET": nowpayments_ipn_secret,
         "NOWPAYMENTS_SANDBOX": nowpayments_sandbox,
+        "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": local_simulation,
         "NOWPAYMENTS_API_URL": nowpayments_api_url,
         "ONRAMP_ENABLED": onramp_enabled,
         "ONRAMP_POLYGON_USDC_VERIFIED": onramp_verified,

@@ -19,6 +19,7 @@ from sqlalchemy import and_, or_
 from .extensions import db
 from .country_service import CheckoutCountryDecision
 from .licensing import build_license_file, get_or_create_license, send_license_email
+from .invoice_service import load_invoice
 from .models import OnrampCheckout, Transaction
 from .webhook_models import NowPaymentsWebhook
 from .nowpayments_service import (
@@ -351,9 +352,11 @@ def deliver_license(session_id: str) -> str:
             license_record.issuance_reference,
             license_record.created_at,
         )
-        send_license_email(
-            decrypt(checkout.recipient_encrypted), license_file, beta=checkout.beta
-        )
+        invoice = load_invoice(session_id)
+        if invoice is None:
+            raise ValueError("Paid order invoice is unavailable")
+        send_license_email(decrypt(checkout.recipient_encrypted), license_file,
+            beta=checkout.beta, invoice=invoice, payment_environment=transaction.environment)
     except Exception:
         db.session.rollback()
         db.session.execute(

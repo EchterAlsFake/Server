@@ -190,3 +190,29 @@ it every 15 seconds using the same database and credentials as the web service.
 The rootless deployment supplies dedicated systemd user timers in the infrastructure
 repository. Keep both email retry jobs enabled independently. See
 [Onramp operations](../docs/ONRAMP_CHECKOUT.md#durable-receipt-worker-and-deployment).
+
+### Provider sandbox versus local simulation
+
+The application defaults to `NOWPAYMENTS_LOCAL_SIMULATION_ENABLED=false`. A real
+provider sandbox uses `NOWPAYMENTS_SANDBOX=true` with that fallback disabled;
+errors surface instead of creating mock invoices, and the local success endpoint
+is unavailable. An operator can request `case: success` on the sandbox's
+`/invoice-payment` endpoint for an existing invoice via
+`flask --app main:app request-sandbox-payment --order-id NP-...`. The command is
+forbidden in production and never fulfills an order itself. Configure sandbox
+API/IPN credentials first and verify the signed callback and receipt worker.
+
+The rootless installation temporarily sets the local fallback true until the
+owner provisions sandbox credentials. Its step-by-step runbook is
+`docs/operations/NOWPAYMENTS-SANDBOX.md` in the infrastructure repository. Once
+strict sandbox mode is configured, release changes only the two credentials and
+the sandbox flag; local simulation stays false. Onramp live validation is separate.
+
+### Email attachments
+
+English comes before German in both MIME alternatives. HTML uses system sans-serif
+fonts, inline styles, no remote images and no external fonts. NOWPayments delivery
+loads the existing stored invoice and attaches its PDF. Missing/unreadable invoices
+leave delivery failed and retryable, preserving the encrypted recipient. Stable
+Message-IDs include the invoice identity so a separate purchase/renewal is not
+suppressed merely because its signed license is unchanged.

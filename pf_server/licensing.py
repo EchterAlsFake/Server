@@ -129,8 +129,11 @@ def load_license_email_catalog(language: str) -> dict[str, str]:
     return messages
 
 
-def send_license_email(recipient: str, license_file: bytes, *, beta: bool = False) -> None:
-    """Send a bilingual plain-text email with the signed license attached."""
+def send_license_email(
+    recipient: str, license_file: bytes, *, beta: bool = False,
+    invoice: dict | None = None, payment_environment: str = "production",
+) -> None:
+    """English-first plain text and HTML, with the license and original invoice."""
     config = current_app.config
     smtp_host = config.get("LICENSE_SMTP_HOST")
     email_from = config.get("LICENSE_EMAIL_FROM")
@@ -159,30 +162,50 @@ def send_license_email(recipient: str, license_file: bytes, *, beta: bool = Fals
     message = EmailMessage()
     message["From"] = email_from
     message["To"] = recipient
-    message["Subject"] = f"{german['subject']} / {english['subject']}"
+    sandbox = payment_environment == "sandbox"
+    message["Subject"] = ("[TEST] " if sandbox else "") + f"{english['subject']} / {german['subject']}"
     message["Date"] = format_datetime(datetime.now(timezone.utc))
     message_domain = email_from.rpartition("@")[2]
     if message_domain:
         # Retrying the same license keeps the same identity, helping receiving
         # systems suppress the unavoidable SMTP accepted/DB commit crash window.
-        delivery_id = hashlib.sha256(license_file).hexdigest()[:32]
+        identity = license_file + (json.dumps(invoice, sort_keys=True, ensure_ascii=False).encode() if invoice else b"")
+        delivery_id = hashlib.sha256(identity).hexdigest()[:32]
         message["Message-ID"] = f"<license-{delivery_id}@{message_domain}>"
     else:
         message["Message-ID"] = make_msgid()
+    english_body = english["legacy_beta_body" if beta else "body"].format(filename=filename)
+    german_body = german["legacy_beta_body" if beta else "body"].format(filename=filename)
+    beta_en = "V3.9 BETA ONLY: This license will be deleted at product release. This real-money purchase does not grant a permanent release license."
+    beta_de = "NUR V3.9-BETA: Diese Lizenz wird zur Produktveröffentlichung gelöscht. Dieser Kauf mit echtem Geld gewährt keine dauerhafte Lizenz für die Veröffentlichung."
     message.set_content(
-        ("V3.9 BETA ONLY: This license will be deleted at product release. This real-money purchase does not grant a permanent release license.\n"
-         "NUR V3.9-BETA: Diese Lizenz wird zur Produktveröffentlichung gelöscht. Dieser Kauf mit echtem Geld gewährt keine dauerhafte Lizenz für die Veröffentlichung.\n\n" if beta else "")
-        + "Deutsch\n--------\n"
-        + german["legacy_beta_body" if beta else "body"].format(filename=filename)
-        + "\n\nEnglish\n-------\n"
-        + english["legacy_beta_body" if beta else "body"].format(filename=filename)
+        "English\n-------\n"
+        + ("SANDBOX TEST: No real payment was received.\n\n" if sandbox else "")
+        + (beta_en + "\n\n" if beta else "") + english_body
+        + ("\n\nYour PDF invoice is attached. Save both attachments." if invoice else "")
+        + "\n\nDeutsch\n-------\n"
+        + ("SANDBOX-TEST: Es ist keine echte Zahlung eingegangen.\n\n" if sandbox else "")
+        + (beta_de + "\n\n" if beta else "") + german_body
+        + ("\n\nDeine PDF-Rechnung ist angehängt. Bewahre beide Anhänge auf." if invoice else "")
     )
+    message.add_alternative(current_app.jinja_env.get_template("emails/license.html").render(
+        english_paragraphs=english_body.split("\n\n"),
+        german_paragraphs=german_body.split("\n\n"), beta=beta,
+        beta_en=beta_en, beta_de=beta_de, sandbox=sandbox, invoice=invoice,
+    ), subtype="html")
     message.add_attachment(
         license_file,
         maintype="application",
         subtype="json",
         filename=filename,
     )
+    if invoice is not None:
+        from .invoice_service import invoice_download_name, render_invoice_pdf
+        document = dict(invoice)
+        if sandbox:
+            document["Environment"] = "sandbox"
+        message.add_attachment(render_invoice_pdf(document), maintype="application",
+            subtype="pdf", filename=invoice_download_name(invoice))
 
     tls_context = ssl.create_default_context()
     connection_args = {

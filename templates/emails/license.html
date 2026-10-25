@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Your Porn Fetch license</title></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;color:#202633;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65">
+<div style="display:none;max-height:0;overflow:hidden">Your license{% if invoice %} and PDF invoice{% endif %} are attached. Save them somewhere safe.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6"><tr><td align="center" style="padding:32px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background-color:#ffffff;border:1px solid #dfe3e8;border-radius:12px">
+<tr><td style="padding:28px 28px 22px;border-top:5px solid #b52965">
+<p style="margin:0 0 10px;font-size:13px;font-weight:bold;letter-spacing:1px;color:#8a2452">PORN FETCH</p>
+<h1 style="margin:0 0 12px;font-size:28px;line-height:1.25;color:#182230">Your license is ready</h1>
+<p style="margin:0">Your signed license{% if invoice %} and invoice{% endif %}, together in one place.</p>
+</td></tr>
+<tr><td style="padding:0 28px 28px">
+{% if sandbox %}<p style="padding:14px;background-color:#fff1d6;border:1px solid #a9690c;color:#653b00"><strong>Sandbox test — no real payment was received.</strong></p>{% endif %}
+{% if beta %}<p style="padding:14px;background-color:#fff1d6;color:#653b00"><strong>{{ beta_en }}</strong></p>{% endif %}
+<div style="padding:16px 18px;background-color:#f7f8fa;border:1px solid #dfe3e8;border-radius:8px">
+<p style="margin:0 0 6px;font-weight:bold">Attached files</p>
+<p style="margin:0"><strong>porn_fetch.license</strong> — import this file in the app’s license activation screen.</p>
+{% if invoice %}<p style="margin:10px 0 0"><strong>PDF invoice {{ invoice.get('Invoice Number', '') }}</strong> — keep this with your purchase records.</p>{% endif %}
+</div>
+<section lang="en"><h2 style="margin:26px 0 12px;font-size:21px;color:#182230">English</h2>
+{% for paragraph in english_paragraphs %}<p style="margin:0 0 16px;overflow-wrap:anywhere;word-break:break-word">{{ paragraph }}</p>{% endfor %}
+</section>
+<hr style="margin:30px 0;border:0;border-top:1px solid #dfe3e8">
+<section lang="de"><h2 style="margin:0 0 12px;font-size:21px;color:#182230">Deutsch</h2>
+{% if sandbox %}<p style="padding:14px;background-color:#fff1d6;color:#653b00"><strong>Sandbox-Test — es ist keine echte Zahlung eingegangen.</strong></p>{% endif %}
+{% if beta %}<p style="padding:14px;background-color:#fff1d6;color:#653b00"><strong>{{ beta_de }}</strong></p>{% endif %}
+{% for paragraph in german_paragraphs %}<p style="margin:0 0 16px;overflow-wrap:anywhere;word-break:break-word">{{ paragraph }}</p>{% endfor %}
+{% if invoice %}<p style="margin:0 0 16px">Deine PDF-Rechnung ist angehängt. Bewahre Lizenzdatei und Rechnung sicher auf.</p>{% endif %}
+</section>
+<p style="margin:24px 0 0;padding-top:18px;border-top:1px solid #dfe3e8;color:#4b5563;font-size:14px">Need help? / Fragen? <a href="mailto:support@echteralsfake.me" style="color:#8a2452">support@echteralsfake.me</a></p>
+</td></tr></table>
+<p style="max-width:600px;margin:18px 0 0;color:#4b5563;font-size:13px">Keep your license and purchase records somewhere safe. / Bewahre Lizenz und Kaufbelege sicher auf.</p>
+</td></tr></table>
+</body></html>

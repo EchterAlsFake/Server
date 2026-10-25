@@ -13,6 +13,48 @@ from pf_server.models import License, Transaction
 
 
 class PaymentTests(ServerTestCase):
+    def test_operator_sandbox_request_uses_real_invoice_without_locally_fulfilling(self):
+        self.add_transaction("NP-sandbox-provider", "12345")
+        with main.app.app_context():
+            transaction = main.db.session.get(Transaction, "NP-sandbox-provider")
+            transaction.environment = "sandbox"
+            main.db.session.commit()
+            with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": True,
+                "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": False,
+                "NOWPAYMENTS_API_URL": "https://api-sandbox.nowpayments.io/v1"}), \
+                patch.object(nowpayments_service.httpx, "post") as post:
+                nowpayments_service.request_sandbox_invoice_payment("NP-sandbox-provider")
+                self.assertEqual(post.call_args.args[0], "https://api-sandbox.nowpayments.io/v1/invoice-payment")
+                self.assertEqual(post.call_args.kwargs["json"], {"iid": 12345, "pay_currency": "btc", "case": "success"})
+            self.assertEqual(transaction.status, "pending")
+            self.assertEqual(License.query.count(), 0)
+
+    def test_operator_sandbox_request_cannot_touch_production_or_mock_invoices(self):
+        with main.app.app_context(), patch.object(nowpayments_service.httpx, "post") as post:
+            for settings in (
+                {"NOWPAYMENTS_SANDBOX": False},
+                {"NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": True},
+                {"NOWPAYMENTS_SANDBOX": True, "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": False,
+                 "NOWPAYMENTS_API_URL": "https://api.nowpayments.io/v1"},
+            ):
+                with patch.dict(main.app.config, settings):
+                    with self.assertRaises(nowpayments_service.PaymentProviderError):
+                        nowpayments_service.request_sandbox_invoice_payment("NP-any-order")
+            post.assert_not_called()
+
+    def test_real_sandbox_provider_error_cannot_fall_back_to_local_success(self):
+        import httpx
+        with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": True,
+            "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": False, "NOWPAYMENTS_API_KEY": "test-api-key"}), \
+            patch.object(nowpayments_service.httpx, "post", side_effect=httpx.ConnectError("provider unavailable")):
+            result = self.client.post("/create-crypto-payment", json={
+                "country": "DE", "terms_accepted": True, "age_confirmed": True,
+                "withdrawal_accepted": True, "test_acknowledged": True, "no_email_acknowledged": True})
+            self.assertEqual(result.status_code, 500)
+            self.assertEqual(self.client.post("/simulate-payment-success", json={}).status_code, 404)
+        with main.app.app_context():
+            self.assertEqual(Transaction.query.count(), 0)
+
     def test_verified_renewal_replay_and_download_keep_same_license(self):
         from license_fixtures import LICENSE, signed_key
         self.add_transaction('NP-renewal', 'invoice-renewal')

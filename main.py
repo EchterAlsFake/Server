@@ -173,6 +173,17 @@ def create_app(
             raise click.ClickException("Could not verify the annual policy and client configuration") from None
         click.echo("Verified: one year from first activation, continued access, ten installations; client policy matches.")
 
+    @application.cli.command("request-sandbox-payment")
+    @click.option("--order-id", required=True)
+    def request_sandbox_payment_command(order_id):
+        """Request provider-side success emulation for an existing sandbox invoice."""
+        from pf_server.nowpayments_service import PaymentProviderError, request_sandbox_invoice_payment
+        try:
+            request_sandbox_invoice_payment(order_id)
+        except PaymentProviderError as error:
+            raise click.ClickException(str(error)) from None
+        click.echo("Sandbox emulation requested. Await NOWPayments' signed webhook on the recovery page. No local payment was approved.")
+
     @application.cli.command("process-nowpayments-receipts")
     def process_nowpayments_receipts_command():
         """Fulfill durable signed payment receipts outside the webhook request."""

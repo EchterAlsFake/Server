@@ -281,7 +281,8 @@ def download_invoice():
 @payments_bp.route("/simulate-payment-success", methods=["POST"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
 def simulate_payment_success():
-    if not current_app.config.get("NOWPAYMENTS_SANDBOX"):
+    if (not current_app.config.get("NOWPAYMENTS_SANDBOX")
+        or not current_app.config.get("NOWPAYMENTS_LOCAL_SIMULATION_ENABLED")):
         abort(404)
 
     data = request.get_json(silent=True) or {}

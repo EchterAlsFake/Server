@@ -10,6 +10,7 @@ from sqlalchemy import and_, or_
 from .extensions import db
 from .licensing import build_license_file, get_or_create_license, send_license_email
 from .models import CryptoLicenseDelivery, Transaction
+from .invoice_service import load_invoice
 
 
 def cipher():
@@ -81,9 +82,13 @@ def deliver_crypto_license(session_id):
             license_record.issuance_reference,
             license_record.created_at,
         )
+        invoice = load_invoice(session_id)
+        if invoice is None:
+            raise ValueError("Paid order invoice is unavailable")
         send_license_email(
             cipher().decrypt(delivery.recipient_encrypted.encode()).decode(),
             license_file,
+            invoice=invoice, payment_environment=transaction.environment,
         )
     except Exception:
         db.session.rollback()

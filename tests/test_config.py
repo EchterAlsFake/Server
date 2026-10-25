@@ -8,6 +8,13 @@ from pf_server.config import load_environment_config
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_local_simulation_is_explicit_and_disallowed_for_production(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self.assertFalse(load_environment_config(directory, {"SECRET_KEY": "test"})["NOWPAYMENTS_LOCAL_SIMULATION_ENABLED"])
+            with self.assertRaisesRegex(ValueError, "LOCAL_SIMULATION"):
+                load_environment_config(directory, {"SECRET_KEY": "test",
+                    "NOWPAYMENTS_SANDBOX": "false", "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": "true"})
+
     def test_configuration_normalizes_paths_origins_booleans_and_tiers(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
             config = load_environment_config(
@@ -57,6 +64,7 @@ class ConfigurationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
             for variable in (
                 "NOWPAYMENTS_SANDBOX",
+                "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED",
                 "SEO_INDEXING_ENABLED",
                 "LICENSE_SMTP_SSL",
                 "LICENSE_SMTP_STARTTLS",

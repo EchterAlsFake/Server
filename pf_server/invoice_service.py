@@ -69,11 +69,13 @@ def build_invoice(
     crypto_amount: float,
     pay_currency: str,
     transaction_hash: str,
+    environment: str = "production",
 ) -> dict:
     invoice_number = "INV-" + os.urandom(4).hex().upper()
     invoice_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
     exchange_rate = fiat_amount / crypto_amount if crypto_amount > 0 else 0
     return {
+        "Environment": environment,
         "Full Name": "Johannes Habel",
         "Address": "Bahnstr. 21 06886 Lutherstadt Wittenberg",
         "Tax Number": "46208375790",
@@ -96,6 +98,7 @@ def build_simulated_invoice() -> dict:
         crypto_amount=0.00016,
         pay_currency="BTC",
         transaction_hash="mock-tx-hash-12345",
+        environment="sandbox",
     )
 
 
@@ -108,6 +111,12 @@ def render_invoice_pdf(invoice: dict) -> bytes:
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Helvetica", size=12)
+
+    if invoice.get("Environment") == "sandbox":
+        pdf.set_font("Helvetica", style="B", size=14)
+        pdf.set_text_color(145, 70, 0)
+        pdf.cell(0, 10, "SANDBOX TEST - NO REAL PAYMENT", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_text_color(0, 0, 0)
 
     pdf.set_font("Helvetica", style="B", size=16)
     pdf.cell(

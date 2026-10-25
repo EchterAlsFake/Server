@@ -334,3 +334,17 @@ Run `flask --app main:app process-nowpayments-receipts` every 15 seconds and app
 migrations before starting the updated web service. Keygen and SMTP run outside
 the webhook request; email outboxes retain their independent retry schedules.
 See [checkout operations](docs/ONRAMP_CHECKOUT.md#durable-receipt-worker-and-deployment).
+
+For a real provider sandbox test, use `NOWPAYMENTS_SANDBOX=true` and
+`NOWPAYMENTS_LOCAL_SIMULATION_ENABLED=false`. Local fallback is opt-in and startup
+rejects it in production. The operator command
+`flask --app main:app request-sandbox-payment --order-id NP-...` asks the provider
+to emulate a success for an existing sandbox invoice; only the signed webhook can
+authorize fulfillment. NOWPayments' current sandbox documentation warns that it
+has not been actively maintained since 2025 and does not guarantee production
+compatibility. The infrastructure runbook documents credential setup and cutover.
+
+License emails contain English-first HTML and plain-text alternatives. Crypto/card
+orders attach their existing PDF invoice alongside the signed license file.
+Sandbox messages and invoice PDFs are labelled as tests. Patreon delivery keeps
+using its provider receipt rather than inventing a local purchase invoice.
