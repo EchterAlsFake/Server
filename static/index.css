@@ -832,3 +832,14 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Optional card checkout stays secondary to the preferred payment methods. */
+.onramp-warning { border: 2px solid #ef4444; background: #450a0a; color: #fee2e2; padding: 1rem; border-radius: var(--radius-md); margin: 1rem 0; }
+.onramp-warning a { color: #fecaca; text-decoration: underline; }
+.onramp-form { max-width: 800px; margin: 2rem auto; }
+.onramp-form input[type="email"], .onramp-form select { display: block; width: 100%; padding: .75rem; margin: .5rem 0 1rem; background: var(--color-bg); color: var(--color-text); border: 1px solid #94a3b8; border-radius: .4rem; }
+#kyc-dialog { width: min(90vw, 720px); max-height: 85vh; overflow-y: auto; padding: 1.5rem; background: var(--color-bg); color: var(--color-text); border: 2px solid #f59e0b; border-radius: var(--radius-md); }
+#kyc-dialog::backdrop { background: rgba(0, 0, 0, .8); }
+#checkout-error, #kyc-error { color: #ef4444; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+#beta-license-key { display: block; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }

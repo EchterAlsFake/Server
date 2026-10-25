@@ -19,7 +19,7 @@
     margin-bottom: 7px;
     color: var(--text-muted);
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: var(--text-small);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -49,7 +49,7 @@
     background: transparent;
     color: var(--text);
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: var(--text-body);
 }
 
 .search-input-wrapper input::placeholder {
@@ -66,7 +66,7 @@
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--text-secondary);
 }
 
 #clearSearch:hover {
@@ -95,7 +95,7 @@
     color: var(--text-muted);
     cursor: pointer;
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: var(--text-small);
 }
 
 .filter-btn:hover {
@@ -112,7 +112,7 @@
 #searchCount {
     color: var(--text-muted);
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: var(--text-small);
 }
 
 .portal-grid {
@@ -164,7 +164,7 @@
     background: var(--accent-soft);
     color: var(--accent-strong);
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: var(--text-small);
     font-weight: 700;
 }
 
@@ -175,7 +175,7 @@
 .card-title {
     margin: 0 !important;
     overflow: hidden;
-    font-size: 18px !important;
+    font-size: var(--text-prominent) !important;
     line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -195,7 +195,7 @@
     margin-top: 2px;
     color: var(--text-muted);
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: var(--text-small);
 }
 
 .card-desc {
@@ -203,7 +203,7 @@
     margin: 15px 0 20px;
     overflow: hidden;
     color: var(--text-soft);
-    font-size: 16px;
+    font-size: var(--text-body);
     line-height: 1.65;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 5;
@@ -251,7 +251,7 @@
 .card-install .prefix {
     color: var(--accent);
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: var(--text-secondary);
 }
 
 .card-install code {
@@ -261,7 +261,7 @@
     border: 0;
     background: transparent;
     color: var(--text-soft);
-    font-size: 14px;
+    font-size: var(--text-secondary);
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -270,7 +270,7 @@
 .card-install .copy-icon {
     margin-left: auto;
     flex: 0 0 auto;
-    font-size: 13px;
+    font-size: var(--text-small);
 }
 
 .card-actions {
@@ -288,7 +288,7 @@
     border-radius: 3px;
     color: var(--text-soft);
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: var(--text-secondary);
     font-weight: 500;
     text-decoration: none;
 }
@@ -324,13 +324,13 @@
 .feature-card-title {
     margin: 0 0 7px !important;
     color: var(--text) !important;
-    font-size: 17px !important;
+    font-size: var(--text-body-large) !important;
 }
 
 .feature-card-desc {
     margin: 0;
     color: var(--text-muted);
-    font-size: 16px;
+    font-size: var(--text-body);
     line-height: 1.6;
 }
 
@@ -348,12 +348,12 @@
 
 .empty-state h3 {
     margin: 0 0 5px;
-    font-size: 18px;
+    font-size: var(--text-prominent);
 }
 
 .empty-state p {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--text-body);
 }
 
 @media (max-width: 1500px) {

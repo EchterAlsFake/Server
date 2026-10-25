@@ -1,0 +1,52 @@
+Platform artwork and trademark references
+Sources and usage guidelines reviewed: 24 October 2026
+
+Windows: Lucide app-window illustration (not the Windows logo).
+macOS: Lucide laptop illustration (not an Apple logo or product rendering).
+iOS: Lucide smartphone illustration (not an Apple logo or product rendering).
+CLI: Lucide terminal illustration.
+Source: https://github.com/lucide-icons/lucide
+Pinned revision: 7faf87628a1ad6175975bc595344337ce14a7db4
+Source files: icons/app-window.svg, icons/laptop.svg, icons/smartphone.svg,
+icons/terminal.svg. Stroke changed from currentColor to #f1efeb for local SVG
+image rendering. ISC license; Feather-derived icons also carry the MIT license.
+Full notices: /static/notices/lucide.txt
+
+Linux: Tux, original artwork by Larry Ewing, re-illustrated in vector by
+Garrett LeSage, refined and cleaned up by IFo Hancroft. Used unmodified.
+Source: https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/logo.svg
+Permission: https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/COPYING-logo
+Local permission notice: /static/notices/tux.txt
+Artist repository: https://github.com/garrett/Tux
+
+Android: unmodified green robot head from the Android brand guidelines.
+Source: https://developer.android.com/static/images/brand/android-head_flat.svg
+The Android robot is reproduced or modified from work created and shared by
+Google and used according to terms described in the Creative Commons 3.0
+Attribution License: https://creativecommons.org/licenses/by/3.0/
+Guidelines: https://developer.android.com/distribute/marketing-tools/brand-guidelines
+https://partnermarketinghub.withgoogle.com/brands/android/legal-and-trademarks/
+The robot's Creative Commons permission is distinct from permission for other
+Google logos, wordmarks, store badges, and brand assets.
+
+Trademark references
+--------------------
+Windows is a trademark of the Microsoft group of companies.
+Apple, macOS and iPhone are trademarks of Apple Inc., registered in the U.S.
+and other countries and regions. IOS is a trademark or registered trademark of
+Cisco in the U.S. and other countries; Apple uses it under license.
+Android is a trademark of Google LLC.
+Linux is the registered trademark of Linus Torvalds in the U.S. and other countries.
+
+Platform names identify compatibility. These illustrations do not indicate
+certification, sponsorship or endorsement of Porn Fetch by a platform vendor.
+Apple and Microsoft brand graphics require authorization under their respective
+guidelines, so the platform cards use neutral Lucide illustrations instead.
+No Apple, Finder, iOS or Windows logo is supplied by this platform icon set.
+Existing payment acceptance artwork has separate notices in payment-brands.txt.
+
+Official guidance:
+https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html
+https://www.apple.com/legal/intellectual-property/trademark/appletmlist.html
+https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks
+https://www.linuxfoundation.org/legal/the-linux-mark

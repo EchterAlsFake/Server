@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='checkout.css') }}">{% endblock %}
+{% block content %}
+<div class="checkout-page">
+    <a class="checkout-back" href="/porn_fetch">← Payment methods &amp; confirmations</a>
+    {% block checkout_notice %}{% endblock %}
+    <section class="checkout-card" aria-labelledby="payment-heading" {% block checkout_attributes %}{% endblock %}>
+        <div id="checkout-form-container">
+            <header class="checkout-product">
+                <h1 id="payment-heading">Porn Fetch Premium</h1>
+                <p class="checkout-price"><span class="visually-hidden">License price: </span><strong class="nowpayments-amount">€19.99</strong></p>
+                <p class="checkout-entitlement">One-time purchase · 1 year of updates · Up to 10 devices</p>
+                <p class="checkout-caption">{% block price_caption %}Provider &amp; network fees may apply.{% endblock %}</p>
+            </header>
+            <section class="checkout-method" aria-labelledby="method-heading">
+                {% block checkout_method %}{% endblock %}
+            </section>
+            {% if not checkout_consent %}
+            <p class="checkout-confirmations" role="note">Start with the <a href="/porn_fetch">payment methods and required confirmations</a> to continue.</p>
+            {% endif %}
+            {% block checkout_form %}{% endblock %}
+            <p class="checkout-reassurance">No subscription. No automatic renewal.<br>License available after verified payment.</p>
+            <nav class="checkout-alternatives" aria-label="Other payment options">
+                <a href="/porn_fetch">Change payment method{% if checkout_consent %}<span class="visually-hidden"> or saved confirmations for {{ dict(countries).get(checkout_consent.country) }}</span>{% endif %}</a>
+                {% block checkout_alternative %}{% endblock %}
+            </nav>
+            <section class="checkout-faq" aria-label="Checkout questions">
+                {% block checkout_faq %}{% endblock %}
+            </section>
+        </div>
+        {% block checkout_simulation %}{% endblock %}
+    </section>
+</div>
+{% block checkout_dialogs %}{% endblock %}
+{% include "partials/license_dialogs.html" %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/checkout-dialogs.js" defer></script>
+<script src="/static/checkout-faq.js" defer></script>
+{% block checkout_scripts %}{% endblock %}
+{% endblock %}

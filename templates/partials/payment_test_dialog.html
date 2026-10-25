@@ -1,0 +1,10 @@
+<dialog id="payment-test-dialog" class="payment-test-dialog" aria-labelledby="payment-test-title" aria-describedby="payment-test-description">
+    <p class="eyebrow">Before you continue</p><h2 id="payment-test-title">Preview <span id="payment-test-provider">this payment method</span>.</h2>
+    <div id="payment-test-description">{% include "partials/payment_test_warning.html" %}</div>
+    <div id="patreon-preview-details" hidden>{% include "partials/patreon_details.html" %}</div>
+    <form method="post" id="payment-test-form" rel="noopener noreferrer">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="checkbox-container"><input id="payment-test-ack" type="checkbox" name="confirm_no_payment" value="yes" required><span>I understand this is a test preview. I will not send money or start a paid membership.</span></label>
+        <div class="checkout-actions"><button type="button" class="btn btn-secondary" id="payment-test-cancel">Cancel</button><button type="submit" class="btn btn-primary" id="payment-test-continue" disabled>I understand. Continue to preview</button></div>
+    </form>
+</dialog>

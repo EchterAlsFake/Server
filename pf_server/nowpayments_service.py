@@ -17,7 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .extensions import db
 from .invoice_service import build_invoice, load_invoice, save_invoice
-from .models import Transaction
+from .models import CryptoLicenseDelivery, OnrampCheckout, PaymentProgress, Transaction
 from .webhook_models import NowPaymentsWebhook
 
 
@@ -76,6 +76,8 @@ def _store_pending_transaction(
     geolocation_database: str,
     expected_pay_amount: str | None = None,
     expected_pay_currency: str | None = None,
+    delivery_recipient_encrypted: str | None = None,
+    hosted_url: str | None = None,
 ) -> None:
     db.session.add(
         Transaction(
@@ -96,6 +98,10 @@ def _store_pending_transaction(
             created_at=created_at,
         )
     )
+    from .payment_progress import hosted_checkout_url
+    db.session.add(PaymentProgress(session_id=session_id, checkout_url=hosted_checkout_url(hosted_url), nowpayments_payment_id=provider_payment_id if provider_reference_type == "payment" else None))
+    if delivery_recipient_encrypted:
+        db.session.add(CryptoLicenseDelivery(session_id=session_id, recipient_encrypted=delivery_recipient_encrypted, created_at=created_at))
     try:
         db.session.commit()
     except SQLAlchemyError:
@@ -107,6 +113,7 @@ def create_crypto_invoice(
     customer_country: str,
     country_evidence: str,
     geolocation_database: str,
+    *, delivery_recipient_encrypted: str | None = None,
 ) -> dict[str, str]:
     session_id, created_at = _new_session()
     payload = {
@@ -130,7 +137,8 @@ def create_crypto_invoice(
         if not isinstance(invoice_data, dict):
             raise TypeError("NOWPayments invoice response was not an object")
         invoice_id = _provider_identifier(invoice_data.get("id"), "invoice ID")
-        invoice_url = invoice_data.get("invoice_url")
+        from .payment_progress import hosted_checkout_url
+        invoice_url = hosted_checkout_url(invoice_data.get("invoice_url"))
         if (
             not isinstance(invoice_url, str)
             or not invoice_url
@@ -151,6 +159,7 @@ def create_crypto_invoice(
             customer_country=customer_country,
             country_evidence=country_evidence,
             geolocation_database=geolocation_database,
+            delivery_recipient_encrypted=delivery_recipient_encrypted,
         )
         return {
             "session_id": session_id,
@@ -167,6 +176,8 @@ def create_crypto_invoice(
         customer_country=customer_country,
         country_evidence=country_evidence,
         geolocation_database=geolocation_database,
+        delivery_recipient_encrypted=delivery_recipient_encrypted,
+        hosted_url=invoice_url,
     )
     return {"session_id": session_id, "invoice_url": invoice_url}
 
@@ -219,6 +230,8 @@ def _validate_finished_payment(
             expected_paid = Decimal(transaction.expected_pay_amount)
         except InvalidOperation:
             return "invalid_stored_pay_amount"
+        if db.session.get(OnrampCheckout, transaction.session_id) is not None:
+            expected_paid *= Decimal("0.95")
         if webhook.actually_paid is None or webhook.actually_paid < expected_paid:
             return "insufficient_actual_payment"
     return None
@@ -281,6 +294,10 @@ def complete_payment(webhook: NowPaymentsWebhook) -> CompletionResult:
                 transaction_hash=webhook.payin_hash or webhook.hash or "N/A",
             )
             save_invoice(webhook.order_id, invoice)
+        if db.session.get(OnrampCheckout, webhook.order_id) is not None:
+            from .licensing import build_license_file, get_or_create_license
+            license_record = get_or_create_license(transaction.provider_payment_id)
+            build_license_file(license_record.license_key, license_record.issuance_reference, license_record.created_at)
         db.session.execute(
             db.update(Transaction)
             .where(

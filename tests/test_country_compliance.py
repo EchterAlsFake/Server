@@ -141,13 +141,13 @@ class CountryComplianceTests(ServerTestCase):
                 database_label="DB-IP fixture",
             )
             mismatch = self.client.post(
-                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True}
+                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True}
             )
             self.mock_country_lookup.return_value = CountryEvidence(
                 status="database_unavailable"
             )
             unavailable = self.client.post(
-                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True}
+                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True}
             )
 
         self.assertEqual(restricted.status_code, 451)
@@ -170,7 +170,7 @@ class CountryComplianceTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True},
+                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True},
                 headers={"X-Forwarded-For": "203.0.113.10"},
             )
 
@@ -179,6 +179,7 @@ class CountryComplianceTests(ServerTestCase):
             "Germany",
             "customer_declaration+local_ip_geolocation",
             "DB-IP City Lite test fixture",
+            delivery_recipient_encrypted=None,
         )
         self.assertNotIn("203.0.113.10", repr(create_invoice.call_args))
 

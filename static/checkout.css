@@ -1,0 +1,64 @@
+/* Shared purchase UI. Provider controllers keep their existing form hooks. */
+.checkout-page { max-width: 480px; margin: 32px auto 64px; }
+.checkout-back { display: inline-block; margin-bottom: 20px; font-size: var(--text-small); text-decoration: none; }
+.checkout-notice { margin: 0 0 20px; }
+.checkout-configuration { margin: -6px 0 20px; color: var(--color-text-muted); font-size: var(--text-small); line-height: 1.6; }
+.checkout-card { padding: 28px; background: var(--color-surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: 0 12px 40px #0002; }
+.checkout-product { padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.checkout-product h1 { margin: 0 0 12px; font-size: 21px; font-weight: 550; line-height: 1.4; letter-spacing: -.03em; }
+.checkout-price { margin: 0 0 12px; line-height: 1; }
+.checkout-price .nowpayments-amount { margin: 0; color: var(--color-text); font-size: 52px; font-weight: 600; letter-spacing: -.06em; line-height: 1.1; }
+.checkout-entitlement { margin: 0; color: #d2cbd4; font-size: var(--text-small); line-height: 1.7; }
+.checkout-caption { margin: 8px 0 0; color: var(--color-text-muted); font-size: var(--text-caption); line-height: 1.65; }
+.checkout-method { padding-block: 22px; }
+.checkout-method h2 { margin: 0; font-size: var(--text-body); font-weight: 550; line-height: 1.5; letter-spacing: -.02em; }
+.checkout-method .payment-brand-strip { margin: 12px 0 8px; gap: 16px; }
+.checkout-method .card-brands { gap: 12px; }
+.checkout-method .payment-brand-tile { padding: 6px; }
+.checkout-supported { display: inline-block; font-size: var(--text-caption); text-decoration: none; }
+.checkout-confirmations { margin: 0 0 20px; color: #d2cbd4; font-size: var(--text-small); line-height: 1.7; }
+.checkout-email.delivery-email-block { border: 0; padding: 0; }
+.checkout-email label { align-items: baseline; margin-bottom: 8px; font-size: var(--text-secondary); }
+.checkout-email label span { color: var(--color-text-muted); font-size: var(--text-caption); }
+.checkout-email input { background: var(--color-bg); border-color: #ffffff30; min-width: 0; }
+.checkout-email p { margin: 8px 0 0; color: var(--color-text-muted); font-size: var(--text-caption); line-height: 1.65; }
+.checkout-disclosure { margin: 20px 0; padding-left: 12px; border-left: 2px solid #f18bb050; font-size: var(--text-caption); line-height: 1.7; color: #c7c0c9; }
+.checkout-disclosure p { margin: 0 0 12px; }
+.checkout-disclosure p:last-child { margin-bottom: 0; }
+.checkout-disclosure strong { color: #e4dce5; font-weight: 550; }
+.checkout-card .card-annual-agreement { margin-top: 0; font-size: var(--text-caption); line-height: 1.65; color: #c7c0c9; }
+.checkout-card .card-annual-agreement input { accent-color: var(--color-primary); }
+.checkout-card .checkout-error:empty { display: none; }
+.checkout-card .nowpayments-btn { margin-top: 0; min-height: 52px; padding: 14px 12px; border-radius: 8px; font-size: var(--text-body); line-height: 1.6; font-weight: 650; }
+.checkout-card .card-annual-agreement + .checkout-error:empty + .nowpayments-btn { margin-top: 20px; }
+.checkout-card .nowpayments-btn:hover:not(:disabled) { box-shadow: none; transform: none; }
+.checkout-reassurance { margin: 14px 0 0; font-size: var(--text-caption); line-height: 1.8; text-align: center; color: var(--color-text-muted); }
+.checkout-alternatives { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin-top: 16px; font-size: var(--text-caption); }
+.checkout-alternatives a { text-decoration: none; }
+.checkout-faq { margin-top: 24px; }
+.checkout-question { border-top: 1px solid var(--line); font-size: var(--text-small); }
+.checkout-question summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; list-style: none; cursor: pointer; font-weight: 500; line-height: 1.5; }
+.checkout-question summary::-webkit-details-marker { display: none; }
+.checkout-chevron { flex: 0 0 7px; height: 7px; margin-right: 3px; border-right: 1.5px solid var(--color-text-muted); border-bottom: 1.5px solid var(--color-text-muted); transform: rotate(45deg); transition: transform 180ms ease; }
+.checkout-question[open] .checkout-chevron { transform: rotate(225deg); }
+.checkout-answer { padding: 0 0 16px; color: #bcb5c0; font-size: var(--text-small); line-height: 1.75; overflow-wrap: anywhere; }
+.checkout-answer p { margin: 0 0 12px; }
+.checkout-answer p:last-child { margin-bottom: 0; }
+.checkout-answer ol { margin: 0 0 12px; padding-left: 20px; }
+.checkout-answer li { padding-left: 3px; margin-bottom: 8px; }
+.checkout-inline-link { display: inline; padding: 0; border: 0; background: none; color: var(--color-accent); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+/* Native details retains keyboard and screen-reader support without JavaScript.
+   Browsers without intrinsic-size transitions use an immediate native toggle. */
+@supports (interpolate-size: allow-keywords) {
+  .checkout-question { interpolate-size: allow-keywords; }
+  .checkout-question::details-content { block-size: 0; overflow: clip; transition: block-size 180ms ease, content-visibility 180ms allow-discrete; }
+  .checkout-question[open]::details-content { block-size: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .checkout-question::details-content { transition: none; }
+}
+@media (max-width: 480px) {
+  .checkout-page { margin-block: 24px 40px; }
+  .checkout-card { padding: 24px 20px; }
+  .checkout-price .nowpayments-amount { font-size: 48px; }
+}

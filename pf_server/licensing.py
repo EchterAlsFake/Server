@@ -117,7 +117,7 @@ def load_license_email_catalog(language: str) -> dict[str, str]:
     return messages
 
 
-def send_license_email(recipient: str, license_file: bytes) -> None:
+def send_license_email(recipient: str, license_file: bytes, *, beta: bool = False) -> None:
     """Send a bilingual plain-text email with the signed license attached."""
     config = current_app.config
     smtp_host = config.get("LICENSE_SMTP_HOST")
@@ -158,10 +158,12 @@ def send_license_email(recipient: str, license_file: bytes) -> None:
     else:
         message["Message-ID"] = make_msgid()
     message.set_content(
-        "Deutsch\n--------\n"
-        + german["body"].format(filename=filename)
+        ("V3.9 BETA ONLY: This license will be deleted at product release. This real-money purchase does not grant a permanent release license.\n"
+         "NUR V3.9-BETA: Diese Lizenz wird zur Produktveröffentlichung gelöscht. Dieser Kauf mit echtem Geld gewährt keine dauerhafte Lizenz für die Veröffentlichung.\n\n" if beta else "")
+        + "Deutsch\n--------\n"
+        + german["legacy_beta_body" if beta else "body"].format(filename=filename)
         + "\n\nEnglish\n-------\n"
-        + english["body"].format(filename=filename)
+        + english["legacy_beta_body" if beta else "body"].format(filename=filename)
     )
     message.add_attachment(
         license_file,

@@ -1,0 +1,14 @@
+{% macro email_field(required=false) %}
+<div class="checkout-email delivery-email-block">
+    <label for="delivery-email">License delivery email <span>{{ 'Required' if required else 'Optional' }}</span></label>
+    <input id="delivery-email" name="{{ 'email' if required else 'delivery_email' }}" type="email" maxlength="254" autocomplete="email" {% if required %}required{% endif %} placeholder="you@example.com" aria-describedby="delivery-email-help">
+    <p id="delivery-email-help">{% if required %}For license delivery. Enter your verification email separately at Banxa.{% else %}Receive your license by email, or leave blank and retrieve it after payment.{% endif %}</p>
+</div>
+{% endmacro %}
+
+{% macro question(id, title) %}
+<details class="checkout-question" id="{{ id }}">
+    <summary id="{{ id }}-heading">{{ title }}<span class="checkout-chevron" aria-hidden="true"></span></summary>
+    <div class="checkout-answer" role="region" aria-labelledby="{{ id }}-heading">{{ caller() }}</div>
+</details>
+{% endmacro %}

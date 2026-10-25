@@ -1,0 +1,83 @@
+PAYMENT BRAND ARTWORK AND USAGE NOTES
+Reviewed against the public owner guidelines on 24 October 2026.
+
+The artwork below is served locally, without third-party image requests. Original
+artwork, colors and aspect ratios are retained. Marks identify the referenced
+payment provider or cryptocurrency; they do not imply sponsorship, endorsement,
+affiliation, guaranteed acceptance or a working production checkout. The website's
+Patreon and card routes are test previews. External services may still take money.
+
+These notes are attribution and provenance, not a blanket trademark license.
+Each owner's current brand requirements and applicable provider agreement govern.
+
+Google Pay
+Owner: Google LLC. Google Pay is a trademark of Google LLC.
+Official asset: Google Pay Acceptance mark (not an API payment button).
+https://developers.google.com/static/pay/api/download-assets/Google-Pay-Acceptance.zip
+Usage: https://developers.google.com/pay/api/web/guides/brand-guidelines
+Used as a static identity for a possible third-party provider payment method,
+not as a button claiming to invoke the Google Pay API.
+
+Apple Pay
+Owner: Apple Inc. Apple and Apple Pay are trademarks of Apple Inc.
+Official artwork: Apple Pay Mark, SVG supplied by Apple.
+https://developer.apple.com/apple-pay/marketing/Apple-Pay-Mark.zip
+Usage: https://developer.apple.com/apple-pay/marketing/
+Keep the supplied mark unmodified and preserve clear space. This is not a native
+Apple Pay payment button. Actual availability is determined by the provider.
+
+Patreon
+Owner: Patreon, Inc.
+Official artwork: Patreon Symbol.
+https://c14.patreon.com/thumbnail_Patreon_Symbol_6fff9723d3.png
+Usage: https://www.patreon.com/brand
+https://support.patreon.com/hc/en-gb/articles/216539323-Use-Patreon-s-logo-to-promote-my-Patreon
+Used to identify and link to the project's Patreon presence. The membership/license
+purchase route is unfinished; do not subscribe or send money while testing.
+
+NOWPayments
+Owner: NOWPayments / the applicable NOWPayments rights holder.
+Official artwork: https://nowpayments.io/images/logo/logo.svg
+Service and supported currencies: https://nowpayments.io/
+https://nowpayments.io/supported-coins
+The service currently advertises support for 350+ cryptocurrencies. This is the
+provider's overall catalog, not a guarantee that every coin is available in every
+checkout. The mark identifies the payment provider, not an endorsement of Porn Fetch.
+
+Bitcoin
+Artwork: https://bitcoin.design/assets/images/guide/getting-started/visual-language/bitcoin-symbol.svg
+The Bitcoin symbol has no central brand authority. Origin and reuse background:
+https://bitcoin.design/guide/getting-started/visual-language/
+The source artwork is used unchanged to identify Bitcoin.
+
+Ethereum
+Official artwork: https://ethereum.org/images/assets/svgs/eth-diamond-purple.svg
+Source and brand assets: https://ethereum.org/assets/
+Used unchanged to identify Ethereum. Rights in third-party marks are retained.
+
+Solana
+Owner: Solana Foundation.
+Official artwork: https://solana.com/src/img/branding/solanaLogoMark.svg
+Usage: https://solana.com/branding
+The unmodified mark identifies Solana. No Foundation connection or endorsement
+is claimed; the logo is not combined into the site's identity or merchandise.
+
+Litecoin
+Official artwork: https://download.litecoin.org/branding/v2/Litecoin-Logo-v2.svg
+Source: https://download.litecoin.org/branding/v2/
+Resources: https://litecoin.com/resources
+Used unchanged to identify Litecoin. Rights in third-party marks are retained.
+
+Visa and Mastercard
+Text references only; their logos are not included in this test configuration.
+Public logo rules limit use to approved partners/merchants and applicable accepted
+payment brands. An attribution is not evidence of such approval. Confirm merchant
+acceptance/brand permission and use approved artwork before adding acceptance marks.
+Visa: https://brand.visa.com/
+Mastercard: https://www.mastercard.com/brandcenter/us/en/faq.html
+Mastercard: https://www.mastercard.com/brandcenter/us/en/brand-requirements/mastercard.html
+
+Generic credit-card icon: Lucide, ISC license.
+Source: https://github.com/lucide-icons/lucide/blob/main/icons/credit-card.svg
+License: /static/notices/lucide.txt (copyright and permission notice included).
+Stroke color and viewport adapted to the acceptance tile. This icon identifies no card network.

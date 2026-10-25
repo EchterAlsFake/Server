@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Porn Fetch Releases — Changelog &amp; Previous Downloads{% endblock %}
+{% block content %}
+<div class="downloads-page"><header class="page-heading"><p class="eyebrow">Release history</p><h1>What’s new.<br>What’s available.</h1><p>Published versions, changes, and original download files. Each release retains its own requirements and license terms.</p></header>
+{% if unavailable %}<p role="status">The release catalog is temporarily unavailable.</p>{% endif %}
+{% for release in releases %}<article class="release-section"><h2><a href="/releases/{{ release.version }}">Porn Fetch {{ release.version }}</a></h2><p>{{ release.channel|capitalize }} · <time datetime="{{ release.published_at }}">{{ release.published_at[:10] }}</time> · {{ release.artifacts|length }} files</p><p>{{ release.notes[:240] }}{% if release.notes|length > 240 %}…{% endif %}</p><a class="text-link" href="/releases/{{ release.version }}">Release notes &amp; downloads →</a></article>{% else %}<p>No website-hosted releases have been published yet.</p>{% endfor %}<a class="text-link" href="/download">← Current downloads</a></div>
+{% endblock %}

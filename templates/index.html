@@ -1,70 +1,74 @@
 {% extends "base.html" %}
-
-{% block title %}Porn Fetch - Source-Available Adult Media Downloader{% endblock %}
-
+{% block title %}Porn Fetch — Download Videos & Collections to Your Device{% endblock %}
+{% block main_class %}marketing{% endblock %}
 {% block content %}
-<div class="hero">
-    <h1>Ultimate Adult Media Downloader</h1>
-    <p>A fast, source-available downloader supporting adult websites. Zero ads. Natively cross-platform.</p>
-    <div class="hero-actions">
-        <a href="/porn_fetch" class="btn btn-primary" style="background: var(--color-primary); box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);">View license options</a>
-        <a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Repository</a>
-    </div>
-</div>
+{% from "partials/platform_icon.html" import platform_icon %}
+{% if age_error %}<p class="form-error" role="alert">{{ age_error }}</p>{% endif %}
+<section class="product-hero" aria-labelledby="hero-title">
+    <p class="eyebrow"><span class="release-dot" aria-hidden="true"></span> Introducing v3.9</p>
+    <h1 id="hero-title">Adult content.<br><span>Locally and privacy friendly.</span></h1>
+    <p class="hero-description">Save videos, playlists, models, channels and collections to your device.</p>
+    {% include "partials/actions.html" %}
+    <p class="hero-platforms">Windows <span>·</span> Linux <span>·</span> macOS <span>·</span> Android™ <span>·</span> <a href="#ios-support">iOS · CLI only</a></p>
+    <figure class="product-stage">
+        <div class="stage-heading"><span><span class="stage-dot" aria-hidden="true"></span> PORN FETCH / PRODUCT TOUR</span><span>00:40 <span aria-hidden="true">↗</span></span></div>
+        <video id="product-video" class="promo-video" width="1920" height="1080" muted playsinline loop controls preload="none" poster="{{ url_for('static', filename='media/promo-poster.jpg') }}" aria-label="Porn Fetch product tour: fetching downloads, configuring filters, connecting accounts and privacy settings" aria-describedby="video-description">
+            <source data-src="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}" type="video/mp4">
+            <a href="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}">Download the product tour</a>.
+        </video>
+        <noscript><p class="video-noscript"><a href="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}">Watch the 40-second product tour</a></p></noscript>
+        <figcaption class="stage-caption" id="video-description"><span>Paste URL <span aria-hidden="true">→</span> Fetch <span aria-hidden="true">→</span> Download locally</span><span>Illustrative demo · accelerated workflow</span></figcaption>
+    </figure>
+    <div class="hero-footnote"><span>No ads. Local files. Source available.</span><a href="#features">Explore the app <span aria-hidden="true">↓</span></a><span>v3.9 preview</span></div>
+</section>
 
-<!-- What is Porn Fetch Section (Moved from /porn_fetch) -->
-<div class="card">
-    <h2 style="text-align: center; margin-bottom: 30px; font-size: 2rem;">What is Porn Fetch?</h2>
-    <p style="text-align: center; max-width: 800px; margin: 0 auto 30px; font-size: 1.1rem; color: var(--color-text-muted);">
-        Porn Fetch is a source-available tool built for downloading videos, playlists, and entire model collections from
-        over 12 popular adult websites. It's built for speed, privacy, and ease of use.
-    </p>
-    
-    <div class="grid-3">
-        <div class="feature-card">
-            <h3>⚡ Extreme Speed</h3>
-            <p>Optimized HLS downloading engine that supports download speeds of over 115 MB/s. No throttling!</p>
-        </div>
-        <div class="feature-card">
-            <h3>📂 Playlists & Channels</h3>
-            <p>Download entire user playlists or a model's whole video library with a single click or command.</p>
-        </div>
-        <div class="feature-card">
-            <h3>💻 Everywhere</h3>
-            <p>Works natively on Windows, Linux, macOS, and Android (GUI & Termux CLI). Run it anywhere.</p>
-        </div>
-        <div class="feature-card">
-            <h3>👤 Login to your Account (Optional)</h3>
-            <p>Securely use your session cookies to download your personal playlists, liked, and watched videos.</p>
-        </div>
-        <div class="feature-card">
-            <h3>⚖️ 100% Legal Compliance</h3>
-            <p>Porn Fetch is <a href="/legal-statement">legally compliant</a> with German Law, not a shady website.</p>
-        </div>
-        <div class="feature-card">
-            <h3>🏷️ Auto Tagging</h3>
-            <p>Automatically tags files with metadata and converts downloaded files to MP4 in seconds.</p>
-        </div>
-        <div class="feature-card">
-            <h3>🔒 No Logs / Ads</h3>
-            <p>Zero advertisements, no mandatory logins, and full proxy support to protect your privacy.</p>
-        </div>
-        <div class="feature-card">
-            <h3>✨ Industrial Grade Scraping</h3>
-            <p>Modern Network stack using libcurl + curl-cffi, mimics real-browser, modern HTTP/3 and impersonation.</p>
-        </div>
-        <div class="feature-card">
-            <h3>🎯 Optimized memory and parsing speed</h3>
-            <p>Porn Fetch uses modern Lexbor (C-Native) parser and internal code efficiency for minimal memory footprint.</p>
-        </div>
-    </div>
-</div>
+<section class="feature-intro section-space" id="features" aria-labelledby="features-title">
+    <div><p class="eyebrow">01 / Download</p><h2 id="features-title">One link.<br>A local file.</h2></div>
+    <div class="intro-copy"><p class="large-copy">From a single video to a whole collection. Paste a supported URL, choose what you want, and save it to your device.</p><p>Videos, playlists and model or channel collections share one download workflow. Available features depend on the website.</p><a class="text-link" href="#websites">See what each website supports <span aria-hidden="true">↗</span></a></div>
+    <div class="download-facts"><div><span>01</span><h3>Paste a link</h3><p>A video, playlist, model or channel URL.</p></div><div><span>02</span><h3>Make it yours</h3><p>Choose quality, filters and output naming.</p></div><div><span>03</span><h3>Save locally</h3><p>Download to a folder on your device.</p></div></div>
+</section>
 
-<div class="card" style="text-align: center; border-left: 4px solid var(--color-primary);">
-    <h2>Unlock Precompiled Releases</h2>
-    <p style="color: var(--color-text-muted); max-width: 600px; margin: 0 auto 25px;">
-        Video qualities above 720p require a premium entitlement in supported builds. {% if config.NOWPAYMENTS_SANDBOX %}Crypto checkout is in test mode; no real crypto payment is processed here.{% else %}Choose a one-time crypto purchase or a Patreon membership, both listed at €19.99.{% endif %}
-    </p>
-    <a href="/porn_fetch" class="btn btn-primary" style="background: var(--color-primary); box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);">View License & Purchase Options</a>
-</div>
+<section class="feature-story section-space" aria-labelledby="filters-title">
+    <div class="story-copy"><p class="eyebrow">02 / Configure</p><h2 id="filters-title">Your collection.<br>Your rules.</h2><p>Choose what makes it into your downloads, then decide how the files are named.</p><ul class="editorial-list"><li><strong>Filter before fetching</strong><span>Duration, quality range, publication date, and title, author or tag patterns.</span></li><li><strong>Name files your way</strong><span>Build output filenames from video metadata with custom title formatting.</span></li><li><strong>Set the pace</strong><span>Configure download concurrency, speed limits and output options.</span></li></ul></div>
+    <figure class="screenshot-frame"><a href="{{ url_for('static', filename='media/filters.png') }}" target="_blank" rel="noopener" aria-label="Open full-size configuration screenshot"><img src="{{ url_for('static', filename='media/filters.png') }}" alt="Porn Fetch advanced configuration showing duration, regex, quality and date filters, plus custom title formatting" width="1537" height="935" loading="lazy" decoding="async"></a><figcaption>Advanced configuration <span>Actual app interface ↗</span></figcaption></figure>
+</section>
+
+<section class="feature-story story-reversed section-space" aria-labelledby="accounts-title">
+    <div class="story-copy"><p class="eyebrow">03 / Connect</p><h2 id="accounts-title">Your accounts.<br>A familiar library.</h2><p>Connect supported website accounts in the app to retrieve your collections. Account features vary by provider.</p><dl class="provider-details"><div><dt>PornHub</dt><dd>Watch history, recommendations, subscription feed and favorites.</dd></div><div><dt>XHamster</dt><dd>Liked videos and account playlists.</dd></div><div><dt>XVideos</dt><dd>Watch later, watch history and liked videos.</dd></div></dl><p class="fine-print">The app supports provider-specific sign-in and browser-session imports. Website credentials are entered in the app, never on this marketing page.</p></div>
+    <figure class="screenshot-frame"><a href="{{ url_for('static', filename='media/accounts.png') }}" target="_blank" rel="noopener" aria-label="Open full-size account screenshot"><img src="{{ url_for('static', filename='media/accounts.png') }}" alt="Porn Fetch account page with PornHub, XHamster and XVideos tabs and account collection controls" width="1045" height="645" loading="lazy" decoding="async"></a><figcaption>Account connections <span>Actual app interface ↗</span></figcaption></figure>
+</section>
+
+<section class="privacy-section section-space" id="privacy" aria-labelledby="privacy-title">
+    <div class="section-heading"><div><p class="eyebrow">04 / Privacy</p><h2 id="privacy-title">Personal content.<br>Personal control.</h2></div><p class="section-description">Porn Fetch runs locally. Browsing history and download records are not sent to the developer’s server. Choose the connection controls that work for you.</p></div>
+    <figure class="screenshot-frame privacy-screenshot"><a href="{{ url_for('static', filename='media/privacy.png') }}" target="_blank" rel="noopener" aria-label="Open full-size privacy settings screenshot"><img src="{{ url_for('static', filename='media/privacy.png') }}" alt="Porn Fetch privacy settings: anonymous mode, encrypted Client Hello, DNS over HTTPS, Tor, onion checks, SNI obfuscation and proxy setup" width="1736" height="797" loading="lazy" decoding="async"></a><figcaption>Privacy settings <span>Actual app interface ↗</span></figcaption></figure>
+    <dl class="privacy-controls"><div><dt>Encrypted DNS &amp; ECH</dt><dd>Configure primary and fallback DNS over HTTPS resolvers. Encrypted Client Hello depends on support from the network and destination.</dd></div><div><dt>Tor &amp; proxies</dt><dd>Route app connections through Tor and configure onion routing for license and update checks. Proxy connections are supported too.</dd></div><div><dt>Anonymous mode</dt><dd>Conceal the app’s presentation from people looking at your screen. This is a local display feature.</dd></div><div><dt>SNI obfuscation</dt><dd>Optional connection controls with platform and privilege requirements. Destination IP addresses may remain visible.</dd></div></dl>
+    <div class="server-privacy">
+        <div class="server-privacy-heading"><p class="eyebrow">Independent by design</p><h3>A private app.<br>A transparent server.</h3><p>The app’s full source is available to inspect. The server and payment infrastructure are open source under the GPL.</p><a class="text-link" href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">{% include "partials/github.svg" %} Explore the server source <span aria-hidden="true">↗</span></a></div>
+        <dl class="server-facts">
+            <div><dt>No IP logs. No viewing-history logs.</dt><dd>No visitor IP addresses are stored by the Porn Fetch server. The app does not send your browsing or download history to it.</dd></div>
+            <div><dt>Self-hosted at home in Germany.</dt><dd>Independent hardware in the developer’s home runs the service. A Swedish relay forwards encrypted connections to Germany; HTTPS terminates on the German endpoint.</dd></div>
+            <div><dt>Tor routing supported.</dt><dd>Use the app’s Tor connection settings and visit this website through its onion service. External payment providers have their own network and identity requirements.</dd></div>
+            <div><dt>Privacy-friendly crypto checkout.</dt><dd>Buy through NOWPayments without a Porn Fetch account. Network and provider fees apply; cryptocurrency payments are not necessarily anonymous.</dd></div>
+            <div><dt>No ads or advertising trackers.</dt><dd>No advertising networks, cross-site profiling or third-party analytics. Aggregate service counters, necessary session cookies and purchase records are described in the privacy policy.</dd></div>
+        </dl>
+    </div>
+    <div class="privacy-note"><p>Privacy controls offer different protections; none guarantees anonymity. Websites, network operators, licensing and payment services have their own data handling.</p><a class="text-link" href="/privacy_policy">Read the privacy policy <span aria-hidden="true">↗</span></a></div>
+</section>
+
+<section class="platform-section section-space" id="platforms" aria-labelledby="platforms-title">
+    <div class="section-heading"><div><p class="eyebrow">05 / Platforms</p><h2 id="platforms-title">At home on<br>your system.</h2></div><p class="section-description">A graphical app for desktop and Android, plus a command line for supported systems. Android also supports CLI use through Termux. iOS requires the restricted jailbreak setup below.</p></div>
+    <div class="platform-list"><div>{{ platform_icon("windows") }}<h3>Windows</h3><p>Windows 10 and higher</p><span>x64 / ARM64</span></div><div>{{ platform_icon("linux") }}<h3>Linux</h3><p>Linux</p><span>x64 / ARM64</span></div><div>{{ platform_icon("macos") }}<h3>macOS</h3><p>14.4 (Sonoma) and higher</p><span>Intel / Apple Silicon</span></div><div>{{ platform_icon("android") }}<h3>Android</h3><p>Android 9.0 and higher</p><span>Installable Android GUI app</span></div><div>{{ platform_icon("ios") }}<h3>iOS</h3><p>Jailbroken iPhones only</p><span>CLI · palera1n / NewTerm</span></div></div>
+    <div id="ios-support">{% include "partials/ios_warning.html" %}<a class="text-link" href="/download/ios">iOS CLI requirements →</a></div>
+    <div class="platform-note"><p><span class="small-indicator" aria-hidden="true"></span> Developed primarily on <strong>Arch Linux · Wayland · Hyprland.</strong></p><p>Platform support and published build availability can differ. <a href="/download">Check downloads →</a></p></div>
+</section>
+
+<section class="websites-section section-space" id="websites" aria-labelledby="websites-title">
+    <div class="section-heading"><div><p class="eyebrow">06 / Compatibility</p><h2 id="websites-title">15 websites.<br>One workflow.</h2></div><p class="section-description">A factual look at what Porn Fetch v3.9 supports. Use a website’s full URL; keyword search is not available.</p></div>
+    <p class="affiliation-note">Porn Fetch is an independent project. It is not affiliated with, sponsored by, authorized by or endorsed by any of the listed websites. Names identify technical compatibility only.</p>
+    <p class="table-hint">Yes = supported · — = unavailable · Scroll horizontally on smaller screens →</p>
+    <div class="capability-scroll" tabindex="0" role="region" aria-label="Supported website capabilities, scroll horizontally for all columns"><table class="capability-table"><caption class="visually-hidden">Porn Fetch v3.9 website capabilities</caption><thead><tr><th scope="col">Website</th><th scope="col">Videos</th><th scope="col">Profiles / channels</th><th scope="col">Playlists / collections</th><th scope="col">Account login</th><th scope="col">Shorts</th><th scope="col">Photo albums</th></tr></thead><tbody>{% for website in websites %}<tr>{% for value in website %}{% if loop.first %}<th scope="row">{{ value }}</th>{% else %}<td{% if value == 'Yes' %} class="supported"{% elif value == '—' %} class="unsupported"{% endif %}>{{ value }}</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody></table></div>
+    <p class="fine-print">Features and quality depend on the source video, region, account access and application entitlement. Photo albums are CLI-only. Website changes may affect availability.</p>
+</section>
+
+<section class="closing-section section-space" aria-labelledby="closing-title"><p class="eyebrow">Keep it local</p><h2 id="closing-title">Your next download<br>starts with a link.</h2><p>Explore v3.9, choose a download, or support its development.</p>{% include "partials/actions.html" %}</section>
 {% endblock %}

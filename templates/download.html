@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Download Porn Fetch for Windows, Linux, macOS, Android &amp; CLI{% endblock %}
+{% block content %}
+<div class="downloads-page">
+<header class="page-heading"><p class="eyebrow">Official downloads</p><h1>Porn Fetch.<br>On your device.</h1><p>Choose your platform, then your architecture. Download directly from this website, with local installation guides and release notes.</p></header>
+{% include "partials/download_channels.html" %}
+{% if unavailable %}<p class="download-status" role="status">The release catalog is temporarily unavailable. Please try again later.</p>{% elif not releases %}<p class="download-status" role="status">The first website-hosted release has not been published yet. Platform guides are available below; download links appear after a release is verified.</p>{% endif %}
+<div class="download-grid">{% for card in cards %}{% include "partials/download_card.html" %}{% endfor %}</div>
+<div class="download-bottom"><a href="/releases">Previous releases &amp; changelog →</a><a href="/help">Installation or activation help →</a></div>
+<p class="download-disclosure">Downloads and licenses are separate. Premium is a <a href="/porn_fetch">€19.99 one-time purchase</a>, with one year of updates from first activation and up to 10 active installations. Eligible versions remain usable afterwards, subject to activation and periodic validation. Processing fees may apply. No automatic renewal.</p>
+</div>
+{% endblock %}

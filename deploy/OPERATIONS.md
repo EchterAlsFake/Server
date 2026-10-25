@@ -133,3 +133,51 @@ UTC month's release. It preserves the previous database if download/validation f
 Keep Node 24, the shared uv binary and `/usr/local/share/eaf-python` maintained.
 Existing environments reference installed Python runtimes; preserve those runtimes
 while any deployment or rollback environment still uses them.
+
+Optional Banxa annual-license checkout setup, token compatibility verification, delivery
+timer installation and rollback: [Onramp checkout operations](../docs/ONRAMP_CHECKOUT.md).
+
+
+### Optional crypto license email
+
+Run the database migration (`flask db upgrade`) before serving the updated checkout.
+Set `LICENSE_DELIVERY_ENCRYPTION_KEY` to a stable Fernet key (or retain the existing
+`ONRAMP_ENCRYPTION_KEY` fallback), and configure the existing `LICENSE_SMTP_*` and
+`LICENSE_EMAIL_FROM` settings. Do not rotate a key while encrypted deliveries are
+queued. No-email checkout remains available without SMTP or an encryption key.
+
+Install and enable the supplied `deploy/eaf-crypto-deliveries.service` and `.timer`,
+or run `flask retry-crypto-deliveries` every minute with the same environment
+and working directory as the server. It retries paid orders and removes queued
+email addresses older than 7 days. The command never marks payments paid. Successful
+delivery clears the address immediately. SMTP retry is at least once with a stable
+Message-ID; a crash after SMTP acceptance may still produce a duplicate email.
+Checkout agreement state lasts one hour in the signed browser session. Country
+verification happens at payment creation, using the existing local lookup.
+
+
+### Payment progress migration
+
+Run `flask db upgrade` for the new `payment_progress` table before loading the
+updated checkout. Provider progress uses the existing NOWPayments API key/IPN
+secret and the existing encrypted Onramp tracking token; no additional provider
+credentials or progress timer are needed. Both crypto and card checkout keep a
+local recovery/progress tab open while the provider runs in another tab.
+See [live customer progress](../docs/ONRAMP_CHECKOUT.md#live-customer-progress) for
+status semantics, polling limits and the receipt-verification boundary.
+
+
+## Product website downloads and canonical host
+
+The dedicated onion gateway and signed Android update feed are documented in
+[Tor support](../docs/TOR_SUPPORT.md). Keep the existing Tor identity and integrate
+the new routes into the current port-18081 listener.
+
+The standalone product host is `pornfetch.to`; its additional Caddy site is
+`deploy/pornfetch-site.caddy`. The working `api.pornfetch.to` app updater remains
+separate. Before installing the updated service definition, provision the external
+release directory and publisher secret as described in
+[website distribution operations](../docs/WEBSITE_DOWNLOADS.md). That guide covers
+CI publishing, immutable storage, recovery, old-host redirects and SEO cutover.
+Do not blanket-redirect existing payment/session, API, documentation or licensing
+routes when moving public product pages.

@@ -131,7 +131,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `GEOIP_DATABASE_LABEL` | Optional retained release/source label | Derived from MMDB build date |
 | `GITHUB_TOKEN` | Raises the GitHub release API rate limit | Unset |
 | `LICENSE_PRIVATE_KEY_B64` | Base64-encoded raw 32-byte Ed25519 private key | Unset |
-| `APP_DOMAIN` | Canonical public website origin used for payment redirects | `https://echteralsfake.me` |
+| `APP_DOMAIN` | Canonical product origin used for links and payment redirects | `https://pornfetch.to` |
 | `API_DOMAIN` | Public origin dedicated to payment webhooks | `https://api.echteralsfake.me` |
 | `NOWPAYMENTS_SANDBOX` | Uses the sandbox API and enables local payment simulation | `true` |
 | `NOWPAYMENTS_API_KEY` | Creates NOWPayments invoices/payments | Unset |
@@ -153,7 +153,7 @@ The product token is a server-side credential and must not be shipped with the a
 
 ## HTTP surface
 
-Public pages include `/porn_fetch`, `/donation`, `/stats`, `/impress`, `/terms`, `/refund_policy`, `/privacy_policy`, `/datenschutz`, and `/legal-statement`. `/` displays an age-confirmation form and redirects to `/porn_fetch` only after its checkbox is submitted. It does not require `CHECKLIST_AUTH`; the old `/access` URL now redirects to `/`. Checklist editing has its own login. Direct requests to `/porn_fetch` remain available so search crawlers can index the product page. On the commercial host, `/robots.txt` and `/sitemap.xml` expose `/porn_fetch` as the public page when sandbox mode is off. Sandbox pages carry `noindex` and the sandbox sitemap is unavailable.
+Public pages include `/porn_fetch`, `/donation`, `/stats`, `/impress`, `/terms`, `/refund_policy`, `/privacy_policy`, `/datenschutz`, and `/legal-statement`. `/` serves the v3.9 marketing homepage, with the official logo, product tour, screenshots, platform requirements and website capability table. Product information, downloads, About and setup/help pages are public. Purchase and donation entry pages retain the age-confirmation dialog and secure browser-session cookie. Confirmation reveals the page in place; the CSRF-protected HTML form also works without JavaScript. `/porn_fetch` and checkout entry pages use the same confirmation state; legal documents remain readable before confirmation. `/leave` clears confirmation and displays a neutral exit page. `/download` uses a local release catalog and platform cards, with direct files served by Caddy and local guides, release history, About and help. It does not contact GitHub. See [website distribution and SEO operations](docs/WEBSITE_DOWNLOADS.md). This does not require `CHECKLIST_AUTH`; the old `/access` URL redirects to `/`. Checklist editing has its own login. On the commercial host, `/robots.txt` and `/sitemap.xml` expose the product, download guides, About/help and published release notes when sandbox mode is off. Canonical URLs use `APP_DOMAIN` (default `https://pornfetch.to`). Sandbox pages carry `noindex` and the sandbox sitemap is unavailable.
 
 The commercial host returns a plain 403 page when the request's `Referer` has the exact HTTPS origin `vplan.echteralsfake.me`. It sets a host-only, secure, HTTP-only browser marker signed by a random key held only in the current app process. The marker stays effective while the process runs and the browser retains the cookie; a restart invalidates it. The `/docs/` and `/dashboard/` routes and non-commercial hosts are excluded. The VPlan Caddy host overrides its upstream `no-referrer` policy with `strict-origin` so normal HTTPS navigation supplies the source origin without revealing the plan path. This mechanism depends on a browser sending the `Referer` header and retaining its cookie; it cannot identify someone who suppresses either signal. The deployed Gunicorn service uses one worker; multiple workers would need shared signing state.
 
@@ -249,5 +249,68 @@ See [LICENSE](LICENSE).
 Licenses now use self-hosted Keygen CE, schema-2 signed keys, ten UUID installation slots,
 and seven-day offline permits. See [application integration](docs/KEYGEN_CLIENT_INTEGRATION.md)
 and [operations](deploy/keygen/OPERATIONS.md). The reusable package is `license_client/`.
+New licenses include one year of updates from first activation, with continued access to eligible builds and no automatic license renewal. New Banxa purchases use this same offer; historical beta orders retain their original terms. Patreon memberships still recur until the customer cancels them.
+
 The purchase service no longer holds an Ed25519 private key. Configure `KEYGEN_PRODUCT_TOKEN`
 and `KEYGEN_POLICY_ID` before enabling fulfillment. The old `/check_license` route returns 410.
+
+## Website presentation and verification
+
+Shared presentation lives in `templates/base.html`, `static/site.css` and `static/site.js`; existing transactional styles and payment logic are retained. Impressum, privacy and terms display full English sections followed by German sections, with language anchors. `/datenschutz` redirects to `/privacy_policy#de`. Bilingual document bodies live in `templates/partials/`. The privacy policy describes the necessary session cookie.
+
+The original 40-second HEVC promo and its Remotion source remain in `porn-fetch-promo/`. The website serves a compatible H.264 MP4 and poster from `static/media/`; video playback waits for age confirmation, pauses offscreen and respects reduced motion. Assets are local. To regenerate the website video after updating the original:
+
+```bash
+ffmpeg -i porn-fetch-promo/out/MyComp.mp4 -c:v libx264 -preset medium -crf 21 -pix_fmt yuv420p -movflags +faststart -an static/media/porn-fetch-promo.mp4
+ffmpeg -ss 3 -i porn-fetch-promo/out/MyComp.mp4 -frames:v 1 -q:v 3 static/media/promo-poster.jpg
+```
+
+Run the isolated HTTPS browser checks without live provider requests or payments:
+
+```bash
+uv run --with playwright python scripts/test_marketing_browser.py
+```
+
+The script uses a temporary test database, exercises desktop/mobile layouts, session confirmation, the no-JavaScript fallback, legal anchors, reduced motion and actual video playback, then shuts down its local server. Screenshots are written to `/tmp/porn-fetch-*.png`. It requires Playwright Chromium (`uv run --with playwright python -m playwright install chromium`); pass `--browser firefox` or `--browser webkit` to check other installed browsers. The capability inventory in `pf_server/product_catalog.py` mirrors the app's `docs/WEBSITES.md`; update both when support changes.
+
+The payment selector uses three compact, unselected choices with a recommended crypto
+option. Only the selected method’s detail panel is shown with JavaScript; no-JavaScript
+visitors get explicit checkout links. All three methods can be selected for preview.
+Patreon and card actions require an explicit no-payment acknowledgment before
+continuing. Real card link creation still follows the existing configuration gates.
+Patreon remains setup-pending until its license tier is ready; repeated
+Patreon purchases and customer renewal workflows are separate work.
+
+The app source link and GitHub icon are local presentation assets; attribution and
+the icon license are served at `/static/notices/github-octicons.txt`. The app remains
+source-available under its custom license; the server/payment implementation is GPL.
+Android v3.9 GUI support is listed independently of published build availability.
+
+Before enabling annual purchases, verify the configured Keygen policy against the
+client’s public configuration using `flask --app main verify-license-policy --client-config /path/to/production.json`.
+See `deploy/keygen/OPERATIONS.md` for annual policy provisioning and historical-policy
+preservation. This command only reads the policy; no running service was changed.
+
+## Payment identity and preview testing
+
+The payment selector displays locally served owner-supplied Patreon, NOWPayments,
+Google Pay, Apple Pay and cryptocurrency artwork. Provenance, attribution and usage
+sources are recorded at `/static/notices/payment-brands.txt`. Visa/Mastercard remain
+text references until merchant acceptance/brand permissions are established; attribution
+alone is not sufficient for their acceptance marks. The 350+ cryptocurrency statement
+refers to NOWPayments' overall advertised catalog, not every individual checkout.
+
+`/payment-preview/patreon` opens the project profile after confirmation.
+`/payment-preview/card` continues to the inspectable card form, and
+`/payment-preview/banxa?session_id=...` opens only the stored link of an existing,
+ready, unpaid Onramp order after confirmation. These routes do not create payments.
+The existing NOWPayments deposit → Onramp Pay wallet → Banxa route is retained;
+there is no direct Banxa integration. No API keys or live settings are enabled by
+this change. The card form can be inspected without credentials, but generating a
+valid external link requires the documented merchant configuration.
+
+Preview warnings explicitly say not to send money, subscribe, enter payment details
+or submit real identity documents. They do not falsely label live provider pages as
+sandboxes. A local launch page performs external navigation after acknowledged POSTs
+so the site's same-origin `form-action` CSP remains intact. Without JavaScript, the
+same server-rendered warning and an explicit provider link remain available.

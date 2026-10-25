@@ -10,6 +10,14 @@
 echteralsfake.me, docs.echteralsfake.me, api.echteralsfake.me {
     import application_defaults
 
+    # Migrate public product pages only. Keep checkout sessions and API/docs hosts.
+    @product_marketing {
+        host echteralsfake.me
+        method GET HEAD
+        path / /download /download/* /about /help /releases /releases/*
+    }
+    redir @product_marketing https://pornfetch.to{uri} 308
+
     @dashboard_keygen_root {
         host echteralsfake.me
         path /dashboard/keygen

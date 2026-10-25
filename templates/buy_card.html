@@ -1,0 +1,75 @@
+{% extends "checkout_base.html" %}
+{% from "partials/checkout_fields.html" import email_field, question %}
+{% block title %}Card & wallet checkout — Porn Fetch{% endblock %}
+{% block price_caption %}Payment processing fees are additional.{% endblock %}
+{% block checkout_notice %}
+<aside class="sandbox-note checkout-notice" role="note"><strong>TEST PREVIEW — Do not send money.</strong><p>Do not enter payment details or submit real KYC documents. External providers can still charge real money.</p></aside>
+{% if not enabled %}<p class="checkout-configuration" role="status">External payment-link creation is not configured. You can inspect the form and verification dialog; no payment has been created.</p>{% endif %}
+{% endblock %}
+{% block checkout_method %}
+<h2 id="method-heading">Pay with card or digital wallet</h2>
+{% include "partials/card_brands.html" %}
+<p class="checkout-caption">Banxa via Onramp Pay · Availability depends on your country, device, card and provider eligibility.</p>
+{% endblock %}
+{% block checkout_form %}
+<form id="onramp-form" method="post" action="/buy_card" data-country="{{ checkout_consent.country if checkout_consent else '' }}" data-confirmed="{{ 'true' if checkout_consent else 'false' }}">
+    {{ email_field(required=true) }}
+    <div class="checkout-disclosure">
+        <p>Payment is processed by Banxa through a cryptocurrency purchase. Email verification is required; additional identity verification may apply. <a href="#card-verification" data-checkout-faq="card-verification">Verification details</a></p>
+        {% set eu_countries = ('AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE') %}
+        {% if checkout_consent and checkout_consent.country in eu_countries %}
+        <p class="checkout-tax-id"><strong>Banxa requires your Tax ID (TIN) for {{ dict(countries).get(checkout_consent.country) }}.</strong></p>
+        {% elif not checkout_consent %}
+        <p class="checkout-tax-id"><strong>EU residents need their Tax ID (TIN).</strong></p>
+        {% endif %}
+        <p><strong>Additional fees:</strong> 3% Onramp Pay fee, plus possible provider, network and exchange-rate costs. Banxa displays the final quote in USD before payment.</p>
+    </div>
+    <label class="card-annual-agreement"><input id="card-annual" type="checkbox" required><span>I understand this is one payment for one year of updates. Eligible versions remain usable afterwards; newer releases require another purchase.</span></label>
+    <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
+    <button id="card-review" class="nowpayments-btn" type="submit" disabled>Continue to secure checkout <span aria-hidden="true">→</span></button>
+    <p id="card-js-help" class="checkout-caption">Enable JavaScript to review the payment route.</p>
+</form>
+{% endblock %}
+{% block checkout_alternative %}<a href="/porn_fetch?method=patreon#method-heading">Prefer Patreon?</a>{% endblock %}
+{% block checkout_faq %}
+{% call question('card-verification', 'Will I need identity verification?') %}
+<p>Banxa requires email verification and assigns checks based on your transaction, payment method and jurisdiction. You may need your name, residential address, date of birth, Tax ID, identity documents, a selfie or additional checks. EU residents need a Tax identification number (TIN); US customers may need their SSN.</p>
+<p>Eligible Express checks do not require ID uploads or a selfie. Express eligibility is not guaranteed. <a href="https://docs.banxa.com/reference/global-kyc-framework" target="_blank" rel="noopener noreferrer">Banxa verification requirements ↗</a></p>
+<p>Porn Fetch does not receive Banxa’s KYC submissions. I receive only the separate license-delivery email entered here. Providers have their own policies: <a href="https://banxa.com/privacy-policy/" target="_blank" rel="noopener noreferrer">Banxa ↗</a> · <a href="https://www.onramp-pay.com/privacy-policy" target="_blank" rel="noopener noreferrer">Onramp Pay ↗</a>. See my <a href="/privacy_policy">privacy policy</a> for license delivery.</p>
+{% endcall %}
+{% call question('card-fees', 'Are there additional fees?') %}
+<p>Yes. The €19.99 license price excludes the 3% Onramp Pay fee and any Banxa/provider fees, network costs or currency conversion. The provider quote is in USD; exchange-rate differences can affect what you pay.</p>
+<p>The funding estimate covers the Onramp Pay deduction, but is not a final all-inclusive quote. Review Banxa’s final quote before payment. An insufficient deposit needs support and does not automatically issue a license.</p>
+{% endcall %}
+{% call question('card-route', 'How does my payment work?') %}
+<ol>
+    <li>Banxa processes your card or wallet payment and cryptocurrency purchase. Porn Fetch does not receive your card details.</li>
+    <li><a href="https://www.onramp-pay.com/" target="_blank" rel="noopener noreferrer">Onramp Pay ↗</a> facilitates the route and forwards the cryptocurrency.</li>
+    <li>NOWPayments verifies receipt, then Porn Fetch issues your license. Your license and invoice appear on the status page, and your license is also sent by email.</li>
+</ol>
+<p>This is an indirect fiat-to-cryptocurrency checkout. Porn Fetch does not charge your card directly.</p>
+{% include "partials/checkout_license_terms.html" %}
+{% endcall %}
+{% call question('card-timing', 'How long does payment take?') %}
+<p>Allow 10 minutes or longer. Verification, conversion and blockchain settlement can take longer than a normal card checkout. Reviews or network delays can extend processing; sending payment does not immediately confirm your license.</p>
+<p>Follow progress on the payment status page. <a href="https://support.banxa.com/en/support/solutions/articles/44002216503-how-long-will-my-order-take-" target="_blank" rel="noopener noreferrer">Banxa processing times ↗</a></p>
+{% endcall %}
+{% endblock %}
+{% block checkout_dialogs %}
+<dialog id="kyc-dialog" class="information-dialog" aria-labelledby="kyc-heading" aria-describedby="kyc-description">
+    <p class="eyebrow">Before continuing</p><h2 id="kyc-heading">Your payment route &amp; verification</h2>
+    <div id="kyc-description">
+        <p><strong>Test preview — do not send money.</strong> External checkout is not necessarily a sandbox and can charge real money. Inspect the flow without paying or submitting real documents.</p>
+        <p>Banxa processes your card or wallet payment and crypto purchase. Onramp Pay forwards the crypto to NOWPayments, which confirms receipt for your Porn Fetch license.</p>
+        <p>Email verification is mandatory. Eligible Express verification asks for personal details such as your name, residential address and date of birth; EU residents need a Tax identification number (TIN). US customers may need their SSN.</p>
+        <p>Express checks do not require ID documents or a selfie. Eligibility depends on your region, payment history and provider risk checks. Banxa can require documents, a selfie or additional information; Express verification is not guaranteed.</p>
+        <p>I do not receive Banxa’s KYC submissions. I receive only the separate license-delivery email entered on this website for license delivery.</p>
+        <p>Your purchase terms are one year of updates from first activation, continued access to eligible builds afterwards and no automatic license renewal.</p>
+        <p><a href="https://docs.banxa.com/reference/global-kyc-framework" target="_blank" rel="noopener noreferrer">Banxa verification requirements ↗</a></p>
+    </div>
+    <label class="card-annual-agreement"><input id="card-kyc" type="checkbox"><span>I understand the route, possible verification requirements and annual update terms.</span></label>
+    <p id="kyc-countdown" role="status" aria-live="polite"></p><p id="kyc-error" class="checkout-error" role="alert" tabindex="-1"></p>
+    <div class="checkout-actions"><button id="kyc-cancel" type="button" class="btn btn-secondary">Cancel</button><button id="kyc-continue" type="button" class="btn btn-primary" disabled>Continue</button></div>
+</dialog>
+{% endblock %}
+{% block checkout_scripts %}<script src="/static/onramp.js" defer></script>{% endblock %}

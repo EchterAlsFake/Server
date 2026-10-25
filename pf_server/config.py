@@ -2,9 +2,13 @@
 
 import fcntl
 import os
+import re
 import secrets
 from collections.abc import Mapping
 from urllib.parse import urlsplit
+
+from cryptography.fernet import Fernet
+from .onion import DEFAULT_ONION_ORIGIN
 
 DEFAULT_RATE_LIMIT = "10000 per minute"
 MAX_REQUEST_SIZE = 200 * 1024
@@ -81,7 +85,10 @@ def load_environment_config(
     )
     os.makedirs(data_directory, exist_ok=True)
 
-    app_domain, _ = _origin(source, "APP_DOMAIN", "https://echteralsfake.me")
+    app_domain, _ = _origin(source, "APP_DOMAIN", "https://pornfetch.to")
+    onion_origin, onion_host = _origin(source, "ONION_ORIGIN", DEFAULT_ONION_ORIGIN)
+    if not re.fullmatch(r"[a-z2-7]{56}\.onion", onion_host):
+        raise ValueError("ONION_ORIGIN must identify a v3 onion service")
     api_domain, api_public_host = _origin(
         source,
         "API_DOMAIN",
@@ -140,6 +147,29 @@ def load_environment_config(
         if nowpayments_sandbox
         else "https://api.nowpayments.io/v1"
     )
+    onramp_enabled = _boolean(source, "ONRAMP_ENABLED", False)
+    onramp_verified = _boolean(source, "ONRAMP_POLYGON_USDC_VERIFIED", False)
+    onramp_email_key = source.get("ONRAMP_ENCRYPTION_KEY", "").strip()
+    if onramp_email_key:
+        try:
+            Fernet(onramp_email_key.encode("ascii"))
+        except (ValueError, UnicodeError) as error:
+            raise ValueError("ONRAMP_ENCRYPTION_KEY must be a Fernet key") from error
+    delivery_email_key = source.get("LICENSE_DELIVERY_ENCRYPTION_KEY", "").strip()
+    if delivery_email_key:
+        try:
+            Fernet(delivery_email_key.encode("ascii"))
+        except (ValueError, UnicodeError) as error:
+            raise ValueError("LICENSE_DELIVERY_ENCRYPTION_KEY must be a Fernet key") from error
+    if onramp_enabled:
+        if nowpayments_sandbox or not onramp_verified:
+            raise ValueError("ONRAMP_ENABLED requires production NOWPayments and verified Polygon USDC compatibility")
+        if not onramp_email_key or not smtp_host or not email_from:
+            raise ValueError("ONRAMP_ENABLED requires ONRAMP_ENCRYPTION_KEY and license SMTP configuration")
+        if not source.get("KEYGEN_PRODUCT_TOKEN") or not source.get("KEYGEN_POLICY_ID"):
+            raise ValueError("ONRAMP_ENABLED requires Keygen issuance configuration")
+        if not app_domain.startswith("https://") or not api_domain.startswith("https://"):
+            raise ValueError("ONRAMP_ENABLED requires HTTPS public origins")
     tier_ids = frozenset(
         tier_id.strip()
         for tier_id in source.get("PATREON_LICENSE_TIER_IDS", "").split(",")
@@ -160,6 +190,13 @@ def load_environment_config(
         )
     )
 
+    try:
+        artifact_limit = int(source.get("WEBSITE_MAX_ARTIFACT_BYTES", str(2 * 1024**3)))
+    except ValueError as error:
+        raise ValueError("WEBSITE_MAX_ARTIFACT_BYTES must be a positive integer") from error
+    if artifact_limit <= 0:
+        raise ValueError("WEBSITE_MAX_ARTIFACT_BYTES must be a positive integer")
+
     return {
         "MAX_CONTENT_LENGTH": MAX_REQUEST_SIZE,
         "SECRET_KEY": _secret_key(source, data_directory),
@@ -168,7 +205,11 @@ def load_environment_config(
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
         "PROJECT_ROOT": project_root,
         "DATA_DIR": data_directory,
+        "WEBSITE_RELEASES_DIR": os.path.abspath(source.get("WEBSITE_RELEASES_DIR", os.path.join(data_directory, "website-releases"))),
+        "WEBSITE_RELEASE_TOKEN": source.get("WEBSITE_RELEASE_TOKEN", ""),
+        "WEBSITE_MAX_ARTIFACT_BYTES": artifact_limit,
         "APP_DOMAIN": app_domain,
+        "ONION_ORIGIN": onion_origin,
         "API_DOMAIN": api_domain,
         "API_PUBLIC_HOST": api_public_host,
         "GITHUB_TOKEN": source.get("GITHUB_TOKEN", ""),
@@ -195,6 +236,10 @@ def load_environment_config(
         "NOWPAYMENTS_IPN_SECRET": nowpayments_ipn_secret,
         "NOWPAYMENTS_SANDBOX": nowpayments_sandbox,
         "NOWPAYMENTS_API_URL": nowpayments_api_url,
+        "ONRAMP_ENABLED": onramp_enabled,
+        "ONRAMP_POLYGON_USDC_VERIFIED": onramp_verified,
+        "ONRAMP_ENCRYPTION_KEY": onramp_email_key,
+        "LICENSE_DELIVERY_ENCRYPTION_KEY": delivery_email_key,
         "RATELIMIT_DEFAULT": DEFAULT_RATE_LIMIT,
         "RATELIMIT_STORAGE_URI": source.get("RATELIMIT_STORAGE_URI", "memory://"),
         "LOG_LEVEL": log_level,

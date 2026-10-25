@@ -33,9 +33,12 @@ from .invoice_service import (
 from .licensing import (
     build_license_file,
     get_or_create_license,
+    normalize_recipient_email,
 )
 from .logging_config import safe_log_reference
-from .models import License, Transaction
+from .models import CryptoLicenseDelivery, License, OnrampCheckout, PaymentProgress, Transaction
+from .payment_progress import hosted_checkout_url, public_progress, record_nowpayments, refresh_providers
+from .crypto_delivery import deliver_crypto_license, encrypt_recipient
 from .keygen_service import KeygenUnavailable
 from .nowpayments_service import (
     CompletionState,
@@ -119,8 +122,24 @@ def buy_license():
 
 @payments_bp.route("/buy_success", methods=["GET"])
 def buy_success():
+    checkout = db.session.get(OnrampCheckout, request.args.get("session_id", ""))
+    transaction = db.session.get(Transaction, checkout.session_id) if checkout else None
+    payment_url = None
+    progress = db.session.get(PaymentProgress, checkout.session_id) if checkout else None
+    if (checkout and transaction and transaction.status == "pending"
+        and checkout.payment_state == "waiting" and checkout.stage == "ready"
+        and checkout.checkout_encrypted
+        and (not progress or (not progress.onramp_state and progress.nowpayments_state == "waiting"))):
+        from .onramp_service import decrypt
+        payment_url = decrypt(checkout.checkout_encrypted)
+    if not checkout:
+        transaction = db.session.get(Transaction, request.args.get("session_id", ""))
+        progress = db.session.get(PaymentProgress, transaction.session_id) if transaction else None
+        if transaction and transaction.status == "pending" and progress and progress.nowpayments_state == "waiting":
+            payment_url = hosted_checkout_url(progress.checkout_url)
     return render_template(
-        "buy_success.html", session_id=request.args.get("session_id")
+        "buy_success.html", session_id=request.args.get("session_id"), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
+        payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
     )
 
 
@@ -173,8 +192,15 @@ def check_payment_status():
     transaction = db.session.get(Transaction, session_id)
     if transaction is None:
         return jsonify({"status": "unknown"}), 404
+    checkout = db.session.get(OnrampCheckout, session_id)
     if transaction.status != "finished":
-        return jsonify({"status": "pending"}), 200
+        refresh_providers(transaction)
+        progress = public_progress(transaction, checkout)
+        status = progress["provider_state"] if progress["provider_state"] in {"partially_paid", "failed", "expired", "refunded", "wrong_asset_confirmed"} else "pending"
+        result = {"status": status, "progress": progress}
+        if checkout:
+            result.update(payment_state=progress["provider_state"], payment_method="banxa", beta=checkout.beta)
+        return jsonify(result), 200
 
     try:
         invoice = load_invoice(session_id)
@@ -186,7 +212,24 @@ def check_payment_status():
         )
         invoice = None
     invoice_number = invoice.get("Invoice Number", "N/A") if invoice else "N/A"
-    return jsonify({"status": "finished", "invoice_num": invoice_number}), 200
+    result = {"status": "finished", "invoice_num": invoice_number}
+    checkout = db.session.get(OnrampCheckout, session_id)
+    if checkout:
+        license_record = License.query.filter_by(issuance_reference=transaction.provider_payment_id).first()
+        result.update(payment_method="banxa", beta=checkout.beta, license_key=license_record.signed_key if license_record else None, delivery_status=checkout.delivery_status)
+    if not checkout:
+        try:
+            license_record = get_or_create_license(transaction.provider_payment_id)
+            build_license_file(license_record.license_key, license_record.issuance_reference, license_record.created_at)
+            result["license_key"] = license_record.signed_key
+        except KeygenUnavailable:
+            db.session.rollback()
+            return jsonify(error="Payment confirmed. License issuance is temporarily unavailable; please retry."), 503
+    delivery = db.session.get(CryptoLicenseDelivery, session_id)
+    if delivery:
+        result["delivery_status"] = delivery.delivery_status
+    result["progress"] = public_progress(transaction, checkout)
+    return jsonify(result), 200
 
 
 @payments_bp.route("/download_invoice", methods=["GET"])
@@ -232,6 +275,8 @@ def simulate_payment_success():
     transaction = db.session.get(Transaction, session_id)
     if transaction is None:
         return jsonify({"error": "Session not found"}), 404
+    if db.session.get(OnrampCheckout, session_id) is not None:
+        return jsonify({"error": "Real-money beta purchases cannot be simulated."}), 400
 
     try:
         save_invoice(session_id, build_simulated_invoice())
@@ -242,6 +287,11 @@ def simulate_payment_success():
         db.session.rollback()
         current_app.logger.exception("Local payment simulation failed")
         return jsonify({"error": "Payment simulation failed"}), 500
+    try:
+        deliver_crypto_license(session_id)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.warning("Crypto license email deferred for retry")
     return jsonify({"status": "ok", "message": "Payment simulation successful."}), 200
 
 
@@ -264,15 +314,33 @@ def create_crypto_payment():
     if country_error:
         return country_error
     assert country is not None
+    if any(data.get(field) is not True for field in ("age_confirmed", "withdrawal_accepted")):
+        return jsonify(error="Please confirm your age and consent to immediate digital delivery."), 400
+    raw_email = data.get("delivery_email", "")
+    if not isinstance(raw_email, str):
+        return jsonify(error="Enter a valid license delivery email."), 400
+    recipient = normalize_recipient_email(raw_email.strip()) if raw_email.strip() else None
+    if raw_email.strip() and recipient is None:
+        return jsonify(error="Enter a valid license delivery email."), 400
+    if not recipient and data.get("no_email_acknowledged") is not True:
+        return jsonify(error="Acknowledge that you will save your license and invoice without email delivery."), 400
+    encrypted_recipient = None
+    if recipient:
+        try:
+            encrypted_recipient = encrypt_recipient(recipient)
+        except (ValueError, TypeError, AttributeError):
+            return jsonify(error="Email delivery is not configured yet. Try again later, or leave the email blank and save your license after checkout."), 503
     try:
         result = create_crypto_invoice(
             country.country_name,
             country.evidence_source,
             country.database_label,
+            delivery_recipient_encrypted=encrypted_recipient,
         )
     except (PaymentProviderError, SQLAlchemyError):
         current_app.logger.exception("NOWPayments invoice creation failed")
         return jsonify({"error": "Failed to generate crypto payment"}), 500
+    result["status_url"] = "/buy_success?session_id=" + result["session_id"]
     return jsonify(result), 200
 
 
@@ -315,6 +383,10 @@ def nowpayments_ipn():
         )
         return "Ignored repeated deposit", 200
 
+    from .onramp_service import deliver_license, record_payment_state
+    record_payment_state(webhook)
+    record_nowpayments(webhook)
+
     if payment_status.casefold() == "finished":
         try:
             result = complete_payment(webhook)
@@ -337,6 +409,10 @@ def nowpayments_ipn():
             response.headers["Retry-After"] = "30"
             return response, 503
         if result.state == CompletionState.REJECTED:
+            checkout = db.session.get(OnrampCheckout, webhook.order_id)
+            if checkout and result.reason == "insufficient_actual_payment":
+                checkout.payment_state = "partially_paid"
+                db.session.commit()
             current_app.logger.warning(
                 "Rejected NOWPayments fulfillment (reference=%s, reason=%s)",
                 reference,
@@ -349,6 +425,14 @@ def nowpayments_ipn():
                 reference,
                 safe_log_reference(result.invoice_number),
             )
+        if result.state in {CompletionState.COMPLETED, CompletionState.ALREADY_FINISHED}:
+            # Delivery errors must never roll back or conceal a confirmed payment.
+            try:
+                deliver_license(webhook.order_id)
+                deliver_crypto_license(webhook.order_id)
+            except Exception:
+                db.session.rollback()
+                current_app.logger.warning("Onramp email delivery deferred to retry job")
     return "OK", 200
 
 

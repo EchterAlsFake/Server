@@ -1,253 +1,53 @@
-{% extends "base.html" %}
-
-{% block title %}Porn Fetch - Crypto Checkout{% endblock %}
-
-{% block content %}
-<div class="hero" style="padding-bottom: 20px;">
-    <h1>Crypto Checkout</h1>
-    <p>Complete your payment using your preferred cryptocurrency. Safe, fast, and privacy-conscious.</p>
-</div>
-
-<!-- NOWPayments Hosted Checkout Card -->
-<div class="nowpayments-card">
-    <div class="nowpayments-header">
-        <div class="nowpayments-logo">
-            NOW<span>Payments</span>
-        </div>
-        <div style="font-size: 0.8rem; color: #94a3b8; text-align: right;">
-            €19.99 one-time<br>
-            <span style="color: #10b981;">Crypto checkout</span>
-        </div>
-    </div>
-    
-    <div class="nowpayments-body" id="checkout-form-container">
-        {% if config.NOWPAYMENTS_SANDBOX %}
-        <!-- Test Environment Warning Banner -->
-        <div style="background: rgba(245, 158, 11, 0.1); border: 2px dashed #f59e0b; padding: 20px; border-radius: var(--radius-md); margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.05);">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span style="font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.95rem;">Test Environment Notice</span>
-            </div>
-            <p style="margin: 0 0 12px 0; font-size: 0.95rem; line-height: 1.5; color: #f8fafc;">
-                This server is running in a <strong>test/sandbox environment</strong>. No real cryptocurrency payment is required, and you do not need to spend any money.
-            </p>
-            <div style="padding-top: 12px; border-top: 1px dashed rgba(245, 158, 11, 0.25); font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
-                <strong style="color: #f59e0b; display: block; margin-bottom: 6px;">How to complete checkout:</strong>
-                <ol style="margin: 0; padding-left: 20px;">
-                    <li style="margin-bottom: 4px;">Tick all the <strong>Required confirmations</strong> below, including the test-site acknowledgment.</li>
-                    <li style="margin-bottom: 4px;">Click <strong>"Continue to NOWPayments"</strong>.</li>
-                    <li>You will either be redirected to the NOWPayments.io Sandbox interface where you can click the simulation button, or a local simulation screen will appear here. Simply click the simulation button to instantly generate your premium license.</li>
-                </ol>
-            </div>
-        </div>
-        {% endif %}
-
-        <div style="margin-bottom: 20px;">
-            <span class="nowpayments-label">Product</span>
-            <div style="font-size: 1.15rem; font-weight: 700; color: #f8fafc;">Porn Fetch Premium License Key</div>
-        </div>
-        
-        <div style="margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
-            <span class="nowpayments-label">Amount to Pay</span>
-            <div class="nowpayments-amount">19,99 EUR</div>
-        </div>
-
-        <div style="margin-top: 10px; margin-bottom: 25px;">
-            <label for="checkout-country" class="nowpayments-label">Country for tax purposes</label>
-            <select id="checkout-country" required aria-describedby="country-help" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #1e293b; background: #0f172a; color: #f8fafc; font-size: 1rem;">
-                <option value="">Select your country</option>
-                {% for code, name in countries %}
-                <option value="{{ code }}">{{ name }}</option>
-                {% endfor %}
-            </select>
-            <p id="country-help" style="font-size: 0.85rem; line-height: 1.5; color: #94a3b8; margin: 10px 0 0;">
-                Tax rules require us to determine the customer's country. When you submit checkout,
-                your IP address is checked once against a database stored on this server. No lookup API
-                is contacted, and the IP address is neither saved nor logged. Only the selected country
-                name and the fact/source of verification are retained with the transaction.
-                <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" style="color: #60a5fa;">IP geolocation by DB-IP</a>.
-            </p>
-        </div>
-        
-        <!-- Legal Checkboxes -->
-        <fieldset class="checkout-agreements">
-            <legend class="nowpayments-label">Required confirmations</legend>
-            
-            <label class="checkbox-container">
-                <input type="checkbox" id="chk-age">
-                <span class="checkbox-text">I confirm that I am at least 18 years of age.</span>
-            </label>
-            <label class="checkbox-container">
-                <input type="checkbox" id="chk-terms">
-                <span class="checkbox-text">I have read and accept the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>, including the rule on publishing premium-license bypass instructions.</span>
-            </label>
-            
-            <label class="checkbox-container">
-                <input type="checkbox" id="chk-withdrawal">
-                <span class="checkbox-text">I expressly consent to the immediate performance of the contract and acknowledge that, by giving this consent, I lose my 14-day right of withdrawal.</span>
-            </label>
-            {% if config.NOWPAYMENTS_SANDBOX %}
-            <label class="checkbox-container checkout-test-acknowledgment">
-                <input type="checkbox" id="chk-test-site" required>
-                <span class="checkbox-text">I understand that this is a test environment, not a real online shop. No real purchase is made, and some information may be incomplete or inaccurate.</span>
-            </label>
-            {% endif %}
-        </fieldset>
-        
-        <p class="checkout-help" id="checkout-requirements">Select your country and confirm all {% if config.NOWPAYMENTS_SANDBOX %}four statements{% else %}three agreements{% endif %} to continue.</p>
-        <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
-        <div class="checkout-actions">
-            <button type="button" id="pay-btn" class="nowpayments-btn" disabled aria-describedby="checkout-requirements">Continue to NOWPayments (€19.99)</button>
-        </div>
-    </div>
-    
-    <!-- Simulated Local Transaction Screen (Hidden by Default, used for sandbox fallback) -->
-    <div class="nowpayments-body tx-screen" id="tx-screen-container" style="display: none;">
-        <h2 tabindex="-1" id="simulation-heading">Local payment simulation</h2>
-        <div class="status-indicator" style="margin-bottom: 15px;">
-            <span class="status-dot" style="background-color: #dfb317;"></span>
-            <span style="color: #dfb317; font-weight: bold;">Local Simulation Mode</span>
-        </div>
-        
-        <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px;">
-            The server could not create an actual transaction on the NOWPayments API (e.g., API key is invalid or offline). 
-            A local simulated transaction has been initialized.
-        </p>
-
-        <div style="background: var(--color-bg); padding: 15px; border-radius: var(--radius-md); border: 1px solid #1e293b; margin-bottom: 20px;">
-            <span class="nowpayments-label">Simulated Session ID</span>
-            <div style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #f8fafc; word-break: break-all;" id="sim-session-id">NP-xxxxxx</div>
-        </div>
-        
-        <p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p>
-        <button type="button" id="simulate-success-btn" class="nowpayments-btn">Simulate Successful Payment</button>
-    </div>
-</div>
-
-<div style="text-align: center; margin-top: 20px;">
-    <a href="/porn_fetch" style="color: var(--color-text-muted); text-decoration: none; font-size: 0.95rem;">&larr; Go Back to Features</a>
-</div>
-
+{% extends "checkout_base.html" %}
+{% from "partials/checkout_fields.html" import email_field, question %}
+{% block title %}Crypto checkout — Porn Fetch{% endblock %}
+{% block checkout_attributes %}id="crypto-checkout" data-country="{{ checkout_consent.country if checkout_consent else '' }}" data-confirmed="{{ 'true' if checkout_consent else 'false' }}" data-sandbox="{{ 'true' if config.NOWPAYMENTS_SANDBOX else 'false' }}"{% endblock %}
+{% block checkout_notice %}
+{% if config.NOWPAYMENTS_SANDBOX %}
+<aside class="sandbox-note checkout-notice" role="note"><strong>Test environment — do not send money.</strong><p>Provider sandbox or local simulation only. This is not a live purchase.</p></aside>
+{% endif %}
 {% endblock %}
-
-{% block scripts %}
-<script>
-    function initCheckout() {
-        const payBtn = document.getElementById("pay-btn");
-        const chkAge = document.getElementById("chk-age");
-        const chkTerms = document.getElementById("chk-terms");
-        const chkWithdrawal = document.getElementById("chk-withdrawal");
-        const chkTestSite = document.getElementById("chk-test-site");
-        const checkoutCountry = document.getElementById("checkout-country");
-
-        const checkoutForm = document.getElementById("checkout-form-container");
-        const txScreen = document.getElementById("tx-screen-container");
-        const simSessionId = document.getElementById("sim-session-id");
-        const simulateBtn = document.getElementById("simulate-success-btn");
-        const checkoutError = document.getElementById("checkout-error");
-        const simulationError = document.getElementById("simulation-error");
-
-        let currentSessionId = null;
-
-        function showError(element, message) {
-            element.textContent = message;
-            element.focus();
-        }
-
-        function updateButtonState(clearError = true) {
-            const checked = chkAge.checked && chkTerms.checked && chkWithdrawal.checked && checkoutCountry.value && (!chkTestSite || chkTestSite.checked);
-            payBtn.disabled = !checked;
-            if (clearError) checkoutError.textContent = "";
-        }
-
-        chkAge.addEventListener("change", updateButtonState);
-        chkTerms.addEventListener("change", updateButtonState);
-        chkWithdrawal.addEventListener("change", updateButtonState);
-        if (chkTestSite) chkTestSite.addEventListener("change", updateButtonState);
-        checkoutCountry.addEventListener("change", updateButtonState);
-
-        // Handle checkout progression
-        payBtn.addEventListener("click", async () => {
-            checkoutError.textContent = "";
-            payBtn.disabled = true;
-            payBtn.textContent = "Creating transaction…";
-
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const response = await fetch("/create-crypto-payment", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: JSON.stringify({ country: checkoutCountry.value, terms_accepted: chkTerms.checked, test_acknowledged: Boolean(chkTestSite && chkTestSite.checked) })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    currentSessionId = data.session_id;
-
-                    // Check if it is a local simulation fallback
-                    if (data.invoice_url.startsWith("local-sim:")) {
-                        simSessionId.innerText = data.session_id;
-                        checkoutForm.style.display = "none";
-                        txScreen.style.display = "block";
-                        document.getElementById("simulation-heading").focus();
-                    } else {
-                        // Redirect directly to NOWPayments hosted invoice
-                        window.location.href = data.invoice_url;
-                    }
-                } else {
-                    const errData = await response.json().catch(() => ({}));
-                    showError(checkoutError, errData.error || "Could not create the payment. Please try again.");
-                    updateButtonState(false);
-                    payBtn.textContent = "Continue to NOWPayments (€19.99)";
-                }
-            } catch (err) {
-                console.error(err);
-                showError(checkoutError, "Network error. Check your connection and try again.");
-                updateButtonState(false);
-                payBtn.textContent = "Continue to NOWPayments (€19.99)";
-            }
-        });
-
-        simulateBtn.addEventListener("click", async () => {
-            simulationError.textContent = "";
-            if (!currentSessionId) {
-                showError(simulationError, "No transaction session found to simulate.");
-                return;
-            }
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const response = await fetch("/simulate-payment-success", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: JSON.stringify({ session_id: currentSessionId })
-                });
-                if (response.ok) {
-                    window.location.href = `/buy_success?session_id=${currentSessionId}`;
-                } else {
-                    showError(simulationError, "The server could not approve the simulated payment. Try again.");
-                }
-            } catch (err) {
-                console.error("Simulation error:", err);
-                showError(simulationError, "Network error. Check your connection and try again.");
-            }
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initCheckout);
-    } else {
-        initCheckout();
-    }
-
-</script>
+{% block checkout_method %}
+<h2 id="method-heading">Pay with cryptocurrency</h2>
+{% include "partials/crypto_coins.html" %}
+<a class="checkout-supported" href="https://nowpayments.io/supported-coins" target="_blank" rel="noopener noreferrer">350+ cryptocurrencies supported ↗</a>
 {% endblock %}
+{% block checkout_form %}
+<form id="crypto-payment-form" method="post" action="/buy_license">
+    {{ email_field() }}
+    <p class="checkout-disclosure">NOWPayments shows the amount to send before payment. Review it, including any provider, exchange and network fees.</p>
+    <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
+    <button type="submit" id="pay-btn" class="nowpayments-btn" disabled>Continue to NOWPayments <span aria-hidden="true">→</span></button>
+    <p id="checkout-js-help" class="checkout-caption">Enable JavaScript to create a cryptocurrency payment.</p>
+</form>
+{% endblock %}
+{% block checkout_faq %}
+{% call question('crypto-fees', 'What fees will I pay?') %}
+<p>The €19.99 license price excludes additional fees. NOWPayments lists a 1% service fee without exchange, or 1.5% for multi-currency, fixed-rate or user-paid-fee payments. Exchange costs and blockchain network fees can also apply.</p>
+<p>Review the provider’s final amount before sending funds. <a href="https://nowpayments.io/help/about-nowpayments/about/what-are-your-fees" target="_blank" rel="noopener noreferrer">Fee details ↗</a></p>
+{% endcall %}
+{% call question('crypto-delivery', 'When will I receive my license?') %}
+<p>Your license and invoice become available on the payment status page after NOWPayments verifies receipt. Blockchain confirmations and settlement can take time; a sent transaction does not mean your license is ready.</p>
+<p>If you enter an email, your license is also sent there. Otherwise, save your license and invoice from the status page.</p>
+{% include "partials/checkout_license_terms.html" %}
+{% endcall %}
+{% call question('crypto-privacy', 'How private is cryptocurrency checkout?') %}
+<p>No Porn Fetch account is required. Blockchain transactions are generally public. NOWPayments may process transaction information under its <a href="https://nowpayments.io/doc/fd-privacy-policy.pdf?v=1.2" target="_blank" rel="noopener noreferrer">privacy policy ↗</a>; cryptocurrency checkout is not fully anonymous.</p>
+<p>Your optional delivery email is used only to send your license, never for advertising. It is encrypted while queued, is not sent to NOWPayments, and is deleted after sending or after 7 days. My mail system processes it for delivery. <a href="/privacy_policy">Privacy / Datenschutz</a>.</p>
+{% endcall %}
+{% endblock %}
+{% block checkout_simulation %}
+<div class="tx-screen" id="tx-screen-container" hidden>
+    <p class="eyebrow">No payment required</p><h2 tabindex="-1" id="simulation-heading">Local payment simulation</h2><p>The provider sandbox is unavailable. This local simulation does not send funds.</p><p class="nowpayments-label">Simulated session ID</p><code id="sim-session-id"></code><p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p><button type="button" id="simulate-success-btn" class="nowpayments-btn">Simulate successful payment</button>
+</div>
+{% endblock %}
+{% block checkout_dialogs %}
+<dialog id="no-email-dialog" class="information-dialog" aria-labelledby="no-email-heading">
+<p class="eyebrow">Keep your purchase safe</p><h2 id="no-email-heading">Continue without email delivery?</h2>
+<p>You haven’t provided a license delivery email. After checkout, your license key will be shown and you can download your license and invoice.</p>
+<p><strong>Save both your license and invoice safely.</strong> Without an email copy, losing them may mean losing access to your purchase.</p>
+<p>For help recovering a purchase, contact support with the crypto transaction ID or the precise purchase timestamp. I can only issue a replacement if I can verify the payment belongs to you.</p>
+<div class="checkout-actions"><button type="button" class="btn btn-secondary" id="add-email">Add an email</button><button type="button" class="btn btn-primary" id="continue-without-email">I’ll save them. Continue</button></div>
+</dialog>
+{% endblock %}
+{% block checkout_scripts %}<script src="/static/crypto-checkout.js" defer></script>{% endblock %}

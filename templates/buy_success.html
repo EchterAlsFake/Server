@@ -1,86 +1,39 @@
 {% extends "base.html" %}
-
-{% block title %}Payment Processing - Porn Fetch{% endblock %}
-
+{% block title %}Track your payment — Porn Fetch{% endblock %}
 {% block content %}
-<div class="card" style="margin-top: 40px; text-align: center; border-top: 4px solid #10b981;" id="loading-container">
-    <h1 style="color: #10b981; font-size: 2.2rem; margin-bottom: 20px;">Processing Payment...</h1>
-    <p style="font-size: 1.15rem; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 30px;">
-        Please wait while we confirm your payment and generate your license and invoice.
-    </p>
-    <div style="margin: 40px auto;" aria-hidden="true">
-        <!-- Loading spinner -->
-        <div style="border: 4px solid #1e293b; border-top: 4px solid #10b981; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-    </div>
+<div class="payment-tracking-page" id="payment-tracker" data-session-id="{{ session_id or '' }}" data-card="{{ 'true' if is_card_checkout else 'false' }}">
+    <a href="/porn_fetch" class="text-link">← Payment methods</a>
+    <header class="crypto-heading"><p class="eyebrow">Every step, in view.</p><h1>Your payment, on its way.</h1></header>
+    <section class="tracking-card" aria-labelledby="payment-progress-title">
+        {% if beta %}{% include "onramp_beta_notice.html" %}{% else %}<p class="widget-delivery-note">One year of updates from first activation. Keep using eligible builds afterwards. No automatic license renewal.</p>{% endif %}
+        <div class="tracking-card-heading"><span class="tracking-pulse" aria-hidden="true"></span><span>{{ 'Banxa → Onramp Pay → NOWPayments' if is_card_checkout else 'NOWPayments cryptocurrency checkout' }}</span></div>
+        <div id="loading-container"><h2 id="payment-progress-title">Checking your payment status…</h2><p id="payment-progress-message">This page follows the payment through to your license. Keep it open while you complete checkout.</p></div>
+        <ol id="payment-progress-steps" class="payment-timeline" aria-label="Payment progress"></ol>
+        <p id="provider-status-note" class="provider-status-note" role="status"></p>
+        <div class="tracking-tools"><p id="progress-updated">Waiting for the first update.</p><button type="button" id="refresh-progress" class="inline-help">Refresh status</button></div>
+        <div id="payment-launch"{% if not payment_url %} hidden{% endif %}>
+            {% if payment_url %}
+                {% if is_card_checkout %}
+                    <p>Estimated funding amount: <strong>USD {{ charge_amount }}</strong>, including the Onramp Pay fee. Banxa may apply additional provider or network costs; review the final total before paying. Currency conversion may apply.</p>
+                    <a href="{{ url_for('pages.payment_preview', method='banxa', session_id=session_id) }}" data-payment-preview="banxa" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open Banxa payment in a new tab</a>
+                {% else %}
+                    <a href="{{ payment_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open NOWPayments checkout <span aria-hidden="true">↗</span></a>
+                {% endif %}
+                <p class="widget-delivery-note">Keep this tab open to follow progress. Do not start a second payment while this one is pending.</p>
+            {% endif %}
+        </div>
+        <p class="tracking-recovery">Save this page’s URL to return to your order. Session: <code>{{ session_id or 'No session provided' }}</code></p>
+        <p class="tracking-recovery">Taking longer than expected? <a href="mailto:support@echteralsfake.me">Contact support</a> with your session ID. Please don’t send a second payment.</p>
+        <p id="tracking-js-help" class="widget-delivery-note">Enable JavaScript for live payment updates.</p>
+    </section>
+    <section class="tracking-card license-ready-card" id="success-container" hidden aria-labelledby="payment-success-heading">
+        <p class="eyebrow">Payment verified</p><h2 id="payment-success-heading" tabindex="-1">Your license is ready.</h2><p>Save your license file and invoice safely.</p>
+        <p class="invoice-reference">Invoice <strong id="invoice-display"></strong></p>
+        <div class="checkout-actions"><a href="/download_license?session_id={{ session_id }}" class="btn btn-primary">Download License Key File</a><a href="/download_invoice?session_id={{ session_id }}" class="btn btn-secondary">Download Invoice</a></div>
+        {% if is_card_checkout %}<p id="card-delivery-status" role="status"></p><code id="card-license-key" aria-label="Your signed license" class="signed-license"></code>{% else %}<div class="crypto-license-result"><label for="crypto-license-key">Your signed license key</label><textarea id="crypto-license-key" readonly rows="4"></textarea><p id="crypto-delivery-status" role="status"></p></div>{% endif %}
+        <details class="activation-instructions"><summary>How to activate Porn Fetch</summary><ol><li>Download the <code>porn_fetch.license</code> file above.</li><li>Open settings in the app.</li><li>Choose <strong>Activate License</strong> and select your downloaded file.</li><li>Your year of updates starts at first activation. Eligible versions remain usable afterwards, subject to normal validation.</li></ol></details>
+    </section>
+    <p id="payment-status-announcement" class="visually-hidden" role="status" aria-live="polite"></p>
 </div>
-
-<div class="card" style="margin-top: 40px; text-align: center; border-top: 4px solid #10b981; display: none;" id="success-container">
-    <h1 id="payment-success-heading" tabindex="-1" style="color: #10b981; font-size: 2.2rem; margin-bottom: 20px;">Thank You for Your Support!</h1>
-    <p style="font-size: 1.15rem; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 30px;">
-        Your payment has been successfully confirmed.
-    </p>
-
-    <div style="background: var(--color-bg); padding: 30px; border-radius: var(--radius-md); border: 1px solid #e2e8f0; max-width: 500px; margin: 0 auto 30px;">
-        <span style="font-size: 0.85rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Your Session ID</span>
-        <div style="font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--color-text); word-break: break-all; margin-bottom: 15px;">{{ session_id }}</div>
-        
-        <span style="font-size: 0.85rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Invoice Number</span>
-        <div id="invoice-display" style="font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--color-text); word-break: break-all; margin-bottom: 25px;"></div>
-        
-        <a href="/download_license?session_id={{ session_id }}" class="btn btn-crypto" style="width: 100%; margin-bottom: 10px;">Download License Key File</a>
-        <a href="/download_invoice?session_id={{ session_id }}" class="btn" style="width: 100%; background: #334155; color: white; border: none;">Download Invoice</a>
-    </div>
-
-    <h3>How to activate the app:</h3>
-    <div style="text-align: left; max-width: 500px; margin: 0 auto; line-height: 1.8;">
-        <ol>
-            <li>Download the <code>porn_fetch.license</code> file using the button above.</li>
-            <li>Open the Porn Fetch app settings.</li>
-            <li>Click on <strong>Activate License</strong> and select the downloaded file.</li>
-            <li>After the license is verified, qualities above 720p become available while the entitlement remains valid.</li>
-        </ol>
-    </div>
-</div>
-
-<p id="payment-status-announcement" class="visually-hidden" role="status" aria-live="polite"></p>
-
-<style>
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-</style>
 {% endblock %}
-
-{% block scripts %}
-<script>
-    const sessionId = "{{ session_id }}";
-    
-    async function checkStatus() {
-        try {
-            const res = await fetch(`/check-payment-status?session_id=${sessionId}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data.status === "finished") {
-                    document.getElementById("loading-container").style.display = "none";
-                    document.getElementById("success-container").style.display = "block";
-                    document.getElementById("invoice-display").innerText = data.invoice_num || "N/A";
-                    document.getElementById("payment-status-announcement").textContent = "Payment confirmed. Your license and invoice are ready to download.";
-                    document.getElementById("payment-success-heading").focus();
-                    return;
-                }
-            }
-        } catch (e) {
-            console.error(e);
-        }
-        // Poll again after 3 seconds
-        setTimeout(checkStatus, 3000);
-    }
-    
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", checkStatus);
-    } else {
-        checkStatus();
-    }
-</script>
-{% endblock %}
+{% block scripts %}<script src="/static/payment-tracker.js" defer></script>{% endblock %}

@@ -22,6 +22,10 @@
         color: white;
         box-sizing: border-box;
     }
+    .login-container h1 {
+        font-size: clamp(26px, 6vw, 36px);
+        overflow-wrap: anywhere;
+    }
     .login-container button {
         width: 100%;
         background: #007bff;
@@ -37,6 +41,9 @@
     .error-msg {
         color: #e05d44;
         margin-bottom: 1rem;
+    }
+    @media (max-width: 480px) {
+        .login-container { margin-block: 40px; padding: 24px 20px; }
     }
 </style>
 {% endblock %}

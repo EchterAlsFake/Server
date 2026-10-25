@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry crypto license delivery and clean up addresses every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+Unit=eaf-crypto-deliveries.service
+
+[Install]
+WantedBy=timers.target

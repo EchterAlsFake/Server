@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy / Datenschutzerklärung — Porn Fetch{% endblock %}
+{% block content %}
+<article class="legal-document">
+<h1>Privacy Policy /<br><span lang="de">Datenschutzerklärung</span></h1>
+{% include "partials/languages.html" %}
+<section class="legal-language" id="en" lang="en" aria-labelledby="privacy-en-title"><h2 id="privacy-en-title">Privacy Policy · English</h2>{% include "partials/privacy_en.html" %}</section>
+<section class="legal-language" id="de" lang="de" aria-labelledby="privacy-de-title"><h2 id="privacy-de-title">Datenschutzerklärung · Deutsch</h2>{% include "partials/privacy_de.html" %}</section>
+</article>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% if page_meta %}
+<meta name="rating" content="adult">
+<meta name="description" content="{{ page_meta.description }}">
+<link rel="canonical" href="{{ page_meta.canonical }}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Porn Fetch"><meta property="og:title" content="{{ page_meta.title }}"><meta property="og:description" content="{{ page_meta.description }}"><meta property="og:url" content="{{ page_meta.canonical }}"><meta property="og:image" content="{{ config.APP_DOMAIN }}/static/media/promo-poster.jpg"><meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{{ page_meta.structured|tojson }}</script>
+{% endif %}

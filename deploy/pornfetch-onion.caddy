@@ -1,0 +1,82 @@
+# Integrate with the existing dedicated onion listener, not the public TLS sites.
+# Tor port 80 -> 127.0.0.1:18081 -> website container 127.0.0.1:18080.
+http://:18081 {
+    bind 127.0.0.1
+    route {
+        @wrong_host not host pornfetchc5ct7s7uiervf4ziymmus5gy33gyqc6vkdtqyr5pbxrxmid.onion
+        respond @wrong_host 404
+        @write not method GET HEAD
+        # License methods are handled separately below; every other onion route is read-only.
+        header {
+            -Server
+            X-Robots-Tag "noindex, follow"
+            Referrer-Policy "no-referrer"
+            X-Content-Type-Options "nosniff"
+        }
+        handle_path /licensing/* {
+            @client {
+                path_regexp license ^/v1/accounts/[0-9a-f-]+/(licenses/actions/validate-key|machines(/[^/]+(/actions/check-out)?)?)$
+                header_regexp Authorization "^License "
+                method GET POST DELETE
+            }
+            handle @client {
+                request_body {
+                    max_size 32KB
+                }
+                reverse_proxy https://licenses.pornfetch.to {
+                    header_up Host licenses.pornfetch.to
+                    header_up -Forwarded
+                    header_up -X-Real-IP
+                    header_up -X-Forwarded-For
+                    header_up -Cookie
+                    header_down -Set-Cookie
+                }
+            }
+            handle {
+                respond 404
+            }
+        }
+        handle_path /downloads/* {
+            respond @write 404
+            root * /srv/pornfetch-downloads/public
+            header Content-Disposition "attachment"
+            header Cache-Control "public, max-age=31536000, immutable"
+            file_server
+        }
+        handle_path /repo/android/metadata/* {
+            respond @write 404
+            root * /srv/pornfetch-downloads/android-updates/current/metadata
+            header Cache-Control "no-store"
+            file_server
+        }
+        handle_path /repo/android/targets/* {
+            respond @write 404
+            root * /srv/pornfetch-downloads/android-updates/targets
+            header Cache-Control "public, max-age=31536000, immutable"
+            file_server
+        }
+        handle /repo/* {
+            respond @write 404
+            reverse_proxy https://api.pornfetch.to {
+                header_up Host api.pornfetch.to
+                header_up -Forwarded
+                header_up -X-Real-IP
+                header_up -X-Forwarded-For
+                header_up -Authorization
+                header_up -Cookie
+            }
+        }
+        handle {
+            respond @write 404
+            reverse_proxy 127.0.0.1:18080 {
+                header_up -Forwarded
+                header_up -X-Real-IP
+                header_up -True-Client-IP
+                header_up -CF-Connecting-IP
+                header_up -X-Forwarded-For
+                header_up X-Forwarded-Host pornfetchc5ct7s7uiervf4ziymmus5gy33gyqc6vkdtqyr5pbxrxmid.onion
+                header_up X-Forwarded-Proto http
+            }
+        }
+    }
+}

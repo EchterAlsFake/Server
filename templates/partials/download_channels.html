@@ -1,0 +1,4 @@
+<nav class="download-channels" aria-label="Release channel">
+    <a href="{{ request.path }}"{% if not channel %} aria-current="page"{% endif %}>Recommended</a><a href="{{ request.path }}?channel=stable"{% if channel == 'stable' %} aria-current="page"{% endif %}>Stable</a><a href="{{ request.path }}?channel=beta"{% if channel == 'beta' %} aria-current="page"{% endif %}>Beta</a>
+    <span>Stable where available; otherwise beta. Each package shows its own version.</span>
+</nav>

@@ -291,3 +291,15 @@ class PatreonWebhookTests(ServerTestCase):
                 for response in responses
             )
         )
+
+    def test_cancellation_does_not_revoke_an_issued_license(self):
+        from pf_server.models import License
+        payload = self.eligible_patreon_payload(member_id='cancel-after-payment')
+        with patch.object(patreon_service, 'send_license_email'):
+            self.assertEqual(self.post_patreon(payload).status_code, 200)
+        with main.app.app_context():
+            before = [(row.license_key, row.state, row.signed_key) for row in License.query.all()]
+        payload['data']['attributes']['patron_status'] = 'former_patron'
+        self.assertEqual(self.post_patreon(payload, event='members:update').status_code, 200)
+        with main.app.app_context():
+            self.assertEqual([(row.license_key, row.state, row.signed_key) for row in License.query.all()], before)

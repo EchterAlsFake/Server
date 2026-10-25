@@ -32,10 +32,42 @@ def request(method: str, path: str, **kwargs) -> httpx.Response:
         raise KeygenUnavailable("Keygen request failed") from None
 
 
+ANNUAL_POLICY_ATTRIBUTES = {
+    "scheme": "ED25519_SIGN",
+    "duration": 31556952,
+    "expirationBasis": "FROM_FIRST_ACTIVATION",
+    "expirationStrategy": "MAINTAIN_ACCESS",
+    "renewalBasis": "FROM_NOW_IF_EXPIRED",
+    "maxMachines": 10,
+    "authenticationStrategy": "LICENSE",
+}
+
+
+def verify_annual_policy() -> dict:
+    """Read-only verification; never modify policies or historical entitlements."""
+    policy_id = current_app.config.get("KEYGEN_POLICY_ID")
+    if not policy_id:
+        raise KeygenUnavailable("Annual licensing policy is not configured")
+    response = request("GET", "/policies/" + policy_id)
+    if response.status_code != 200:
+        raise KeygenUnavailable("Annual licensing policy could not be verified")
+    try:
+        data = response.json()["data"]
+        if data["id"] != policy_id or any(
+            data["attributes"].get(name) != value
+            for name, value in ANNUAL_POLICY_ATTRIBUTES.items()
+        ):
+            raise ValueError("Policy mismatch")
+        return data
+    except (ValueError, KeyError, TypeError, AttributeError):
+        raise KeygenUnavailable("Configured policy does not match the annual offer") from None
+
+
 def ensure_license(issuance_id: str) -> dict:
     """Caller persists a random UUID first; Keygen's primary key deduplicates it."""
     response = request("GET", "/licenses/" + issuance_id)
     if response.status_code == 404:
+        verify_annual_policy()
         response = request("POST", "/licenses", json={"data": {
             "type": "licenses", "id": issuance_id,
             "relationships": {"policy": {"data": {

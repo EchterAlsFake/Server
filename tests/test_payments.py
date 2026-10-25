@@ -376,7 +376,7 @@ class PaymentTests(ServerTestCase):
             def json():
                 return {
                     "id": "invoice-123",
-                    "invoice_url": "https://pay.example/invoice-123",
+                    "invoice_url": "https://nowpayments.io/payment/?iid=invoice-123",
                 }
 
         with (
@@ -395,7 +395,7 @@ class PaymentTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True},
+                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True},
                 base_url="https://attacker.invalid",
             )
 

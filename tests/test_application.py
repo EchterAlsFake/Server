@@ -16,25 +16,28 @@ from pf_server.models import CiStatus, Stats
 
 
 class ApplicationTests(ServerTestCase):
-    def test_root_requires_explicit_age_confirmation(self):
+    def test_public_root_and_purchase_age_confirmation_are_separate(self):
         gate = self.client.get("/")
+        purchase = self.client.get("/porn_fetch")
         rejected = self.client.post("/", data={})
         accepted = self.client.post("/", data={"adult_confirmed": "yes"})
 
         self.assertEqual(gate.status_code, 200)
-        self.assertIn(b'name="adult_confirmed"', gate.data)
-        self.assertIn(b"at least 18 years old", gate.data)
-        self.assertIn("noindex", gate.headers["X-Robots-Tag"])
+        self.assertNotIn(b'id="age-overlay"', gate.data)
+        self.assertIn(b'name="adult_confirmed"', purchase.data)
+        self.assertIn(b"at least 18 years old", purchase.data)
+        self.assertIn(b'class="age-pending"', purchase.data)
+        self.assertIn(b'id="product-video"', gate.data)
         self.assertEqual(rejected.status_code, 400)
         self.assertIn(b'role="alert"', rejected.data)
         self.assertEqual(accepted.status_code, 303)
-        self.assertEqual(accepted.headers["Location"], "/porn_fetch")
-        self.assertIn("no-store", accepted.headers["Cache-Control"])
+        self.assertEqual(accepted.headers["Location"], "/")
+        self.assertIn("no-store", purchase.headers["Cache-Control"])
 
         with patch.dict(main.app.config, {"WTF_CSRF_ENABLED": True}):
             csrf_rejected = self.client.post("/", data={"adult_confirmed": "yes"})
             token = re.search(
-                rb'name="csrf_token" value="([^"]+)"', self.client.get("/").data
+                rb'name="csrf-token" content="([^"]+)"', self.client.get("/").data
             ).group(1)
             csrf_accepted = self.client.post(
                 "/", data={"adult_confirmed": "yes", "csrf_token": token.decode()}
@@ -42,26 +45,26 @@ class ApplicationTests(ServerTestCase):
         self.assertEqual(csrf_rejected.status_code, 400)
         self.assertEqual(csrf_accepted.status_code, 303)
 
-    def test_commercial_seo_exposes_only_the_product_page(self):
+    def test_commercial_seo_exposes_the_marketing_homepage(self):
         commercial_host = "https://echteralsfake.me"
         with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": False}):
-            product = self.client.get("/porn_fetch", base_url=commercial_host)
+            product = self.client.get("/", base_url=commercial_host)
             sitemap = self.client.get("/sitemap.xml", base_url=commercial_host)
             robots = self.client.get("/robots.txt", base_url=commercial_host)
             docs_sitemap = self.client.get("/sitemap.xml", base_url="https://docs.echteralsfake.me")
 
         self.assertEqual(product.status_code, 200)
         self.assertIn(b'<meta name="robots" content="index, follow">', product.data)
-        self.assertIn(b'<link rel="canonical" href="https://echteralsfake.me/porn_fetch">', product.data)
+        self.assertIn(b'<link rel="canonical" href="https://echteralsfake.me/">', product.data)
         self.assertIn(b'<meta name="description"', product.data)
         self.assertEqual(sitemap.status_code, 200)
-        self.assertIn(b"https://echteralsfake.me/porn_fetch", sitemap.data)
-        self.assertNotIn(b"<loc>https://echteralsfake.me/</loc>", sitemap.data)
+        self.assertIn(b"<loc>https://echteralsfake.me/</loc>", sitemap.data)
+        self.assertNotIn(b"https://echteralsfake.me/porn_fetch", sitemap.data)
         self.assertIn(b"Sitemap: https://echteralsfake.me/sitemap.xml", robots.data)
         self.assertEqual(docs_sitemap.status_code, 404)
 
         with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": True}):
-            test_product = self.client.get("/porn_fetch", base_url=commercial_host)
+            test_product = self.client.get("/", base_url=commercial_host)
             test_sitemap = self.client.get("/sitemap.xml", base_url=commercial_host)
         self.assertIn(b'<meta name="robots" content="noindex, nofollow">', test_product.data)
         self.assertEqual(test_sitemap.status_code, 404)
@@ -74,16 +77,16 @@ class ApplicationTests(ServerTestCase):
         self.assertEqual(checkout.status_code, 200)
         self.assertIn(b"NOWPayments", options.data)
         self.assertIn(b"Patreon", options.data)
-        self.assertIn(b"214243387", options.data)
-        self.assertIn("€19.99".encode(), options.data)
+        self.assertIn(b'action="/checkout/start"', options.data)
+        self.assertIn("19.99€".encode(), options.data)
         self.assertNotIn(b"SubscribeStar", options.data)
         self.assertNotIn(b"Transak", checkout.data)
         self.assertNotIn(b"pay-fiat-btn", checkout.data)
-        self.assertIn(b'<fieldset class="checkout-agreements">', checkout.data)
+        self.assertIn(b'<fieldset class="compact-agreements">', options.data)
         self.assertIn(b'role="alert"', checkout.data)
         self.assertIn(b'Skip to main content', checkout.data)
         self.assertIn(b'Test site', checkout.data)
-        self.assertIn(b'id="chk-test-site"', checkout.data)
+        self.assertIn(b'id="chk-test-site"', options.data)
 
         with patch.dict(main.app.config, {"NOWPAYMENTS_SANDBOX": False}):
             live_checkout = self.client.get("/buy_license")
@@ -97,7 +100,7 @@ class ApplicationTests(ServerTestCase):
         with patch.dict(main.app.config, {"CHECKLIST_AUTH": "site-password"}):
             landing_page = self.client.get("/", base_url="https://localhost")
         self.assertEqual(landing_page.status_code, 200)
-        self.assertIn(b'name="adult_confirmed"', landing_page.data)
+        self.assertNotIn(b'id="age-overlay"', landing_page.data)
         with patch.dict(main.app.config, {"CHECKLIST_AUTH": "rotated-password"}):
             after_rotation = self.client.get("/", base_url="https://localhost")
         self.assertEqual(after_rotation.status_code, 200)
@@ -143,7 +146,7 @@ class ApplicationTests(ServerTestCase):
             main.app.config, {"LICENSE_MAIL_PROVIDER_NAME": "Example Mail"}
         ):
             english = self.client.get("/privacy_policy")
-            german = self.client.get("/datenschutz")
+            german = self.client.get("/datenschutz", follow_redirects=True)
 
         self.assertEqual(english.status_code, 200)
         self.assertEqual(german.status_code, 200)

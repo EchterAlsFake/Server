@@ -43,6 +43,31 @@ class Checklist(db.Model):
     created_at = db.Column(db.String, nullable=False)
 
 
+class OnrampCheckout(db.Model):
+    """Checkout consent and delivery outbox; beta preserves historical offer terms."""
+
+    __tablename__ = "onramp_checkouts"
+
+    session_id = db.Column(db.String(64), primary_key=True)
+    created_at = db.Column(db.String(40), nullable=False)
+    consent_version = db.Column(db.String(32), nullable=False)
+    accepted_at = db.Column(db.String(40), nullable=True)
+    stage = db.Column(db.String(20), nullable=False, default="acknowledged")
+    beta = db.Column(db.Boolean, nullable=False, default=True)
+    recipient_encrypted = db.Column(db.Text, nullable=True)
+    checkout_encrypted = db.Column(db.Text, nullable=True)
+    tracking_encrypted = db.Column(db.Text, nullable=True)
+    callback_digest = db.Column(db.String(64), unique=True, nullable=True)
+    callback_seen_at = db.Column(db.String(40), nullable=True)
+    charge_amount = db.Column(db.String(32), nullable=True)
+    charge_currency = db.Column(db.String(8), nullable=False, default="USD")
+    payment_state = db.Column(db.String(32), nullable=False, default="waiting")
+    delivery_status = db.Column(db.String(16), nullable=False, default="pending")
+    lease_token = db.Column(db.String(64), nullable=True)
+    lease_expires_at = db.Column(db.String(40), nullable=True)
+    sent_at = db.Column(db.String(40), nullable=True)
+
+
 class License(db.Model):
     license_key = db.Column(db.String, primary_key=True)
     state = db.Column(db.String, nullable=False, default="valid")
@@ -71,3 +96,33 @@ class PatreonLicenseDelivery(db.Model):
     sent_at = db.Column(db.String(40), nullable=True)
     lease_expires_at = db.Column(db.String(40), nullable=True)
     lease_token = db.Column(db.String(64), nullable=True)
+
+
+class CryptoLicenseDelivery(db.Model):
+    """Optional encrypted crypto-delivery outbox, separate from card checkout."""
+
+    __tablename__ = "crypto_license_deliveries"
+    session_id = db.Column(db.String(64), primary_key=True)
+    recipient_encrypted = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.String(40), nullable=False)
+    delivery_status = db.Column(db.String(16), nullable=False, default="pending")
+    lease_token = db.Column(db.String(64), nullable=True)
+    lease_expires_at = db.Column(db.String(40), nullable=True)
+    sent_at = db.Column(db.String(40), nullable=True)
+
+
+class PaymentProgress(db.Model):
+    """Minimal provider observations; never an authority to issue a license."""
+
+    __tablename__ = "payment_progress"
+    session_id = db.Column(db.String(64), primary_key=True)
+    nowpayments_state = db.Column(db.String(32), nullable=False, default="waiting")
+    nowpayments_payment_id = db.Column(db.String(128), nullable=True)
+    nowpayments_updated_at = db.Column(db.String(40), nullable=True)
+    onramp_state = db.Column(db.String(32), nullable=True)
+    onramp_updated_at = db.Column(db.String(40), nullable=True)
+    checkout_url = db.Column(db.Text, nullable=True)
+    checked_at = db.Column(db.String(40), nullable=True)
+    poll_lease_until = db.Column(db.String(40), nullable=True)
+    poll_token = db.Column(db.String(64), nullable=True)
+    refresh_unavailable = db.Column(db.Boolean, nullable=False, default=False)

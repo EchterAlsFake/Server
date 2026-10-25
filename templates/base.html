@@ -1,53 +1,73 @@
 <!DOCTYPE html>
-<html lang="{% block html_lang %}en{% endblock %}">
+<html lang="{% block html_lang %}en{% endblock %}"{% if age_required %} class="age-pending"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Porn Fetch - The Ultimate Adult Media Downloader{% endblock %}</title>
+    <meta name="color-scheme" content="dark">
+    <title>{% block title %}Porn Fetch — Your videos, on your device{% endblock %}</title>
     {% if config.NOWPAYMENTS_SANDBOX %}
     <meta name="robots" content="noindex, nofollow">
     {% else %}
-    {% block robots %}<meta name="robots" content="noindex">{% endblock %}
+    {% block robots %}<meta name="robots" content="{{ 'index, follow' if page_meta else 'noindex' }}">{% endblock %}
     {% endif %}
-    {% block seo_head %}{% endblock %}
-    <link rel="stylesheet" href="/static/index.css">
+    {% block seo_head %}{% include "partials/seo_head.html" %}{% endblock %}
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='media/porn-fetch-logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
+    {% if page_meta %}<link rel="stylesheet" href="{{ url_for('static', filename='downloads.css') }}">{% endif %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <script src="{{ url_for('static', filename='site.js') }}" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
-    {% if config.NOWPAYMENTS_SANDBOX %}
-    <div class="test-site-banner" role="note" aria-label="Test site notice" lang="en">
-        <strong>Test site</strong>
-        <span>Not a real online shop. No real purchases. Some information may be incomplete or inaccurate.</span>
-    </div>
-    {% endif %}
-    <header class="legal-banner">
-        <div class="legal-banner-container">
-            <nav class="legal-banner-buttons" aria-label="Site and legal pages">
-                <a href="/" class="nav-btn">Home / Startseite</a>
-                <a href="/impress" class="nav-btn">Impress / Impressum</a>
-                <a href="/terms" class="nav-btn">AGB / ToS</a>
-                <a href="/privacy_policy" class="nav-btn">Privacy (EN)</a>
-                <a href="/datenschutz" class="nav-btn">Datenschutz (DE)</a>
-            </nav>
-            <a href="http://i3vtbgg6dufszjzbccyzd3wk4v2on3k6ljzjpg2ppzapgqmjmsxlvkid.onion/" class="tor-network-btn" target="_blank" rel="noopener noreferrer">
-                <span class="tor-icon" aria-hidden="true">🧅</span>
-                <span>Tor Network</span>
-            </a>
+    <div id="site-content"{% if age_required %} inert aria-hidden="true"{% endif %}>
+        <a class="skip-link" href="#main-content">Skip to main content</a>
+        {% if config.NOWPAYMENTS_SANDBOX %}
+        <div class="test-site-banner" role="note" aria-label="Test site notice" lang="en">
+            <strong>Test site</strong><span>Not a real online shop. No real purchases. Some information may be incomplete or inaccurate.</span>
         </div>
-    </header>
-
-    <main class="container" id="main-content" tabindex="-1">
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer class="footer">
-        <p>&copy; 2023–2026 Johannes Habel. All rights reserved.</p>
-        <p>Porn Fetch's current development source is available under its published license; earlier GPL copies retain their rights. <a href="/terms" style="text-decoration: underline; color: inherit;">Licensing and Terms</a> · <a href="/transparency" style="text-decoration: underline; color: inherit;">AI Transparency</a>. Made with ❤️ in Germany.</p>
-    </footer>
-    <script src="/__eaf/visit.js" defer></script>
+        {% endif %}
+        <header class="site-header">
+            <div class="header-inner">
+                <a class="brand" href="/" aria-label="Porn Fetch home">
+                    <span class="brand-mark"><img src="{{ url_for('static', filename='media/porn-fetch-logo.png') }}" alt="" width="72" height="48"></span>
+                    <span class="brand-name">Porn Fetch</span>
+                </a>
+                <details class="site-menu" open>
+                    <summary>Menu <span aria-hidden="true">+</span></summary>
+                    <nav aria-label="Main navigation">
+                        <a href="/"{% if request.path == '/' %} aria-current="page"{% endif %}>Home</a>
+                        <a href="/impress"{% if request.path == '/impress' %} aria-current="page"{% endif %}>Impress / Impressum</a>
+                        <a href="/privacy_policy"{% if request.path == '/privacy_policy' %} aria-current="page"{% endif %}>Privacy Policy / <span lang="de">Datenschutzerklärung</span></a>
+                        <a href="/terms"{% if request.path == '/terms' %} aria-current="page"{% endif %}>ToS / AGB</a>
+                        <a href="/#platforms">Supported Platforms</a>
+                        <a href="/#websites">Supported Websites</a>
+                        <a href="/download"{% if request.path.startswith('/download') %} aria-current="page"{% endif %}>Download</a>
+                        <a href="https://github.com/EchterAlsFake/Porn_Fetch" class="github-nav" target="_blank" rel="noopener noreferrer">{% include "partials/github.svg" %} GitHub <span aria-hidden="true">↗</span></a>
+                    </nav>
+                </details>
+            </div>
+        </header>
+        <main class="container {% block main_class %}{% endblock %}" id="main-content" tabindex="-1">
+            {% block content %}{% endblock %}
+        </main>
+        <footer class="site-footer">
+            <div class="footer-top">
+                <a class="brand footer-brand" href="/"><span class="brand-name">Porn Fetch</span></a>
+                <p>Independent software. Made in Germany.</p>
+                <a href="{{ config.ONION_ORIGIN }}/" target="_blank" rel="noopener noreferrer" class="onion-link">{{ 'Onion service' if is_onion else 'Also on Tor' }} <span aria-hidden="true">↗</span></a>
+            </div>
+            <nav class="footer-links" aria-label="Legal and project links">
+                <a href="/download">Download</a><a href="/help">Help</a><a href="/releases">Release notes</a><a href="/about">About</a><a href="/impress">Impress / Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">ToS / AGB</a><a href="/refund_policy">Refund policy</a><a href="/legal-statement">Legal statement</a><a href="/transparency">AI Transparency</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">App source ↗</a><a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">Open-source server ↗</a><a href="/static/notices/github-octicons.txt">Icon attribution</a>
+            </nav>
+            {% include "partials/platform_credits.html" %}
+            <div class="footer-bottom"><span>© 2023–2026 Johannes Habel</span><span>Source available under the published license. Earlier GPL copies retain their rights.</span><span>For adults 18+.</span></div>
+        </footer>
+    </div>
+    {% include "partials/payment_test_dialog.html" %}
+    {% if age_required %}{% include "age_gate.html" %}{% endif %}
+    <script src="{{ url_for('static', filename='payment-preview.js') }}" defer></script>
+    {% if not is_onion %}<script src="/__eaf/visit.js" defer></script>{% endif %}
     {% block scripts %}{% endblock %}
 </body>
 </html>

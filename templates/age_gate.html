@@ -1,19 +1,22 @@
-{% extends "base.html" %}
-
-{% block title %}Age confirmation - Porn Fetch{% endblock %}
-
-{% block content %}
-<section class="card age-gate" aria-labelledby="age-gate-title">
-    <h1 id="age-gate-title">Age confirmation</h1>
-    <p>Porn Fetch is intended for adults. You must be at least 18 years old to continue to the product page.</p>
-    <form action="/" method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {% if error %}<p class="form-error" id="age-gate-error" role="alert">{{ error }}</p>{% endif %}
-        <label class="age-gate-agreement" for="adult-confirmed">
-            <input type="checkbox" id="adult-confirmed" name="adult_confirmed" value="yes" required {% if error %}aria-describedby="age-gate-error"{% endif %}>
-            <span>I confirm that I am at least 18 years old.</span>
-        </label>
-        <button class="btn btn-primary" type="submit">Continue to Porn Fetch</button>
-    </form>
-</section>
-{% endblock %}
+<div class="age-overlay" id="age-overlay">
+    <section class="age-dialog" role="dialog" aria-modal="true" aria-labelledby="age-title" aria-describedby="age-description" tabindex="-1">
+        <span class="age-symbol" aria-hidden="true">18+</span>
+        <p class="eyebrow">Before you continue / Bevor es weitergeht</p>
+        <h2 id="age-title">Adults only.<br><span lang="de">Nur für Erwachsene.</span></h2>
+        <p id="age-description">This website is intended for adults. Confirm that you are at least 18 years old to continue.</p>
+        <p class="age-translation" lang="de">Diese Website richtet sich an Erwachsene. Bitte bestätige, dass du mindestens 18 Jahre alt bist.</p>
+        <form action="/" method="post" id="age-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+            <label class="age-gate-agreement" for="adult-confirmed">
+                <input type="checkbox" id="adult-confirmed" name="adult_confirmed" value="yes" required>
+                <span>I am at least 18 years old.<br><span lang="de">Ich bin mindestens 18 Jahre alt.</span></span>
+            </label>
+            <p class="form-error" id="age-error" role="alert"{% if not age_error %} hidden{% endif %}>{{ age_error or '' }}</p>
+            <button class="btn btn-primary" type="submit">Confirm &amp; enter <span aria-hidden="true">→</span></button>
+        </form>
+        <a class="age-exit" href="/leave">Leave this website / Website verlassen</a>
+        <nav class="age-legal" aria-label="Legal documents before confirmation"><a href="/impress">Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">ToS / AGB</a></nav>
+        <p class="age-session-note">Remembered for this browser session. No tracking cookie.</p>
+    </section>
+</div>

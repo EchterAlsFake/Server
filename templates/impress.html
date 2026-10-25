@@ -1,28 +1,22 @@
 {% extends "base.html" %}
-
-{% block title %}Impressum / Impress - Porn Fetch{% endblock %}
-
+{% block title %}Impress / Impressum — Porn Fetch{% endblock %}
 {% block content %}
-<div class="card" style="margin-top: 40px;">
-    <h1>Impressum (Legal Disclosure)</h1>
-    <p style="color: var(--color-text-muted);">Information according to § 5 DDG (Digitale-Dienste-Gesetz):</p>
-
-    <div style="margin-top: 25px; line-height: 1.8;">
-        <strong>Johannes Habel</strong><br>
-        Bahnstr. 21<br>
-        06886 Lutherstadt Wittenberg<br>
-        Germany<br>
-        <br>
-        <strong>Contact:</strong><br>
-        Email: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>
-        Phone: +49 1744646064<br>
-
-    </div>
-
-    <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 0.95rem; color: var(--color-text-muted);">
-        <h2>Disclaimer (Haftungsausschluss)</h2>
-        <p><strong>Liability for Content:</strong> The contents of the pages were created with great care. However, they cannot guarantee the correctness, completeness and topicality of the contents.</p>
-        <p><strong>Liability for Links:</strong> The site contains links to external websites of third parties, on whose content I have no influence. Therefore, I cannot assume any liability for these external contents.</p>
-    </div>
-</div>
+<article class="legal-document">
+<h1>Impress / Impressum</h1>
+{% include "partials/languages.html" %}
+<section class="legal-language" id="en" lang="en" aria-labelledby="impress-en-title">
+<h2 id="impress-en-title">Legal Disclosure · English</h2><p>Information according to § 5 DDG (Digitale-Dienste-Gesetz):</p>
+<p><strong>Johannes Habel</strong><br>Bahnstr. 21<br>06886 Lutherstadt Wittenberg<br>Germany</p>
+<h3>Contact</h3><p>Email: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>Phone: <a href="tel:+491744646064">+49 1744646064</a></p>
+<h3>Liability for Content</h3><p>The contents of the pages were created with great care. However, they cannot guarantee the correctness, completeness and topicality of the contents.</p>
+<h3>Liability for Links</h3><p>The site contains links to external websites of third parties, on whose content I have no influence. Therefore, I cannot assume any liability for these external contents. The respective provider or operator is always responsible for the content of the linked pages.</p>
+</section>
+<section class="legal-language" id="de" lang="de" aria-labelledby="impress-de-title">
+<h2 id="impress-de-title">Impressum · Deutsch</h2><p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz):</p>
+<p><strong>Johannes Habel</strong><br>Bahnstr. 21<br>06886 Lutherstadt Wittenberg<br>Deutschland</p>
+<h3>Kontakt</h3><p>E-Mail: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a><br>Telefon: <a href="tel:+491744646064">+49 1744646064</a></p>
+<h3>Haftung für Inhalte</h3><p>Die Inhalte dieser Seiten wurden mit großer Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte kann jedoch keine Gewähr übernommen werden.</p>
+<h3>Haftung für Links</h3><p>Diese Website enthält Links zu externen Websites Dritter, auf deren Inhalte ich keinen Einfluss habe. Daher kann ich für diese fremden Inhalte keine Haftung übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber verantwortlich.</p>
+</section>
+</article>
 {% endblock %}

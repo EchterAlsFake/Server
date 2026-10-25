@@ -15,7 +15,13 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 16px;
         margin-bottom: 1.5rem;
+    }
+    .checklist-header h1 {
+        min-width: 0;
+        margin: 0;
+        font-size: clamp(26px, 6vw, 36px);
     }
     .progress-bar-container {
         background: #333;
@@ -48,9 +54,12 @@
     .task-item input[type="checkbox"] {
         margin-right: 1rem;
         transform: scale(1.2);
+        flex-shrink: 0;
     }
     .task-text {
         flex: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
         font-size: 1.1rem;
     }
     .task-text.done {
@@ -58,6 +67,9 @@
         color: #888;
     }
     .remove-btn {
+        flex-shrink: 0;
+        min-height: 44px;
+        margin-left: 10px;
         background: #e05d44;
         color: white;
         border: none;
@@ -74,6 +86,7 @@
     }
     .add-task-form input[type="text"] {
         flex: 1;
+        min-width: 0;
         padding: 0.75rem;
         border: 1px solid #444;
         border-radius: 4px 0 0 4px;
@@ -90,6 +103,11 @@
     }
     .add-task-form button:hover {
         background: #0056b3;
+    }
+    @media (max-width: 480px) {
+        .checklist-container { padding: 24px 20px; }
+        .add-task-form { flex-direction: column; gap: 10px; }
+        .add-task-form input[type="text"], .add-task-form button { width: 100%; border-radius: 4px; }
     }
 </style>
 {% endblock %}

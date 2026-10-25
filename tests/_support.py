@@ -16,15 +16,19 @@ os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["PATREON_SECRET"] = "patreon-test-secret"
 os.environ["NOWPAYMENTS_IPN_SECRET"] = "nowpayments-test-secret"
 os.environ["NOWPAYMENTS_SANDBOX"] = "true"
+os.environ["APP_DOMAIN"] = "https://echteralsfake.me"
 
 
 import main  # noqa: E402
 from pf_server.country_service import CountryEvidence  # noqa: E402
 from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
+    PaymentProgress,
+    CryptoLicenseDelivery,
     Checklist,
     CiStatus,
     License,
+    OnrampCheckout,
     PatreonLicenseDelivery,
     Transaction,
 )
@@ -60,9 +64,12 @@ class ServerTestCase(unittest.TestCase):
         self.mock_country_lookup = self.country_lookup.start()
         with main.app.app_context():
             for model in (
+                PaymentProgress,
+                CryptoLicenseDelivery,
                 Checklist,
                 CiStatus,
                 PatreonLicenseDelivery,
+                OnrampCheckout,
                 License,
                 Transaction,
             ):

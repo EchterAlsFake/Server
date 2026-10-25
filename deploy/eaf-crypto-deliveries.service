@@ -1,0 +1,20 @@
+[Unit]
+Description=Retry optional crypto license emails and purge expired addresses
+After=network-online.target eaf-server.service
+ConditionPathExists=/srv/server/.env
+
+[Service]
+Type=oneshot
+User=eaf-server
+Group=eaf-server
+WorkingDirectory=/srv/server
+Environment=PF_SERVER_DATA_DIR=/srv/server/data
+Environment=PF_SERVER_DB=/srv/server/data/server.db
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/srv/server/.venv/bin/python -m flask --app main retry-crypto-deliveries
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/server/data
+PrivateTmp=true

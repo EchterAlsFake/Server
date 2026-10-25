@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Test preview — {{ provider }} — Porn Fetch{% endblock %}
+{% block content %}
+<section class="card payment-preview-page" aria-labelledby="preview-title">
+    <p class="eyebrow">Before you continue</p><h1 id="preview-title">Preview {{ provider }}.</h1>
+    {% include "partials/payment_test_warning.html" %}
+    {% if method == "patreon" %}{% include "partials/patreon_details.html" %}{% endif %}
+    <form method="post" rel="noopener noreferrer"{% if method != 'card' %} target="_blank"{% endif %}>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="session_id" value="{{ session_id }}">
+        <label class="checkbox-container"><input type="checkbox" name="confirm_no_payment" value="yes" required><span>I understand this is a test preview. I will not send money or start a paid membership.</span></label>
+        {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+        <div class="checkout-actions"><a href="/porn_fetch" class="btn btn-secondary">Back to payment methods</a><button type="submit" class="btn btn-primary">I understand. Continue to preview</button></div>
+    </form>
+</section>
+{% endblock %}

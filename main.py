@@ -27,10 +27,15 @@ from pf_server.operations_routes import (
 )
 from pf_server.page_routes import pages_bp
 from pf_server.payment_routes import payments_bp
+from pf_server.onramp_routes import onramp_bp
 from pf_server.referral_guard import block_vplan_referrals
 from pf_server.seo_routes import seo_bp
 from pf_server.tax_service import country_transaction_summary
 from pf_server.update_routes import updates_bp
+from pf_server.website_releases import releases_bp
+from pf_server.download_pages import downloads_bp
+from pf_server.onion import init_onion
+from pf_server.android_updates import android_updates_bp
 
 load_dotenv()
 
@@ -53,6 +58,7 @@ def create_app(
     application.config.from_mapping(load_environment_config(BASE_DIR))
     if test_config:
         application.config.update(test_config)
+    init_onion(application)
     configure_logging(application)
     application.extensions["vplan_referral_key"] = secrets.token_bytes(32)
     application.before_request(block_vplan_referrals)
@@ -100,23 +106,40 @@ def create_app(
         session_cookie_secure=True,
         session_cookie_http_only=True,
         session_cookie_samesite="Lax",
+        referrer_policy="no-referrer",
     )
 
     for blueprint in (
         pages_bp,
         payments_bp,
+        onramp_bp,
         seo_bp,
         docs_bp,
         updates_bp,
         operations_bp,
         ci_bp,
         checklist_bp,
+        releases_bp,
+        downloads_bp,
+        android_updates_bp,
     ):
         application.register_blueprint(blueprint)
 
     application.before_request(track_request)
     application.before_request(handle_docs_subdomain)
     application.after_request(track_response)
+
+    @application.after_request
+    def private_payment_response(response):
+        from flask import request
+        if request.path in {
+            "/buy_card", "/buy_success", "/download_license", "/download_invoice",
+            "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
+            "/onramp-callback",
+        }:
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["Referrer-Policy"] = "no-referrer"
+        return response
     application.register_error_handler(429, ratelimit_handler)
     application.register_error_handler(413, payload_too_large)
 
@@ -130,6 +153,33 @@ def create_app(
     def tax_country_summary_command(year: int):
         """Print country-level completed transaction totals as JSON."""
         click.echo(json.dumps(country_transaction_summary(year), indent=2))
+
+    @application.cli.command("verify-license-policy")
+    @click.option("--client-config", type=click.Path(exists=True, dir_okay=False), required=True)
+    def verify_license_policy_command(client_config):
+        """Read-only check of annual entitlement and the shipped client policy ID."""
+        from pf_server.keygen_service import KeygenUnavailable, verify_annual_policy
+        try:
+            with open(client_config, encoding="utf-8") as source:
+                public_client = json.load(source)
+            if public_client["policy_id"] != application.config["KEYGEN_POLICY_ID"]:
+                raise click.ClickException("Server and client policy IDs do not match")
+            verify_annual_policy()
+        except (OSError, ValueError, KeyError, TypeError, KeygenUnavailable):
+            raise click.ClickException("Could not verify the annual policy and client configuration") from None
+        click.echo("Verified: one year from first activation, continued access, ten installations; client policy matches.")
+
+    @application.cli.command("retry-crypto-deliveries")
+    def retry_crypto_deliveries_command():
+        """Retry optional crypto license email and purge expired delivery data."""
+        from pf_server.crypto_delivery import retry_crypto_deliveries
+        click.echo(f"Processed {retry_crypto_deliveries()} delivery candidates.")
+
+    @application.cli.command("retry-onramp-deliveries")
+    def retry_onramp_deliveries_command():
+        """Purge expired checkout PII and retry confirmed card-license emails."""
+        from pf_server.onramp_service import retry_deliveries
+        click.echo(f"Processed {retry_deliveries()} delivery candidates.")
 
     if initialize_runtime:
         initialize_runtime_state(application)

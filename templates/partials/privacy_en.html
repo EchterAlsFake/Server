@@ -1,0 +1,108 @@
+<div class="card" style="margin-top: 40px;">
+    <h1>Privacy Policy</h1>
+    <p style="color: var(--color-text-muted);">Last Updated: October 2026</p>
+    <p><strong>Payment availability:</strong> Crypto payments are simulated while the sandbox notice is displayed. Enabled Banxa checkout charges real money for an annual update license. Historical beta purchases keep the terms accepted at purchase. The sections below describe the data handled by these services.</p>
+
+    <div style="margin-top: 25px; line-height: 1.8;">
+
+        <h2>1. Controller Information</h2>
+        <p>The controller responsible for data processing on this website within the meaning of the EU General Data Protection Regulation (GDPR) is:</p>
+        <p>
+            <strong>Johannes Habel</strong><br>
+            Bahnstr. 21<br>
+            06886 Lutherstadt Wittenberg<br>
+            Germany<br>
+            Email: <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>
+        </p>
+
+        <h2>2. Data Not Collected by the Porn Fetch Application</h2>
+        <p>The Porn Fetch application runs locally and does <strong>not</strong> transmit browsing history or records of downloaded videos to my server. My application server does <strong>not</strong> log visitor IP addresses. It keeps aggregate counters for requests, transfer volume and approximate daily visitors. For the daily visitor count, the connection IP address is used only in memory with a secret, day-specific context to produce a non-reversible check value. Only those check values are retained briefly to prevent duplicate counting; the permanent records contain only totals by day, host and broad page section. No user profiles are created and visits are not linked across days or websites. Purchase and license-fulfilment data are processed separately as described below.</p>
+
+        <h2>3. Self-Hosted Server &amp; Internet Service Provider</h2>
+        <p>This website is self-hosted on my own hardware. My internet connection is provided by <strong>Vodafone GmbH</strong> (Edmund-Rumpler-Straße 2, 51149 Köln, Germany) as the Internet Service Provider (ISP). As a telecommunications provider, Vodafone may be legally required to retain certain connection data (such as IP addresses and port numbers) for a limited period under applicable German telecommunications law (TKG) and potential future data retention legislation (<em>Vorratsdatenspeicherung</em>). This data retention is performed by Vodafone in its capacity as an ISP and is <strong>outside of my control</strong>. I have no access to and do not request any of Vodafone's retained data. For more information, please refer to <a href="https://www.vodafone.de/de/datenschutz/privatsphaere" target="_blank" rel="noopener noreferrer">Vodafone's privacy policy</a>.</p>
+
+        <h2>4. Privex VPS &amp; WireGuard Transport</h2>
+        <p>Public connections first reach a virtual private server operated by <strong>Privex Inc.</strong> in Sweden. The VPS forwards the still-TLS-encrypted connection through a WireGuard tunnel to my Acer Swift 3 or Google Pixel 7 Pro in Germany. HTTPS is terminated by my reverse proxy on the German endpoint, after the WireGuard tunnel; Privex does not terminate HTTPS for this website.</p>
+        <p>Privex and the data-centre/network operators involved in providing the VPS may process connection data required to route and secure the service, including:</p>
+        <ul>
+            <li><strong>Source and destination IP addresses</strong> — for traffic routing, service operation, and abuse prevention</li>
+            <li><strong>Connection metadata</strong> — such as timestamps, ports, protocol, and traffic volume</li>
+        </ul>
+        <p>The additional WireGuard encryption protects traffic between the Swedish VPS and the German endpoint. For more information about Privex's handling of data, please refer to <a href="https://www.privex.io/privacy/" target="_blank" rel="noopener noreferrer">Privex's Privacy Policy</a>.</p>
+
+        <h2>5. Session Cookies and No External Analytics Providers</h2>
+        <p>This website uses a secure, HTTP-only, first-party session cookie to remember age confirmation and to protect checkout and form submissions. It contains session state, not browsing history or downloaded-video records, and has no persistent expiry; browsers may restore session cookies when restoring a browser session. It is not used for tracking. No third-party tracking cookies are used. A small self-hosted script reports only the broad page section to my server for the daily aggregate count described in section 2; URL parameters and page titles are not transmitted. I do <strong>not</strong> load external fonts (such as Google Fonts), external stylesheets, third-party analytics scripts, advertising networks, social media plugins, or other external resources. All assets are served directly from my own server.</p>
+
+        <h2>6. Payment Processing via NowPayments.io</h2>
+        <p>If you choose to purchase a license, payment is processed through cryptocurrency via <strong>NowPayments.io</strong> (operated by FD Transfers LLC). NowPayments widgets are embedded on my checkout pages. When you interact with these widgets, NowPayments may process the following data:</p>
+        <ul>
+            <li>Cryptocurrency wallet addresses and transaction data</li>
+            <li>Transaction amounts and timestamps</li>
+            <li>IP addresses and browser/device information</li>
+            <li>In certain cases, KYC/AML verification data (identity documents) if required by applicable regulations</li>
+        </ul>
+        <p>At checkout, you are asked to select your country so that the place of supply can be documented for tax purposes and geographic restrictions can be applied. When you submit the checkout form, my server temporarily processes the connection IP address in memory and compares its country with your selection using a locally installed DB-IP City Lite database. No geolocation API request is made. The IP address and any subdivision result are discarded before the application handles or logs the request. Only the selected country name, the fact that customer declaration and local IP geolocation agreed, and the database release label are retained with the transaction. No street, billing, or other address is requested or stored for this check. DB-IP City Lite is provided by <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP.com</a> under CC BY 4.0.</p>
+        <p>NowPayments acts as an independent controller for its payment processing. My server stores the order and provider identifiers, payment status, invoice details, amount, currency, transaction hash, selected country and country-evidence metadata needed to verify and document a purchase. It does not store cryptocurrency wallet addresses. The cryptocurrency checkout does not require a name or email address. The generated license file contains an opaque license identifier and a cryptographic signature, but no name or email address.</p>
+        <p>Please note that blockchain transactions are <strong>public by nature</strong> and can be viewed by anyone on the respective blockchain network. For more information about how NowPayments handles your data, please refer to <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">NowPayments' Privacy Policy</a>. For data-related inquiries to NowPayments, contact: <a href="mailto:support@nowpayments.io">support@nowpayments.io</a>.</p>
+
+        <h3>Optional card checkout through Onramp-Pay and Banxa</h3>
+        <p>This optional route buys cryptocurrency through Banxa and forwards it through Onramp-Pay to a unique NOWPayments deposit address. Banxa handles payment details and identity checks, which may include email verification, name, address, date of birth, tax identification and additional documents. This server does not receive Banxa's KYC submissions. Provider checkout opens directly in a separate tab.</p>
+        <p>I collect a separate license-delivery email on this website. It is encrypted at rest, used only for license delivery, removed after successful delivery, and purged after seven days if undelivered or abandoned. The scheduled cleanup runs every five minutes. Your delivery email is not prefilled into Banxa. The configured mail provider receives the email and signed attachment for delivery.</p>
+        <p>I retain checkout/order references, payment status, offer designation (historical beta or annual), disclosure version and acknowledgment timestamps for fulfillment, support and accounting. Encrypted checkout/tracking references and callback tokens are purged after seven days. The deposit address is used transiently to create the Onramp-Pay wallet and is not stored separately. A browser session cookie binds the five-second disclosure to your browser; it contains no delivery email or KYC details. Keep the secret recovery URL private: it provides access to your payment and license.</p>
+        <p>Onramp-Pay and Banxa process data under their own policies: <a href="https://www.onramp-pay.com/privacy-policy" target="_blank" rel="noopener noreferrer">Onramp-Pay privacy policy</a> and <a href="https://banxa.com/privacy-policy/" target="_blank" rel="noopener noreferrer">Banxa privacy policy</a>.</p>
+
+        <h2>7. Patreon Membership and License Delivery</h2>
+        <p>If a paid Patreon membership includes a Porn Fetch license, Patreon sends a signed webhook to my server. Depending on the member's sharing preference and the API permissions, this contains a Patreon member identifier, email address, membership and entitlement status, tier identifiers, and charge status. The data are used only to verify eligibility, prevent duplicate issuance and deliver the contractual license benefit. Free, gifted, trial, unpaid or declined memberships do not receive a license through this process.</p>
+        <p>The email address is validated in memory and passed to the configured outgoing mail server with the bilingual delivery message and signed license attachment; it is not stored in the Patreon delivery table and the raw webhook is not retained. The server stores the Patreon member identifier, issued license key, delivery status and timestamps so retries cannot issue multiple keys. Patreon members may restrict email sharing; automatic email delivery is then unavailable. Patreon provides member data under its Creator Privacy Promise. For more information, see <a href="https://privacy.patreon.com/policies" target="_blank" rel="noopener noreferrer">Patreon's Privacy Policy</a> and <a href="https://support.patreon.com/hc/en-us/articles/360026912432-Data-Processing-Agreement-Creator-Privacy-Promise" target="_blank" rel="noopener noreferrer">Creator Privacy Promise</a>.</p>
+
+        <h3>License activation</h3><p>The self-hosted licensing service at licenses.echteralsfake.me stores a license identifier, its signed credential, up to ten random installation UUIDs, and necessary activation and renewal timestamps. It does not collect hardware identifiers, hostnames, browsing history or downloaded content. Customer email addresses and payment-provider references are not sent to Keygen. Installation records remain until deactivation or deletion of the license. A valid license permits seven days of provisional access on first offline import; after activation, signed offline permits last seven days from renewal. Requests normally renew once daily while the application is used. Licensing access logs and external telemetry are disabled; encrypted local backup snapshots expire after seven days.</p>
+
+        <h2>8. External Links</h2>
+        <p>This website may contain links to external third-party websites. I have <strong>no control</strong> over the content, privacy practices, or data processing of these external sites. Following any external link is entirely at your own risk. I assume <strong>no liability or responsibility</strong> for the privacy practices or content of any linked third-party websites. I encourage you to review the privacy policies of any website you visit via links from my site.</p>
+
+        <h2>9. Legal Basis for Data Processing</h2>
+        <p>Where personal data are processed for website transport and hosting, payment handling or Patreon license fulfilment, the legal bases are:</p>
+        <ul>
+            <li><strong>Art. 6(1)(b) GDPR</strong> — Contractual necessity: verifying a purchase or paid membership and issuing and delivering the license.</li>
+            <li><strong>Art. 6(1)(f) GDPR</strong> — Legitimate interests: website and webhook security, abuse prevention, reliable retry handling, prevention of duplicate license issuance, and the conservative geographic store policy.</li>
+            <li><strong>Art. 6(1)(c) GDPR</strong> — Legal obligation: determining and documenting the applicable tax treatment, complying with geographic restrictions where legally required, and retaining invoice and accounting information where required by law.</li>
+        </ul>
+
+        <h2>10. Your Rights Under EU Law (GDPR)</h2>
+        <p>Under the General Data Protection Regulation (GDPR), you have the following rights regarding personal data processed for website operation, purchases and license delivery:</p>
+        <ul>
+            <li><strong>Right of Access</strong> (Art. 15 GDPR) — You have the right to request confirmation as to whether personal data concerning you is being processed and, if so, to obtain a copy of that data.</li>
+            <li><strong>Right to Rectification</strong> (Art. 16 GDPR) — You have the right to request correction of inaccurate personal data.</li>
+            <li><strong>Right to Erasure ("Right to be Forgotten")</strong> (Art. 17 GDPR) — You have the right to request the deletion of your personal data, provided no legal retention obligations apply.</li>
+            <li><strong>Right to Restriction of Processing</strong> (Art. 18 GDPR) — You have the right to request the restriction of processing of your personal data under certain circumstances.</li>
+            <li><strong>Right to Data Portability</strong> (Art. 20 GDPR) — You have the right to receive your personal data in a structured, commonly used, and machine-readable format.</li>
+            <li><strong>Right to Object</strong> (Art. 21 GDPR) — You have the right to object to processing based on legitimate interests (Art. 6(1)(f) GDPR) at any time, on grounds relating to your particular situation.</li>
+        </ul>
+        <p>To exercise any of these rights, please contact me at <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a>. I will respond to your request without undue delay and in any event within one month of receipt (Art. 12(3) GDPR).</p>
+
+        <h2>11. Right to Lodge a Complaint</h2>
+        <p>You have the right to lodge a complaint with a supervisory authority (Art. 77 GDPR). The competent supervisory authority for my location is:</p>
+        <p>
+            Landesbeauftragter für den Datenschutz Sachsen-Anhalt<br>
+            Leiterstraße 9<br>
+            39104 Magdeburg<br>
+            Germany<br>
+            Website: <a href="https://datenschutz.sachsen-anhalt.de" target="_blank" rel="noopener noreferrer">https://datenschutz.sachsen-anhalt.de</a>
+        </p>
+
+        <h2>12. Data Retention</h2>
+        <p>Before software updates, access-restricted local backups of the database, invoices and configuration are created for recovery. They are not served publicly. Deletion in the running service does not automatically remove these backups. Maintenance instructions require manually removing obsolete backups within seven days and before applicable deletion deadlines; backup expiration is not automated.</p>
+        <p>Patreon webhook bodies and member email addresses are not retained by my server. The member identifier, license mapping and delivery timestamps are kept while the issued license remains valid so it can be verified and duplicate delivery can be prevented; they are deleted on a valid erasure request unless contractual or legal obligations require continued retention. Transaction, invoice, selected-country and country-evidence records are retained for the applicable statutory accounting period; records covered by EU One-Stop-Shop requirements may need to be retained for ten years. They are otherwise kept only as long as needed for contractual claims and support. Checkout IP addresses and subdivision results are not retained by my application. Privex, Patreon, NowPayments, the configured mail service{% if config.LICENSE_MAIL_PROVIDER_NAME %} ({{ config.LICENSE_MAIL_PROVIDER_NAME }}){% endif %} and Vodafone retain data according to their own applicable policies and legal obligations.</p>
+
+        <h2>13. Changes to This Privacy Policy</h2>
+        <p>I reserve the right to update this privacy policy at any time to reflect changes in legal requirements, technical changes, or business practices. The date at the top of this page indicates when this policy was last updated. I encourage you to review this policy periodically.</p>
+
+        <h2>14. Contact</h2>
+        <p>If you have any questions regarding this privacy policy or wish to exercise your data subject rights, please contact me at:<br>
+        <a href="mailto:echteralsfakebs@proton.me">echteralsfakebs@proton.me</a></p>
+    </div>
+</div>
+
+<h3>Optional cryptocurrency license delivery email</h3><p>If you provide an optional delivery email during cryptocurrency checkout, it is used only to send your license, not for advertising. It is encrypted while queued on this server, is not sent to NOWPayments, and is deleted after successful sending or after 7 days. My mail system processes it for delivery. You can leave the field blank and download your license and invoice in your browser instead. Purchase records and licenses remain subject to the retention rules described here.</p>
+
+<h3>Payment progress</h3><p>To display payment progress, this server checks NOWPayments and, for the card route, Onramp Pay using payment references. I retain minimal payment states, timestamps and checkout links alongside the transaction. These status requests do not forward your delivery email or IP address. Providers may collect information directly when you open their own checkout, under their own policies.</p>

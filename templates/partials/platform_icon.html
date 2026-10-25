@@ -1,0 +1,3 @@
+{% macro platform_icon(platform) -%}
+<img class="platform-icon" src="{{ url_for('static', filename='media/platforms/' ~ platform ~ '.svg') }}" alt="" aria-hidden="true" width="32" height="32" decoding="async">
+{%- endmacro %}

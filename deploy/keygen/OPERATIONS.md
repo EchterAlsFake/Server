@@ -22,9 +22,32 @@ The product token has the product's CE permissions and no expiry; rotate it expl
 by creating a replacement locally, updating the purchase service, verifying issuance,
 and revoking the old token. CE does not provide EE's granular permission management.
 
-The bootstrap script provisions a protected perpetual Ed25519 policy, strict with ten
-machines, license authentication, no heartbeat or check-in requirement, and unique UUIDs
-per license. Do not regenerate the account or signing keys during deployment.
+The bootstrap script provisions a separate protected annual-update Ed25519 policy:
+`duration=31556952`, `expirationBasis=FROM_FIRST_ACTIVATION`,
+`expirationStrategy=MAINTAIN_ACCESS`, `renewalBasis=FROM_NOW_IF_EXPIRED`, ten
+installations and license authentication. The update year starts on first activation;
+eligible older builds remain usable after that year, with normal periodic validation.
+No payment or automatic renewal is initiated by this policy.
+
+An existing policy supplied through `KEYGEN_POLICY_ID` is verified, never rewritten.
+Without an ID, bootstrap uses the named annual policy and leaves old perpetual/beta
+policies untouched. If saved credentials point to another policy, bootstrap stops
+without overwriting them. Reconcile server configuration and the public client policy
+explicitly; do not silently repoint existing licenses or regenerate signing keys.
+Historical purchases keep their accepted terms.
+
+Before enabling purchases, run this **read-only** check with the public configuration
+from the actual client build you will distribute:
+
+```sh
+.venv/bin/python -m flask --app main verify-license-policy --client-config /path/to/Porn_Fetch/src/licensing/production.json
+```
+
+New issuance also verifies the remote annual policy before creating a license. A
+mismatch stops issuance safely for retry; the existing signed license path is retained
+for historical delivery. Run the verification before accepting money, rather than
+waiting for a fulfillment failure. This repository change does not provision or alter
+the running licensing service.
 
 The `Gemfile` override retains bundled telemetry dependencies so the upstream image's
 frozen lockfile remains valid when NO_SENTRY and NO_JUDOSCALE are set. Their runtime
