@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = HQPorner API -->
 <!-- SLOT:HERO_TITLE = HQPorner API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for HQPorner. Fetch videos, metadata, search, get videos by actress or category, and download content — all powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.5 -->
+<!-- SLOT:VERSION = 2.5.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-hqporner -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-hqporner -->
 
@@ -102,8 +102,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.5 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.5.2 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
     </div>
+
+<p>Release <strong>2.5.2</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -210,7 +212,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
     url: <span class="token-builtin">str</span>,
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> Video</div>
+) -&gt; Video</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -232,11 +234,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </div>
         </div>
         <div class="method-desc">Fetches videos matching the given actress page by page.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_videos_by_actress(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.get_videos_by_actress(
     name: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -259,11 +261,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </div>
         </div>
         <div class="method-desc">Fetches videos belonging to a specific category page by page.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_videos_by_category(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.get_videos_by_category(
     category: Category | <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -286,11 +288,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </div>
         </div>
         <div class="method-desc">Searches for videos matching the query text. See <a href="#searching">Search &amp; Filtering</a> for details.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_videos(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -313,11 +315,11 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </div>
         </div>
         <div class="method-desc">Fetches top rated/viewed videos sorted by a specific interval.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_top_porn(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.get_top_porn(
     sort_by: Sort | <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -342,7 +344,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <div class="method-desc">Queries the random endpoint, extracts three random suggestions, and returns one randomly selected <code>Video</code> object.</div>
         <div class="method-signature"><span class="token-keyword">await</span> client.get_random_video(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> Video</div>
+) -&gt; Video</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Video</span>
@@ -358,7 +360,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </div>
         </div>
         <div class="method-desc">Scrapes and returns a complete list of all category slug strings available on HQPorner.</div>
-        <div class="method-signature"><span class="token-keyword">await</span> client.get_all_categories() -> <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+        <div class="method-signature"><span class="token-keyword">await</span> client.get_all_categories() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ list[str]</span>
@@ -374,10 +376,10 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
             </div>
         </div>
         <div class="method-desc">Fetches free Brazzers videos hosted on HQPorner.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_brazzers_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.get_brazzers_videos(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -388,6 +390,9 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Listing page counts must be positive. Path pagination fetches the first listing followed by <code>/2</code>, <code>/3</code> and later pages without repeating page one. <code>get_top_porn()</code> accepts both <code>all-time</code> and <code>all_time</code>. Actress input can be a name or a valid canonical, www or mobile actress URL. Empty search results exclude the unrelated recommendations displayed beneath the site’s no-results message. Category enumeration returns category cards.</p>
 </div>
 
 <div class="section" id="video-section">
@@ -445,7 +450,7 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <div class="method-desc">Downloads the video direct MP4 files using range/multipart support. Appends the video title to path unless <code>no_title=True</code>. Ordinary failures raise <code>DownloadFailed</code> with full diagnostic context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigRAW
-) -> <span class="token-builtin">bool</span></div>
+)</div>
         
         <ul class="param-list">
             <li class="param-item"><span class="param-name">configuration</span> <span class="param-type">DownloadConfigRAW</span> <span class="param-desc">— RAW download settings. See <a href="#downloading">Downloading</a>.</span></li>
@@ -454,6 +459,9 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>CDN links are read from ordinary download anchors and fallback HTML strings in the player script. The script is not executed. Absolute and protocol-relative links are resolved normally.</p>
 </div>
 
 <hr>
@@ -684,6 +692,9 @@ hqporner_api --search "blonde" --pages 2 --quality 1080 --output ./blonde_videos
             </tbody>
         </table>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>--pages</code> and <code>--concurrency</code> must be positive. Failed downloads are reported per video and in the final batch result.</p>
 </div>
 
 <!-- ================================================================
@@ -692,7 +703,19 @@ hqporner_api --search "blonde" --pages 2 --quality 1080 --output ./blonde_videos
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📜</span> Changelog</h2>
-    <h3>2.5 (current)</h3>
+<h3>2.5.2 — 2026-10-27 (current)</h3>
+<ul>
+<li>Fetch distinct listing pages and handle the all-time sorting option correctly.</li>
+<li>Return an empty search when the site shows recommendations below its no-results message.</li>
+<li>Accept canonical, www and mobile actress links, and correct the mobile 404 fallback.</li>
+<li>Limit category results to actual category cards and resolve listing and image links correctly.</li>
+<li>Extract CDN download links from both ordinary anchors and JavaScript HTML strings.</li>
+<li>Reject zero page or concurrency limits and report CLI batch failures accurately.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-hqporner/releases/tag/2.5.2">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-hqporner/2.5.2/">PyPI 2.5.2</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
+    <h3>2.5</h3>
     <ul class="param-list">
         <li class="param-item"><span class="param-name">2026-09-15 · <code>fccc573</code> / <code>4e702e9</code></span> <span class="param-desc">— Adopted shared request and download error handling with <code>base_api.modules.provider</code> (requiring <code>eaf-base-api&gt;=4.2.0</code>). Failed downloads now raise <code>DownloadFailed</code> with complete diagnostic context. Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for video metadata and CDN URLs. Enhanced download quality resolution using <code>PATTERN_RESOLUTION</code> and validation. Added snippet-based unit tests for HTML extraction and layout checks.</span></li>
         <li class="param-item"><span class="param-name">2026-08-11 · <code>a097c19</code></span> <span class="param-desc">— Released 2.5, added generic <code>ScrapeResult[Video]</code> annotations and the <code>py.typed</code> marker, and switched missing iterator policies to live RuntimeConfig-derived defaults.</span></li>

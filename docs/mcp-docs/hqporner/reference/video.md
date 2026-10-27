@@ -85,13 +85,17 @@ Downloads the video direct MP4 files using range/multipart support. Appends the 
 ```python
 await video.download(
     configuration: DownloadConfigRAW
-) -> bool
+)
 ```
 - configuration DownloadConfigRAW — RAW download settings. See [Downloading](../guides/downloading.md).
 
 ### Returns
 
 → bool
+
+## Behavior and edge cases
+
+CDN links are read from ordinary download anchors and fallback HTML strings in the player script. The script is not executed. Absolute and protocol-relative links are resolved normally.
 
 ## Related MCP documents
 

@@ -2,8 +2,8 @@
 
 ## Project Overview
 This is a plug-and-play documentation website system for **EchterAlsFake's Porn API** ecosystem.
-The author (Johannes Habel) maintains **15 Python API wrappers/scrapers**, all sharing:
-- A common base dependency: **eaf_base_api** (v4.1.1; wrappers require `eaf-base-api>=4.0.0`)
+The author (Johannes Habel) maintains **17 Python API wrappers/scrapers**, all sharing:
+- A common base dependency: **eaf_base_api** (v4.2.5; wrappers require `eaf-base-api>=4.2.5`)
 - A consistent architecture: `Client → Video / Pornstar / Channel` objects
 - Async-first design using `asyncio` + `curl_cffi`
 
@@ -45,7 +45,7 @@ The author (Johannes Habel) maintains **15 Python API wrappers/scrapers**, all s
 
 ## Completed APIs
 
-The core documentation and all **15 wrapper APIs** are present and complete:
+The core documentation and all **17 wrapper APIs** are present and complete:
 
 1. **eaf_base_api** — shared core documentation
 2. **beeg**
@@ -63,6 +63,8 @@ The core documentation and all **15 wrapper APIs** are present and complete:
 14. **xnxx**
 15. **xvideos**
 16. **youporn**
+17. **empflix**
+18. **tnaflix**
 
 There are no pending wrapper pages. Each source file builds to `dist/{api_name}/index.html`.
 
@@ -75,7 +77,7 @@ There are no pending wrapper pages. Each source file builds to `dist/{api_name}/
 ├── build.py                  # Build script: template + content → final HTML
 ├── transparency.html         # Source for the AI transparency page
 ├── assets/                   # Shared CSS/JS, local fonts, and donation artwork
-├── content/                  # eaf_base_api.html + all 15 wrapper sources
+├── content/                  # eaf_base_api.html + all 17 wrapper sources
 └── dist/                     # Generated output; never hand-edit
     ├── index.html
     ├── assets/
@@ -83,7 +85,7 @@ There are no pending wrapper pages. Each source file builds to `dist/{api_name}/
     └── {api_name}/index.html
 ```
 
-## eaf_base_api v4.1.1 Summary (Key for All Docs)
+## eaf_base_api v4.2.5 Summary (Key for All Docs)
 
 - **RuntimeConfig**: 26 configuration attributes. These cover separate byte-bounded response/segment cache sizes and TTLs; bounded request retries (`request_attempts`, initial/max delay, multiplier, and jitter); delay/timeout/bandwidth; singular `proxy`; HTTP version, DoH, impersonation/JA3, proxy auth, TLS/environment/cookies/locale; download workers; iterator page/item concurrency; and interface binding. `request_multiplier` is both the exponential base for `BaseCore` request backoff and the multiplier used when `IteratorConfig.resolve()` derives Helper stage policies.
 - **CachePolicy and caches**: requests use explicit cache policy with separate byte-bounded TTL caches for text responses and media segments. The old item-count/FIFO description is obsolete.

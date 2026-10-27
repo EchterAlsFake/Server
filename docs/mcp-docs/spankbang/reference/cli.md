@@ -43,6 +43,14 @@ Flag| Description
 `--output DIR`| Destination directory or output file path
 `--no-title True/False`| Skip auto-appending video title to output filename (default: `False`)
 
+## Behavior and edge cases
+
+Use `--raw` for direct MP4 downloads:
+
+```text
+spankbang_api --download URL --output downloads --quality 720 --raw
+```
+
 ## Related MCP documents
 
 - [SpankBang API getting started](../getting-started.md)

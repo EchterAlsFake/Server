@@ -8,6 +8,7 @@ keywords:
   - "PornHub"
   - "GIF"
   - "download"
+  - "get_author"
   - "url"
   - "title"
   - "vote_count"
@@ -86,6 +87,16 @@ await gif.download(
 ### Returns
 
 → bool
+
+## get_author
+
+Resolve the GIF uploader.
+
+```python
+await gif.get_author(
+    load_html: bool = True
+) -> User | Pornstar | Channel | Model | None
+```
 
 ## Related MCP documents
 

@@ -80,7 +80,7 @@ Type: list | None; Description: CDN-resolved direct MP4 URLs
 
 ## video_qualities
 
-Type: list[str] | None; Description: Sorted list of available resolution heights (e.g. ["240", "320", "480", "720", "1080", "4k"] )
+Type: list | None; Description: Sorted list of available resolution heights (e.g. ["240", "320", "480", "720", "1080", "4k"] )
 
 ## tag
 
@@ -120,6 +120,10 @@ await video.download(
 ### Returns
 
 → bool | DownloadReport
+
+## Behavior and edge cases
+
+RAW quality selection accepts numeric values and supported labels such as `hd`, `fhd`, `uhd` and `4k`, with the normal closest-tier fallback. Supplying only `configuration_raw` selects RAW mode automatically. Missing streams raise `VideoUnavailable`.
 
 ## Related MCP documents
 

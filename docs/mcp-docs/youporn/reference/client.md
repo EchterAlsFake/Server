@@ -121,10 +121,10 @@ Queries search endpoints and streams video results via async generator.
 async for result in client.search_videos(
     query: str,
     pages: int = 0,
-    filter_relevance: Literal["views", "rating", "date", "duration"] | None = None,
-    filter_duration_minimum: Literal["10", "20", "30", "40", "50", "60"] | None = None,
-    filter_duration_maximum: Literal["10", "20", "30", "40", "50", "60"] | None = None,
-    filter_resolution: Literal["VR", "HD"] | None = None,
+    filter_relevance: Literal['views', 'rating', 'date', 'duration'] | None = None,
+    filter_duration_minimum: Literal['10', '20', '30', '40', '50', '60'] | None = None,
+    filter_duration_maximum: Literal['10', '20', '30', '40', '50', '60'] | None = None,
+    filter_resolution: Literal['VR', 'HD'] | None = None,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```
@@ -141,6 +141,10 @@ async for result in client.search_videos(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## Behavior and edge cases
+
+Calling search with its default page count requests the first page. Empty listing pages and cards without links do not crash extraction.
 
 ## Related MCP documents
 

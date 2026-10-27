@@ -244,10 +244,10 @@ Searches for videos matching the query text. Supports filtering by production ty
 ```python
 async for result in client.search_videos(
     query: str,
-    production_type: Literal["professional", "homemade"] | None = None,
-    sort_by: Literal["mr", "mv", "tr"] | None = None,
-    duration_min: Literal["10", "20", "30"] | None = None,
-    duration_max: Literal["10", "20", "30"] | None = None,
+    production_type: Literal['professional', 'homemade'] | None = None,
+    sort_by: Literal['mr', 'mv', 'tr'] | None = None,
+    duration_min: Literal['10', '20', '30'] | None = None,
+    duration_max: Literal['10', '20', '30'] | None = None,
     pages: int = 5,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
@@ -273,8 +273,8 @@ Searches for GIFs matching the query. Supports category and sort filtering.
 ```python
 async for result in client.search_gifs(
     query: str,
-    category: Literal["gay", "transgender"] | None = None,
-    search_filter: Literal["mr", "mv", "tr"] | None = None,
+    category: Literal['gay', 'transgender'] | None = None,
+    search_filter: Literal['mr', 'mv', 'tr'] | None = None,
     pages: int = 5,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[GIF], None]
@@ -299,8 +299,8 @@ Searches for videos using the HubTraffic (Webmaster) API. Faster and provides pr
 async for result in client.search_hubtraffic(
     query: str,
     category: str | None = None,
-    sort_by: Literal["newest", "mostviewed", "rating"] | None = None,
-    period: Literal["weekly", "monthly", "alltime"] | None = None,
+    sort_by: Literal['newest', 'mostviewed', 'rating'] | None = None,
+    period: Literal['weekly', 'monthly', 'alltime'] | None = None,
     pages: int = 5,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
@@ -323,7 +323,7 @@ async for result in client.search_hubtraffic(
 Asynchronously constructs a client and, when `login=True` and credentials are provided, awaits `login()` before returning the instance. This is the recommended entry point when creating an authenticated client.
 
 ```python
-client = await Client.create(
+await client.create(
     core: BaseCore | None = None,
     email: str | None = None,
     password: str | None = None,
@@ -363,6 +363,10 @@ await client.login(
 ### Raises
 - LoginFailed — If credentials are invalid or login request fails
 - ClientAlreadyLogged — If already logged in and `force=False`
+
+## Behavior and edge cases
+
+Video lookup accepts bare viewkeys, relative paths and embed links. HubTraffic search parses its JSON response. For regular user profiles, uploads use `/videos/public` and GIFs use `/gifs`; model and pornstar routes retain their corresponding upload/GIF tabs.
 
 ## Related MCP documents
 

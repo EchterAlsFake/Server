@@ -174,6 +174,10 @@ async for result in client.search(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+The client supports `async with Client() as client:` and closes its core on exit. Video and playlist lookups accept bare IDs or relative paths. Profile paths normalize to singular `/pornstar/` and `/amateur/`, plural `/channels/`, and singular `/user/`. Unsupported trailing profile `/videos` segments are removed.
+
 ## Related MCP documents
 
 - [Redtube API getting started](../getting-started.md)

@@ -142,15 +142,15 @@ Runs a query through search filters and yields video scrape results.
 ```python
 async for result in client.search_videos(
     query: str,
-    minimum_quality: Literal["720p", "1080p", "2160p"] = "720p",
-    sort_by: Literal["views", "newest", "best", "longest"] | None = None,
-    category: Literal["german", "amateur", "18-year-old", "granny", "anal", "old-young", "mature", "mom", "milf", "big-tits", "big-natural-tits", "lesbian", "teen", "cum-in-mouth", "bdsm", "porn-for-women", "russian", "vintage", "hairy", "brutal-sex"] | list[str] | None = None,
+    minimum_quality: Literal['720p', '1080p', '2160p'] = '720p',
+    sort_by: Literal['views', 'newest', 'best', 'longest'] | None = None,
+    category: Literal['german', 'amateur', '18-year-old', 'granny', 'anal', 'old-young', 'mature', 'mom', 'milf', 'big-tits', 'big-natural-tits', 'lesbian', 'teen', 'cum-in-mouth', 'bdsm', 'porn-for-women', 'russian', 'vintage', 'hairy', 'brutal-sex'] | list[str] | None = None,
     vr: bool = False,
     full_length_only: bool = False,
-    min_duration: Literal["2", "5", "10", "30", "40"] | None = None,
-    date: Literal["latest", "weekly", "monthly", "yearly"] | None = None,
-    production: Literal["studios", "creators"] | None = None,
-    fps: Literal["30", "60"] | None = None,
+    min_duration: Literal['2', '5', '10', '30', '40'] | None = None,
+    date: Literal['latest', 'weekly', 'monthly', 'yearly'] | None = None,
+    production: Literal['studios', 'creators'] | None = None,
+    fps: Literal['30', '60'] | None = None,
     pages: int = 2,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
@@ -194,6 +194,10 @@ await client.login(
 ### Returns
 
 → Account
+
+## Behavior and edge cases
+
+`get_user()` is an alias of `get_creator()`. VR searches omit the incompatible standard quality filter, even when a default minimum quality is configured. The CLI resolves both shorts and moments links.
 
 ## Related MCP documents
 

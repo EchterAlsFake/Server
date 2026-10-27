@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = SpankBang API -->
 <!-- SLOT:HERO_TITLE = SpankBang API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for SpankBang. Fetch videos, metadata, search, and iterate over channels, creators, or pornstars. Download content using HLS or direct RAW MP4 downloads. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.4.3 -->
+<!-- SLOT:VERSION = 2.4.4 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-spankbang -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-spankbang -->
 
@@ -101,8 +101,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.5</code> is installed automatically as a dependency.
     </div>
+
+<p>Release <strong>2.4.4</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -300,13 +302,13 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Performs a search query for videos with options to filter by rating, quality, duration, and upload date. Yields results paginated. See <a href="#searching">Search &amp; Filtering</a>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query,
-    filter: Literal[<span class="token-string">"trending"</span>, <span class="token-string">"new"</span>, <span class="token-string">"featured"</span>, <span class="token-string">"popular"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    quality: Literal[<span class="token-string">"hd"</span>, <span class="token-string">"fhd"</span>, <span class="token-string">"uhd"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    duration: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"40"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    date: Literal[<span class="token-string">"d"</span>, <span class="token-string">"w"</span>, <span class="token-string">"m"</span>, <span class="token-string">"y"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    filter: Literal['trending', 'new', 'featured', 'popular'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    quality: Literal['hd', 'fhd', 'uhd'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    duration: Literal['10', '20', '40'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    date: Literal['d', 'w', 'm', 'y'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
@@ -324,6 +326,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Default listing concurrency is limited to two video loads and one page at a time. Search builds independent page URLs and encodes the query once. Bare video IDs and embed/play paths normalize to video pages; profile routing preserves regional hosts and supported path prefixes.</p>
 </div>
 
 <!-- ================================================================
@@ -352,7 +357,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>length</code></td><td><code>str | None</code></td><td>Length in seconds</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>HLS master playlist URL</td></tr>
                 <tr><td><code>direct_download_urls</code></td><td><code>list | None</code></td><td>CDN-resolved direct MP4 URLs</td></tr>
-                <tr><td><code>video_qualities</code></td><td><code>list[str] | None</code></td><td>Sorted list of available resolution heights (e.g. <code>["240", "320", "480", "720", "1080", "4k"]</code>)</td></tr>
+                <tr><td><code>video_qualities</code></td><td><code>list | None</code></td><td>Sorted list of available resolution heights (e.g. <code>["240", "320", "480", "720", "1080", "4k"]</code>)</td></tr>
                 <tr style="border-top: 1px solid var(--border-color);"><td colspan="3" style="font-weight: 600; padding-top: 12px;">Scraper Iterator Fallback Attributes</td></tr>
                 <tr><td><code>tag</code></td><td><code>str | None</code></td><td>Primary search tag associated with the item</td></tr>
                 <tr><td><code>views</code></td><td><code>str | None</code></td><td>View count string from the listing card</td></tr>
@@ -390,6 +395,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool | DownloadReport</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>RAW quality selection accepts numeric values and supported labels such as <code>hd</code>, <code>fhd</code>, <code>uhd</code> and <code>4k</code>, with the normal closest-tier fallback. Supplying only <code>configuration_raw</code> selects RAW mode automatically. Missing streams raise <code>VideoUnavailable</code>.</p>
 </div>
 
 <!-- ================================================================
@@ -696,6 +704,18 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>2.4.4 — 2026-10-27 (current)</h3>
+<ul>
+<li>Build independent search page URLs and preserve special characters in search terms.</li>
+<li>Use conservative default listing concurrency and standard navigation headers.</li>
+<li>Keep each RAW download URL paired with its resolution and support numeric and named quality choices.</li>
+<li>Select RAW mode when only a RAW configuration is supplied, and add the --raw CLI flag.</li>
+<li>Normalize bare, embed and play links and handle regional profile paths and statistics.</li>
+<li>Improve thumbnail, duration and stream-data parsing across the supported page layouts.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-spankbang/releases/tag/2.4.4">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-spankbang/2.4.4/">PyPI 2.4.4</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>2.4.1 — 2026-09-15</h3>
     <ul>
@@ -762,6 +782,9 @@ spankbang_api --file urls.txt --quality best --output ./downloads --no-title Fal
             </tbody>
         </table>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Use <code>--raw</code> for direct MP4 downloads:</p><pre><code>spankbang_api --download URL --output downloads --quality 720 --raw</code></pre>
 </div>
 
 <div class="section" id="platforms-section">

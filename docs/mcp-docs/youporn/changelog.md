@@ -13,6 +13,17 @@ keywords:
 
 Records the versions and documented changes for the YouPorn API.
 
+## 1.8.3 — 2026-10-27 (current)
+- Fetch search results with default arguments and encode search queries correctly.
+- Handle empty listing pages, partial collections and users without public collections safely.
+- Resolve absolute collection links without adding a second site prefix.
+- Let author, performer and collection helpers work without loading unrelated title or name fields for logging.
+- Close CLI sessions reliably and report unsuccessful downloads as errors.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-youporn/releases/tag/1.8.3) · [PyPI 1.8.3](https://pypi.org/project/unofficial-api-for-youporn/1.8.3/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 Date| Commit| Changes
 ---|---|---
 2026-09-15| `8144589` / `874e7ab` / `f4272be`| Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete diagnostic context. Added `BaseProfile` class for common header attributes (name, avatar, banner, description) across `Channel` and `Pornstar`. Added complete public type-hint coverage across the API.

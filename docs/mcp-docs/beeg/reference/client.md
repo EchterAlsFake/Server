@@ -43,7 +43,7 @@ Fetches a video profile and returns a populated `Video` object. Queries Beeg's e
 await client.get_video(
     url: str,
     load_api: bool = True
-) -> Video
+)
 ```
 
 ### Parameters
@@ -56,6 +56,10 @@ await client.get_video(
 
 **Source-aware fields**
 Beeg has no paginated `Helper` iterator: `get_video()` is its only fetch operation, so `IteratorConfig`, iterator `RetryPolicy`, custom scrape handlers, and `ScrapeResult` do not apply here. With `load_api=True`, all remote fields are loaded from the `"api"` source. If you construct a lightweight object with `load_api=False`, call `await video.load_sources("api")`, `await video.load_fields("title", "duration")`, or `await video.get_field("title")` before reading unresolved fields. Direct unresolved access raises `DataNotLoadedError`; a real loaded `None` does not.
+
+## Accepted video links
+
+`get_video()` accepts a complete Beeg URL, a protocol-relative URL, a URL without a scheme, or a bare video ID. Tag-scoped links, optional trailing slugs, query strings and fragments are normalized before the API key is extracted. Malformed or missing API records raise `NotFound`.
 
 ## Related MCP documents
 

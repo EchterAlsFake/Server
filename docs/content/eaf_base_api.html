@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = Base API -->
 <!-- SLOT:HERO_TITLE = eaf_base_api -->
 <!-- SLOT:HERO_SUBTITLE = The version 4 asynchronous networking and media-loading engine for EchterAlsFake API wrappers. It provides explicit request APIs, bounded retries, byte-limited TTL caches, source-aware media models, structured scrape streams, and HLS/RAW downloads. -->
-<!-- SLOT:VERSION = 4.2.2 -->
+<!-- SLOT:VERSION = 4.2.5 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/eaf_base_api -->
 <!-- SLOT:PYPI_PACKAGE = eaf_base_api -->
 
@@ -73,7 +73,7 @@
 <span class="token-comment"># Install optional HLS playlist parsing dependencies</span>
 pip install "eaf_base_api[hls]"</code></pre>
     </div>
-    <p>Version 4 requires <strong>Python 3.12 or newer</strong>. The package ships a <code>py.typed</code> marker, so type checkers can consume its inline annotations. TS→MP4 remuxing (<code>remux=True</code>) and MP4 metadata/cover-art tagging use an external <code>ffmpeg</code> executable (discovered via <code>RuntimeConfig.ffmpeg_path</code>, <code>EAF_FFMPEG_BINARY</code> / <code>PORN_FETCH_FFMPEG_BINARY</code>, bundled <code>third_party/</code> directories, or the system <code>PATH</code>).</p>
+    <p>Version 4.2.5 requires <strong>Python 3.12 or newer</strong>. The package ships a <code>py.typed</code> marker, so type checkers can consume its inline annotations. TS→MP4 remuxing (<code>remux=True</code>) and MP4 metadata/cover-art tagging use an external <code>ffmpeg</code> executable (discovered via <code>RuntimeConfig.ffmpeg_path</code>, <code>EAF_FFMPEG_BINARY</code> / <code>PORN_FETCH_FFMPEG_BINARY</code>, bundled <code>third_party/</code> directories, or the system <code>PATH</code>).</p>
 </div>
 
 <div class="section" id="runtime-config-section">
@@ -485,6 +485,9 @@ stream = helper.iterator(
 
     <h3>DownloadConfigRAW</h3>
     <p>Direct-file downloads add <code>allow_multipart=True</code>, <code>max_workers=5</code>, <code>read_timeout=120.0</code>, <code>chunk_size=1024</code>, and <code>max_retries=5</code>. These downloader retries are separate from <code>RuntimeConfig.request_attempts</code>.</p>
+
+<h3>Behavior and edge cases</h3>
+<p>This published version includes resumable RAW download support and the filename fixes used by the provider releases.</p>
 </div>
 
 <div class="section" id="provider-helpers-section">
@@ -520,6 +523,9 @@ logger = get_logger(__name__)
 <span class="token-keyword">async def</span> download(self, configuration):
     <span class="token-keyword">return await</span> download_hls(self, configuration)</code></pre>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>prepare_download_config()</code> sanitizes automatically generated title filenames and falls back to <code>video.mp4</code> when no title is available. The caller’s configuration remains unchanged.</p>
 </div>
 
 <div class="section" id="utilities-section">
@@ -630,6 +636,9 @@ core.enable_logging(
 <span class="token-comment"># Always release the curl_cffi connection pool.</span>
 <span class="token-keyword">await</span> core.close()</code></pre>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Contextual log messages handle percent-escaped URLs without corrupting printf-style message arguments.</p>
 </div>
 
 <div class="section" id="migration-section">
@@ -689,6 +698,14 @@ core.enable_logging(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📋</span> Changelog</h2>
+<h3>4.2.5 — 2026-10-27 (current)</h3>
+<ul>
+<li>Keep URLs containing percent escapes from breaking contextual log formatting.</li>
+<li>Sanitize automatic download filenames and use a safe fallback when a title is missing.</li>
+<li>Include the resumable RAW downloader updates previously present only in the source checkout.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/eaf_base_api/releases/tag/v4.2.5">GitHub release and distribution files</a> · <a href="https://pypi.org/project/eaf-base-api/4.2.5/">PyPI 4.2.5</a></p>
+
 
     <div class="table-wrapper">
         <table>

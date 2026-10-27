@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">XNXX API</span>
                 </a>
-                <span class="sidebar-version">v2.4.3</span>
+                <span class="sidebar-version">v2.4.4</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -96,7 +96,7 @@
                             <span aria-hidden="true">/</span>
                             <span>XNXX API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.3</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.4</div>
                         <h1>XNXX API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for XNXX. Fetch videos, metadata, search with complex filters, and iterate over user uploads — all powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -170,8 +170,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.5</code> is installed automatically as a dependency.
     </div>
+
+<p>Release <strong>2.4.4</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -269,7 +271,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         </div>
         <div class="method-desc">Fetches a video page and returns a populated <code>Video</code> object. Extracts inline JSON metadata and master HLS playlist files.</div>
         <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
-    url: <span class="token-builtin">str</span>,
+    url,
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
 ) -&gt; Video</div>
 
@@ -318,13 +320,13 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Searches for videos matching the query text. Supports filtering by search mode, duration range, upload date, and resolution quality. Yields results paginated. See <a href="#searching">Search &amp; Filtering</a>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_videos(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
-    mode: Mode | <span class="token-builtin">str</span> = <span class="token-string">""</span>,
-    upload_time: UploadTime | <span class="token-builtin">str</span> = <span class="token-string">""</span>,
-    length: Length | <span class="token-builtin">str</span> = <span class="token-string">""</span>,
-    searching_quality: SearchingQuality | <span class="token-builtin">str</span> = <span class="token-string">""</span>,
+    pages: <span class="token-builtin">int</span> = 0,
+    mode: Mode | <span class="token-builtin">str</span> = '',
+    upload_time: UploadTime | <span class="token-builtin">str</span> = '',
+    length: Length | <span class="token-builtin">str</span> = '',
+    searching_quality: SearchingQuality | <span class="token-builtin">str</span> = '',
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -342,6 +344,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Search terms are encoded as a single path segment. Slashes and hashes in a query do not become path separators or URL fragments.</p>
 </div>
 
 <!-- ================================================================
@@ -403,6 +408,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool | DownloadReport</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>JSON-LD video metadata can be an object, an array or part of an <code>@graph</code>. The extractor searches for the video object rather than assuming the first value is a dictionary.</p>
 </div>
 
 <!-- ================================================================
@@ -440,8 +448,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Asynchronously iterates over videos uploaded by the user, navigating page-by-page.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> user.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> user.videos(
+    pages: <span class="token-builtin">int</span> = 0,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -454,6 +462,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Empty profiles with zero or missing per-page counts are handled without division by zero. Closing a profile generator closes its inner scraper immediately.</p>
 </div>
 
 <hr>
@@ -728,6 +739,16 @@ xnxx_api --file file_list.txt --quality best --output ./downloads --no-title Fal
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>2.4.4 — 2026-10-27 (current)</h3>
+<ul>
+<li>Encode search terms as one path segment, including literal slashes and hashes.</li>
+<li>Read video metadata from JSON-LD arrays and graph objects.</li>
+<li>Handle empty profiles without dividing by zero and close profile scrapers when iteration stops early.</li>
+<li>Close CLI sessions and report unsuccessful downloads as errors.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-xnxx/releases/tag/2.4.4">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-xnxx/2.4.4/">PyPI 2.4.4</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>2.4.1 — 2026-09-15</h3>
     <ul>

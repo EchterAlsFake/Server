@@ -52,6 +52,7 @@ Yields video scrape results uploaded by this studio channel. Inherits from `User
 ```python
 async for result in channel.get_videos(
     pages: int = 2,
+    iterator_config: IteratorConfig | None = None,
     iterator_configuration: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```

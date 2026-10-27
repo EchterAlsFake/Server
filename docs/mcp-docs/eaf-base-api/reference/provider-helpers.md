@@ -39,6 +39,10 @@ async def download(self, configuration):
     return await download_hls(self, configuration)
 ```
 
+## Behavior and edge cases
+
+`prepare_download_config()` sanitizes automatically generated title filenames and falls back to `video.mp4` when no title is available. The caller’s configuration remains unchanged.
+
 ## Related MCP documents
 
 - [Overview — eaf_base_api](../overview.md)

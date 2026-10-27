@@ -13,6 +13,16 @@ keywords:
 
 Records the versions and documented changes for the XNXX API.
 
+## 2.4.4 — 2026-10-27 (current)
+- Encode search terms as one path segment, including literal slashes and hashes.
+- Read video metadata from JSON-LD arrays and graph objects.
+- Handle empty profiles without dividing by zero and close profile scrapers when iteration stops early.
+- Close CLI sessions and report unsuccessful downloads as errors.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-xnxx/releases/tag/2.4.4) · [PyPI 2.4.4](https://pypi.org/project/unofficial-api-for-xnxx/2.4.4/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 2.4.1 — 2026-09-15
 - `6857235` / `0ee8040` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context. Added layout anchor validations to detect page structure changes. Implemented robust fallback parsing for ld+json and HTML metadata (title, description, thumbnail, publish date, length, views, author, tags). Cleaned up log messages when paginating user videos.
 

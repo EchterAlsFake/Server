@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = YouPorn API -->
 <!-- SLOT:HERO_TITLE = YouPorn API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous high-speed Python API wrapper and scraper for YouPorn. Fetch video details, custom collections, publisher channels, user uploads, and pornstar metadata. Supports dual streaming modes (HLS and raw MP4). Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.8.2 -->
+<!-- SLOT:VERSION = 1.8.3 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-youporn -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-youporn -->
 
@@ -108,8 +108,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 1.8.2 uses <code>eaf_base_api ≥ 4.2.2</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 1.8.3 uses <code>eaf_base_api ≥ 4.2.5</code>, which is installed automatically.
     </div>
+
+<p>Release <strong>1.8.3</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -304,15 +306,15 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries search endpoints and streams video results via async generator.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_videos(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
-    filter_relevance: Literal[<span class="token-string">"views"</span>, <span class="token-string">"rating"</span>, <span class="token-string">"date"</span>, <span class="token-string">"duration"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    filter_duration_minimum: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"30"</span>, <span class="token-string">"40"</span>, <span class="token-string">"50"</span>, <span class="token-string">"60"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    filter_duration_maximum: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"30"</span>, <span class="token-string">"40"</span>, <span class="token-string">"50"</span>, <span class="token-string">"60"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    filter_resolution: Literal[<span class="token-string">"VR"</span>, <span class="token-string">"HD"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = 0,
+    filter_relevance: Literal['views', 'rating', 'date', 'duration'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    filter_duration_minimum: Literal['10', '20', '30', '40', '50', '60'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    filter_duration_maximum: Literal['10', '20', '30', '40', '50', '60'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    filter_resolution: Literal['VR', 'HD'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -328,6 +330,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Calling search with its default page count requests the first page. Empty listing pages and cards without links do not crash extraction.</p>
 </div>
 
 <!-- ================================================================
@@ -434,6 +439,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar | Channel</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Author and performer lookup does not require an unrelated title field for logging. <code>author()</code> is a coroutine method, while <code>pornstars</code> is an async-generator property used without parentheses. Optional collection metadata can be <code>None</code>.</p>
 </div>
 
 <!-- ================================================================
@@ -522,9 +530,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields playlist collections created by this user.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> collection <span class="token-keyword">in</span> user.get_collections(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> user.get_collections(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; AsyncGenerator[Collection, None]</div>
+) -&gt; AsyncGenerator[Collection, <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -534,6 +542,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[Collection, None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Users without public collections return an empty collection list. Collection helpers do not require a loaded display name. Positive public User helper coverage is offline; public channel, pornstar and collection endpoints were verified live.</p>
 </div>
 
 <!-- ================================================================
@@ -739,6 +750,17 @@ youporn_api --file urls.txt --quality best --output ./downloads --no-title False
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>1.8.3 — 2026-10-27 (current)</h3>
+<ul>
+<li>Fetch search results with default arguments and encode search queries correctly.</li>
+<li>Handle empty listing pages, partial collections and users without public collections safely.</li>
+<li>Resolve absolute collection links without adding a second site prefix.</li>
+<li>Let author, performer and collection helpers work without loading unrelated title or name fields for logging.</li>
+<li>Close CLI sessions reliably and report unsuccessful downloads as errors.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-youporn/releases/tag/1.8.3">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-youporn/1.8.3/">PyPI 1.8.3</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Date</th><th>Commit</th><th>Changes</th></tr></thead>

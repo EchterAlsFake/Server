@@ -114,6 +114,10 @@ async for result in client.search(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+Search terms are encoded in both the URL path and query string. Search pagination starts at `from=01`. The obsolete fixed cache-buster is no longer sent.
+
 ## Related MCP documents
 
 - [Porntrex API getting started](../getting-started.md)

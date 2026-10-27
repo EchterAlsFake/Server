@@ -173,6 +173,10 @@ async for result in client.get_brazzers_videos(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+Listing page counts must be positive. Path pagination fetches the first listing followed by `/2`, `/3` and later pages without repeating page one. `get_top_porn()` accepts both `all-time` and `all_time`. Actress input can be a name or a valid canonical, www or mobile actress URL. Empty search results exclude the unrelated recommendations displayed beneath the site’s no-results message. Category enumeration returns category cards.
+
 ## Related MCP documents
 
 - [HQPorner API getting started](../getting-started.md)

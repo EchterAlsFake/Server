@@ -112,6 +112,10 @@ await video.download(
 
 → bool | DownloadReport
 
+## Behavior and edge cases
+
+JSON-LD video metadata can be an object, an array or part of an `@graph`. The extractor searches for the video object rather than assuming the first value is a dictionary.
+
 ## Related MCP documents
 
 - [XNXX API getting started](../getting-started.md)

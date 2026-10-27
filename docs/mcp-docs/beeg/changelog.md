@@ -13,6 +13,16 @@ keywords:
 
 Records the versions and documented changes for the Beeg API.
 
+## 1.7.4 — 2026-10-27 (current)
+- Accept video IDs, links without a scheme, and video links copied from tag pages without losing the video key.
+- Expose author, tags, thumbnails and publication dates from the API response.
+- Report missing or malformed metadata as NotFound instead of failing with an indexing error.
+- Handle missing batch files and output directories more gracefully in the CLI.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-beeg/releases/tag/1.7.4) · [PyPI 1.7.4](https://pypi.org/project/unofficial-api-for-beeg/1.7.4/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 1.7 — September 15, 2026
 - `6bd391b` / `c5a4549` / `05837ac` — Adopted shared request and download error handling from `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context. Added CLI support with automatic console logging, exception chaining, and contextual logging.
 

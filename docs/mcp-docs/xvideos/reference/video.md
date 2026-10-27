@@ -161,6 +161,10 @@ async for star in video.get_pornstars -> Pornstar
 **Tip — Lazy Loading**
 All objects inherit from `BaseMedia`. Accessing an unresolved attribute raises `DataNotLoadedError`. Use `await media.load_sources("html")` to load a complete source or `await media.load_fields(...)` for selected fields. By default, `client.get_video(..., load_html=True)` calls `load_sources("html")` and populates the HTML-backed attributes.
 
+## Behavior and edge cases
+
+Author and performer helpers support both compatibility styles: `await video.get_author` or `await video.get_author(load_html=False)`; `async for star in video.get_pornstars` or `async for star in video.get_pornstars(load_html=False)`. Lazy-loaded thumbnails replace blank image placeholders, and listing titles exclude duration badges.
+
 ## Related MCP documents
 
 - [XVideos API getting started](../getting-started.md)

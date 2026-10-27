@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Thumbzilla API</span>
                 </a>
-                <span class="sidebar-version">v1.4.2</span>
+                <span class="sidebar-version">v1.4.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -112,7 +112,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Thumbzilla API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.4.2</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.4.3</div>
                         <h1>Thumbzilla API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Thumbzilla. Fetch video metadata, playlists, pornstar biographies, amateur profiles, and studio channels. Stream downloads via HLS with auto-constructed master playlists. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -183,8 +183,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 1.4.2 uses <code>eaf_base_api ≥ 4.2.2</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 1.4.3 uses <code>eaf_base_api ≥ 4.2.5</code>, which is installed automatically.
     </div>
+
+<p>Release <strong>1.4.3</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -367,11 +369,12 @@ client = <span class="token-class">Client</span>()</code></pre>
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
         <div class="method-desc">Queries Thumbzilla search index pages and yields structured video scrape results.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    pages: <span class="token-builtin">int</span> = 2,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     iterator_configuration: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search query words</span></li>
@@ -381,6 +384,9 @@ client = <span class="token-class">Client</span>()</code></pre>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Search preserves literal reserved characters and Unicode in query terms. CLI sessions close on completion or error, and unsuccessful downloads are reported as errors.</p>
 </div>
 
 <div class="section" id="video-section">
@@ -469,10 +475,10 @@ client = <span class="token-class">Client</span>()</code></pre>
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
         <div class="method-desc">Yields video scrape results nested inside this playlist.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> playlist.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> playlist.get_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int</span> <span class="param-desc">— Pages to load</span></li>
@@ -481,6 +487,9 @@ client = <span class="token-class">Client</span>()</code></pre>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Optional playlist fields can be <code>None</code>, including on partial or empty pages. Parser and filtered-pagination regressions are covered offline. Current live playlist support remains unverified without a public fixture.</p>
 </div>
 
 <div class="section" id="user-helper-section">
@@ -555,10 +564,11 @@ client = <span class="token-class">Client</span>()</code></pre>
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
         <div class="method-desc">Yields video scrape results uploaded by this studio channel. Inherits from <code>UserHelper.get_videos()</code>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> channel.get_videos(
+    pages: <span class="token-builtin">int</span> = 2,
+    iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     iterator_configuration: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
@@ -752,6 +762,16 @@ thumbzilla_api --file urls.txt --quality best --output ./downloads --no-title Fa
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>1.4.3 — 2026-10-27 (current)</h3>
+<ul>
+<li>Handle playlists with missing optional metadata or fewer statistics fields without crashing.</li>
+<li>Encode search terms correctly, including reserved characters and Unicode.</li>
+<li>Close CLI sessions reliably and report unsuccessful downloads as errors.</li>
+<li>Add regression coverage for playlist metadata and filtered pagination. Live playlist support remains unverified without a public fixture.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-thumbzilla/releases/tag/1.4.3">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-thumbzilla/1.4.3/">PyPI 1.4.3</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
     <div class="table-wrapper">
         <table>
             <thead><tr><th>Date</th><th>Commit</th><th>Changes</th></tr></thead>

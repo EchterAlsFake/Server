@@ -8,6 +8,9 @@ keywords:
   - "TNAFlix"
   - "Video"
   - "download"
+  - "get_author"
+  - "get_pornstars"
+  - "get_related_videos"
   - "url"
   - "video_id"
   - "title"
@@ -22,9 +25,6 @@ keywords:
   - "author_name"
   - "author_link"
   - "author_verified"
-  - "pornstars"
-  - "pornstars_urls"
-  - "categories"
 ---
 
 # Video — TNAFlix API
@@ -161,6 +161,38 @@ await video.download(
 ### Returns
 
 → bool
+
+## get_author
+
+Resolve the uploader as a profile or channel.
+
+```python
+await video.get_author(
+    load_html: bool = True
+) -> Profile | Channel | None
+```
+
+## get_pornstars
+
+Yield the performer profiles associated with this video.
+
+```python
+async for result in video.get_pornstars(
+    load_html: bool = True
+) -> AsyncGenerator[Pornstar, None]
+```
+
+## get_related_videos
+
+Iterate related video results.
+
+```python
+await video.get_related_videos() -> list[dict]
+```
+
+## Behavior and edge cases
+
+Use `await video.get_author(load_html=False)` and `async for star in video.get_pornstars(load_html=False)`. These are callable methods, not properties. Author lookup can return a profile or channel; performer iteration yields `Pornstar` objects. Channel links are excluded from tags and categories.
 
 ## Related MCP documents
 

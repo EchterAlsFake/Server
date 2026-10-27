@@ -138,6 +138,7 @@ Queries Thumbzilla search index pages and yields structured video scrape results
 async for result in client.search(
     query: str,
     pages: int = 2,
+    iterator_config: IteratorConfig | None = None,
     iterator_configuration: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```
@@ -150,6 +151,10 @@ async for result in client.search(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## Behavior and edge cases
+
+Search preserves literal reserved characters and Unicode in query terms. CLI sessions close on completion or error, and unsuccessful downloads are reported as errors.
 
 ## Related MCP documents
 

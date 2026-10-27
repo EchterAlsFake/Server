@@ -72,6 +72,10 @@ await video.download(
 
 → bool | DownloadReport
 
+## Behavior and edge cases
+
+Direct playlist URLs preserve signed query parameters and escaped slashes, including URLs whose playlist is named `master.m3u8`. Missing stream metadata produces a download error rather than a successful download result.
+
 ## Related MCP documents
 
 - [MissAV API getting started](../getting-started.md)

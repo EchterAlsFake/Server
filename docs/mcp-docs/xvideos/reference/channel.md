@@ -106,13 +106,18 @@ Returns a list of channels/studios this entity has worked for/with.
 
 ```python
 await channel.worked_for_with(
-    load_html: bool = True
+    load_html: bool = True,
+    limit: int | None = None
 ) -> list[Channel]
 ```
 
 ### Returns
 
 → list[Channel]
+
+## Behavior and edge cases
+
+Empty profiles terminate cleanly. Collaborator loading is bounded; an individual missing or failing profile does not abort the complete list. `limit` can cap the number of related channels loaded.
 
 ## Related MCP documents
 

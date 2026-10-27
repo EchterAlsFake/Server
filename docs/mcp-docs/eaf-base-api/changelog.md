@@ -15,6 +15,13 @@ keywords:
 
 Records the versions and documented changes for the eaf_base_api API.
 
+## 4.2.5 — 2026-10-27 (current)
+- Keep URLs containing percent escapes from breaking contextual log formatting.
+- Sanitize automatic download filenames and use a safe fallback when a title is missing.
+- Include the resumable RAW downloader updates previously present only in the source checkout.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/eaf_base_api/releases/tag/v4.2.5) · [PyPI 4.2.5](https://pypi.org/project/eaf-base-api/4.2.5/)
+
 Date / Version| Changes since 3.3.3
 ---|---
 **2026-10-16 — 4.2.0**|  Replaced PyAV (`av`) remuxing with direct FFmpeg execution in `base_api.modules.ffmpeg` (`find_ffmpeg`, `has_ffmpeg`, `remux_ts_to_mp4`, `write_metadata_tags`) and added single-pass HLS remuxing with MP4 metadata & cover-art embedding via `DownloadConfigHLS(metadata=..., thumbnail=...)` and `DownloadReport.metadata_written`. Added `RuntimeConfig.ffmpeg_path` and `MetadataWriteError`. Centralized provider request and download helpers in `base_api.modules.provider` (`fetch_content`, `download_errors`, `prepare_download_config`, `download_hls`), contextual logging via `ContextLogger`/`log_context`/`get_logger`, structured exception reporting (`error.url`, `error.class_name`, `error.api`), and `extract_video_grid()`.

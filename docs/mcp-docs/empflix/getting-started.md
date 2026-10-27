@@ -26,7 +26,9 @@ pip install unofficial-api-for-empflix
 ```
 
 **Note**
-Requires **Python ≥ 3.12** and `eaf-base-api>=4.2.2`. The networking engine is installed automatically.
+Requires **Python ≥ 3.12** and `eaf-base-api>=4.2.5`. The networking engine is installed automatically.
+
+Release **1.0.1** requires `eaf-base-api>=4.2.5` from PyPI. A local base-API checkout is not required.
 
 ## Quick Start
 

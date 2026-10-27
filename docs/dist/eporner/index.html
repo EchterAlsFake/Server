@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Eporner API</span>
                 </a>
-                <span class="sidebar-version">v2.4.3</span>
+                <span class="sidebar-version">v2.5.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -107,7 +107,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Eporner API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.4.3</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v2.5.3</div>
                         <h1>Eporner API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Eporner. Fetch video details via API and HTML endpoints, download files directly with multi-threaded range requests, and retrieve pornstar biographies. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -185,8 +185,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.4.3 depends on <code>eaf-base-api&gt;=4.2.2</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.5.3 depends on <code>eaf-base-api&gt;=4.2.5</code>, which is installed automatically.
     </div>
+
+<p>Release <strong>2.5.3</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -334,15 +336,15 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries search endpoints and streams video results.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_videos(
     query: <span class="token-builtin">str</span>,
-    sorting_gay: str | Gay,
-    sorting_order: str | Order,
-    sorting_low_quality: str | LowQuality,
-    per_page: <span class="token-builtin">int</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    sorting_gay: <span class="token-builtin">str</span> | Gay = Gay.include_gay_content,
+    sorting_order: <span class="token-builtin">str</span> | Order = Order.latest,
+    sorting_low_quality: <span class="token-builtin">str</span> | LowQuality = LowQuality.include_low_quality_content,
+    per_page: <span class="token-builtin">int</span> = 30,
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -369,10 +371,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Retrieves video lists categorized under specific tags.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_videos_by_category(
-    category: str | Category,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.get_videos_by_category(
+    category: <span class="token-builtin">str</span> | Category,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -433,6 +435,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Channel</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Search defaults are <code>Gay.include_gay_content</code>, <code>Order.latest</code>, <code>LowQuality.include_low_quality_content</code>, <code>per_page=30</code> and <code>pages=2</code>. Pages must be positive; <code>per_page</code> must be between 1 and 1000. Invalid enum values raise <code>ValueError</code>. Search pagination is one-based. Video identity handling also accepts localized <code>/porno-video/</code> paths.</p>
 </div>
 
 <!-- ================================================================
@@ -528,9 +533,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <div class="method-desc">Downloads the video directly from CDN server using <code>DownloadConfigRAW</code>. Failure raises <code>DownloadFailed</code> with full context and chained cause.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigRAW,
-    mode: Encoding | <span class="token-builtin">str</span>,
-    use_workaround: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; <span class="token-builtin">bool</span></div>
+    mode: Encoding | <span class="token-builtin">str</span>
+)</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -553,9 +557,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields pornstar profiles starring in this video.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> star <span class="token-keyword">in</span> video.get_authors(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> video.get_authors(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; AsyncGenerator[Pornstar, None]</div>
+) -&gt; AsyncGenerator[Pornstar, <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -565,6 +569,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[Pornstar, None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>get_url_by_quality()</code> selects among heights available for the requested encoding. An AV1-only height will not prevent selection of an available H.264 alternative. Listing keywords and thumbnails are lists; <code>length_seconds</code> is an integer. Optional structured metadata may be absent. German and French profile statistics are recognized, and missing channels that return HTTP 200 raise <code>NotFound</code>.</p>
 </div>
 
 <!-- ================================================================
@@ -622,10 +629,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results associated with this pornstar. Inherited from <code>BaseProfile</code>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> pornstar.videos(
+    pages: <span class="token-builtin">int</span> = 0,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -680,10 +687,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results for this channel. Inherited from <code>BaseProfile</code>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> channel.videos(
+    pages: <span class="token-builtin">int</span> = 0,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -768,7 +775,19 @@ await video.download(configuration=config, mode=Encoding.mp4_h264)</code></pre>
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📜</span> Changelog</h2>
-    <h3>2.4.1 (current)</h3>
+<h3>2.5.3 — 2026-10-27 (current)</h3>
+<ul>
+<li>Fix search pagination so later pages no longer repeat page one. Search queries now preserve reserved characters and Unicode.</li>
+<li>Correct IDs, embed links, keywords, thumbnails and duration types returned by listing parsers.</li>
+<li>Choose a download quality from the requested codec, and handle absolute download URLs correctly.</li>
+<li>Accept more JSON-LD shapes and optional metadata without crashing.</li>
+<li>Recognize German and French profile statistics, localized video paths and missing channels that return HTTP 200.</li>
+<li>Close CLI sessions reliably and report unsuccessful downloads as errors.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-eporner/releases/tag/2.5.3">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-eporner/2.5.3/">PyPI 2.5.3</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
+    <h3>2.4.1</h3>
     <ul class="param-list">
         <li class="param-item"><span class="param-name">2026-09-15 · <code>3ee78ee</code> / <code>6b80518</code> / <code>f9fd944</code> / <code>01429e8</code></span> <span class="param-desc">— Updated dependency to <code>eaf-base-api&gt;=4.2.0</code> and adopted centralized request/download error handling. Failed downloads now raise <code>DownloadFailed</code> with complete context. Added <code>BaseProfile</code>, <code>Pornstar</code>, and <code>Channel</code> classes with profile video scraping via <code>videos()</code>. Added <code>Client.get_channel()</code>. Expanded <code>Video</code> metadata (dual API/HTML source loading for title, views, embed URL, and thumbnails; <code>length_seconds</code> integer type; clean <code>ResourceGone</code> exception when videos are deleted or removed).</span></li>
         <li class="param-item"><span class="param-name">2026-08-14 · <code>7f1bbac</code></span> <span class="param-desc">— Added HTML-backed <code>tags</code>, <code>categories</code>, and <code>uploader</code> fields; renamed <code>get_available_qualities()</code> to <code>video_qualities()</code>; and made optional pornstar biography fields tolerant of missing page elements.</span></li>

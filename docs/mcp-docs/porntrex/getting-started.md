@@ -26,7 +26,9 @@ pip install unofficial-api-for-porntrex
 ```
 
 **Note**
-Requires **Python ≥ 3.12** and `eaf-base-api>=4.2.2`. The compatible networking core is installed automatically.
+Requires **Python ≥ 3.12** and `eaf-base-api>=4.2.5`. The compatible networking core is installed automatically.
+
+Release **1.8.3** requires `eaf-base-api>=4.2.5` from PyPI. A local base-API checkout is not required.
 
 ## Quick Start
 

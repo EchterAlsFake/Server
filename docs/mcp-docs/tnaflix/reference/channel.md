@@ -58,7 +58,7 @@ Type: bool; Description: Whether the channel is an officially verified partner
 
 ## subscribers_count
 
-Type: str | None; Description: Total channel subscribers count
+Type: int | None; Description: Total channel subscribers count
 
 ## total_videos_count
 
@@ -76,7 +76,7 @@ Asynchronously yields video scrape results uploaded by this studio channel acros
 
 ```python
 async for result in channel.videos(
-    pages: int | str = 2,
+    pages: int = 1,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```

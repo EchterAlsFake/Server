@@ -102,7 +102,7 @@ Returns the `User` object associated with this channel.
 ```python
 await channel.get_user(
     load_html: bool = True
-) -> User
+) -> User | None
 ```
 
 ### Returns

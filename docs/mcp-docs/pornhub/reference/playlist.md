@@ -112,7 +112,7 @@ Returns the `User` who created the playlist.
 ```python
 await playlist.get_author(
     load_html: bool = True
-) -> User
+) -> User | Pornstar | Channel | Model | None
 ```
 
 ### Returns

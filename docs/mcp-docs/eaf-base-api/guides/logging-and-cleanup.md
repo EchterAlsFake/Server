@@ -86,6 +86,10 @@ core.enable_logging(
 await core.close()
 ```
 
+## Behavior and edge cases
+
+Contextual log messages handle percent-escaped URLs without corrupting printf-style message arguments.
+
 ## Related MCP documents
 
 - [Overview — eaf_base_api](../overview.md)

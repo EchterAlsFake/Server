@@ -10,6 +10,7 @@ keywords:
   - "get_video"
   - "get_album"
   - "search"
+  - "close"
 ---
 
 # Client — XFreeHD API
@@ -81,6 +82,8 @@ Queries XFreeHD search and streams video results via an asynchronous generator.
 async for result in client.search(
     query: str,
     pages: int = 5,
+    sort_by: str | None = None,
+    time_frame: str | None = None,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```
@@ -93,6 +96,18 @@ async for result in client.search(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## close
+
+Close the client’s HTTP core.
+
+```python
+await client.close()
+```
+
+## Behavior and edge cases
+
+Video and album lookup accepts bare IDs, relative paths and embed links. The client supports `async with Client() as client:` and an explicit `close()`. Search accepts optional sorting and time-frame arguments and encodes query values correctly.
 
 ## Related MCP documents
 

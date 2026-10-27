@@ -59,7 +59,8 @@ Returns a list of channels/studios this performer has worked for/with.
 
 ```python
 await pornstar.worked_for_with(
-    load_html: bool = True
+    load_html: bool = True,
+    limit: int | None = None
 ) -> list[Channel]
 ```
 

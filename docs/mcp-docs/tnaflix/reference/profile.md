@@ -73,7 +73,7 @@ Type: str | None; Description: Total profile views count
 
 ## subscribers_count
 
-Type: str | None; Description: Total subscriber count
+Type: int | None; Description: Total subscriber count
 
 ## video_views
 
@@ -115,7 +115,7 @@ Asynchronously yields video scrape results uploaded by this user profile across 
 
 ```python
 async for result in profile.videos(
-    pages: int | str = 2,
+    pages: int = 1,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```

@@ -122,6 +122,10 @@ await video.download(
 
 → bool
 
+## Behavior and edge cases
+
+MP4 quality detection accepts signed query strings and fragments. The original download URL, including its token, is preserved.
+
 ## Related MCP documents
 
 - [Porntrex API getting started](../getting-started.md)

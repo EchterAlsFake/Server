@@ -28,7 +28,9 @@ pip install unofficial-api-for-beeg
 For **TS→MP4 remuxing** and metadata tagging support (recommended for HLS downloads with `remux=True`), ensure `ffmpeg` is installed on your system `PATH` (or set `RuntimeConfig.ffmpeg_path`).
 
 **Note**
-Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.2.2` is installed automatically as a dependency.
+Requires **Python ≥ 3.12**. `eaf_base_api ≥ 4.2.5` is installed automatically as a dependency.
+
+Release **1.7.4** requires `eaf-base-api>=4.2.5` from PyPI. A local base-API checkout is not required.
 
 ## Quick Start
 

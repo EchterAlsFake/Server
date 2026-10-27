@@ -12,6 +12,7 @@ keywords:
   - "get_channel"
   - "get_amateur"
   - "search"
+  - "get_user"
 ---
 
 # Client — Tube8 API
@@ -130,6 +131,21 @@ async for result in client.search(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## get_user
+
+Construct or load a public User object. A missing public identity raises a loading error.
+
+```python
+await client.get_user(
+    url: str,
+    load_html: bool = True
+) -> User
+```
+
+## Behavior and edge cases
+
+Search terms are encoded as literal query values. CLI sessions close on completion or error, and failed downloads are reported accurately.
 
 ## Related MCP documents
 

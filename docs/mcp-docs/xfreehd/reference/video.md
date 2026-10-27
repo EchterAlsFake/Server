@@ -126,7 +126,7 @@ Downloads the video directly from CDN server using `DownloadConfigRAW`. Supports
 ```python
 await video.download(
     configuration: DownloadConfigRAW
-) -> bool
+)
 ```
 
 ### Parameters
@@ -135,6 +135,10 @@ await video.download(
 ### Returns
 
 → bool
+
+## Behavior and edge cases
+
+`is_private: bool | None` reports private-page status when present. It does not grant access to private media. Available qualities are derived from the actual sources, and numeric/string quality aliases are supported.
 
 ## Related MCP documents
 

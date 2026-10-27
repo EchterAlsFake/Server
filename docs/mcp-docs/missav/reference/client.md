@@ -67,6 +67,10 @@ async for result in client.search(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+`video_count` must be positive. Default clients use isolated runtime settings, and stopping the search generator closes its inner scraper. Public search and localized pages can still return access challenges; a successful earlier request does not guarantee later access.
+
 ## Related MCP documents
 
 - [MissAV API getting started](../getting-started.md)

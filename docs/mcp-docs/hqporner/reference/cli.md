@@ -46,6 +46,10 @@ Flag| Description
 `--pages N`| Number of pages to scrape (default: `1`)
 `--concurrency N`| Max concurrent downloads to run in parallel (default: `3`)
 
+## Behavior and edge cases
+
+`--pages` and `--concurrency` must be positive. Failed downloads are reported per video and in the final batch result.
+
 ## Related MCP documents
 
 - [HQPorner API getting started](../getting-started.md)

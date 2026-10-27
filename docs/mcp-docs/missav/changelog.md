@@ -15,6 +15,17 @@ keywords:
 
 Records the versions and documented changes for the MissAV API.
 
+## 2.6.2 — 2026-10-27 (current)
+- Preserve query tokens and escaped slashes in direct HLS playlist URLs.
+- Give default clients their own runtime configuration instead of changing shared client settings.
+- Reject invalid search counts before making a request and close search streams when callers stop early.
+- Close CLI sessions and stop reporting failed downloads as completed.
+- Access challenges can still prevent requests; this release does not bypass them.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-missav/releases/tag/2.6.2) · [PyPI 2.6.2](https://pypi.org/project/unofficial-api-for-missav/2.6.2/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 2.6 — 2026-09-15
 - `8c16241` / `6389916` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context. Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for title, thumbnail, publish date, and duration. Enhanced m3u8 playlist URL extraction fallbacks (JS regex, direct regex, surrit regex) and validated base URL presence in download method. Added unit tests for snippet parsing and error scenarios.
 

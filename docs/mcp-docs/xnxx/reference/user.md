@@ -59,6 +59,10 @@ async for result in user.videos(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+Empty profiles with zero or missing per-page counts are handled without division by zero. Closing a profile generator closes its inner scraper immediately.
+
 ## Related MCP documents
 
 - [XNXX API getting started](../getting-started.md)

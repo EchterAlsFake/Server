@@ -32,7 +32,9 @@ pip install unofficial-api-for-hqporner[cli]
 ```
 
 **Note**
-Requires **Python ≥ 3.12**. Version 2.5 depends on `eaf-base-api>=4.0.0`, which is installed automatically.
+Requires **Python ≥ 3.12**. Version 2.5.2 depends on `eaf-base-api>=4.0.0`, which is installed automatically.
+
+Release **2.5.2** requires `eaf-base-api>=4.2.5` from PyPI. A local base-API checkout is not required.
 
 ## Quick Start
 

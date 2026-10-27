@@ -60,6 +60,10 @@ async for result in channel.get_videos(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+Video totals are read from video labels rather than subscriber positions. German and French channel statistics are recognized; absent video totals remain `None`.
+
 ## Related MCP documents
 
 - [Tube8 API getting started](../getting-started.md)

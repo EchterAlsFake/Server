@@ -153,7 +153,7 @@ Fetches the uploader profile, automatically returning either an `Amateur`, `Porn
 ```python
 await video.author(
     load_html: bool = False
-) -> Amateur | Pornstar | Channel
+) -> Amateur | Pornstar | Channel | User
 ```
 
 ### Parameters
@@ -162,6 +162,10 @@ await video.author(
 ### Returns
 
 → Amateur | Pornstar | Channel
+
+## Behavior and edge cases
+
+Uploader IDs/types, preview URLs and performer names/URLs participate in lazy HTML loading. Listing thumbnails prefer real lazy-loaded image URLs and clean srcset entries over placeholders. Performer entries are deduplicated.
 
 ## Related MCP documents
 

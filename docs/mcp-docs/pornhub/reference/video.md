@@ -9,6 +9,7 @@ keywords:
   - "Video"
   - "download"
   - "author"
+  - "get_author"
   - "url"
   - "video_id"
   - "title"
@@ -24,7 +25,6 @@ keywords:
   - "is_vr"
   - "is_vertical"
   - "is_video_unavailable"
-  - "is_video_unavailable_in_your_country"
 ---
 
 # Video — PornHub API
@@ -117,7 +117,7 @@ Type: str | None; Source: HTML; Description: Author's profile URL
 
 ## author_information
 
-Type: dict | None; Source: HTML; Description: Author details: name, link, video count, subscriber count
+Type: dict[str, Any] | None; Source: HTML; Description: Author details: name, link, video count, subscriber count
 
 **Important**
 To download a video, you **must** load the HTML source (either via `client.get_video(url, load_html=True)` or by calling `await video.load_sources("html")` afterward). The m3u8 streaming URLs are only available from that source.
@@ -152,6 +152,20 @@ await video.author -> Pornstar | Model | Channel | None
 ### Returns
 
 → Pornstar | Model | Channel | None
+
+## get_author
+
+Resolve the video uploader.
+
+```python
+await video.get_author(
+    load_html: bool = True
+) -> Pornstar | Channel | Model | User | None
+```
+
+## Behavior and edge cases
+
+`author_name` is available as top-level metadata. `await video.get_author()` resolves the correct author object, including channel uploaders; the `author` property provides the corresponding convenience access.
 
 ## Related MCP documents
 

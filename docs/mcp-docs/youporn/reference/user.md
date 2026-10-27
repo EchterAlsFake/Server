@@ -40,7 +40,7 @@ Type: list[str] | None; Description: List of relative collection paths created b
 Yields playlist collections created by this user.
 
 ```python
-async for collection in user.get_collections(
+async for result in user.get_collections(
     load_html: bool = True
 ) -> AsyncGenerator[Collection, None]
 ```
@@ -51,6 +51,10 @@ async for collection in user.get_collections(
 ### Returns
 
 → AsyncGenerator[Collection, None]
+
+## Behavior and edge cases
+
+Users without public collections return an empty collection list. Collection helpers do not require a loaded display name. Positive public User helper coverage is offline; public channel, pornstar and collection endpoints were verified live.
 
 ## Related MCP documents
 

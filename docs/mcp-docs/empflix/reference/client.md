@@ -96,9 +96,9 @@ Queries EMPFlix video search and yields results as an asynchronous generator.
 ```python
 async for result in client.search(
     query: str,
-    sorting_sort: str | Sort = Sort.RECENT,
-    sorting_date: str | SortDate = SortDate.ALL_TIME,
-    pages: int | str = 2,
+    sorting_sort: str | Sort = Sort.Sort_relevance,
+    sorting_date: str | SortDate = SortDate.Sort_all,
+    pages: int = 1,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```
@@ -113,6 +113,10 @@ async for result in client.search(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## Behavior and edge cases
+
+Canonical watch links, numeric IDs, short/embed links, relative profile/channel paths and supported plural aliases are normalized. Embedded pages follow their canonical watch link when full metadata is omitted. `get_pornstar()` returns a `Pornstar` object. `Sort` and `SortDate` are exported by the package; date sorting uses the website’s `u` parameter.
 
 ## Related MCP documents
 

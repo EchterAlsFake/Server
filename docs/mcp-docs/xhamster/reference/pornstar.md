@@ -61,7 +61,7 @@ Type: dict | None; Description: Biography sidebar parameters (only parsed for Po
 Yields videos uploaded to this profile page.
 
 ```python
-async for result in profile.videos(
+async for result in something.videos(
     pages: int = 2,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]

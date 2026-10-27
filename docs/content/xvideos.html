@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = XVideos API -->
 <!-- SLOT:HERO_TITLE = XVideos API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for XVideos. Fetch videos, metadata, pornstar profiles, channels, playlists, and download content — all powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.5.2 -->
+<!-- SLOT:VERSION = 2.5.3 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-xvideos -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-xvideos -->
 
@@ -123,8 +123,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.5</code> is installed automatically as a dependency.
     </div>
+
+<p>Release <strong>2.5.3</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -205,7 +207,7 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
     url: <span class="token-builtin">str</span>,
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> Video</div>
+) -&gt; Video</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -227,20 +229,20 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
             </div>
         </div>
         <div class="method-desc">Searches for videos and yields results as an async generator. See <a href="#searching">Search &amp; Filtering</a> for details.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
     sorting_sort: <span class="token-builtin">str</span> | Sort = Sort.Sort_relevance,
     sorting_date: <span class="token-builtin">str</span> | SortDate = SortDate.Sort_all,
     sorting_time: <span class="token-builtin">str</span> | SortVideoTime = SortVideoTime.Sort_all,
     sort_quality: <span class="token-builtin">str</span> | SortQuality = SortQuality.Sort_all,
-    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-string">"all"</span>,
+    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">query</span> <span class="param-type">str</span> <span class="param-desc">— Search terms</span></li>
-            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | "all"</span> <span class="param-desc">— Number of result pages or <code>"all"</code> for automatic iteration</span></li>
+            <li class="param-item"><span class="param-name">pages</span> <span class="param-type">int | "all"</span> <span class="param-desc">— Number of result pages (default 2), a digit string, or <code>"all"</code> for ten pages</span></li>
             <li class="param-item"><span class="param-name">iterator_config</span> <span class="param-type">IteratorConfig | None</span> <span class="param-desc">— Optional v4 concurrency, ordering, eager-source, retry, and error-handling policy. The package default eagerly loads <code>html</code>.</span></li>
         </ul>
         
@@ -258,9 +260,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
             </div>
         </div>
         <div class="method-desc">Fetches videos from a playlist page by page.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.get_playlist(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.get_playlist(
     url: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
@@ -288,7 +290,7 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         <div class="method-signature"><span class="token-keyword">await</span> client.get_pornstar(
     url: <span class="token-builtin">str</span>,
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> Pornstar</div>
+) -&gt; Pornstar</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar</span>
@@ -307,7 +309,7 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         <div class="method-signature"><span class="token-keyword">await</span> client.get_channel(
     url: <span class="token-builtin">str</span>,
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> Channel</div>
+) -&gt; Channel</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Channel</span>
@@ -325,11 +327,14 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         <div class="method-desc">Creates an <code>Account</code> instance for authenticated actions using cookies. See <a href="#account">Account</a>.</div>
         <div class="method-signature">client.get_account(
     cookies: <span class="token-builtin">dict</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -> Account</div>
+) -&gt; Account</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Account</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Search defaults to two pages. Positive integers, digit strings and <code>all</code> are accepted; <code>all</code> currently requests ten pages. Spaces are encoded once. Both <code>Channel</code> and <code>Account</code> are available from the package exports.</p>
 </div>
 
 <div class="section" id="video-section">
@@ -382,7 +387,7 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         <div class="method-desc">Downloads the video using the HLS threaded downloader. The video title is automatically appended to the output path unless <code>no_title=True</code>.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigHLS
-) -> <span class="token-builtin">bool</span> | DownloadReport</div>
+) -&gt; <span class="token-builtin">bool</span> | DownloadReport</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -431,6 +436,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         <div class="info-box-title">Tip — Lazy Loading</div>
         All objects inherit from <code>BaseMedia</code>. Accessing an unresolved attribute raises <code>DataNotLoadedError</code>. Use <code>await media.load_sources("html")</code> to load a complete source or <code>await media.load_fields(...)</code> for selected fields. By default, <code>client.get_video(..., load_html=True)</code> calls <code>load_sources("html")</code> and populates the HTML-backed attributes.
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Author and performer helpers support both compatibility styles: <code>await video.get_author</code> or <code>await video.get_author(load_html=False)</code>; <code>async for star in video.get_pornstars</code> or <code>async for star in video.get_pornstars(load_html=False)</code>. Lazy-loaded thumbnails replace blank image placeholders, and listing titles exclude duration badges.</p>
 </div>
 
 <div class="section" id="channel-section">
@@ -473,8 +481,8 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
             </div>
         </div>
         <div class="method-desc">Iterates over the channel's uploaded videos. Set <code>pages=0</code> (default) to fetch <em>all</em> pages.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> channel.videos(
+    pages: <span class="token-builtin">int</span> = 0,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -499,12 +507,16 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         </div>
         <div class="method-desc">Returns a list of channels/studios this entity has worked for/with.</div>
         <div class="method-signature"><span class="token-keyword">await</span> channel.worked_for_with(
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> <span class="token-builtin">list</span>[Channel]</div>
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>,
+    limit: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; <span class="token-builtin">list</span>[Channel]</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ list[Channel]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Empty profiles terminate cleanly. Collaborator loading is bounded; an individual missing or failing profile does not abort the complete list. <code>limit</code> can cap the number of related channels loaded.</p>
 </div>
 
 <div class="section" id="pornstar-section">
@@ -535,8 +547,8 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
             </div>
         </div>
         <div class="method-desc">Iterates over the pornstar's uploaded videos. Set <code>pages=0</code> (default) to fetch <em>all</em> pages.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">0</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> pornstar.videos(
+    pages: <span class="token-builtin">int</span> = 0,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -561,8 +573,9 @@ client = <span class="token-class">Client</span>(core=core)</code></pre>
         </div>
         <div class="method-desc">Returns a list of channels/studios this performer has worked for/with.</div>
         <div class="method-signature"><span class="token-keyword">await</span> pornstar.worked_for_with(
-    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -> <span class="token-builtin">list</span>[Channel]</div>
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>,
+    limit: <span class="token-builtin">int</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
+) -&gt; <span class="token-builtin">list</span>[Channel]</div>
         
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ list[Channel]</span>
@@ -604,8 +617,8 @@ account = client.get_account(cookies=my_cookies)
             </div>
         </div>
         <div class="method-desc">Fetches your liked videos page by page; the required account-page <code>POST</code> request is handled internally.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_liked_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_liked_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -629,8 +642,8 @@ account = client.get_account(cookies=my_cookies)
             </div>
         </div>
         <div class="method-desc">Fetches your recommended feed videos page by page; the required account-page <code>POST</code> request is handled internally.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_recommended_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_recommended_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -654,8 +667,8 @@ account = client.get_account(cookies=my_cookies)
             </div>
         </div>
         <div class="method-desc">Fetches your watch later videos page by page; the required account-page <code>POST</code> request is handled internally.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_watch_later_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_watch_later_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -937,6 +950,18 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>2.5.3 — 2026-10-27 (current)</h3>
+<ul>
+<li>Fix default search pagination and avoid double-encoding spaces in search terms.</li>
+<li>Return real thumbnails and clean titles from listings, and skip profile cards that are not videos.</li>
+<li>Decode HTML entities in profile JSON results.</li>
+<li>Support both property-style and method-style author and performer helpers.</li>
+<li>Bound collaborator loading so a missing profile does not abort the whole result.</li>
+<li>Handle empty channels and model URL aliases, and export Channel and Account.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-xvideos/releases/tag/2.5.3">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-xvideos/2.5.3/">PyPI 2.5.3</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>2.5 — 2026-09-15</h3>
     <ul>

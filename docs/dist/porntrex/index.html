@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Porntrex API</span>
                 </a>
-                <span class="sidebar-version">v1.8.2</span>
+                <span class="sidebar-version">v1.8.3</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -103,7 +103,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Porntrex API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.8.2</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.8.3</div>
                         <h1>Porntrex API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Porntrex. Fetch video metadata, channel information, and model profiles, run search queries, and download media via direct CDN links. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -175,8 +175,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.2</code>. The compatible networking core is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.5</code>. The compatible networking core is installed automatically.
     </div>
+
+<p>Release <strong>1.8.3</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -377,11 +379,11 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries Porntrex search and streams video results via an asynchronous generator.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -393,6 +395,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Search terms are encoded in both the URL path and query string. Search pagination starts at <code>from=01</code>. The obsolete fixed cache-buster is no longer sent.</p>
 </div>
 
 <!-- ================================================================
@@ -455,6 +460,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>MP4 quality detection accepts signed query strings and fragments. The original download URL, including its token, is preserved.</p>
 </div>
 
 <!-- ================================================================
@@ -492,10 +500,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Iterates over the videos uploaded/featuring this model.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> model.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> model.videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -543,10 +551,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Iterates over the videos uploaded to this channel.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> channel.videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -669,6 +677,16 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>1.8.3 — 2026-10-27 (current)</h3>
+<ul>
+<li>Start search pagination at the first page and encode search terms correctly in paths and query strings.</li>
+<li>Recognize MP4 download links with signed query strings or fragments without changing their tokens.</li>
+<li>Remove the fixed, outdated search cache-buster.</li>
+<li>Close CLI sessions and report failed downloads accurately.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-porntrex/releases/tag/1.8.3">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-porntrex/1.8.3/">PyPI 1.8.3</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>1.8 — 2026-09-15</h3>
     <ul>

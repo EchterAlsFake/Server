@@ -45,7 +45,7 @@ Fetches direct photo image URLs for a specific album index page.
 ```python
 await album.get_images_by_page(
     page: int = 1
-) -> list[str]
+) -> list
 ```
 
 ### Parameters
@@ -60,12 +60,16 @@ await album.get_images_by_page(
 Iterates and collects direct image URLs for all pages in this album concurrently.
 
 ```python
-await album.get_all_images() -> list[str]
+await album.get_all_images() -> list
 ```
 
 ### Returns
 
 → list[str]
+
+## Behavior and edge cases
+
+Empty albums use safe metadata fallbacks. `get_images_by_page()` rejects page numbers below one before making a request.
 
 ## Related MCP documents
 

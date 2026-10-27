@@ -124,7 +124,7 @@ Gets the subscription feed for the logged-in account. Filterable by section type
 
 ```python
 async for result in account.get_feed(
-    section: str = "videos",
+    section: str = 'videos',
     pages: int = 5,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]

@@ -175,9 +175,8 @@ Downloads the video directly from CDN server using `DownloadConfigRAW`. Failure 
 ```python
 await video.download(
     configuration: DownloadConfigRAW,
-    mode: Encoding | str,
-    use_workaround: bool = True
-) -> bool
+    mode: Encoding | str
+)
 ```
 
 ### Parameters
@@ -194,7 +193,7 @@ await video.download(
 Yields pornstar profiles starring in this video.
 
 ```python
-async for star in video.get_authors(
+async for result in video.get_authors(
     load_html: bool = True
 ) -> AsyncGenerator[Pornstar, None]
 ```
@@ -205,6 +204,10 @@ async for star in video.get_authors(
 ### Returns
 
 → AsyncGenerator[Pornstar, None]
+
+## Behavior and edge cases
+
+`get_url_by_quality()` selects among heights available for the requested encoding. An AV1-only height will not prevent selection of an available H.264 alternative. Listing keywords and thumbnails are lists; `length_seconds` is an integer. Optional structured metadata may be absent. German and French profile statistics are recognized, and missing channels that return HTTP 200 raise `NotFound`.
 
 ## Related MCP documents
 

@@ -155,6 +155,10 @@ await video.author(
 
 → Pornstar | Channel
 
+## Behavior and edge cases
+
+Author and performer lookup does not require an unrelated title field for logging. `author()` is a coroutine method, while `pornstars` is an async-generator property used without parentheses. Optional collection metadata can be `None`.
+
 ## Related MCP documents
 
 - [YouPorn API getting started](../getting-started.md)

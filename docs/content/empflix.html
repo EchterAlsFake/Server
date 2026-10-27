@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = EMPFlix API -->
 <!-- SLOT:HERO_TITLE = EMPFlix API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for empflix.com. Extract full video metadata, user profiles, and pornstars, run search queries, and download high-definition progressive MP4 media. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 1.0 -->
+<!-- SLOT:VERSION = 1.0.1 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-empflix -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-empflix -->
 
@@ -31,6 +31,9 @@
 <div class="nav-collapsible">
     <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
+        <a href="#video-get_related_videos" class="nav-link nav-link-sub">get_related_videos()</a>
+        <a href="#video-get_pornstars" class="nav-link nav-link-sub">get_pornstars()</a>
+        <a href="#video-get_author" class="nav-link nav-link-sub">get_author()</a>
         <a href="#video-download" class="nav-link nav-link-sub">download()</a>
     </div>
 </div>
@@ -108,8 +111,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.2</code>. The networking engine is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.5</code>. The networking engine is installed automatically.
     </div>
+
+<p>Release <strong>1.0.1</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <!-- ================================================================
@@ -313,13 +318,13 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries EMPFlix video search and yields results as an asynchronous generator.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
-    sorting_sort: <span class="token-builtin">str</span> | Sort = Sort.RECENT,
-    sorting_date: <span class="token-builtin">str</span> | SortDate = SortDate.ALL_TIME,
-    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+    sorting_sort: <span class="token-builtin">str</span> | Sort = Sort.Sort_relevance,
+    sorting_date: <span class="token-builtin">str</span> | SortDate = SortDate.Sort_all,
+    pages: <span class="token-builtin">int</span> = 1,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -333,6 +338,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Canonical watch links, numeric IDs, short/embed links, relative profile/channel paths and supported plural aliases are normalized. Embedded pages follow their canonical watch link when full metadata is omitted. <code>get_pornstar()</code> returns a <code>Pornstar</code> object. <code>Sort</code> and <code>SortDate</code> are exported by the package; date sorting uses the website’s <code>u</code> parameter.</p>
 </div>
 
 <!-- ================================================================
@@ -405,6 +413,19 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool</span>
     </div>
+
+<span class="section-anchor" id="video-get_author"></span><div class="method-card"><div class="method-header-row"><h3 class="method-title"><code>get_author()</code></h3></div><div class="method-desc">Resolve the uploader as a profile or channel.</div><div class="method-signature"><span class="token-keyword">await</span> video.get_author(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Profile | Channel | <span class="token-keyword">None</span></div></div>
+
+<span class="section-anchor" id="video-get_pornstars"></span><div class="method-card"><div class="method-header-row"><h3 class="method-title"><code>get_pornstars()</code></h3></div><div class="method-desc">Yield the performer profiles associated with this video.</div><div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> video.get_pornstars(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; AsyncGenerator[Pornstar, <span class="token-keyword">None</span>]</div></div>
+
+<span class="section-anchor" id="video-get_related_videos"></span><div class="method-card"><div class="method-header-row"><h3 class="method-title"><code>get_related_videos()</code></h3></div><div class="method-desc">Iterate related video results.</div><div class="method-signature"><span class="token-keyword">await</span> video.get_related_videos() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">dict</span>]</div></div>
+
+<h3>Behavior and edge cases</h3>
+<p>Use <code>await video.get_author(load_html=False)</code> and <code>async for star in video.get_pornstars(load_html=False)</code>. These are callable methods, not properties. Author lookup can return a profile or channel; performer iteration yields <code>Pornstar</code> objects. Channel links are excluded from tags and categories.</p>
 </div>
 
 <!-- ================================================================
@@ -431,7 +452,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Biography or description text</td></tr>
                 <tr><td><code>rank</code></td><td><code>str | None</code></td><td>Site ranking position</td></tr>
                 <tr><td><code>profile_views</code></td><td><code>str | None</code></td><td>Total profile views count</td></tr>
-                <tr><td><code>subscribers_count</code></td><td><code>str | None</code></td><td>Total subscriber count</td></tr>
+                <tr><td><code>subscribers_count</code></td><td><code>int | None</code></td><td>Total subscriber count</td></tr>
                 <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Cumulative views across all uploaded videos</td></tr>
                 <tr><td><code>total_videos_count</code></td><td><code>str | None</code></td><td>Total uploaded videos count</td></tr>
                 <tr><td><code>gender</code></td><td><code>str | None</code></td><td>Stated gender identity</td></tr>
@@ -456,10 +477,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Asynchronously yields video scrape results uploaded by this user profile across listing pages.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> profile.videos(
-    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> profile.videos(
+    pages: <span class="token-builtin">int</span> = 1,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -495,7 +516,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
                 <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Biography or introduction text</td></tr>
                 <tr><td><code>rank</code></td><td><code>str | None</code></td><td>Site ranking position among pornstars</td></tr>
                 <tr><td><code>profile_views</code></td><td><code>str | None</code></td><td>Accumulated views on this pornstar profile</td></tr>
-                <tr><td><code>subscribers_count</code></td><td><code>str | None</code></td><td>Total followers and subscribers count</td></tr>
+                <tr><td><code>subscribers_count</code></td><td><code>int | None</code></td><td>Total followers and subscribers count</td></tr>
                 <tr><td><code>video_views</code></td><td><code>str | None</code></td><td>Cumulative video views across all starring videos</td></tr>
                 <tr><td><code>total_videos_count</code></td><td><code>str | None</code></td><td>Total count of videos featuring this performer</td></tr>
                 <tr><td><code>gender</code></td><td><code>str | None</code></td><td>Performer gender</td></tr>
@@ -520,10 +541,10 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Asynchronously yields video scrape results featuring or uploaded by this performer.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.videos(
-    pages: <span class="token-builtin">int</span> | <span class="token-builtin">str</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> pornstar.videos(
+    pages: <span class="token-builtin">int</span> = 1,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -711,6 +732,17 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>1.0.1 — 2026-10-27 (current)</h3>
+<ul>
+<li>Resolve short and embedded video links to the full watch page so metadata and related videos are available.</li>
+<li>Return the correct profile, channel and pornstar types when resolving author links.</li>
+<li>Keep channel authors out of categories and tags, and parse abbreviated rating counts safely.</li>
+<li>Expose Sort and SortDate and support normal get_author() and get_pornstars() calls.</li>
+<li>Include the HTML fixtures used by the parser regression tests.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-empflix/releases/tag/1.0.1">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-empflix/1.0.1/">PyPI 1.0.1</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>1.0 — 2026-10-17</h3>
     <ul>

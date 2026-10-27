@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Beeg API</span>
                 </a>
-                <span class="sidebar-version">v1.7.3</span>
+                <span class="sidebar-version">v1.7.4</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -85,7 +85,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Beeg API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.7.3</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.7.4</div>
                         <h1>Beeg API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Beeg. Fetch video metadata by parsing external API endpoints, and download streams via HLS. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -158,8 +158,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.5</code> is installed automatically as a dependency.
     </div>
+
+<p>Release <strong>1.7.4</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -263,7 +265,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <div class="method-signature"><span class="token-keyword">await</span> client.get_video(
     url: <span class="token-builtin">str</span>,
     load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; Video</div>
+)</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -279,6 +281,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <div class="info-box-title">Source-aware fields</div>
         Beeg has no paginated <code>Helper</code> iterator: <code>get_video()</code> is its only fetch operation, so <code>IteratorConfig</code>, iterator <code>RetryPolicy</code>, custom scrape handlers, and <code>ScrapeResult</code> do not apply here. With <code>load_api=True</code>, all remote fields are loaded from the <code>"api"</code> source. If you construct a lightweight object with <code>load_api=False</code>, call <code>await video.load_sources("api")</code>, <code>await video.load_fields("title", "duration")</code>, or <code>await video.get_field("title")</code> before reading unresolved fields. Direct unresolved access raises <code>DataNotLoadedError</code>; a real loaded <code>None</code> does not.
     </div>
+
+<h3>Accepted video links</h3><p><code>get_video()</code> accepts a complete Beeg URL, a protocol-relative URL, a URL without a scheme, or a bare video ID. Tag-scoped links, optional trailing slugs, query strings and fragments are normalized before the API key is extracted. Malformed or missing API records raise <code>NotFound</code>.</p>
 </div>
 
 <!-- ================================================================
@@ -298,7 +302,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             <tbody>
                 <tr><td><code>url</code></td><td><code>str</code></td><td>The video page URL</td></tr>
                 <tr><td><code>title</code></td><td><code>str | None</code></td><td>Video title</td></tr>
-                <tr><td><code>video_id</code></td><td><code>str | None</code></td><td>Unique video file ID</td></tr>
+                <tr><td><code>video_id</code></td><td><code>int | str | None</code></td><td>Unique video file ID</td></tr>
                 <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Video duration in seconds</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Master HLS stream playlist URL</td></tr>
                 <tr><td><code>key</code></td><td><code>str | None</code></td><td>Video key extracted from the URL path</td></tr>
@@ -330,6 +334,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool | DownloadReport</span>
     </div>
+
+<h3>Additional metadata</h3><p>Alongside the title and duration, Video exposes <code>tags: list[str] | None</code>, <code>author: str | None</code>, <code>thumbnail: str | None</code> and <code>publish_date: str | None</code> from its <code>api</code> source. <code>video_id</code> can be an integer or string. Author metadata can be absent when the upstream tags do not identify an owner or performer.</p>
 </div>
 
 <!-- ================================================================
@@ -464,6 +470,16 @@ beeg_api --file urls.txt --quality best --output ./downloads --no-title False</c
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📜</span> Changelog</h2>
+<h3>1.7.4 — 2026-10-27 (current)</h3>
+<ul>
+<li>Accept video IDs, links without a scheme, and video links copied from tag pages without losing the video key.</li>
+<li>Expose author, tags, thumbnails and publication dates from the API response.</li>
+<li>Report missing or malformed metadata as NotFound instead of failing with an indexing error.</li>
+<li>Handle missing batch files and output directories more gracefully in the CLI.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-beeg/releases/tag/1.7.4">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-beeg/1.7.4/">PyPI 1.7.4</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>1.7 — September 15, 2026</h3>
     <ul class="param-list" style="margin: 12px 0;">

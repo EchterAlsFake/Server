@@ -62,9 +62,9 @@ Type: str | None; Description: Album author's profile URL
 Iterates over photos in the album. Each result is a dictionary containing `url`, `download_url`, `rating`, and `views`.
 
 ```python
-async for photo in album.get_photos(
+async for result in album.get_photos(
     pages: int = 1
-) -> dict
+) -> AsyncGenerator[dict[str, Any], None]
 ```
 
 ### Parameters
@@ -106,6 +106,10 @@ await album.author -> Pornstar
 ### Returns
 
 → Pornstar
+
+## Behavior and edge cases
+
+Photo downloads accept an existing destination directory and derive a filename with the correct image extension.
 
 ## Related MCP documents
 

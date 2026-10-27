@@ -16,6 +16,16 @@ keywords:
 
 Records the versions and documented changes for the Porntrex API.
 
+## 1.8.3 — 2026-10-27 (current)
+- Start search pagination at the first page and encode search terms correctly in paths and query strings.
+- Recognize MP4 download links with signed query strings or fragments without changing their tokens.
+- Remove the fixed, outdated search cache-buster.
+- Close CLI sessions and report failed downloads accurately.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-porntrex/releases/tag/1.8.3) · [PyPI 1.8.3](https://pypi.org/project/unofficial-api-for-porntrex/1.8.3/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 1.8 — 2026-09-15
 - `541cd29` / `221d32b` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context. Added layout anchor validations to detect page structure changes. Implemented robust fallback selectors for video and channel/model metadata. Normalized protocol schemes for download URLs and validated quality availability. Added snippet-based unit tests for channel and video data extraction.
 

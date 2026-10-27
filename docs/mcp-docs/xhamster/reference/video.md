@@ -41,7 +41,7 @@ Type: str; Description: The video page URL
 
 ## video_id
 
-Type: str | None; Description: Unique video key ID
+Type: int | None; Description: Unique video key ID
 
 ## video_hash
 
@@ -69,7 +69,7 @@ Type: int | None; Description: Total comment count
 
 ## created_timestamp
 
-Type: str | None; Description: Creation timestamp supplied by the page data
+Type: str | int | None; Description: Creation timestamp supplied by the page data
 
 ## date_ago
 
@@ -109,7 +109,7 @@ Type: str | None; Description: Uploader profile name
 
 ## uploader_subscribers
 
-Type: str | None; Description: Uploader subscriber count
+Type: int | None; Description: Uploader subscriber count
 
 ## tags
 
@@ -157,6 +157,10 @@ await video.download(
 ### Returns
 
 → bool | DownloadReport
+
+## Behavior and edge cases
+
+Full HD/UHD flags and explicit resolution tiers are considered when reporting HD status. Search and profile listing metadata is read from hydrated page data, with DOM fallbacks for supported layouts.
 
 ## Related MCP documents
 

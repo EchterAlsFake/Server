@@ -21,7 +21,7 @@ pip install eaf_base_api
 pip install "eaf_base_api[hls]"
 ```
 
-Version 4 requires **Python 3.12 or newer**. The package ships a `py.typed` marker, so type checkers can consume its inline annotations. TS→MP4 remuxing (`remux=True`) and MP4 metadata/cover-art tagging use an external `ffmpeg` executable (discovered via `RuntimeConfig.ffmpeg_path`, `EAF_FFMPEG_BINARY` / `PORN_FETCH_FFMPEG_BINARY`, bundled `third_party/` directories, or the system `PATH`).
+Version 4.2.5 requires **Python 3.12 or newer**. The package ships a `py.typed` marker, so type checkers can consume its inline annotations. TS→MP4 remuxing (`remux=True`) and MP4 metadata/cover-art tagging use an external `ffmpeg` executable (discovered via `RuntimeConfig.ffmpeg_path`, `EAF_FFMPEG_BINARY` / `PORN_FETCH_FFMPEG_BINARY`, bundled `third_party/` directories, or the system `PATH`).
 
 ## Related MCP documents
 

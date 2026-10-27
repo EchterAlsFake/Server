@@ -15,6 +15,18 @@ keywords:
 
 Records the versions and documented changes for the XFreeHD API.
 
+## 1.7.4 — 2026-10-27 (current)
+- Normalize bare IDs, relative paths and embed links for videos and albums.
+- Return the available video qualities consistently and accept numeric quality aliases.
+- Expose private-video status and tolerate optional ratings and duration metadata.
+- Handle empty albums safely and reject invalid image page numbers.
+- Encode search terms and support sorting and time-frame options.
+- Add async client lifecycle support and improve missing-file handling in the CLI.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-xfreehd/releases/tag/1.7.4) · [PyPI 1.7.4](https://pypi.org/project/unofficial-api-for-xfreehd/1.7.4/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 1.7.1 — 2026-09-15
 - `a728c0e` / `b18b650` / `fb5e92c` — Adopted shared request and download error handling from `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete diagnostic context. Expanded `Video` metadata with `author_thumbnail`, `author_url`, `author_subscribers`, `embed_url`, and `rating`. Cleanly report removed or unavailable videos via `ResourceGone`. Added robust fallback selectors and offline extraction unit tests.
 

@@ -13,6 +13,18 @@ keywords:
 
 Records the versions and documented changes for the SpankBang API.
 
+## 2.4.4 — 2026-10-27 (current)
+- Build independent search page URLs and preserve special characters in search terms.
+- Use conservative default listing concurrency and standard navigation headers.
+- Keep each RAW download URL paired with its resolution and support numeric and named quality choices.
+- Select RAW mode when only a RAW configuration is supplied, and add the --raw CLI flag.
+- Normalize bare, embed and play links and handle regional profile paths and statistics.
+- Improve thumbnail, duration and stream-data parsing across the supported page layouts.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-spankbang/releases/tag/2.4.4) · [PyPI 2.4.4](https://pypi.org/project/unofficial-api-for-spankbang/2.4.4/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 2.4.1 — 2026-09-15
 - `35024f6` / `9ab9185` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context. Added 4K resolution support (sorted as 2160p) for video scraping and downloads. Upgraded scraper selectors across video, channel, creator, and pornstar pages with robust fallbacks and `data-testid` attributes. Enhanced `stream_data` regex parsing and added offline extraction unit tests.
 

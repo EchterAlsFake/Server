@@ -13,6 +13,18 @@ keywords:
 
 Records the versions and documented changes for the PornHub API.
 
+## 5.4.6 — 2026-10-27 (current)
+- Parse HubTraffic search results as JSON instead of treating them as HTML.
+- Use the correct upload and GIF routes for regular users, with more resilient profile listing extraction.
+- Fix photo extension parsing and album downloads to directory paths.
+- Accept bare viewkeys, relative video links and embed URLs.
+- Expose author helpers consistently across videos, shorts and GIFs, including channel authors.
+- Read localized profile statistics and route more supported media types through the CLI.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-pornhub/releases/tag/v5.4.6) · [PyPI 5.4.6](https://pypi.org/project/unofficial-api-for-pornhub/5.4.6/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 5.4.3 — 2026-09-15
 - `d3c8743` / `81e4629` / `d034cf2` — Adopted centralized request and download error handling from `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with full context. Added dedicated `Pornstar` class inheriting from `UserHelper` and `client.get_pornstar()`. Greatly expanded `Short` metadata with 15 new attributes (duration, categories, tags, is_verified, like/dislike counts and info, token, author ID/type, external links, preview URLs). Added comprehensive unit test suites covering `Short`, `User`, `Album`, `Channel`, `Gif`, `Playlist`, and `Video`. Removed redundant code and streamlined scraping logic.
 

@@ -28,7 +28,9 @@ pip install unofficial-api-for-missav
 For **TS→MP4 remuxing** and metadata tagging support (recommended for HLS downloads with `remux=True`), ensure `ffmpeg` is installed on your system `PATH` (or set `RuntimeConfig.ffmpeg_path`).
 
 **Note**
-Requires **Python ≥ 3.12**. Version 2.6 depends on `eaf-base-api>=4.0.0`, which is installed automatically.
+Requires **Python ≥ 3.12**. Version 2.6.2 depends on `eaf-base-api>=4.0.0`, which is installed automatically.
+
+Release **2.6.2** requires `eaf-base-api>=4.2.5` from PyPI. A local base-API checkout is not required.
 
 ## Quick Start
 

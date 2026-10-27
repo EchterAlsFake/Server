@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = MissAV API -->
 <!-- SLOT:HERO_TITLE = MissAV API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for MissAV. Fetch JAV video metadata and download streams via HLS. Features Recombee-powered search with HMAC-signed API requests. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 2.6 -->
+<!-- SLOT:VERSION = 2.6.2 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-missav -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-missav -->
 
@@ -87,8 +87,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. Version 2.6 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. Version 2.6.2 depends on <code>eaf-base-api&gt;=4.0.0</code>, which is installed automatically.
     </div>
+
+<p>Release <strong>2.6.2</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -217,11 +219,11 @@ client = <span class="token-class">Client</span>()</code></pre>
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
         <div class="method-desc">Queries MissAV's Recombee recommendation engine to discover videos matching the search query. Generates an anonymous user ID and signs the API request with HMAC-SHA1.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
-    video_count: <span class="token-builtin">int</span> = <span class="token-number">50</span>,
+    video_count: <span class="token-builtin">int</span> = 50,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -233,6 +235,9 @@ client = <span class="token-class">Client</span>()</code></pre>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>video_count</code> must be positive. Default clients use isolated runtime settings, and stopping the search generator closes its inner scraper. Public search and localized pages can still return access challenges; a successful earlier request does not guarantee later access.</p>
 </div>
 
 <div class="section" id="video-section">
@@ -279,6 +284,9 @@ client = <span class="token-class">Client</span>()</code></pre>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool | DownloadReport</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Direct playlist URLs preserve signed query parameters and escaped slashes, including URLs whose playlist is named <code>master.m3u8</code>. Missing stream metadata produces a download error rather than a successful download result.</p>
 </div>
 
 <div class="section" id="downloading-section">
@@ -392,6 +400,17 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>2.6.2 — 2026-10-27 (current)</h3>
+<ul>
+<li>Preserve query tokens and escaped slashes in direct HLS playlist URLs.</li>
+<li>Give default clients their own runtime configuration instead of changing shared client settings.</li>
+<li>Reject invalid search counts before making a request and close search streams when callers stop early.</li>
+<li>Close CLI sessions and stop reporting failed downloads as completed.</li>
+<li>Access challenges can still prevent requests; this release does not bypass them.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-missav/releases/tag/2.6.2">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-missav/2.6.2/">PyPI 2.6.2</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>2.6 — 2026-09-15</h3>
     <ul>

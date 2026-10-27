@@ -65,10 +65,10 @@ Queries search endpoints and streams video results.
 ```python
 async for result in client.search_videos(
     query: str,
-    sorting_gay: str | Gay,
-    sorting_order: str | Order,
-    sorting_low_quality: str | LowQuality,
-    per_page: int,
+    sorting_gay: str | Gay = Gay.include_gay_content,
+    sorting_order: str | Order = Order.latest,
+    sorting_low_quality: str | LowQuality = LowQuality.include_low_quality_content,
+    per_page: int = 30,
     pages: int = 2,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
@@ -143,6 +143,10 @@ await client.get_channel(
 ### Returns
 
 → Channel
+
+## Behavior and edge cases
+
+Search defaults are `Gay.include_gay_content`, `Order.latest`, `LowQuality.include_low_quality_content`, `per_page=30` and `pages=2`. Pages must be positive; `per_page` must be between 1 and 1000. Invalid enum values raise `ValueError`. Search pagination is one-based. Video identity handling also accepts localized `/porno-video/` paths.
 
 ## Related MCP documents
 

@@ -6,7 +6,7 @@
 <!-- SLOT:TITLE = PornHub API -->
 <!-- SLOT:HERO_TITLE = PornHub API -->
 <!-- SLOT:HERO_SUBTITLE = A fully asynchronous Python API wrapper and scraper for Pornhub. Fetch videos, GIFs, shorts, albums, playlists, pornstars, models, channels, and user profiles — with full account login support. Powered by the eaf_base_api networking engine. -->
-<!-- SLOT:VERSION = 5.4.5 -->
+<!-- SLOT:VERSION = 5.4.6 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-pornhub -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-pornhub -->
 
@@ -41,6 +41,7 @@
 <div class="nav-collapsible">
     <a href="#video" class="nav-link nav-link-parent">Video <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
+        <a href="#video-get_author" class="nav-link nav-link-sub">get_author()</a>
         <a href="#video-download" class="nav-link nav-link-sub">download()</a>
         <a href="#video-author" class="nav-link nav-link-sub">author</a>
     </div>
@@ -97,6 +98,7 @@
 <div class="nav-collapsible">
     <a href="#gif" class="nav-link nav-link-parent">GIF <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
+        <a href="#gif-get_author" class="nav-link nav-link-sub">get_author()</a>
         <a href="#gif-download" class="nav-link nav-link-sub">download()</a>
     </div>
 </div>
@@ -179,8 +181,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically as a dependency.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.5</code> is installed automatically as a dependency.
     </div>
+
+<p>Release <strong>5.4.6</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -520,13 +524,13 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Searches for videos matching the query text. Supports filtering by production type, sort order, and duration range. See <a href="#searching">Search &amp; Filtering</a> for details.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_videos(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_videos(
     query: <span class="token-builtin">str</span>,
-    production_type: Literal[<span class="token-string">"professional"</span>, <span class="token-string">"homemade"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    sort_by: Literal[<span class="token-string">"mr"</span>, <span class="token-string">"mv"</span>, <span class="token-string">"tr"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    duration_min: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"30"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    duration_max: Literal[<span class="token-string">"10"</span>, <span class="token-string">"20"</span>, <span class="token-string">"30"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    production_type: Literal['professional', 'homemade'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    sort_by: Literal['mr', 'mv', 'tr'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    duration_min: Literal['10', '20', '30'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    duration_max: Literal['10', '20', '30'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
@@ -555,11 +559,11 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Searches for GIFs matching the query. Supports category and sort filtering.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_gifs(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_gifs(
     query: <span class="token-builtin">str</span>,
-    category: Literal[<span class="token-string">"gay"</span>, <span class="token-string">"transgender"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    search_filter: Literal[<span class="token-string">"mr"</span>, <span class="token-string">"mv"</span>, <span class="token-string">"tr"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    category: Literal['gay', 'transgender'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    search_filter: Literal['mr', 'mv', 'tr'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[GIF], <span class="token-keyword">None</span>]</div>
         
@@ -586,12 +590,12 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Searches for videos using the HubTraffic (Webmaster) API. Faster and provides pre-parsed metadata without HTML scraping.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search_hubtraffic(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search_hubtraffic(
     query: <span class="token-builtin">str</span>,
     category: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    sort_by: Literal[<span class="token-string">"newest"</span>, <span class="token-string">"mostviewed"</span>, <span class="token-string">"rating"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    period: Literal[<span class="token-string">"weekly"</span>, <span class="token-string">"monthly"</span>, <span class="token-string">"alltime"</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    sort_by: Literal['newest', 'mostviewed', 'rating'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    period: Literal['weekly', 'monthly', 'alltime'] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
@@ -617,7 +621,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             <div class="method-tags"><span class="tag tag-async">async</span></div>
         </div>
         <div class="method-desc">Asynchronously constructs a client and, when <code>login=True</code> and credentials are provided, awaits <code>login()</code> before returning the instance. This is the recommended entry point when creating an authenticated client.</div>
-        <div class="method-signature">client = <span class="token-keyword">await</span> Client.create(
+        <div class="method-signature"><span class="token-keyword">await</span> client.create(
     core: BaseCore | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     email: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     password: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
@@ -664,6 +668,9 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             <li class="param-item"><span class="param-name">ClientAlreadyLogged</span> <span class="param-desc">— If already logged in and <code>force=False</code></span></li>
         </ul>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Video lookup accepts bare viewkeys, relative paths and embed links. HubTraffic search parses its JSON response. For regular user profiles, uploads use <code>/videos/public</code> and GIFs use <code>/gifs</code>; model and pornstar routes retain their corresponding upload/GIF tabs.</p>
 </div>
 
 <!-- ================================================================
@@ -701,7 +708,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>HTML</td><td>Synthesized master m3u8 playlist for HLS download</td></tr>
                 <tr><td><code>author_thumbnail</code></td><td><code>str | None</code></td><td>HTML</td><td>Author's avatar image URL</td></tr>
                 <tr><td><code>author_link</code></td><td><code>str | None</code></td><td>HTML</td><td>Author's profile URL</td></tr>
-                <tr><td><code>author_information</code></td><td><code>dict | None</code></td><td>HTML</td><td>Author details: name, link, video count, subscriber count</td></tr>
+                <tr><td><code>author_information</code></td><td><code>dict[str, Any] | None</code></td><td>HTML</td><td>Author details: name, link, video count, subscriber count</td></tr>
             </tbody>
         </table>
     </div>
@@ -752,6 +759,13 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar | Model | Channel | None</span>
     </div>
+
+<span class="section-anchor" id="video-get_author"></span><div class="method-card"><div class="method-header-row"><h3 class="method-title"><code>get_author()</code></h3></div><div class="method-desc">Resolve the video uploader.</div><div class="method-signature"><span class="token-keyword">await</span> video.get_author(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; Pornstar | Channel | Model | User | <span class="token-keyword">None</span></div></div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>author_name</code> is available as top-level metadata. <code>await video.get_author()</code> resolves the correct author object, including channel uploaders; the <code>author</code> property provides the corresponding convenience access.</p>
 </div>
 
 <!-- ================================================================
@@ -773,7 +787,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
                 <tr><td><code>name</code></td><td><code>str | None</code></td><td>Profile display name</td></tr>
                 <tr><td><code>bio</code></td><td><code>str | None</code></td><td>Short bio / tagline text</td></tr>
                 <tr><td><code>about</code></td><td><code>str | None</code></td><td>Extended about section text</td></tr>
-                <tr><td><code>info</code></td><td><code>dict | None</code></td><td>Structured info fields (e.g., gender, age, location)</td></tr>
+                <tr><td><code>info</code></td><td><code>dict[str, str] | None</code></td><td>Structured info fields (e.g., gender, age, location)</td></tr>
             </tbody>
         </table>
     </div>
@@ -790,8 +804,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over videos featured on the pornstar's profile.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> pornstar.get_videos(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -815,8 +829,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over videos directly uploaded by the pornstar (as opposed to featured videos).</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.get_uploads(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> pornstar.get_uploads(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -840,8 +854,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over GIFs associated with the pornstar's profile.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> pornstar.get_gifs(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> pornstar.get_gifs(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[GIF], <span class="token-keyword">None</span>]</div>
 
@@ -878,8 +892,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over videos on the model's profile. Inherited from <code>UserHelper</code>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> model.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> model.get_videos(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -915,8 +929,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over videos on the user's profile. Inherited from <code>UserHelper</code>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> user.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> user.get_videos(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -971,8 +985,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over videos published by the channel.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> channel.get_videos(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -996,7 +1010,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <div class="method-desc">Returns the <code>User</code> object associated with this channel.</div>
         <div class="method-signature"><span class="token-keyword">await</span> channel.get_user(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; User</div>
+) -&gt; User | <span class="token-keyword">None</span></div>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ User</span>
     </div>
@@ -1045,8 +1059,8 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over videos in the playlist. Uses the internal chunked API for paginated fetching.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> playlist.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> playlist.get_videos(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -1070,7 +1084,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <div class="method-desc">Returns the <code>User</code> who created the playlist.</div>
         <div class="method-signature"><span class="token-keyword">await</span> playlist.get_author(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; User</div>
+) -&gt; User | Pornstar | Channel | Model | <span class="token-keyword">None</span></div>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ User</span>
     </div>
@@ -1114,9 +1128,9 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
             </div>
         </div>
         <div class="method-desc">Iterates over photos in the album. Each result is a dictionary containing <code>url</code>, <code>download_url</code>, <code>rating</code>, and <code>views</code>.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> photo <span class="token-keyword">in</span> album.get_photos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">1</span>
-) -&gt; <span class="token-builtin">dict</span></div>
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> album.get_photos(
+    pages: <span class="token-builtin">int</span> = 1
+) -&gt; AsyncGenerator[<span class="token-builtin">dict</span>[<span class="token-builtin">str</span>, Any], <span class="token-keyword">None</span>]</div>
         
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -1168,6 +1182,9 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Photo downloads accept an existing destination directory and derive a filename with the correct image extension.</p>
 </div>
 
 <!-- ================================================================
@@ -1222,6 +1239,10 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool</span>
     </div>
+
+<span class="section-anchor" id="gif-get_author"></span><div class="method-card"><div class="method-header-row"><h3 class="method-title"><code>get_author()</code></h3></div><div class="method-desc">Resolve the GIF uploader.</div><div class="method-signature"><span class="token-keyword">await</span> gif.get_author(
+    load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
+) -&gt; User | Pornstar | Channel | Model | <span class="token-keyword">None</span></div></div>
 </div>
 
 <!-- ================================================================
@@ -1255,7 +1276,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
                 <tr><td><code>avatar</code></td><td><code>str | None</code></td><td>Author avatar image URL</td></tr>
                 <tr><td><code>video_url</code></td><td><code>str | None</code></td><td>Link to the full video version</td></tr>
                 <tr><td><code>m3u8_base_url</code></td><td><code>str | None</code></td><td>Synthesized master m3u8 playlist</td></tr>
-                <tr><td><code>media_definitions</code></td><td><code>dict | None</code></td><td>Raw media quality definitions</td></tr>
+                <tr><td><code>media_definitions</code></td><td><code>list[dict] | None</code></td><td>Raw media quality definitions</td></tr>
                 <tr><td><code>duration</code></td><td><code>int | None</code></td><td>Video duration in seconds</td></tr>
                 <tr><td><code>categories</code></td><td><code>list[str] | None</code></td><td>Category labels</td></tr>
                 <tr><td><code>tags</code></td><td><code>list[str] | None</code></td><td>Tag labels</td></tr>
@@ -1310,7 +1331,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <div class="method-desc">Returns the <code>Pornstar</code> object who created this short.</div>
         <div class="method-signature"><span class="token-keyword">await</span> short.get_author(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; Pornstar</div>
+) -&gt; User | Pornstar | Channel | Model | <span class="token-keyword">None</span></div>
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Pornstar</span>
     </div>
@@ -1328,7 +1349,7 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <div class="method-signature"><span class="token-keyword">await</span> short.get_video(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>,
     load_api: <span class="token-builtin">bool</span> = <span class="token-keyword">True</span>
-) -&gt; Video</div>
+) -&gt; Video | <span class="token-keyword">None</span></div>
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
             <li class="param-item"><span class="param-name">load_html</span> <span class="param-type">bool</span> <span class="param-desc">— If <code>True</code>, fetches full HTML page for video details</span></li>
@@ -1337,6 +1358,9 @@ client = <span class="token-keyword">await</span> <span class="token-class">Clie
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Video</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>short_id</code> exposes the short’s key or ID. Shorts and GIFs provide author convenience properties, and channel authors are resolved as channels.</p>
 </div>
 
 <!-- ================================================================
@@ -1392,8 +1416,8 @@ client = <span class="token-class">Client</span>(email=<span class="token-string
             </div>
         </div>
         <div class="method-desc">Gets recommended videos for the logged-in account. Automatically fixes recommendation cookies before fetching.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_recommended(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_recommended(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -1416,8 +1440,8 @@ client = <span class="token-class">Client</span>(email=<span class="token-string
             </div>
         </div>
         <div class="method-desc">Gets the watch history for the logged-in account. Requires authentication.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_history(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_history(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -1440,8 +1464,8 @@ client = <span class="token-class">Client</span>(email=<span class="token-string
             </div>
         </div>
         <div class="method-desc">Gets favorite/liked videos for the logged-in account. Requires authentication.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_favorites(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_favorites(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -1464,9 +1488,9 @@ client = <span class="token-class">Client</span>(email=<span class="token-string
             </div>
         </div>
         <div class="method-desc">Gets the subscription feed for the logged-in account. Filterable by section type.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_feed(
-    section: <span class="token-builtin">str</span> = <span class="token-string">"videos"</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_feed(
+    section: <span class="token-builtin">str</span> = 'videos',
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
         
@@ -1491,8 +1515,8 @@ client = <span class="token-class">Client</span>(email=<span class="token-string
             </div>
         </div>
         <div class="method-desc">Gets all subscribed users/creators for the logged-in account.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> account.get_subscriptions(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> account.get_subscriptions(
+    pages: <span class="token-builtin">int</span> = 5,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[User], <span class="token-keyword">None</span>]</div>
 
@@ -1831,6 +1855,18 @@ phub --download "https://www.pornhub.com/view_video.php?viewkey=..." --quality b
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>5.4.6 — 2026-10-27 (current)</h3>
+<ul>
+<li>Parse HubTraffic search results as JSON instead of treating them as HTML.</li>
+<li>Use the correct upload and GIF routes for regular users, with more resilient profile listing extraction.</li>
+<li>Fix photo extension parsing and album downloads to directory paths.</li>
+<li>Accept bare viewkeys, relative video links and embed URLs.</li>
+<li>Expose author helpers consistently across videos, shorts and GIFs, including channel authors.</li>
+<li>Read localized profile statistics and route more supported media types through the CLI.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-pornhub/releases/tag/v5.4.6">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-pornhub/5.4.6/">PyPI 5.4.6</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>5.4.3 — 2026-09-15</h3>
     <ul>

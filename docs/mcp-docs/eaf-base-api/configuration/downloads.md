@@ -101,6 +101,10 @@ Remuxing concatenated transport streams to MP4 (`remux=True`) uses an external `
 
 Direct-file downloads add `allow_multipart=True`, `max_workers=5`, `read_timeout=120.0`, `chunk_size=1024`, and `max_retries=5`. These downloader retries are separate from `RuntimeConfig.request_attempts`.
 
+## Behavior and edge cases
+
+This published version includes resumable RAW download support and the filename fixes used by the provider releases.
+
 ## Related MCP documents
 
 - [Overview — eaf_base_api](../overview.md)

@@ -13,6 +13,18 @@ keywords:
 
 Records the versions and documented changes for the Redtube API.
 
+## 1.4.4 — 2026-10-27 (current)
+- Accept bare video and playlist IDs and normalize profile routes to the paths the site supports.
+- Return real thumbnail URLs instead of lazy-loading placeholders or raw srcset strings.
+- Handle German, French, Spanish and Italian statistics and playlist counts more reliably.
+- Load optional uploader and performer fields lazily and remove duplicate performer entries.
+- Accept the supported user-playlist JSON shapes and resolve playlists without requiring a loaded display name.
+- Export Amateur and User and support async client context management.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-redtube/releases/tag/1.4.4) · [PyPI 1.4.4](https://pypi.org/project/unofficial-api-for-redtube/1.4.4/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 ## 1.4.1 — 2026-09-15
 - `105ca53` / `7751b3b` — Adopted shared request and download error handling with `base_api.modules.provider` (requiring `eaf-base-api>=4.2.0`). Failed downloads now raise `DownloadFailed` with complete context. Added layout anchor checks across Video, Channel, Playlist, and Pornstar parsers. Implemented resilient fallback selectors for titles, stats, avatars, banners, and media definitions. Improved download stream resolution and added unit tests for video, channel, playlist, and pornstar HTML snippet extractions.
 

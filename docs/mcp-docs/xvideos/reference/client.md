@@ -57,14 +57,14 @@ async for result in client.search(
     sorting_date: str | SortDate = SortDate.Sort_all,
     sorting_time: str | SortVideoTime = SortVideoTime.Sort_all,
     sort_quality: str | SortQuality = SortQuality.Sort_all,
-    pages: int | str = "all",
+    pages: int | str = 2,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```
 
 ### Parameters
 - query str — Search terms
-- pages int | "all" — Number of result pages or `"all"` for automatic iteration
+- pages int | "all" — Number of result pages (default 2), a digit string, or `"all"` for ten pages
 - iterator_config IteratorConfig | None — Optional v4 concurrency, ordering, eager-source, retry, and error-handling policy. The package default eagerly loads `html`.
 
 ### Returns
@@ -135,6 +135,10 @@ client.get_account(
 ### Returns
 
 → Account
+
+## Behavior and edge cases
+
+Search defaults to two pages. Positive integers, digit strings and `all` are accepted; `all` currently requests ten pages. Spaces are encoded once. Both `Channel` and `Account` are available from the package exports.
 
 ## Related MCP documents
 

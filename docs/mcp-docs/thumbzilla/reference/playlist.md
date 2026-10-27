@@ -74,6 +74,10 @@ async for result in playlist.get_videos(
 
 → AsyncGenerator[ScrapeResult[Video], None]
 
+## Behavior and edge cases
+
+Optional playlist fields can be `None`, including on partial or empty pages. Parser and filtered-pagination regressions are covered offline. Current live playlist support remains unverified without a public fixture.
+
 ## Related MCP documents
 
 - [Thumbzilla API getting started](../getting-started.md)

@@ -13,7 +13,19 @@ keywords:
 
 Records the versions and documented changes for the Eporner API.
 
-## 2.4.1 (current)
+## 2.5.3 — 2026-10-27 (current)
+- Fix search pagination so later pages no longer repeat page one. Search queries now preserve reserved characters and Unicode.
+- Correct IDs, embed links, keywords, thumbnails and duration types returned by listing parsers.
+- Choose a download quality from the requested codec, and handle absolute download URLs correctly.
+- Accept more JSON-LD shapes and optional metadata without crashing.
+- Recognize German and French profile statistics, localized video paths and missing channels that return HTTP 200.
+- Close CLI sessions reliably and report unsuccessful downloads as errors.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-eporner/releases/tag/2.5.3) · [PyPI 2.5.3](https://pypi.org/project/unofficial-api-for-eporner/2.5.3/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
+## 2.4.1
 - 2026-09-15 · `3ee78ee` / `6b80518` / `f9fd944` / `01429e8` — Updated dependency to `eaf-base-api>=4.2.0` and adopted centralized request/download error handling. Failed downloads now raise `DownloadFailed` with complete context. Added `BaseProfile`, `Pornstar`, and `Channel` classes with profile video scraping via `videos()`. Added `Client.get_channel()`. Expanded `Video` metadata (dual API/HTML source loading for title, views, embed URL, and thumbnails; `length_seconds` integer type; clean `ResourceGone` exception when videos are deleted or removed).
 - 2026-08-14 · `7f1bbac` — Added HTML-backed `tags`, `categories`, and `uploader` fields; renamed `get_available_qualities()` to `video_qualities()`; and made optional pornstar biography fields tolerant of missing page elements.
 - 2026-08-11 · `c8f2974` — Added typed `ScrapeResult[Video]` annotations and `py.typed`; fixed the Eporner v2 API URL/list response handling and treated package `NotFound` as a terminal resource error. Default iterator error handling now uses the structured `ScrapeErrorContext`/`ErrorAction` handler.

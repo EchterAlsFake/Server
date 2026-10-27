@@ -122,10 +122,10 @@ Performs a search query for videos with options to filter by rating, quality, du
 ```python
 async for result in client.search(
     query,
-    filter: Literal["trending", "new", "featured", "popular"] | None = None,
-    quality: Literal["hd", "fhd", "uhd"] | None = None,
-    duration: Literal["10", "20", "40"] | None = None,
-    date: Literal["d", "w", "m", "y"] | None = None,
+    filter: Literal['trending', 'new', 'featured', 'popular'] | None = None,
+    quality: Literal['hd', 'fhd', 'uhd'] | None = None,
+    duration: Literal['10', '20', '40'] | None = None,
+    date: Literal['d', 'w', 'm', 'y'] | None = None,
     pages: int = 2,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
@@ -143,6 +143,10 @@ async for result in client.search(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## Behavior and edge cases
+
+Default listing concurrency is limited to two video loads and one page at a time. Search builds independent page URLs and encodes the query once. Bare video IDs and embed/play paths normalize to video pages; profile routing preserves regional hosts and supported path prefixes.
 
 ## Related MCP documents
 

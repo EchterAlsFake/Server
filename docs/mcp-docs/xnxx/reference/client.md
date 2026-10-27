@@ -43,7 +43,7 @@ Fetches a video page and returns a populated `Video` object. Extracts inline JSO
 
 ```python
 await client.get_video(
-    url: str,
+    url,
     load_html: bool = True
 ) -> Video
 ```
@@ -83,10 +83,10 @@ Searches for videos matching the query text. Supports filtering by search mode, 
 async for result in client.search_videos(
     query: str,
     pages: int = 0,
-    mode: Mode | str = "",
-    upload_time: UploadTime | str = "",
-    length: Length | str = "",
-    searching_quality: SearchingQuality | str = "",
+    mode: Mode | str = '',
+    upload_time: UploadTime | str = '',
+    length: Length | str = '',
+    searching_quality: SearchingQuality | str = '',
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```
@@ -103,6 +103,10 @@ async for result in client.search_videos(
 ### Returns
 
 → AsyncGenerator[ScrapeResult[Video], None]
+
+## Behavior and edge cases
+
+Search terms are encoded as a single path segment. Slashes and hashes in a query do not become path separators or URL fragments.
 
 ## Related MCP documents
 

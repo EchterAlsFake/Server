@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">Redtube API</span>
                 </a>
-                <span class="sidebar-version">v1.4.3</span>
+                <span class="sidebar-version">v1.4.4</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -116,7 +116,7 @@
                             <span aria-hidden="true">/</span>
                             <span>Redtube API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.4.3</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.4.4</div>
                         <h1>Redtube API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for Redtube. Fetch video details, custom playlists, publishers channels, users, and pornstars. Stream downloads via HLS. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -190,8 +190,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.2</code> is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong>. <code>eaf_base_api ≥ 4.2.5</code> is installed automatically.
     </div>
+
+<p>Release <strong>1.4.4</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -433,9 +435,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries Redtube search index pages and yields video scrape results.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -449,6 +451,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>The client supports <code>async with Client() as client:</code> and closes its core on exit. Video and playlist lookups accept bare IDs or relative paths. Profile paths normalize to singular <code>/pornstar/</code> and <code>/amateur/</code>, plural <code>/channels/</code>, and singular <code>/user/</code>. Unsupported trailing profile <code>/videos</code> segments are removed.</p>
 </div>
 
 <!-- ================================================================
@@ -530,7 +535,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <div class="method-desc">Fetches the uploader profile, automatically returning either an <code>Amateur</code>, <code>Pornstar</code>, or <code>Channel</code> object.</div>
         <div class="method-signature"><span class="token-keyword">await</span> video.author(
     load_html: <span class="token-builtin">bool</span> = <span class="token-keyword">False</span>
-) -&gt; Amateur | Pornstar | Channel</div>
+) -&gt; Amateur | Pornstar | Channel | User</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -540,6 +545,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ Amateur | Pornstar | Channel</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Uploader IDs/types, preview URLs and performer names/URLs participate in lazy HTML loading. Listing thumbnails prefer real lazy-loaded image URLs and clean srcset entries over placeholders. Performer entries are deduplicated.</p>
 </div>
 
 <!-- ================================================================
@@ -606,8 +614,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results nested inside this playlist.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> playlist.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> playlist.get_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -656,8 +664,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields videos uploaded by or featuring this profile.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> profile.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> user.get_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -681,8 +689,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields playlists created by the user. <strong>Available for User objects only.</strong></div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> user.get_playlists(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> user.get_playlists(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Playlist], <span class="token-keyword">None</span>]</div>
 
@@ -734,8 +742,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Yields video scrape results uploaded by this studio channel.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> channel.get_videos(
-    pages: <span class="token-builtin">int</span> = <span class="token-number">2</span>,
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> channel.get_videos(
+    pages: <span class="token-builtin">int</span> = 2,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
 ) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
@@ -906,6 +914,18 @@ iterator_config = <span class="token-class">IteratorConfig</span>(
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>1.4.4 — 2026-10-27 (current)</h3>
+<ul>
+<li>Accept bare video and playlist IDs and normalize profile routes to the paths the site supports.</li>
+<li>Return real thumbnail URLs instead of lazy-loading placeholders or raw srcset strings.</li>
+<li>Handle German, French, Spanish and Italian statistics and playlist counts more reliably.</li>
+<li>Load optional uploader and performer fields lazily and remove duplicate performer entries.</li>
+<li>Accept the supported user-playlist JSON shapes and resolve playlists without requiring a loaded display name.</li>
+<li>Export Amateur and User and support async client context management.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-redtube/releases/tag/1.4.4">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-redtube/1.4.4/">PyPI 1.4.4</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>1.4.1 — 2026-09-15</h3>
     <ul>

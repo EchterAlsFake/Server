@@ -56,7 +56,7 @@ Type: dict | None; Description: Sidebar stat parameters (only populated for Porn
 Yields videos uploaded by or featuring this profile.
 
 ```python
-async for result in profile.get_videos(
+async for result in user.get_videos(
     pages: int = 2,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]

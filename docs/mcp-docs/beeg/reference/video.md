@@ -34,7 +34,7 @@ Type: str | None; Description: Video title
 
 ## video_id
 
-Type: str | None; Description: Unique video file ID
+Type: int | str | None; Description: Unique video file ID
 
 ## duration
 
@@ -66,6 +66,10 @@ await video.download(
 ### Returns
 
 → bool | DownloadReport
+
+## Additional metadata
+
+Alongside the title and duration, Video exposes `tags: list[str] | None`, `author: str | None`, `thumbnail: str | None` and `publish_date: str | None` from its `api` source. `video_id` can be an integer or string. Author metadata can be absent when the upstream tags do not identify an owner or performer.
 
 ## Related MCP documents
 

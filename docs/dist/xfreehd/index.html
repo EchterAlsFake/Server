@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">XFreeHD API</span>
                 </a>
-                <span class="sidebar-version">v1.7.3</span>
+                <span class="sidebar-version">v1.7.4</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -43,6 +43,7 @@
 <div class="nav-collapsible">
     <a href="#client" class="nav-link nav-link-parent">Client <span class="toggle-icon">▼</span></a>
     <div class="nav-sub-links">
+        <a href="#client-close" class="nav-link nav-link-sub">close()</a>
         <a href="#client-get_video" class="nav-link nav-link-sub">get_video()</a>
         <a href="#client-get_album" class="nav-link nav-link-sub">get_album()</a>
         <a href="#client-search" class="nav-link nav-link-sub">search()</a>
@@ -97,7 +98,7 @@
                             <span aria-hidden="true">/</span>
                             <span>XFreeHD API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.7.3</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.7.4</div>
                         <h1>XFreeHD API</h1>
                         <p>A fully asynchronous Python API wrapper and scraper for XFreeHD. Fetch video metadata, photo albums, execute search queries, and download media files directly from CDNs. Powered by the eaf_base_api networking engine.</p>
                         <div class="hero-actions">
@@ -169,8 +170,10 @@
 
     <div class="info-box note">
         <div class="info-box-title">Note</div>
-        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.2</code>. The compatible networking core is installed automatically.
+        Requires <strong>Python ≥ 3.12</strong> and <code>eaf-base-api&gt;=4.2.5</code>. The compatible networking core is installed automatically.
     </div>
+
+<p>Release <strong>1.7.4</strong> requires <code>eaf-base-api&gt;=4.2.5</code> from PyPI. A local base-API checkout is not required.</p>
 </div>
 
 <div class="section" id="quickstart-section">
@@ -351,11 +354,13 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Queries XFreeHD search and streams video results via an asynchronous generator.</div>
-        <div class="method-signature"><span class="token-keyword">async for</span> result <span class="token-keyword">in</span> client.search(
+        <div class="method-signature"><span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(
     query: <span class="token-builtin">str</span>,
-    pages: <span class="token-builtin">int</span> = <span class="token-number">5</span>,
+    pages: <span class="token-builtin">int</span> = 5,
+    sort_by: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+    time_frame: <span class="token-builtin">str</span> | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
     iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>
-) -&gt; AsyncGenerator[ScrapeResult[Video], None]</div>
+) -&gt; AsyncGenerator[ScrapeResult[Video], <span class="token-keyword">None</span>]</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -367,6 +372,11 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ AsyncGenerator[ScrapeResult[Video], None]</span>
     </div>
+
+<span class="section-anchor" id="client-close"></span><div class="method-card"><div class="method-header-row"><h3 class="method-title"><code>close()</code></h3></div><div class="method-desc">Close the client’s HTTP core.</div><div class="method-signature"><span class="token-keyword">await</span> client.close()</div></div>
+
+<h3>Behavior and edge cases</h3>
+<p>Video and album lookup accepts bare IDs, relative paths and embed links. The client supports <code>async with Client() as client:</code> and an explicit <code>close()</code>. Search accepts optional sorting and time-frame arguments and encodes query values correctly.</p>
 </div>
 
 <!-- ================================================================
@@ -432,7 +442,7 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <p><code>Video.download()</code> returns <code>True</code> when the RAW downloader completes. On an exception it raises <code>DownloadFailed</code> with the video URL and original cause; it no longer returns an exception object. Replace checks such as <code>isinstance(result, DownloadFailed)</code> with <code>try</code>/<code>except DownloadFailed</code>.</p>
         <div class="method-signature"><span class="token-keyword">await</span> video.download(
     configuration: DownloadConfigRAW
-) -&gt; <span class="token-builtin">bool</span></div>
+)</div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -442,6 +452,9 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ bool</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p><code>is_private: bool | None</code> reports private-page status when present. It does not grant access to private media. Available qualities are derived from the actual sources, and numeric/string quality aliases are supported.</p>
 </div>
 
 <!-- ================================================================
@@ -480,8 +493,8 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
         <div class="method-desc">Fetches direct photo image URLs for a specific album index page.</div>
         <p><code>get_images_by_page(page)</code> raises <code>NotFound</code> when <code>page</code> exceeds <code>total_pages_count</code>; the message includes the requested page, album URL, and total page count.</p>
         <div class="method-signature"><span class="token-keyword">await</span> album.get_images_by_page(
-    page: <span class="token-builtin">int</span> = <span class="token-number">1</span>
-) -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+    page: <span class="token-builtin">int</span> = 1
+) -&gt; <span class="token-builtin">list</span></div>
 
         <h4 class="method-section-title">Parameters</h4>
         <ul class="param-list">
@@ -502,11 +515,14 @@ client_custom = <span class="token-class">Client</span>(core=<span class="token-
             </div>
         </div>
         <div class="method-desc">Iterates and collects direct image URLs for all pages in this album concurrently.</div>
-        <div class="method-signature"><span class="token-keyword">await</span> album.get_all_images() -&gt; <span class="token-builtin">list</span>[<span class="token-builtin">str</span>]</div>
+        <div class="method-signature"><span class="token-keyword">await</span> album.get_all_images() -&gt; <span class="token-builtin">list</span></div>
 
         <h4 class="method-section-title">Returns</h4>
         <span class="returns-tag">→ list[str]</span>
     </div>
+
+<h3>Behavior and edge cases</h3>
+<p>Empty albums use safe metadata fallbacks. <code>get_images_by_page()</code> rejects page numbers below one before making a request.</p>
 </div>
 
 <!-- ================================================================
@@ -621,6 +637,18 @@ success = <span class="token-keyword">await</span> video.download(configuration=
 <div class="section" id="changelog-section">
     <span class="section-anchor" id="changelog"></span>
     <h2><span class="section-icon">📝</span> Changelog</h2>
+<h3>1.7.4 — 2026-10-27 (current)</h3>
+<ul>
+<li>Normalize bare IDs, relative paths and embed links for videos and albums.</li>
+<li>Return the available video qualities consistently and accept numeric quality aliases.</li>
+<li>Expose private-video status and tolerate optional ratings and duration metadata.</li>
+<li>Handle empty albums safely and reject invalid image page numbers.</li>
+<li>Encode search terms and support sorting and time-frame options.</li>
+<li>Add async client lifecycle support and improve missing-file handling in the CLI.</li>
+</ul>
+<p><a href="https://github.com/EchterAlsFake/unofficial-api-for-xfreehd/releases/tag/1.7.4">GitHub release and distribution files</a> · <a href="https://pypi.org/project/unofficial-api-for-xfreehd/1.7.4/">PyPI 1.7.4</a></p>
+<p>Uses the published <code>eaf-base-api&gt;=4.2.5</code> dependency.</p>
+
 
     <h3>1.7.1 — 2026-09-15</h3>
     <ul>

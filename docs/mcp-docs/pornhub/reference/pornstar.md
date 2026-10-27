@@ -43,7 +43,7 @@ Type: str | None; Description: Extended about section text
 
 ## info
 
-Type: dict | None; Description: Structured info fields (e.g., gender, age, location)
+Type: dict[str, str] | None; Description: Structured info fields (e.g., gender, age, location)
 
 ## Methods
 

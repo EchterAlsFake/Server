@@ -69,7 +69,7 @@ Type: str | None; Description: Accumulated views on this pornstar profile
 
 ## subscribers_count
 
-Type: str | None; Description: Total followers and subscribers count
+Type: int | None; Description: Total followers and subscribers count
 
 ## video_views
 
@@ -111,7 +111,7 @@ Asynchronously yields video scrape results featuring or uploaded by this perform
 
 ```python
 async for result in pornstar.videos(
-    pages: int | str = 2,
+    pages: int = 1,
     iterator_config: IteratorConfig | None = None
 ) -> AsyncGenerator[ScrapeResult[Video], None]
 ```

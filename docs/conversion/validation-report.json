@@ -1,25 +1,25 @@
 {
   "mode": "full",
   "status": "pass",
-  "markdown_documents_checked": 224,
+  "markdown_documents_checked": 222,
   "errors": [],
   "warnings": [],
   "largest_file": {
     "path": "pornhub/reference/client.md",
-    "bytes": 10550,
-    "headings": 49,
+    "bytes": 10830,
+    "headings": 50,
     "h1_count": 1
   },
   "files": [
     {
       "path": "beeg/changelog.md",
-      "bytes": 1740,
-      "headings": 6,
+      "bytes": 2385,
+      "headings": 7,
       "h1_count": 1
     },
     {
       "path": "beeg/getting-started.md",
-      "bytes": 2860,
+      "bytes": 2964,
       "headings": 6,
       "h1_count": 1
     },
@@ -37,14 +37,14 @@
     },
     {
       "path": "beeg/reference/client.md",
-      "bytes": 2494,
-      "headings": 9,
+      "bytes": 2793,
+      "headings": 10,
       "h1_count": 1
     },
     {
       "path": "beeg/reference/video.md",
-      "bytes": 1792,
-      "headings": 14,
+      "bytes": 2129,
+      "headings": 15,
       "h1_count": 1
     },
     {
@@ -61,8 +61,8 @@
     },
     {
       "path": "eaf-base-api/changelog.md",
-      "bytes": 4086,
-      "headings": 3,
+      "bytes": 4555,
+      "headings": 4,
       "h1_count": 1
     },
     {
@@ -73,8 +73,8 @@
     },
     {
       "path": "eaf-base-api/configuration/downloads.md",
-      "bytes": 5063,
-      "headings": 20,
+      "bytes": 5209,
+      "headings": 21,
       "h1_count": 1
     },
     {
@@ -97,8 +97,8 @@
     },
     {
       "path": "eaf-base-api/guides/logging-and-cleanup.md",
-      "bytes": 4533,
-      "headings": 6,
+      "bytes": 4665,
+      "headings": 7,
       "h1_count": 1
     },
     {
@@ -115,7 +115,7 @@
     },
     {
       "path": "eaf-base-api/installation.md",
-      "bytes": 1289,
+      "bytes": 1293,
       "headings": 3,
       "h1_count": 1
     },
@@ -145,14 +145,8 @@
     },
     {
       "path": "eaf-base-api/reference/provider-helpers.md",
-      "bytes": 2711,
-      "headings": 3,
-      "h1_count": 1
-    },
-    {
-      "path": "eaf-base-api/reference/provider.md",
-      "bytes": 3700,
-      "headings": 9,
+      "bytes": 2924,
+      "headings": 4,
       "h1_count": 1
     },
     {
@@ -165,12 +159,6 @@
       "path": "eaf-base-api/reference/scrape-stream-and-result.md",
       "bytes": 3048,
       "headings": 11,
-      "h1_count": 1
-    },
-    {
-      "path": "eaf-base-api/reference/scraper-utils.md",
-      "bytes": 5956,
-      "headings": 21,
       "h1_count": 1
     },
     {
@@ -187,13 +175,13 @@
     },
     {
       "path": "empflix/changelog.md",
-      "bytes": 1352,
-      "headings": 4,
+      "bytes": 2080,
+      "headings": 5,
       "h1_count": 1
     },
     {
       "path": "empflix/getting-started.md",
-      "bytes": 3705,
+      "bytes": 3809,
       "headings": 7,
       "h1_count": 1
     },
@@ -223,19 +211,19 @@
     },
     {
       "path": "empflix/reference/client.md",
-      "bytes": 3213,
-      "headings": 17,
+      "bytes": 3601,
+      "headings": 18,
       "h1_count": 1
     },
     {
       "path": "empflix/reference/pornstar.md",
-      "bytes": 3232,
+      "bytes": 3226,
       "headings": 25,
       "h1_count": 1
     },
     {
       "path": "empflix/reference/profile.md",
-      "bytes": 3147,
+      "bytes": 3141,
       "headings": 26,
       "h1_count": 1
     },
@@ -247,8 +235,8 @@
     },
     {
       "path": "empflix/reference/video.md",
-      "bytes": 3865,
-      "headings": 35,
+      "bytes": 4671,
+      "headings": 39,
       "h1_count": 1
     },
     {
@@ -265,13 +253,13 @@
     },
     {
       "path": "eporner/changelog.md",
-      "bytes": 2257,
-      "headings": 4,
+      "bytes": 3115,
+      "headings": 5,
       "h1_count": 1
     },
     {
       "path": "eporner/getting-started.md",
-      "bytes": 3841,
+      "bytes": 3945,
       "headings": 7,
       "h1_count": 1
     },
@@ -301,8 +289,8 @@
     },
     {
       "path": "eporner/reference/client.md",
-      "bytes": 4372,
-      "headings": 21,
+      "bytes": 4827,
+      "headings": 22,
       "h1_count": 1
     },
     {
@@ -319,8 +307,8 @@
     },
     {
       "path": "eporner/reference/video.md",
-      "bytes": 4919,
-      "headings": 41,
+      "bytes": 5305,
+      "headings": 42,
       "h1_count": 1
     },
     {
@@ -337,13 +325,13 @@
     },
     {
       "path": "hqporner/changelog.md",
-      "bytes": 1922,
-      "headings": 4,
+      "bytes": 2724,
+      "headings": 5,
       "h1_count": 1
     },
     {
       "path": "hqporner/getting-started.md",
-      "bytes": 3768,
+      "bytes": 3874,
       "headings": 7,
       "h1_count": 1
     },
@@ -367,20 +355,20 @@
     },
     {
       "path": "hqporner/reference/cli.md",
-      "bytes": 2336,
-      "headings": 5,
+      "bytes": 2484,
+      "headings": 6,
       "h1_count": 1
     },
     {
       "path": "hqporner/reference/client.md",
-      "bytes": 4839,
-      "headings": 26,
+      "bytes": 5304,
+      "headings": 27,
       "h1_count": 1
     },
     {
       "path": "hqporner/reference/video.md",
-      "bytes": 2448,
-      "headings": 18,
+      "bytes": 2655,
+      "headings": 19,
       "h1_count": 1
     },
     {
@@ -403,13 +391,13 @@
     },
     {
       "path": "missav/changelog.md",
-      "bytes": 2092,
-      "headings": 8,
+      "bytes": 2807,
+      "headings": 9,
       "h1_count": 1
     },
     {
       "path": "missav/getting-started.md",
-      "bytes": 3729,
+      "bytes": 3835,
       "headings": 7,
       "h1_count": 1
     },
@@ -433,14 +421,14 @@
     },
     {
       "path": "missav/reference/client.md",
-      "bytes": 2321,
-      "headings": 11,
+      "bytes": 2621,
+      "headings": 12,
       "h1_count": 1
     },
     {
       "path": "missav/reference/video.md",
-      "bytes": 2095,
-      "headings": 15,
+      "bytes": 2345,
+      "headings": 16,
       "h1_count": 1
     },
     {
@@ -456,26 +444,20 @@
       "h1_count": 1
     },
     {
-      "path": "official-mcp-server.md",
-      "bytes": 5898,
-      "headings": 16,
-      "h1_count": 1
-    },
-    {
       "path": "overview.md",
-      "bytes": 6840,
+      "bytes": 6848,
       "headings": 30,
       "h1_count": 1
     },
     {
       "path": "pornhub/changelog.md",
-      "bytes": 4152,
-      "headings": 11,
+      "bytes": 4939,
+      "headings": 12,
       "h1_count": 1
     },
     {
       "path": "pornhub/getting-started.md",
-      "bytes": 2688,
+      "bytes": 2792,
       "headings": 6,
       "h1_count": 1
     },
@@ -505,13 +487,13 @@
     },
     {
       "path": "pornhub/reference/album.md",
-      "bytes": 2419,
-      "headings": 20,
+      "bytes": 2594,
+      "headings": 21,
       "h1_count": 1
     },
     {
       "path": "pornhub/reference/channel.md",
-      "bytes": 2538,
+      "bytes": 2545,
       "headings": 21,
       "h1_count": 1
     },
@@ -523,14 +505,14 @@
     },
     {
       "path": "pornhub/reference/client.md",
-      "bytes": 10550,
-      "headings": 49,
+      "bytes": 10830,
+      "headings": 50,
       "h1_count": 1
     },
     {
       "path": "pornhub/reference/gif.md",
-      "bytes": 2149,
-      "headings": 18,
+      "bytes": 2318,
+      "headings": 19,
       "h1_count": 1
     },
     {
@@ -541,20 +523,20 @@
     },
     {
       "path": "pornhub/reference/playlist.md",
-      "bytes": 2855,
+      "bytes": 2891,
       "headings": 23,
       "h1_count": 1
     },
     {
       "path": "pornhub/reference/pornstar.md",
-      "bytes": 2937,
+      "bytes": 2947,
       "headings": 19,
       "h1_count": 1
     },
     {
       "path": "pornhub/reference/short.md",
-      "bytes": 4373,
-      "headings": 45,
+      "bytes": 4592,
+      "headings": 46,
       "h1_count": 1
     },
     {
@@ -565,8 +547,8 @@
     },
     {
       "path": "pornhub/reference/video.md",
-      "bytes": 4248,
-      "headings": 31,
+      "bytes": 4628,
+      "headings": 33,
       "h1_count": 1
     },
     {
@@ -583,13 +565,13 @@
     },
     {
       "path": "porntrex/changelog.md",
-      "bytes": 2019,
-      "headings": 7,
+      "bytes": 2625,
+      "headings": 8,
       "h1_count": 1
     },
     {
       "path": "porntrex/getting-started.md",
-      "bytes": 3711,
+      "bytes": 3815,
       "headings": 7,
       "h1_count": 1
     },
@@ -619,8 +601,8 @@
     },
     {
       "path": "porntrex/reference/client.md",
-      "bytes": 3143,
-      "headings": 18,
+      "bytes": 3326,
+      "headings": 19,
       "h1_count": 1
     },
     {
@@ -631,8 +613,8 @@
     },
     {
       "path": "porntrex/reference/video.md",
-      "bytes": 2893,
-      "headings": 25,
+      "bytes": 3050,
+      "headings": 26,
       "h1_count": 1
     },
     {
@@ -655,13 +637,13 @@
     },
     {
       "path": "redtube/changelog.md",
-      "bytes": 1991,
-      "headings": 8,
+      "bytes": 2831,
+      "headings": 9,
       "h1_count": 1
     },
     {
       "path": "redtube/getting-started.md",
-      "bytes": 2522,
+      "bytes": 2626,
       "headings": 6,
       "h1_count": 1
     },
@@ -691,8 +673,8 @@
     },
     {
       "path": "redtube/reference/client.md",
-      "bytes": 3996,
-      "headings": 27,
+      "bytes": 4340,
+      "headings": 28,
       "h1_count": 1
     },
     {
@@ -703,14 +685,14 @@
     },
     {
       "path": "redtube/reference/profile-objects.md",
-      "bytes": 2558,
+      "bytes": 2555,
       "headings": 17,
       "h1_count": 1
     },
     {
       "path": "redtube/reference/video.md",
-      "bytes": 3873,
-      "headings": 34,
+      "bytes": 4135,
+      "headings": 35,
       "h1_count": 1
     },
     {
@@ -727,13 +709,13 @@
     },
     {
       "path": "spankbang/changelog.md",
-      "bytes": 2150,
-      "headings": 8,
+      "bytes": 2976,
+      "headings": 9,
       "h1_count": 1
     },
     {
       "path": "spankbang/getting-started.md",
-      "bytes": 2987,
+      "bytes": 3091,
       "headings": 6,
       "h1_count": 1
     },
@@ -757,14 +739,14 @@
     },
     {
       "path": "spankbang/reference/cli.md",
-      "bytes": 2049,
-      "headings": 5,
+      "bytes": 2197,
+      "headings": 6,
       "h1_count": 1
     },
     {
       "path": "spankbang/reference/client.md",
-      "bytes": 4603,
-      "headings": 21,
+      "bytes": 4910,
+      "headings": 22,
       "h1_count": 1
     },
     {
@@ -775,8 +757,8 @@
     },
     {
       "path": "spankbang/reference/video.md",
-      "bytes": 3381,
-      "headings": 24,
+      "bytes": 3656,
+      "headings": 25,
       "h1_count": 1
     },
     {
@@ -793,13 +775,13 @@
     },
     {
       "path": "thumbzilla/changelog.md",
-      "bytes": 1682,
-      "headings": 3,
+      "bytes": 2360,
+      "headings": 4,
       "h1_count": 1
     },
     {
       "path": "thumbzilla/getting-started.md",
-      "bytes": 2523,
+      "bytes": 2627,
       "headings": 6,
       "h1_count": 1
     },
@@ -817,7 +799,7 @@
     },
     {
       "path": "thumbzilla/reference/channel.md",
-      "bytes": 1698,
+      "bytes": 1749,
       "headings": 12,
       "h1_count": 1
     },
@@ -829,14 +811,14 @@
     },
     {
       "path": "thumbzilla/reference/client.md",
-      "bytes": 3611,
-      "headings": 24,
+      "bytes": 3858,
+      "headings": 25,
       "h1_count": 1
     },
     {
       "path": "thumbzilla/reference/playlist.md",
-      "bytes": 1977,
-      "headings": 15,
+      "bytes": 2222,
+      "headings": 16,
       "h1_count": 1
     },
     {
@@ -865,13 +847,13 @@
     },
     {
       "path": "tnaflix/changelog.md",
-      "bytes": 1462,
-      "headings": 4,
+      "bytes": 2276,
+      "headings": 5,
       "h1_count": 1
     },
     {
       "path": "tnaflix/getting-started.md",
-      "bytes": 3708,
+      "bytes": 3812,
       "headings": 7,
       "h1_count": 1
     },
@@ -895,7 +877,7 @@
     },
     {
       "path": "tnaflix/reference/channel.md",
-      "bytes": 2519,
+      "bytes": 2513,
       "headings": 18,
       "h1_count": 1
     },
@@ -907,19 +889,19 @@
     },
     {
       "path": "tnaflix/reference/client.md",
-      "bytes": 3707,
-      "headings": 20,
+      "bytes": 4095,
+      "headings": 21,
       "h1_count": 1
     },
     {
       "path": "tnaflix/reference/pornstar.md",
-      "bytes": 3258,
+      "bytes": 3252,
       "headings": 25,
       "h1_count": 1
     },
     {
       "path": "tnaflix/reference/profile.md",
-      "bytes": 3146,
+      "bytes": 3140,
       "headings": 26,
       "h1_count": 1
     },
@@ -931,8 +913,8 @@
     },
     {
       "path": "tnaflix/reference/video.md",
-      "bytes": 3864,
-      "headings": 35,
+      "bytes": 4670,
+      "headings": 39,
       "h1_count": 1
     },
     {
@@ -949,13 +931,13 @@
     },
     {
       "path": "tube8/changelog.md",
-      "bytes": 1710,
-      "headings": 3,
+      "bytes": 2437,
+      "headings": 4,
       "h1_count": 1
     },
     {
       "path": "tube8/getting-started.md",
-      "bytes": 2453,
+      "bytes": 2557,
       "headings": 6,
       "h1_count": 1
     },
@@ -973,8 +955,8 @@
     },
     {
       "path": "tube8/reference/channel.md",
-      "bytes": 1636,
-      "headings": 12,
+      "bytes": 1827,
+      "headings": 13,
       "h1_count": 1
     },
     {
@@ -985,14 +967,20 @@
     },
     {
       "path": "tube8/reference/client.md",
-      "bytes": 3297,
-      "headings": 21,
+      "bytes": 3673,
+      "headings": 23,
       "h1_count": 1
     },
     {
       "path": "tube8/reference/profile-objects.md",
-      "bytes": 2031,
+      "bytes": 2028,
       "headings": 14,
+      "h1_count": 1
+    },
+    {
+      "path": "tube8/reference/user.md",
+      "bytes": 1228,
+      "headings": 4,
       "h1_count": 1
     },
     {
@@ -1015,13 +1003,13 @@
     },
     {
       "path": "xfreehd/changelog.md",
-      "bytes": 2103,
-      "headings": 8,
+      "bytes": 2853,
+      "headings": 9,
       "h1_count": 1
     },
     {
       "path": "xfreehd/getting-started.md",
-      "bytes": 3822,
+      "bytes": 3926,
       "headings": 7,
       "h1_count": 1
     },
@@ -1039,8 +1027,8 @@
     },
     {
       "path": "xfreehd/reference/album.md",
-      "bytes": 1817,
-      "headings": 13,
+      "bytes": 1957,
+      "headings": 14,
       "h1_count": 1
     },
     {
@@ -1051,14 +1039,14 @@
     },
     {
       "path": "xfreehd/reference/client.md",
-      "bytes": 2734,
-      "headings": 15,
+      "bytes": 3167,
+      "headings": 17,
       "h1_count": 1
     },
     {
       "path": "xfreehd/reference/video.md",
-      "bytes": 3383,
-      "headings": 27,
+      "bytes": 3622,
+      "headings": 28,
       "h1_count": 1
     },
     {
@@ -1075,13 +1063,13 @@
     },
     {
       "path": "xhamster/changelog.md",
-      "bytes": 2483,
-      "headings": 3,
+      "bytes": 3264,
+      "headings": 4,
       "h1_count": 1
     },
     {
       "path": "xhamster/getting-started.md",
-      "bytes": 2619,
+      "bytes": 2723,
       "headings": 6,
       "h1_count": 1
     },
@@ -1111,13 +1099,13 @@
     },
     {
       "path": "xhamster/reference/client.md",
-      "bytes": 5589,
-      "headings": 27,
+      "bytes": 5821,
+      "headings": 28,
       "h1_count": 1
     },
     {
       "path": "xhamster/reference/pornstar.md",
-      "bytes": 2728,
+      "bytes": 2730,
       "headings": 18,
       "h1_count": 1
     },
@@ -1129,8 +1117,8 @@
     },
     {
       "path": "xhamster/reference/video.md",
-      "bytes": 3607,
-      "headings": 34,
+      "bytes": 3842,
+      "headings": 35,
       "h1_count": 1
     },
     {
@@ -1147,13 +1135,13 @@
     },
     {
       "path": "xnxx/changelog.md",
-      "bytes": 1991,
-      "headings": 8,
+      "bytes": 2583,
+      "headings": 9,
       "h1_count": 1
     },
     {
       "path": "xnxx/getting-started.md",
-      "bytes": 2611,
+      "bytes": 2715,
       "headings": 6,
       "h1_count": 1
     },
@@ -1183,20 +1171,20 @@
     },
     {
       "path": "xnxx/reference/client.md",
-      "bytes": 3702,
-      "headings": 15,
+      "bytes": 3855,
+      "headings": 16,
       "h1_count": 1
     },
     {
       "path": "xnxx/reference/user.md",
-      "bytes": 1845,
-      "headings": 12,
+      "bytes": 2030,
+      "headings": 13,
       "h1_count": 1
     },
     {
       "path": "xnxx/reference/video.md",
-      "bytes": 2741,
-      "headings": 23,
+      "bytes": 2942,
+      "headings": 24,
       "h1_count": 1
     },
     {
@@ -1213,13 +1201,13 @@
     },
     {
       "path": "xvideos/changelog.md",
-      "bytes": 1994,
-      "headings": 7,
+      "bytes": 2750,
+      "headings": 8,
       "h1_count": 1
     },
     {
       "path": "xvideos/getting-started.md",
-      "bytes": 2662,
+      "bytes": 2766,
       "headings": 6,
       "h1_count": 1
     },
@@ -1249,8 +1237,8 @@
     },
     {
       "path": "xvideos/reference/channel.md",
-      "bytes": 2793,
-      "headings": 22,
+      "bytes": 3049,
+      "headings": 23,
       "h1_count": 1
     },
     {
@@ -1261,20 +1249,20 @@
     },
     {
       "path": "xvideos/reference/client.md",
-      "bytes": 3793,
-      "headings": 20,
+      "bytes": 4054,
+      "headings": 21,
       "h1_count": 1
     },
     {
       "path": "xvideos/reference/pornstar.md",
-      "bytes": 1924,
+      "bytes": 1954,
       "headings": 12,
       "h1_count": 1
     },
     {
       "path": "xvideos/reference/video.md",
-      "bytes": 3644,
-      "headings": 32,
+      "bytes": 4010,
+      "headings": 33,
       "h1_count": 1
     },
     {
@@ -1291,13 +1279,13 @@
     },
     {
       "path": "youporn/changelog.md",
-      "bytes": 1594,
-      "headings": 3,
+      "bytes": 2318,
+      "headings": 4,
       "h1_count": 1
     },
     {
       "path": "youporn/getting-started.md",
-      "bytes": 2762,
+      "bytes": 2866,
       "headings": 6,
       "h1_count": 1
     },
@@ -1321,8 +1309,8 @@
     },
     {
       "path": "youporn/reference/client.md",
-      "bytes": 4083,
-      "headings": 21,
+      "bytes": 4249,
+      "headings": 22,
       "h1_count": 1
     },
     {
@@ -1333,14 +1321,14 @@
     },
     {
       "path": "youporn/reference/user.md",
-      "bytes": 1516,
-      "headings": 11,
+      "bytes": 1783,
+      "headings": 12,
       "h1_count": 1
     },
     {
       "path": "youporn/reference/video.md",
-      "bytes": 3743,
-      "headings": 30,
+      "bytes": 4008,
+      "headings": 31,
       "h1_count": 1
     },
     {

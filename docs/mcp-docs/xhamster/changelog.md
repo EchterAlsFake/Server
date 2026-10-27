@@ -13,6 +13,18 @@ keywords:
 
 Records the versions and documented changes for the xHamster API.
 
+## 2.6.5 — 2026-10-27 (current)
+- Restore shorts and moments extraction from current page data and DOM layouts.
+- Keep profile shorts on the correct listing route and preserve regional URL hosts.
+- Read listing metadata from hydrated page data so later cards retain thumbnails and durations.
+- Avoid incompatible quality filters for VR search and recognize Full HD and UHD videos correctly.
+- Handle missing short metadata safely and add compatible user, video and shorts aliases.
+- Route shorts and moments through the CLI.
+
+[GitHub release and distribution files](https://github.com/EchterAlsFake/unofficial-api-for-xhamster/releases/tag/2.6.5) · [PyPI 2.6.5](https://pypi.org/project/unofficial-api-for-xhamster/2.6.5/)
+
+Uses the published `eaf-base-api>=4.2.5` dependency.
+
 Date| Commit| Changes
 ---|---|---
 2026-09-17| `e452f99` / `79f61a7`| Released 2.6.2. Added validation for invalid credential error payloads in xHamster login API JSON responses (`extras.error`), raising `LoginFailed` when authentication fails rather than returning an invalid `Account` instance on HTTP 200 responses.

@@ -101,7 +101,7 @@ Type: str | None; Description: Synthesized master m3u8 playlist
 
 ## media_definitions
 
-Type: dict | None; Description: Raw media quality definitions
+Type: list[dict] | None; Description: Raw media quality definitions
 
 ## duration
 
@@ -189,7 +189,7 @@ Returns the `Pornstar` object who created this short.
 ```python
 await short.get_author(
     load_html: bool = True
-) -> Pornstar
+) -> User | Pornstar | Channel | Model | None
 ```
 
 ### Returns
@@ -204,7 +204,7 @@ Returns the full `Video` object corresponding to this short.
 await short.get_video(
     load_html: bool = False,
     load_api: bool = True
-) -> Video
+) -> Video | None
 ```
 
 ### Parameters
@@ -214,6 +214,10 @@ await short.get_video(
 ### Returns
 
 → Video
+
+## Behavior and edge cases
+
+`short_id` exposes the short’s key or ID. Shorts and GIFs provide author convenience properties, and channel authors are resolved as channels.
 
 ## Related MCP documents
 
