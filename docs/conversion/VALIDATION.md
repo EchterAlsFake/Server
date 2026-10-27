@@ -2,7 +2,7 @@
 
 - Mode: full
 - Status: pass
-- Markdown documents checked: 222
+- Markdown documents checked: 225
 - HTML source unchanged: True
 - Symlinks: 0
 - Retrieval cases checked: 34

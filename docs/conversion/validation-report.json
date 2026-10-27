@@ -1,7 +1,7 @@
 {
   "mode": "full",
   "status": "pass",
-  "markdown_documents_checked": 222,
+  "markdown_documents_checked": 225,
   "errors": [],
   "warnings": [],
   "largest_file": {
@@ -150,6 +150,12 @@
       "h1_count": 1
     },
     {
+      "path": "eaf-base-api/reference/provider.md",
+      "bytes": 3700,
+      "headings": 9,
+      "h1_count": 1
+    },
+    {
       "path": "eaf-base-api/reference/request-api.md",
       "bytes": 1875,
       "headings": 6,
@@ -159,6 +165,12 @@
       "path": "eaf-base-api/reference/scrape-stream-and-result.md",
       "bytes": 3048,
       "headings": 11,
+      "h1_count": 1
+    },
+    {
+      "path": "eaf-base-api/reference/scraper-utils.md",
+      "bytes": 5956,
+      "headings": 21,
       "h1_count": 1
     },
     {
@@ -441,6 +453,12 @@
       "path": "missav/troubleshooting/errors.md",
       "bytes": 3998,
       "headings": 10,
+      "h1_count": 1
+    },
+    {
+      "path": "official-mcp-server.md",
+      "bytes": 5898,
+      "headings": 16,
       "h1_count": 1
     },
     {
