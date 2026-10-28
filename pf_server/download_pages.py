@@ -13,8 +13,8 @@ PLATFORMS = {
         "kinds": {"gui", "installer"},
         "steps": [
             "Choose x64 for an Intel or AMD PC, or ARM64 for a Windows on ARM device. Check System → About → System type if you are unsure.",
-            "Download the portable package, extract the entire archive to a writable folder, and launch the application. Keep the bundled files together.",
-            "Optional Qt setup runners install the app directly. These installers are experimental; use the portable package if an installer does not work.",
+            "Download and run the Qt installer. Choose the components you need; QMaintenanceTool handles component changes and automatic app updates.",
+            "Alternatively, extract the complete portable archive and launch the application. Keep its bundled files together. Portable packages require manual updates.",
         ],
     },
     "linux": {
@@ -24,8 +24,8 @@ PLATFORMS = {
         "kinds": {"gui", "installer"},
         "steps": [
             "Choose x64 for an Intel or AMD system, or ARM64 for an AArch64 system. Run uname -m in a terminal to check.",
-            "Extract the complete portable archive to a writable folder. Keep its bundled libraries and helper executables together.",
-            "Allow the application file to execute in your file manager, then run it. Experimental .run installers also need executable permission.",
+            "Download the Qt installer, allow the .run file to execute, and run it. Choose your components during setup; QMaintenanceTool manages components and automatic app updates.",
+            "For a portable installation, extract the complete archive and allow the application file to execute. Keep its bundled libraries and helper executables together. Portable packages require manual updates.",
         ],
     },
     "macos": {
@@ -35,8 +35,8 @@ PLATFORMS = {
         "kinds": {"gui", "installer"},
         "steps": [
             "Choose ARM64 for Apple Silicon or x64 for Intel. A Universal package, when listed, contains both architectures. Check Apple menu → About This Mac.",
-            "Open the downloaded disk image or extract the complete archive, then follow its included installation instructions.",
-            "Builds may be ad-hoc signed. If macOS blocks a verified download, review the developer information and use the system’s Open or Privacy & Security controls. Qt setup runners are experimental.",
+            "Open the Qt installer and choose your components. QMaintenanceTool manages components and automatic app updates. Portable archives are also available, but require manual updates.",
+            "Builds may be ad-hoc signed. If macOS blocks a verified download, review the developer information and use the system’s Open or Privacy & Security controls. Follow the included installation instructions.",
         ],
     },
     "android": {
@@ -134,11 +134,30 @@ def download_context(selected_platform=None):
             file["arch_label"] = PLATFORM_ARCH_LABELS.get(file["platform"], {}).get(
                 file["arch"], ARCH_LABELS[file["arch"]]
             )
-        primary = [
-            file
-            for file in files
-            if file["kind"] in {"gui", "apk"} and not file["experimental"]
-        ]
+        # Prefer stable packages, then the managed Qt installer for each CPU.
+        # Older manifests retain their original experimental metadata; installers
+        # are now supported and recommended regardless of that historical flag.
+        recommended = {}
+        for file in files:
+            if file["kind"] not in {"gui", "apk", "installer"}:
+                continue
+            if file["experimental"] and file["kind"] != "installer":
+                continue
+            file["installation_note"] = (
+                "Qt installer · Choose components and get automatic app updates with QMaintenanceTool."
+                if file["kind"] == "installer"
+                else "Portable app · Updates must be downloaded and installed manually."
+                if file["kind"] == "gui"
+                else "APK · Open the downloaded file to install."
+            )
+            rank = (file["channel"] != "stable", file["kind"] != "installer")
+            previous = recommended.get(file["arch"])
+            if previous is None or rank < (
+                previous["channel"] != "stable",
+                previous["kind"] != "installer",
+            ):
+                recommended[file["arch"]] = file
+        primary = list(recommended.values())
         has_stable = any(file["channel"] == "stable" for file in primary)
         default = next(
             (
@@ -149,6 +168,18 @@ def download_context(selected_platform=None):
             ),
             None,
         )
+        if (
+            default
+            and default["kind"] == "gui"
+            and any(
+                file["kind"] == "installer"
+                and (file["channel"] == "stable" or default["channel"] != "stable")
+                for file in primary
+            )
+        ):
+            # Ask for the chip rather than defaulting to a portable universal app
+            # when an equally suitable managed installer is available.
+            default = None
         if key == "android":
             default = next(
                 (file for file in primary if file["arch"] == "arm64"), default

@@ -164,7 +164,7 @@ def run(browser_name="chromium"):
             assert Path(download.path()).read_bytes() == fixture.payload
             page.locator("#windows .advanced-downloads > summary").click()
             expect(page.locator("#windows .package-list").first).to_contain_text(
-                "Experimental Qt installer"
+                "Qt installer · QMaintenanceTool"
             )
             expect(page.locator("#windows .cli-downloads")).not_to_have_attribute(
                 "open", ""
@@ -197,8 +197,12 @@ def run(browser_name="chromium"):
             detected.goto(origin + "/download")
             expect(detected.locator("#windows")).to_be_visible()
             expect(detected.locator("#windows .primary-cta")).to_have_attribute(
-                "href", "/downloads/3.9.66/PornFetch_windows_GUI_x64.zip"
+                "href", "/downloads/3.9.66/PornFetch_windows_GUI_x64_Setup.exe"
             )
+            expect(detected.locator("#windows .primary-installation")).to_contain_text(
+                "automatic app updates"
+            )
+            expect(detected.locator("#windows")).not_to_contain_text("Experimental")
             expect(detected.locator("#windows .package-choice")).to_be_hidden()
             detected.locator("#windows .change-device").click()
             detected.locator("#windows .primary-package").select_option(
@@ -211,9 +215,20 @@ def run(browser_name="chromium"):
             expect(detected.locator("#macos .primary-cta")).to_be_hidden()
             expect(detected.locator("#macos .package-choice")).to_be_visible()
             detected.locator("#macos .advanced-downloads > summary").click()
-            expect(
-                detected.locator("#macos .download-channels a").last
-            ).to_have_attribute("href", "/download/macos?channel=beta")
+            expect(detected.locator(".download-channels a").last).to_have_attribute(
+                "href", "/download/macos?channel=beta"
+            )
+            expect(detected.locator(".download-channels")).to_be_visible()
+            detected.locator(".download-channels a").nth(1).click()
+            expect(detected.locator(".download-channels a[aria-current]")).to_have_text(
+                "Stable"
+            )
+            expect(detected.locator("#macos .package-row")).to_have_count(0)
+            detected.locator(".download-channels a").last.click()
+            expect(detected.locator(".download-channels a[aria-current]")).to_have_text(
+                "Beta"
+            )
+            expect(detected.locator("#macos .primary-package")).to_be_visible()
             detected.close()
             for width in (375, 768, 1440):
                 page.set_viewport_size({"width": width, "height": 900})
@@ -287,7 +302,7 @@ def run(browser_name="chromium"):
             assert not failures, failures
             browser.close()
         print(
-            f"{browser_name}: synthetic CI publisher, verified downloads, platform selection, experimental installers, no-JavaScript access, local guides and purchase age gate passed"
+            f"{browser_name}: synthetic CI publisher, verified downloads, platform selection, Qt installers, no-JavaScript access, local guides and purchase age gate passed"
         )
     finally:
         server.shutdown()

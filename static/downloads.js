@@ -24,6 +24,7 @@
     cta.href = option.value;
     panel.querySelector('.primary-version').textContent = `Recommended version: ${option.dataset.version} · ${option.dataset.channel === 'beta' ? 'Beta' : 'Stable'}`;
     panel.querySelector('.primary-requirements').textContent = option.dataset.requirements;
+    panel.querySelector('.primary-installation').textContent = option.dataset.installationNote;
   }
   function selectPlatform(key) {
     panels.forEach(panel => { panel.hidden = panel.id !== key; });
@@ -40,7 +41,10 @@
     const select = panel?.querySelector('.primary-package');
     if (select && detectedArch && key === detectedPlatform && !userSelectedPackage) {
       const options = [...select.options].filter(option => option.dataset.arch === detectedArch || option.dataset.arch === 'universal');
-      const choice = options.find(option => option.dataset.channel === 'stable') || options[0];
+      options.sort((a, b) =>
+        Number(a.dataset.channel !== 'stable') - Number(b.dataset.channel !== 'stable') ||
+        Number(a.dataset.kind !== 'installer') - Number(b.dataset.kind !== 'installer'));
+      const choice = options[0];
       if (choice) {
         select.value = choice.value;
         panel.querySelector('.package-choice').hidden = true;

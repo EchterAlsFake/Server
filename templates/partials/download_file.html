@@ -1,6 +1,6 @@
 <div class="download-file">
     <h3>{{ file.platform|capitalize if file.platform != 'any' else 'CLI source' }} · {{ file.arch_label }}</h3>
-    <p class="download-file-meta">{{ file.version }} · {{ file.channel|capitalize }}{% if file.experimental %} · Experimental{% endif %} · {{ file.size|filesizeformat(true) }}</p>
+    <p class="download-file-meta">{{ file.version }} · {{ file.channel|capitalize }}{% if file.experimental and file.kind != 'installer' %} · Experimental{% endif %} · {{ file.size|filesizeformat(true) }}</p>
     {% if file.min_os %}<p class="download-file-meta">{{ file.min_os }}</p>{% endif %}
     <a class="btn btn-primary" href="{{ file.url }}">Download {{ 'APK' if file.kind == 'apk' else 'source' if file.kind == 'source' else 'installer' if file.kind == 'installer' else 'CLI' if file.kind == 'cli' else 'app' }} <span aria-hidden="true">↓</span></a>
     <p class="download-filename">{{ file.filename }}</p>

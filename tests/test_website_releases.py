@@ -161,7 +161,7 @@ class WebsiteReleaseTests(ServerTestCase):
         self.assertEqual(list(path.parent.glob(".upload-*")), [])
         self.assertEqual(self.publish(manifest).status_code, 200)
 
-    def test_traversal_duplicate_variants_and_hidden_installer_flags_are_rejected(self):
+    def test_traversal_duplicate_variants_and_invalid_flags_are_rejected(self):
         for name in (
             "../payload.zip",
             "nested/payload.zip",
@@ -178,7 +178,7 @@ class WebsiteReleaseTests(ServerTestCase):
                 400,
                 name,
             )
-        for change in ({"kind": "installer"}, {"platform": "ios"}, {"kind": "apk"}):
+        for change in ({"experimental": "false"}, {"platform": "ios"}, {"kind": "apk"}):
             manifest = self.manifest()
             manifest["artifacts"][0].update(change)
             self.assertEqual(
@@ -273,7 +273,9 @@ class WebsiteReleaseTests(ServerTestCase):
         self.assertIn(b"3.9.66", page)
         self.assertNotIn(b"3.9.60", page)
 
-    def test_primary_download_uses_stable_universal_and_excludes_installers(self):
+    def test_primary_download_uses_stable_universal_and_supports_legacy_installers(
+        self,
+    ):
         from pf_server.download_pages import download_context
 
         stable = self.manifest("3.9.60", "stable", arch="universal")
@@ -292,7 +294,7 @@ class WebsiteReleaseTests(ServerTestCase):
                     if card["key"] == "macos"
                 )
                 self.assertEqual(card["default"]["version"], "3.9.60")
-                self.assertEqual(len(card["primary"]), 1)
+                self.assertEqual(len(card["primary"]), 2)
                 self.assertEqual(len(card["files"]), 2)
             with main.app.test_request_context("/download/macos?channel=beta"):
                 card = next(
@@ -300,8 +302,34 @@ class WebsiteReleaseTests(ServerTestCase):
                     for card in download_context()["cards"]
                     if card["key"] == "macos"
                 )
-                self.assertEqual(card["default"]["version"], "3.9.66")
-                self.assertEqual(card["default"]["channel"], "beta")
+                self.assertIsNone(card["default"])
+                self.assertEqual(
+                    {file["channel"] for file in card["primary"]}, {"beta"}
+                )
+                self.assertIn("installer", {file["kind"] for file in card["primary"]})
+
+    def test_qt_installer_is_preferred_and_no_longer_requires_experimental_flag(self):
+        from pf_server.download_pages import download_context
+
+        gui = self.manifest("3.9.60", "stable")
+        installer = self.manifest("3.9.61", "stable", kind="installer")
+        self.complete(gui)
+        self.complete(installer)
+        with main.app.test_request_context("/download/linux"):
+            card = next(
+                card for card in download_context()["cards"] if card["key"] == "linux"
+            )
+            self.assertEqual(len(card["primary"]), 1)
+            self.assertEqual(card["primary"][0]["kind"], "installer")
+            self.assertIn(
+                "automatic app updates", card["primary"][0]["installation_note"]
+            )
+            self.assertEqual(len(card["files"]), 2)
+        page = self.client.get("/download/linux").data
+        self.assertIn(b"QMaintenanceTool", page)
+        self.assertIn(b"Manual updates required", page)
+        self.assertNotIn(b"Experimental", page)
+        self.assertEqual(page.count(b'aria-label="Release channel"'), 1)
 
     def test_public_pages_work_without_github_and_escape_release_notes(self):
         self.complete(self.manifest())

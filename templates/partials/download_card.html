@@ -6,8 +6,7 @@
     {% if card.files %}
     <details class="download-builds"{% if selected_platform %} open{% endif %}>
         <summary>Choose your download <span aria-hidden="true">↓</span></summary>
-        {% for file in card.files if not file.experimental %}{% include "partials/download_file.html" %}{% endfor %}
-        {% if card.files|selectattr('experimental')|list %}<details class="experimental-downloads"><summary>Experimental Qt installers</summary><p>Setup runners install the app directly. This route is experimental; use a portable package if setup fails.</p>{% for file in card.files if file.experimental %}{% include "partials/download_file.html" %}{% endfor %}</details>{% endif %}
+        {% for file in card.files %}{% include "partials/download_file.html" %}{% endfor %}
     </details>
     {% else %}<p class="download-unavailable">{% if card.key == 'ios' %}Source package not published yet. See the CLI setup requirements.{% else %}No {{ channel or 'current' }} package published yet.{% endif %}</p>{% endif %}
     {% if not selected_platform %}<a class="text-link" href="/download/{{ card.key }}">{{ card.name }} installation guide <span aria-hidden="true">→</span></a>{% endif %}

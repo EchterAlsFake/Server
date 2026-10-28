@@ -140,8 +140,8 @@ def validate_manifest(value, *, uploading=False):
         if not isinstance(digest, str) or re.fullmatch(r"[a-f0-9]{64}", digest) is None:
             raise ReleaseError("Invalid SHA-256 digest.")
         experimental = item.get("experimental", False)
-        if type(experimental) is not bool or (kind == "installer" and not experimental):
-            raise ReleaseError("Qt installers must be marked experimental.")
+        if type(experimental) is not bool:
+            raise ReleaseError("Experimental must be a boolean.")
         records.append(
             {
                 "filename": name,

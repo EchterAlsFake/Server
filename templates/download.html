@@ -8,6 +8,7 @@
 <nav class="platform-selector" aria-label="Choose your platform">
 {% for item in cards if item.key != 'cli' %}<a href="/download/{{ item.key }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
 </nav>
+{% include "partials/download_channels.html" %}
 {% if unavailable %}<p class="download-status" role="status">The release catalog is temporarily unavailable. Please try again later.</p>{% elif not releases %}<p class="download-status" role="status">The first website-hosted release has not been published yet. Installation guides are available below.</p>{% endif %}
 {% for card in cards %}
 <section id="{{ card.key }}" class="platform-panel" aria-labelledby="{{ card.key }}-title"{% if card.key != (selected_platform or 'windows') %} hidden{% endif %}>
@@ -24,11 +25,12 @@
 <label for="package-{{ card.key }}">{{ 'Your Mac' if card.key == 'macos' else 'Your device' }}</label>
 <select id="package-{{ card.key }}" class="primary-package">
 <option value="">Choose {{ 'Apple Silicon or Intel' if card.key == 'macos' else 'your device type' }}</option>
-{% for file in card.primary %}<option value="{{ file.url }}" data-arch="{{ file.arch }}" data-version="{{ file.version }}" data-channel="{{ file.channel }}" data-requirements="{{ file.min_os or card.requirements }}"{% if card.default == file %} selected{% endif %}>{{ file.arch_label }}</option>{% endfor %}
+{% for file in card.primary %}<option value="{{ file.url }}" data-arch="{{ file.arch }}" data-kind="{{ file.kind }}" data-version="{{ file.version }}" data-channel="{{ file.channel }}" data-requirements="{{ file.min_os or card.requirements }}" data-installation-note="{{ file.installation_note }}"{% if card.default == file %} selected{% endif %}>{{ file.arch_label }}</option>{% endfor %}
 </select>
-<p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Extract the portable archive to get started.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
+<p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Use the Qt installer for automatic app updates.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
 </div>
 <a class="btn btn-primary primary-cta"{% if card.default %} href="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
+<p class="primary-installation">{% if card.default %}{{ card.default.installation_note }}{% elif card.key != 'android' %}Qt installers support component selection and automatic app updates. Portable packages require manual updates.{% endif %}</p>
 <p class="primary-requirements">{{ card.default.min_os if card.default and card.default.min_os else card.requirements }}</p>
 <button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>Different device type?</button>
 <noscript><p>Choose your download from the file list in advanced options below.</p></noscript>
@@ -37,10 +39,8 @@
 <details class="advanced-downloads"{% if card.key == 'cli' %} open{% endif %}>
 <summary>Other downloads &amp; advanced options</summary>
 <div class="advanced-content">
-{% include 'partials/download_channels.html' %}
-{% if card.files|selectattr('experimental')|list %}<p class="choice-help">Qt setup installers are experimental. Use a portable package if setup fails.</p>{% endif %}
 {% if card.files %}<h3>{{ 'CLI source' if card.key == 'ios' else 'Application packages' }}</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
-<details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>Advanced / CLI downloads &amp; source</summary><p>Command-line packages require a terminal. Source packages require Python and the release’s dependencies.</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>No command-line package published for this selection.</p>{% endfor %}</div><a href="/download/cli">CLI installation guide &amp; all platforms →</a></details>
+<details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>Advanced / CLI downloads &amp; source</summary><p>Command-line packages require a terminal. Source packages require Python and the release’s dependencies. CLI packages require manual updates.</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>No command-line package published for this selection.</p>{% endfor %}</div><a href="/download/cli">CLI installation guide &amp; all platforms →</a></details>
 </div>
 </details>
 <details class="installation-guide compact-guide" id="guide-{{ card.key }}"><summary>Installation guide for {{ card.name }}</summary><ol>{% for step in card.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% if card.key == 'cli' %}{% include 'partials/ios_warning.html' %}<p><a href="/download/android">Android / Termux guide</a> · <a href="/download/ios">iOS guide</a></p>{% endif %}<p>Next: <a href="/guides">learn how to save your first video</a>. Need help? <a href="mailto:support@echteralsfake.me">Contact support</a> with your version, platform and exact error.</p></details>
