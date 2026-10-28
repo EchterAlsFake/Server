@@ -273,6 +273,36 @@ class WebsiteReleaseTests(ServerTestCase):
         self.assertIn(b"3.9.66", page)
         self.assertNotIn(b"3.9.60", page)
 
+    def test_primary_download_uses_stable_universal_and_excludes_installers(self):
+        from pf_server.download_pages import download_context
+
+        stable = self.manifest("3.9.60", "stable", arch="universal")
+        beta = self.manifest("3.9.66", arch="universal")
+        installer = self.manifest("3.9.67", kind="installer", arch="x64")
+        for release in (stable, beta, installer):
+            release["artifacts"][0]["platform"] = "macos"
+        installer["artifacts"][0]["experimental"] = True
+        with patch(
+            "pf_server.download_pages.catalog", return_value=[beta, stable, installer]
+        ):
+            with main.app.test_request_context("/download/macos"):
+                card = next(
+                    card
+                    for card in download_context()["cards"]
+                    if card["key"] == "macos"
+                )
+                self.assertEqual(card["default"]["version"], "3.9.60")
+                self.assertEqual(len(card["primary"]), 1)
+                self.assertEqual(len(card["files"]), 2)
+            with main.app.test_request_context("/download/macos?channel=beta"):
+                card = next(
+                    card
+                    for card in download_context()["cards"]
+                    if card["key"] == "macos"
+                )
+                self.assertEqual(card["default"]["version"], "3.9.66")
+                self.assertEqual(card["default"]["channel"], "beta")
+
     def test_public_pages_work_without_github_and_escape_release_notes(self):
         self.complete(self.manifest())
         with patch("httpx.get", side_effect=AssertionError("No website GitHub calls")):
@@ -322,7 +352,10 @@ class WebsiteReleaseTests(ServerTestCase):
             self.assertIn(b"/releases/3.9.66", sitemap)
             self.assertNotIn(b"/buy_card", sitemap)
             self.assertNotIn(b"/downloads/", sitemap)
-            self.assertIn(b'content="noindex"', self.client.get("/buy_card", base_url="https://pornfetch.to").data)
+            self.assertIn(
+                b'content="noindex"',
+                self.client.get("/buy_card", base_url="https://pornfetch.to").data,
+            )
         self.assertIn(b'content="noindex, nofollow"', self.client.get("/download").data)
 
     def test_upload_limit_is_scoped_and_cannot_hide_existing_releases(self):

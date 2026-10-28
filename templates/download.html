@@ -1,12 +1,53 @@
 {% extends "base.html" %}
-{% block title %}Download Porn Fetch for Windows, Linux, macOS, Android &amp; CLI{% endblock %}
+{% from "partials/platform_icon.html" import platform_icon %}
+{% block title %}Download Porn Fetch — Choose your device{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='downloads.js') }}" defer></script>{% endblock %}
 {% block content %}
-<div class="downloads-page">
-<header class="page-heading"><p class="eyebrow">Official downloads</p><h1>Porn Fetch.<br>On your device.</h1><p>Choose your platform, then your architecture. Download directly from this website, with local installation guides and release notes.</p></header>
-{% include "partials/download_channels.html" %}
-{% if unavailable %}<p class="download-status" role="status">The release catalog is temporarily unavailable. Please try again later.</p>{% elif not releases %}<p class="download-status" role="status">The first website-hosted release has not been published yet. Platform guides are available below; download links appear after a release is verified.</p>{% endif %}
-<div class="download-grid">{% for card in cards %}{% include "partials/download_card.html" %}{% endfor %}</div>
-<div class="download-bottom"><a href="/releases">Previous releases &amp; changelog →</a><a href="/help">Installation or activation help →</a></div>
+<div class="downloads-page download-picker" data-initial-platform="{{ selected_platform or '' }}">
+<header class="page-heading"><p class="eyebrow">Official downloads</p><h1>Your videos. On your device.</h1><p>Get Porn Fetch for your computer or phone.</p></header>
+<nav class="platform-selector" aria-label="Choose your platform">
+{% for item in cards if item.key != 'cli' %}<a href="/download/{{ item.key }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
+</nav>
+{% if unavailable %}<p class="download-status" role="status">The release catalog is temporarily unavailable. Please try again later.</p>{% elif not releases %}<p class="download-status" role="status">The first website-hosted release has not been published yet. Installation guides are available below.</p>{% endif %}
+{% for card in cards %}
+<section id="{{ card.key }}" class="platform-panel" aria-labelledby="{{ card.key }}-title"{% if card.key != (selected_platform or 'windows') %} hidden{% endif %}>
+<div class="primary-download">
+<p class="eyebrow">{{ 'Command line' if card.key in ['ios', 'cli'] else 'Get the app' }}</p>
+<h2 id="{{ card.key }}-title">Porn Fetch for {{ card.name }}</h2>
+{% if card.key in ['ios', 'cli'] %}
+<p class="primary-description">{{ card.summary }}</p>
+{% if card.key == 'ios' %}{% include 'partials/ios_warning.html' %}<p>There is no graphical iOS app or IPA. Follow the setup guide, then use the CLI source package in advanced downloads.</p>{% else %}<p>Choose a terminal package for your operating system in advanced downloads below.</p>{% endif %}
+<a href="#guide-{{ card.key }}" class="text-link guide-jump">Read the installation guide →</a>
+{% elif card.primary %}
+<p class="primary-version" aria-live="polite">{% if card.default %}Recommended version: {{ card.default.version }} · {{ card.default.channel|capitalize }}{% else %}Choose your device below to get the recommended version.{% endif %}</p>
+<div class="package-choice"{% if card.default %} hidden{% endif %}>
+<label for="package-{{ card.key }}">{{ 'Your Mac' if card.key == 'macos' else 'Your device' }}</label>
+<select id="package-{{ card.key }}" class="primary-package">
+<option value="">Choose {{ 'Apple Silicon or Intel' if card.key == 'macos' else 'your device type' }}</option>
+{% for file in card.primary %}<option value="{{ file.url }}" data-arch="{{ file.arch }}" data-version="{{ file.version }}" data-channel="{{ file.channel }}" data-requirements="{{ file.min_os or card.requirements }}"{% if card.default == file %} selected{% endif %}>{{ file.arch_label }}</option>{% endfor %}
+</select>
+<p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Extract the portable archive to get started.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
+</div>
+<a class="btn btn-primary primary-cta"{% if card.default %} href="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
+<p class="primary-requirements">{{ card.default.min_os if card.default and card.default.min_os else card.requirements }}</p>
+<button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>Different device type?</button>
+<noscript><p>Choose your download from the file list in advanced options below.</p></noscript>
+{% else %}<p class="download-status">No {{ channel or 'recommended' }} graphical app published for this platform yet. Check advanced options or previous releases.</p>{% endif %}
+</div>
+<details class="advanced-downloads"{% if card.key == 'cli' %} open{% endif %}>
+<summary>Other downloads &amp; advanced options</summary>
+<div class="advanced-content">
+{% include 'partials/download_channels.html' %}
+{% if card.files|selectattr('experimental')|list %}<p class="choice-help">Qt setup installers are experimental. Use a portable package if setup fails.</p>{% endif %}
+{% if card.files %}<h3>{{ 'CLI source' if card.key == 'ios' else 'Application packages' }}</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
+<details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>Advanced / CLI downloads &amp; source</summary><p>Command-line packages require a terminal. Source packages require Python and the release’s dependencies.</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>No command-line package published for this selection.</p>{% endfor %}</div><a href="/download/cli">CLI installation guide &amp; all platforms →</a></details>
+</div>
+</details>
+<details class="installation-guide compact-guide" id="guide-{{ card.key }}"><summary>Installation guide for {{ card.name }}</summary><ol>{% for step in card.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% if card.key == 'cli' %}{% include 'partials/ios_warning.html' %}<p><a href="/download/android">Android / Termux guide</a> · <a href="/download/ios">iOS guide</a></p>{% endif %}<p>Next: <a href="/guides">learn how to save your first video</a>. Need help? <a href="mailto:support@echteralsfake.me">Contact support</a> with your version, platform and exact error.</p></details>
+</section>
+{% endfor %}
+<nav class="download-bottom" aria-label="Download help"><a href="#guide-{{ selected_platform or 'windows' }}" class="installation-link">Installation guide</a><a href="/releases">Previous releases &amp; changelog</a><a href="/help">Troubleshooting / activation help</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="#verify-download">Verify download (SHA-256)</a></nav>
+<details id="verify-download" class="installation-guide compact-guide"><summary>How to verify your download</summary><p>Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>Linux: <code>sha256sum &lt;filename&gt;</code><br>macOS: <code>shasum -a 256 &lt;filename&gt;</code></p><p>A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.</p></details>
 <p class="download-disclosure">Downloads and licenses are separate. Premium is a <a href="/porn_fetch">€19.99 one-time purchase</a>, with one year of updates from first activation and up to 10 active installations. Eligible versions remain usable afterwards, subject to activation and periodic validation. Processing fees may apply. No automatic renewal.</p>
 </div>
 {% endblock %}

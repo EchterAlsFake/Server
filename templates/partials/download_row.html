@@ -1,0 +1,7 @@
+<div class="package-row">
+<div><strong>{{ file.arch_label }}</strong> <span class="package-badge">{{ file.channel|capitalize }}</span>{% if file.experimental %} <span class="package-badge experimental">Experimental Qt installer</span>{% else %} <span class="package-kind">{{ 'Portable app' if file.kind == 'gui' else file.kind|upper }}</span>{% endif %}
+<p class="download-file-meta">{{ file.platform|capitalize }} · {{ file.version }} · {{ file.size|filesizeformat(true) }}{% if file.min_os %} · {{ file.min_os }}{% endif %}</p>
+<p class="download-filename">{{ file.filename }}</p>
+<div class="download-file-links"><a href="{{ file.url }}.sha256" aria-label="SHA-256 for {{ file.filename }}">SHA-256</a><a href="/releases/{{ file.version }}">Release notes &amp; notices</a></div>
+</div><a class="package-download" href="{{ file.url }}" aria-label="Download {{ file.filename }}">Download ↓</a>
+</div>

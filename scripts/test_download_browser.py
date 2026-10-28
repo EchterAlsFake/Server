@@ -147,43 +147,74 @@ def run(browser_name="chromium"):
             page.on("pageerror", lambda error: failures.append(str(error)))
             page.goto(origin + "/download")
             expect(page.locator("#age-overlay")).to_have_count(0)
-            expect(page.locator(".download-grid > .download-card")).to_have_count(6)
-            expect(page.locator(".download-card .platform-icon")).to_have_count(6)
-            page.locator("#platform-icon-credits > summary").click()
-            expect(page.locator("#platform-icon-credits")).to_contain_text(
-                "Larry Ewing"
-            )
-            expect(page.locator("#platform-icon-credits")).to_contain_text(
-                "Creative Commons 3.0 Attribution License"
-            )
-            page.locator("#platform-icon-credits > summary").click()
-            expect(page.locator("#ios .ios-warning")).to_contain_text(
-                "xz-kitty Python build"
-            )
-            expect(page.locator("#windows .download-builds")).not_to_have_attribute(
+            expect(page.locator(".platform-selector a")).to_have_count(5)
+            expect(page.locator(".platform-panel:visible")).to_have_count(1)
+            page.locator('[data-platform="windows"]').click()
+            expect(page.locator("#windows")).to_be_visible()
+            expect(page.locator("#windows .advanced-downloads")).not_to_have_attribute(
                 "open", ""
             )
-            page.locator("#windows .download-builds > summary").click()
-            expect(
-                page.locator("#windows .experimental-downloads > summary")
-            ).to_be_visible()
-            expect(
-                page.locator("#windows .experimental-downloads .download-file")
-            ).to_be_hidden()
-            page.locator("#windows .experimental-downloads > summary").click()
-            expect(page.locator("#windows .experimental-downloads")).to_contain_text(
-                "Experimental"
-            )
+            page.locator("#windows .primary-package").select_option(index=1)
+            expect(page.locator(".primary-cta:visible")).to_have_count(1)
+            expect(page.locator("#windows .primary-version")).to_contain_text("Beta")
             with page.expect_download() as event:
-                page.locator("#windows .download-file .btn").first.click()
+                page.locator("#windows .primary-cta").click()
             download = event.value
             assert download.suggested_filename.endswith(".zip")
             assert Path(download.path()).read_bytes() == fixture.payload
-            page.locator("#windows .download-builds > summary").click()
+            page.locator("#windows .advanced-downloads > summary").click()
+            expect(page.locator("#windows .package-list").first).to_contain_text(
+                "Experimental Qt installer"
+            )
+            expect(page.locator("#windows .cli-downloads")).not_to_have_attribute(
+                "open", ""
+            )
+            page.locator("#windows .cli-downloads > summary").click()
+            expect(page.locator("#windows .cli-downloads")).to_contain_text("CLI")
+            expect(page.locator("#windows .cli-downloads")).to_contain_text(
+                "source_3.9.66"
+            )
+            page.locator("#windows .advanced-downloads > summary").click()
             page.evaluate('window.scrollTo({top: 0, behavior: "instant"})')
             page.screenshot(
                 path="/tmp/porn-fetch-downloads-desktop.png", full_page=True
             )
+            page.locator('[data-platform="android"]').click()
+            expect(page.locator("#android .primary-cta")).to_have_attribute(
+                "href", "/downloads/3.9.66/PornFetch_android_GUI_arm64.apk"
+            )
+            expect(page.locator(".primary-cta:visible")).to_have_count(1)
+            page.locator('[data-platform="ios"]').click()
+            expect(page.locator("#ios .ios-warning")).to_contain_text(
+                "xz-kitty Python build"
+            )
+            expect(page.locator(".primary-cta:visible")).to_have_count(0)
+            detected = context.new_page()
+            detected.add_init_script("""Object.defineProperty(navigator, 'userAgentData', {
+                value: { platform: 'Windows', getHighEntropyValues: () =>
+                    Promise.resolve({architecture: 'x86', bitness: '64'}) }
+            });""")
+            detected.goto(origin + "/download")
+            expect(detected.locator("#windows")).to_be_visible()
+            expect(detected.locator("#windows .primary-cta")).to_have_attribute(
+                "href", "/downloads/3.9.66/PornFetch_windows_GUI_x64.zip"
+            )
+            expect(detected.locator("#windows .package-choice")).to_be_hidden()
+            detected.locator("#windows .change-device").click()
+            detected.locator("#windows .primary-package").select_option(
+                "/downloads/3.9.66/PornFetch_windows_GUI_arm64.zip"
+            )
+            expect(detected.locator("#windows .primary-cta")).to_have_attribute(
+                "href", "/downloads/3.9.66/PornFetch_windows_GUI_arm64.zip"
+            )
+            detected.locator('[data-platform="macos"]').click()
+            expect(detected.locator("#macos .primary-cta")).to_be_hidden()
+            expect(detected.locator("#macos .package-choice")).to_be_visible()
+            detected.locator("#macos .advanced-downloads > summary").click()
+            expect(
+                detected.locator("#macos .download-channels a").last
+            ).to_have_attribute("href", "/download/macos?channel=beta")
+            detected.close()
             for width in (375, 768, 1440):
                 page.set_viewport_size({"width": width, "height": 900})
                 for path in (
@@ -201,13 +232,10 @@ def run(browser_name="chromium"):
                     "/about",
                 ):
                     page.goto(origin + path)
-                    page.wait_for_function(
-                        """Array.from(document.querySelectorAll('.platform-icon')).every(
-                            icon => icon.complete && icon.naturalWidth > 0 && icon.naturalHeight > 0
-                        )"""
-                    )
                     if path == "/":
-                        expect(page.locator(".platform-list .platform-icon")).to_have_count(5)
+                        expect(
+                            page.locator(".platform-list .platform-icon")
+                        ).to_have_count(5)
                     assert page.evaluate(
                         "document.documentElement.scrollWidth <= innerWidth"
                     ), (width, path)
@@ -228,9 +256,9 @@ def run(browser_name="chromium"):
                         )
                 print(f"Downloads and product guides fit {width}px.", flush=True)
             page.goto(origin + "/download?channel=stable")
-            expect(page.locator(".download-file")).to_have_count(0)
+            expect(page.locator(".package-row")).to_have_count(0)
             page.goto(origin + "/download?channel=beta")
-            expect(page.locator(".download-file")).not_to_have_count(0)
+            expect(page.locator(".package-row")).not_to_have_count(0)
             page.goto(origin + "/porn_fetch")
             expect(page.locator("#age-overlay")).to_be_visible()
             no_js = browser.new_context(
@@ -248,16 +276,18 @@ def run(browser_name="chromium"):
             )
             fallback = no_js.new_page()
             fallback.goto(origin + "/download")
-            fallback.locator("#android .download-builds > summary").click()
-            expect(fallback.locator("#android .download-file .btn")).to_have_count(5)
-            expect(
-                fallback.locator("#android .download-file .btn").first
-            ).to_be_visible()
+            fallback.locator(".site-menu > summary").click()
+            fallback.locator('[data-platform="android"]').click()
+            fallback.locator(".site-menu > summary").click()
+            expect(fallback.locator("#android .primary-cta")).to_be_visible()
+            fallback.locator("#android .advanced-downloads > summary").click()
+            expect(fallback.locator("#android .package-download")).to_have_count(5)
+            expect(fallback.locator("#android .package-download").first).to_be_visible()
             no_js.close()
             assert not failures, failures
             browser.close()
         print(
-            f"{browser_name}: synthetic CI publisher, verified downloads, platform cards, experimental installers, no-JavaScript access, local guides and purchase age gate passed"
+            f"{browser_name}: synthetic CI publisher, verified downloads, platform selection, experimental installers, no-JavaScript access, local guides and purchase age gate passed"
         )
     finally:
         server.shutdown()

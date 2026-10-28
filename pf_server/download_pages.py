@@ -125,7 +125,44 @@ def download_context(selected_platform=None):
             file["arch_label"] = PLATFORM_ARCH_LABELS.get(file["platform"], {}).get(
                 file["arch"], ARCH_LABELS[file["arch"]]
             )
-        cards.append(dict(info, key=key, files=files))
+        cli_files = latest_artifacts(
+            releases, None if key == "cli" else key, {"cli", "source"}, channel
+        )
+        if key != "cli":
+            cli_files += latest_artifacts(releases, "any", {"source"}, channel)
+        for file in cli_files:
+            file["arch_label"] = PLATFORM_ARCH_LABELS.get(file["platform"], {}).get(
+                file["arch"], ARCH_LABELS[file["arch"]]
+            )
+        primary = [
+            file
+            for file in files
+            if file["kind"] in {"gui", "apk"} and not file["experimental"]
+        ]
+        has_stable = any(file["channel"] == "stable" for file in primary)
+        default = next(
+            (
+                file
+                for file in primary
+                if file["arch"] == "universal"
+                and (file["channel"] == "stable" or not has_stable)
+            ),
+            None,
+        )
+        if key == "android":
+            default = next(
+                (file for file in primary if file["arch"] == "arm64"), default
+            )
+        cards.append(
+            dict(
+                info,
+                key=key,
+                files=files,
+                cli_files=cli_files,
+                primary=primary,
+                default=default,
+            )
+        )
     return dict(data, cards=cards, channel=channel, selected_platform=selected_platform)
 
 
