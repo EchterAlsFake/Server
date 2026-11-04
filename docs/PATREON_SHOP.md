@@ -100,3 +100,34 @@ after thirty days while the worker runs. Encrypted recipient, keyed email digest
 last request time, purchase and license mappings remain for recovery. Review valid
 erasure requests manually, including contractual evidence, backups and the effect
 on future deduplication. Do not promise recovery after deleting those mappings.
+
+## MSI rootless deployment
+
+The MSI host uses `sudo pfctl update web`, not the legacy `/srv/server` layout.
+Pin `curl-cffi==0.17.0` in the infrastructure repository's
+`ops/web.requirements.txt` and its installed constraints before building. The
+candidate image runs the server tests before the coordinated backup, migration
+and image cutover. Persistent application files live in the `pornfetch-data`
+volume mounted at `/data`.
+
+The matching user units are supplied in `deploy/rootless/`. Install them into
+the `pornfetch` account's user-systemd directory and mirror them in the
+infrastructure repository's `ops/user-systemd/`. Register `patreon-shop` as the
+`pornfetch-patreon-shop.timer` component in `pfctl` so maintenance commands also
+control it. The worker executes inside the running web container with the same
+credential wrapper as the existing delivery jobs.
+
+Add the feature flag, product-variant ID and cookie-file path to the web and
+migration Quadlets. Store the stable lookup key as a TPM-sealed user credential
+named `PATREON_SHOP_LOOKUP_KEY` and load it in both units, following their existing
+credential pattern. Keep the cookie export at `/data/secrets/patreon-cookies.txt`,
+owned by container UID 1000 with mode 0600 in a 0700 directory. It is covered by
+the existing encrypted application backups. The web and worker share a Unix
+identity in this layout; the export is not isolated from the web process.
+
+Before enabling the flag, run `verify-patreon-shop` inside the container through
+the credential wrapper with the cookie path and variant ID supplied. After a
+successful complete scan, enable the flag, reload the user manager, restart web,
+and enable the minute timer. Check the public activation page, CSRF rejection,
+Keygen policy and worker status without creating a customer claim or sending a
+test email. Preserve the existing lookup key on future deployments.

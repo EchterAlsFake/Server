@@ -1,0 +1,11 @@
+[Unit]
+Description=Process Patreon Shop activation every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=1min
+AccuracySec=1s
+Unit=pornfetch-patreon-shop.service
+
+[Install]
+WantedBy=timers.target
