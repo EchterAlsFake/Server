@@ -139,7 +139,7 @@ def create_app(
     def private_payment_response(response):
         from flask import request
         if request.path in {
-            "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
+            "/activate", "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
             "/onramp-callback", "/download-recovery", "/create-crypto-payment",
             "/payment-preview/banxa",
@@ -193,6 +193,24 @@ def create_app(
         """Fulfill durable signed payment receipts outside the webhook request."""
         from pf_server.payment_receipts import process_receipts
         click.echo(f"Processed {process_receipts()} authenticated payment receipts.")
+
+    @application.cli.command("verify-patreon-shop")
+    def verify_patreon_shop_command():
+        """Read-only complete sales scan; prints counts, never buyer details."""
+        from pf_server.patreon_shop import fetch_sales, VerificationUnavailable
+        if not application.config.get('PATREON_SHOP_PRODUCT_VARIANT_ID'):
+            raise click.ClickException('Configure PATREON_SHOP_PRODUCT_VARIANT_ID first')
+        try:
+            sales = fetch_sales()
+        except VerificationUnavailable as error:
+            raise click.ClickException('Verification unavailable: ' + error.reason) from None
+        click.echo(f"Complete scan: {len(sales)} orders; {sum(row[3] for row in sales)} eligible.")
+
+    @application.cli.command("process-patreon-shop")
+    def process_patreon_shop_command():
+        """Verify queued Shop claims and retry durable email delivery."""
+        from pf_server.patreon_shop import process_claims
+        click.echo(f"Processed {process_claims()} Patreon Shop claims.")
 
     @application.cli.command("retry-crypto-deliveries")
     def retry_crypto_deliveries_command():

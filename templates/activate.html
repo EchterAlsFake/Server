@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Activate your Patreon purchase — Porn Fetch{% endblock %}
+{% block content %}
+<section class="card">
+<h1>Activate your Patreon Shop purchase</h1>
+<p>Enter the email address used for your Porn Fetch purchase. Your license is delivered only by email.</p>
+{% if accepted %}
+<p role="status">Your request has been received. If eligible, your license will be emailed to you. Please check your inbox and spam folder. Requests are normally processed within a few minutes. If it does not arrive, contact <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a>.</p>
+{% else %}
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="{{ url_for('pages.activate') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label for="activation-email">Purchase email</label>
+<input type="email" id="activation-email" name="email" autocomplete="email" maxlength="254" required>
+<button type="submit">Email my license</button>
+</form>
+{% endif %}
+<p>Repeat requests resend your license. A later purchase receives a new annual license. <a href="/privacy_policy">How we handle your email and purchase information</a>.</p>
+</section>
+{% endblock %}

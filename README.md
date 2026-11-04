@@ -479,3 +479,15 @@ recipient address and any conversion quote, preserve the full amount legally owe
 and cover necessary refund costs. If a timely cost-free alternative cannot be arranged,
 statutory repayment remains due; do not extend legal deadlines or treat 90 days as a
 claims cutoff. See the dated legal-review supplement for scope, sources and open issues.
+
+### Patreon Shop email activation
+
+`/activate` accepts only a purchase email and never exposes a license in the browser.
+This is independent of membership webhooks. One eligible Shop order receives one
+normal annual Keygen license; repeated claims resend it, and another order gets a
+new license. Technical Patreon failures grant a normal fallback license, once per
+email; confirmed missing/ineligible purchases do not. This deliberately permits
+unverified claims during outages. Shared IP limits and mailbox cooldowns reduce abuse.
+
+Setup, cookie rotation, failure handling and retention are documented in
+[Patreon Shop operations](docs/PATREON_SHOP.md). Activation defaults to disabled.

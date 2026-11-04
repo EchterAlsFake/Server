@@ -187,6 +187,17 @@ def load_environment_config(
             raise ValueError("ONRAMP_ENABLED requires Keygen issuance configuration")
         if not app_domain.startswith("https://") or not api_domain.startswith("https://"):
             raise ValueError("ONRAMP_ENABLED requires HTTPS public origins")
+    shop_enabled = _boolean(source, "PATREON_SHOP_ENABLED", False)
+    if shop_enabled:
+        if not source.get("RATELIMIT_STORAGE_URI", "").startswith(("redis://", "rediss://")):
+            raise ValueError("PATREON_SHOP_ENABLED requires shared Redis RATELIMIT_STORAGE_URI")
+        if len(source.get("PATREON_SHOP_LOOKUP_KEY", "")) < 32:
+            raise ValueError("PATREON_SHOP_ENABLED requires a stable PATREON_SHOP_LOOKUP_KEY (32+ characters)")
+        for name in ("LICENSE_DELIVERY_ENCRYPTION_KEY", "KEYGEN_PRODUCT_TOKEN", "KEYGEN_POLICY_ID", "PATREON_SHOP_PRODUCT_VARIANT_ID"):
+            if not source.get(name):
+                raise ValueError("PATREON_SHOP_ENABLED requires " + name)
+        if not smtp_host or not email_from:
+            raise ValueError("PATREON_SHOP_ENABLED requires license SMTP configuration")
     tier_ids = frozenset(
         tier_id.strip()
         for tier_id in source.get("PATREON_LICENSE_TIER_IDS", "").split(",")
@@ -236,6 +247,10 @@ def load_environment_config(
         "KILL_TOKEN": source.get("KILL_TOKEN"),
         "CI_TOKEN": source.get("CI_TOKEN"),
         "CHECKLIST_AUTH": source.get("CHECKLIST_AUTH"),
+        "PATREON_SHOP_ENABLED": shop_enabled,
+        "PATREON_SHOP_COOKIE_FILE": source.get("PATREON_SHOP_COOKIE_FILE", ""),
+        "PATREON_SHOP_LOOKUP_KEY": source.get("PATREON_SHOP_LOOKUP_KEY", ""),
+        "PATREON_SHOP_PRODUCT_VARIANT_ID": source.get("PATREON_SHOP_PRODUCT_VARIANT_ID", ""),
         "PATREON_SECRET": source.get("PATREON_SECRET", ""),
         "PATREON_PAYMENTS_ENABLED": source.get("PATREON_PAYMENTS_ENABLED", "false").lower() == "true",
         "PATREON_LICENSE_TIER_IDS": tier_ids,

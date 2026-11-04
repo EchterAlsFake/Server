@@ -197,3 +197,36 @@ class WithdrawalDelivery(db.Model):
     lease_token = db.Column(db.String(64), nullable=True)
     lease_expires_at = db.Column(db.String(40), nullable=True)
     sent_at = db.Column(db.String(40), nullable=True)
+
+
+class PatreonShopCustomer(db.Model):
+    """Durable email-only activation queue and recovery identity."""
+    __tablename__ = 'patreon_shop_customers'
+    email_digest = db.Column(db.String(64), primary_key=True)
+    recipient_encrypted = db.Column(db.Text, nullable=False)
+    pending = db.Column(db.Boolean, nullable=False, default=True)
+    requested_at = db.Column(db.Float, nullable=False)
+    completed_at = db.Column(db.Float, nullable=True)
+    next_attempt_at = db.Column(db.Float, nullable=False, default=0)
+    delivery_key = db.Column(db.String, db.ForeignKey('license.license_key'))
+    last_key = db.Column(db.String, db.ForeignKey('license.license_key'))
+    fallback_key = db.Column(db.String, db.ForeignKey('license.license_key'))
+    fallback_created_at = db.Column(db.Float)
+    reason = db.Column(db.String(32))
+
+
+class PatreonShopPurchase(db.Model):
+    __tablename__ = 'patreon_shop_purchases'
+    order_id = db.Column(db.String(128), primary_key=True)
+    email_digest = db.Column(db.String(64), db.ForeignKey('patreon_shop_customers.email_digest'), nullable=False, index=True)
+    purchased_at = db.Column(db.Float, nullable=False)
+    eligible = db.Column(db.Boolean, nullable=False)
+    license_key = db.Column(db.String, db.ForeignKey('license.license_key'), unique=True)
+
+
+class PatreonShopHealth(db.Model):
+    __tablename__ = 'patreon_shop_health'
+    id = db.Column(db.Integer, primary_key=True)
+    retry_at = db.Column(db.Float, nullable=False, default=0)
+    last_success_at = db.Column(db.Float)
+    reason = db.Column(db.String(32))

@@ -28,6 +28,7 @@ import main  # noqa: E402
 from pf_server.country_service import CountryEvidence  # noqa: E402
 from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
+    PatreonShopCustomer, PatreonShopPurchase, PatreonShopHealth,
     WithdrawalRequest,
     WithdrawalDelivery,
     CheckoutAgreement,
@@ -77,6 +78,7 @@ class ServerTestCase(unittest.TestCase):
         self.mock_country_lookup = self.country_lookup.start()
         with main.app.app_context():
             for model in (
+                PatreonShopPurchase, PatreonShopCustomer, PatreonShopHealth,
                 WithdrawalDelivery,
                 WithdrawalRequest,
                 CheckoutAgreement,

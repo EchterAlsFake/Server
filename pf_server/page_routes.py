@@ -9,6 +9,7 @@ from flask import (
     request, session, url_for,
 )
 
+from .extensions import limiter
 from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent
 from .countries import COUNTRY_OPTIONS
 from .http import normalized_hostname
@@ -235,4 +236,33 @@ def payment_preview(method):
         session_id=session_id, recovery_token=request.values.get("token"), error=error,
     ), 400 if error else 200)
     response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+@pages_bp.route('/activate', methods=['GET', 'POST'])
+@limiter.limit('5 per minute;20 per hour', methods=['POST'])
+def activate():
+    from flask import current_app
+    from .licensing import normalize_recipient_email
+    from .patreon_shop import enqueue
+    from .extensions import db
+    from sqlalchemy.exc import SQLAlchemyError
+    if not current_app.config.get('PATREON_SHOP_ENABLED'):
+        abort(404)
+    status, error, accepted = 200, None, False
+    if request.method == 'POST':
+        email = normalize_recipient_email(request.form.get('email'))
+        if not email:
+            status, error = 400, 'Please enter a valid email address.'
+        else:
+            try:
+                enqueue(email)
+                accepted = True
+                status = 202
+            except SQLAlchemyError:
+                db.session.rollback()
+                status, error = 503, 'We could not save your request. Please try again shortly.'
+    response = make_response(render_template('activate.html', error=error, accepted=accepted), status)
+    response.headers['Cache-Control'] = 'private, no-store'
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     return response
