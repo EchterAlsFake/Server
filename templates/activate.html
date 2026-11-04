@@ -10,12 +10,17 @@
             <h1 id="activation-heading">Your purchase.<br>Your license.</h1>
             <p>Enter the email address used for your Porn Fetch purchase to receive your license.</p>
         </header>
+        <aside class="activation-delivery-notice" role="note" aria-labelledby="delivery-notice-heading">
+            <h2 id="delivery-notice-heading">Gmail users: check your Spam folder</h2>
+            <p>Gmail can place your license email in <strong>Spam</strong>. Check there even if your inbox is empty.</p>
+            <p>Delivery can take <strong>up to 10 minutes</strong>. If nothing arrives after 10 minutes, check Spam again, then <a href="mailto:support@echteralsfake.me">contact me</a>.</p>
+        </aside>
         {% if accepted %}
         <div class="activation-status" role="status">
             <span class="activation-status-mark" aria-hidden="true">✓</span>
             <div>
                 <h2>Request received</h2>
-                <p>If eligible, your license will arrive by email. Allow a few minutes, then check your inbox and spam folder.</p>
+                <p>If eligible, your license will arrive by email. Please allow up to 10 minutes and check your Spam folder, especially if you use Gmail.</p>
             </div>
         </div>
         {% else %}
@@ -28,7 +33,7 @@
             </div>
             {% if error %}<p id="activation-error" class="checkout-error" role="alert">{{ error }}</p>{% endif %}
             <button type="submit" class="btn btn-primary">Email my license <span aria-hidden="true">→</span></button>
-            <p class="checkout-reassurance">Delivered to your inbox. Never displayed in your browser.</p>
+            <p class="checkout-reassurance">Delivered by email. Never displayed in your browser.</p>
         </form>
         {% endif %}
         <div class="activation-details">

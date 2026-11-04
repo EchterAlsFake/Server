@@ -84,3 +84,10 @@
 .activation-status h2 { margin: 1px 0 8px; font-size: var(--text-body); font-weight: 550; }
 .activation-status p { margin: 0; color: var(--color-text-muted); font-size: var(--text-secondary); line-height: 1.75; }
 @media (max-width: 540px) { .activation-page { margin-block: 24px 48px; } .activation-card { padding: 24px; } .activation-status { padding: 16px; } }
+
+.activation-delivery-notice { margin-top: 26px; padding: 18px 20px; border: 1px solid #ffcf7166; border-left: 4px solid #ffcf71; border-radius: 8px; background: #ffcf7110; }
+.activation-delivery-notice h2 { margin: 0 0 10px; color: #ffda94; font-size: var(--text-body); font-weight: 650; line-height: 1.5; letter-spacing: -.015em; }
+.activation-delivery-notice p { margin: 0 0 10px; color: #e6d6b9; font-size: var(--text-secondary); line-height: 1.75; }
+.activation-delivery-notice p:last-child { margin-bottom: 0; }
+.activation-delivery-notice strong { color: #ffe3ad; font-weight: 650; }
+.activation-delivery-notice a { color: #ffda94; }
