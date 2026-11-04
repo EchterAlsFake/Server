@@ -18,7 +18,7 @@
             {% if not checkout_consent %}
             <p class="checkout-confirmations" role="note">Start with the <a href="/porn_fetch">payment methods and required confirmations</a> to continue.</p>
             {% endif %}
-            {% if checkout_consent %}<p><a href="/checkout/agreement" download>Download checkout agreement receipt / Zustimmungsbeleg herunterladen (PDF)</a></p>{% endif %}
+            {% if checkout_consent %}<p><a href="/checkout/agreement" download>Download agreement receipt (PDF)</a></p>{% endif %}
             {% block checkout_form %}{% endblock %}
             <p class="checkout-reassurance">No subscription. No automatic renewal.<br>License available after verified payment.</p>
             <nav class="checkout-alternatives" aria-label="Other payment options">

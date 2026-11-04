@@ -12,10 +12,10 @@ from sqlalchemy import update
 from .extensions import db
 from .models import CheckoutAgreement, Transaction, PatreonLicenseDelivery
 
-VERSION = "contract-2026-11-04-v4"
-IMMEDIATE_EN = "I expressly consent to the supply of the digital content beginning before the withdrawal period ends. I acknowledge that my right of withdrawal expires when performance begins, provided I have received the legally required contract confirmation."
+VERSION = "contract-2026-11-04-v5"
+IMMEDIATE_EN = "I expressly agree to digital delivery before the withdrawal period ends. I understand that my withdrawal right ends when delivery starts, once I receive the contract confirmation."
 IMMEDIATE_DE = "Ich stimme ausdrücklich zu, dass vor Ablauf der Widerrufsfrist mit der Bereitstellung der digitalen Inhalte begonnen wird. Mir ist bekannt, dass mein Widerrufsrecht mit Beginn der Vertragsausführung erlischt, sofern mir die gesetzlich erforderliche Vertragsbestätigung zur Verfügung gestellt wurde."
-REFUND_EN = "I expressly agree to cryptocurrency refunds for the Porn Fetch license under the separate refund agreement, including after a Banxa-funded payment. Patreon payments are refunded through Patreon to the original payment method within 90 days; after that, cryptocurrency applies under this agreement. The supplier bears refund costs. My statutory claims and deadlines remain unchanged."
+REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
 REFUND_DE = "Ich vereinbare ausdrücklich Krypto-Erstattungen für die Porn-Fetch-Lizenz nach der gesonderten Erstattungsvereinbarung, auch bei über Banxa finanzierten Zahlungen. Patreon-Zahlungen werden innerhalb von 90 Tagen über Patreon auf das ursprüngliche Zahlungsmittel erstattet; danach gilt die Krypto-Erstattung nach dieser Vereinbarung. Der Anbieter trägt die Erstattungskosten. Meine gesetzlichen Ansprüche und Fristen bleiben unverändert."
 
 

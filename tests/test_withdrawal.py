@@ -41,7 +41,7 @@ class WithdrawalTests(ServerTestCase):
         for path in ('/', '/porn_fetch', '/withdrawal'):
             page = self.client.get(path)
             self.assertEqual(page.status_code, 200)
-            self.assertIn('Vertrag widerrufen', page.get_data(as_text=True))
+            self.assertIn('Withdraw from contract', page.get_data(as_text=True))
         page = self.client.get('/withdrawal')
         self.assertNotIn(b'id="age-overlay"', page.data)
         self.assertNotIn(b'<details class="site-menu" open>', page.data)
@@ -55,7 +55,7 @@ class WithdrawalTests(ServerTestCase):
         blocked = self.client.get('/', base_url=host,
             headers={'Referer': 'https://vplan.echteralsfake.me/school/plan'})
         self.assertEqual(blocked.status_code, 403)
-        self.assertIn('Vertrag widerrufen', blocked.get_data(as_text=True))
+        self.assertIn('Withdraw from contract', blocked.get_data(as_text=True))
         for path in ('/withdrawal', '/privacy_policy', '/impress', '/static/withdrawal.css'):
             response = self.client.get(path, base_url=host)
             self.assertEqual(response.status_code, 200)

@@ -13,6 +13,11 @@
     button.textContent = names[method] || 'Continue with selected method →';
   }
   form.addEventListener('change', update);
+  form.querySelector('a[href="#refund-agreement"]').addEventListener('click', () => {
+    const agreement = form.querySelector('#refund-agreement');
+    agreement.open = true;
+    agreement.querySelector('summary').focus();
+  });
   window.addEventListener('pageshow', update);
   form.addEventListener('submit', async event => {
     if (!form.reportValidity()) return;
