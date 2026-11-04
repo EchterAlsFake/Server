@@ -261,7 +261,7 @@ def activate():
                 status = 202
             except SQLAlchemyError:
                 db.session.rollback()
-                status, error = 503, 'We could not save your request. Please try again shortly.'
+                status, error = 503, 'Your request could not be saved. Please try again shortly.'
     response = make_response(render_template('activate.html', error=error, accepted=accepted), status)
     response.headers['Cache-Control'] = 'private, no-store'
     response.headers['X-Robots-Tag'] = 'noindex, nofollow'

@@ -1,20 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Activate your Patreon purchase — Porn Fetch{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='checkout.css') }}">{% endblock %}
 {% block content %}
-<section class="card">
-<h1>Activate your Patreon Shop purchase</h1>
-<p>Enter the email address used for your Porn Fetch purchase. Your license is delivered only by email.</p>
-{% if accepted %}
-<p role="status">Your request has been received. If eligible, your license will be emailed to you. Please check your inbox and spam folder. Requests are normally processed within a few minutes. If it does not arrive, contact <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a>.</p>
-{% else %}
-{% if error %}<p role="alert">{{ error }}</p>{% endif %}
-<form method="post" action="{{ url_for('pages.activate') }}">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<label for="activation-email">Purchase email</label>
-<input type="email" id="activation-email" name="email" autocomplete="email" maxlength="254" required>
-<button type="submit">Email my license</button>
-</form>
-{% endif %}
-<p>Repeat requests resend your license. A later purchase receives a new annual license. <a href="/privacy_policy">How we handle your email and purchase information</a>.</p>
-</section>
+<div class="checkout-page activation-page">
+    <a class="checkout-back" href="/porn_fetch">← Back to Porn Fetch</a>
+    <section class="checkout-card activation-card" aria-labelledby="activation-heading">
+        <header class="activation-heading">
+            <p class="eyebrow">Patreon Shop · License delivery</p>
+            <h1 id="activation-heading">Your purchase.<br>Your license.</h1>
+            <p>Enter the email address used for your Porn Fetch purchase to receive your license.</p>
+        </header>
+        {% if accepted %}
+        <div class="activation-status" role="status">
+            <span class="activation-status-mark" aria-hidden="true">✓</span>
+            <div>
+                <h2>Request received</h2>
+                <p>If eligible, your license will arrive by email. Allow a few minutes, then check your inbox and spam folder.</p>
+            </div>
+        </div>
+        {% else %}
+        <form method="post" action="{{ url_for('pages.activate') }}" class="activation-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="checkout-email delivery-email-block">
+                <label for="activation-email">Purchase email</label>
+                <input type="email" id="activation-email" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" aria-describedby="activation-email-help{% if error %} activation-error{% endif %}"{% if error %} aria-invalid="true"{% endif %} required>
+                <p id="activation-email-help">Use the same address as your Patreon Shop purchase.</p>
+            </div>
+            {% if error %}<p id="activation-error" class="checkout-error" role="alert">{{ error }}</p>{% endif %}
+            <button type="submit" class="btn btn-primary">Email my license <span aria-hidden="true">→</span></button>
+            <p class="checkout-reassurance">Delivered to your inbox. Never displayed in your browser.</p>
+        </form>
+        {% endif %}
+        <div class="activation-details">
+            <p>Already activated? Your existing license is resent. A later purchase receives a new annual license.</p>
+            <a href="/privacy_policy">Email &amp; purchase privacy</a>
+        </div>
+    </section>
+    <p class="activation-support">{% if accepted %}Nothing arrived?{% else %}Need a hand?{% endif %} <a href="mailto:support@echteralsfake.me">Contact me</a></p>
+</div>
 {% endblock %}

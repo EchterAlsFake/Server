@@ -62,3 +62,25 @@
   .checkout-card { padding: 24px 20px; }
   .checkout-price .nowpayments-amount { font-size: 48px; }
 }
+
+/* Email-only purchase recovery, using the shared checkout surfaces and fields. */
+.activation-page { max-width: 560px; margin-block: 48px 80px; }
+.activation-card { padding: 36px; }
+.activation-heading .eyebrow { margin-bottom: 18px; font-size: var(--text-caption); color: var(--color-accent); }
+.activation-heading h1 { margin: 0 0 18px; font-size: clamp(32px, 5vw, 42px); line-height: 1.15; font-weight: 550; letter-spacing: -.045em; }
+.activation-heading > p:last-child { margin: 0; color: var(--color-text-muted); font-size: var(--text-secondary); line-height: 1.75; }
+.activation-form { margin-top: 28px; }
+.activation-form .delivery-email-block { margin: 0 0 22px; }
+.activation-form label { display: block; font-weight: 550; }
+.activation-form input::placeholder { color: #8e8494; }
+.activation-form input[aria-invalid="true"] { border-color: #ff9d9d; }
+.activation-form .btn { display: flex; justify-content: space-between; width: 100%; cursor: pointer; }
+.activation-details { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); font-size: var(--text-caption); line-height: 1.75; }
+.activation-details p { margin: 0 0 12px; color: var(--color-text-muted); }
+.activation-details a { text-decoration: none; }
+.activation-support { margin: 20px 0 0; text-align: center; font-size: var(--text-small); line-height: 1.7; color: var(--color-text-muted); }
+.activation-status { display: flex; align-items: flex-start; gap: 14px; margin-top: 28px; padding: 20px; border: 1px solid #87e9aa35; border-radius: 8px; background: #87e9aa08; }
+.activation-status-mark { display: grid; place-items: center; flex: 0 0 28px; height: 28px; border-radius: 50%; background: #87e9aa18; color: #87e9aa; }
+.activation-status h2 { margin: 1px 0 8px; font-size: var(--text-body); font-weight: 550; }
+.activation-status p { margin: 0; color: var(--color-text-muted); font-size: var(--text-secondary); line-height: 1.75; }
+@media (max-width: 540px) { .activation-page { margin-block: 24px 48px; } .activation-card { padding: 24px; } .activation-status { padding: 16px; } }
