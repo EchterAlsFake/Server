@@ -21,7 +21,8 @@
     const cta = panel.querySelector('.primary-cta');
     cta.hidden = !option.value;
     if (!option.value) { cta.removeAttribute('href'); return; }
-    cta.href = option.value;
+    cta.dataset.vpsUrl = option.value;
+    cta.href = (picker.dataset.directOrigin || '') + option.value;
     panel.querySelector('.primary-version').textContent = `Recommended version: ${option.dataset.version} · ${option.dataset.channel === 'beta' ? 'Beta' : 'Stable'}`;
     panel.querySelector('.primary-requirements').textContent = option.dataset.requirements;
     panel.querySelector('.primary-installation').textContent = option.dataset.installationNote;

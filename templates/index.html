@@ -10,7 +10,7 @@
     <h1 id="hero-title">Download adult videos.<br><span>Keep them on your device.</span></h1>
     <p class="hero-description">Porn Fetch is a video downloader for PornHub, XHamster, XVideos, Eporner and other supported adult websites. Save videos and supported collections locally on desktop or Android.</p>
     {% include "partials/actions.html" %}
-    <p class="hero-platforms">Windows <span>·</span> Linux <span>·</span> macOS <span>·</span> Android™ <span>·</span> <a href="#ios-support">iOS · CLI only</a></p>
+    <p class="hero-platforms">Windows <span>·</span> Linux <span>·</span> macOS <span>·</span> Android™ <span>·</span> <a href="#ios-support">iOS 15+</a></p>
     <figure class="product-stage">
         <div class="stage-heading"><span><span class="stage-dot" aria-hidden="true"></span> PORN FETCH / PRODUCT TOUR</span><span>00:40 <span aria-hidden="true">↗</span></span></div>
         <video id="product-video" class="promo-video" width="1920" height="1080" muted playsinline loop controls preload="none" poster="{{ url_for('static', filename='media/web/promo-poster.webp') }}" aria-label="Porn Fetch product tour: fetching downloads, configuring filters, connecting accounts and privacy settings" aria-describedby="video-description">
@@ -57,9 +57,9 @@
 </section>
 
 <section class="platform-section section-space" id="platforms" aria-labelledby="platforms-title">
-    <div class="section-heading"><div><p class="eyebrow">05 / Platforms</p><h2 id="platforms-title">At home on<br>your system.</h2></div><p class="section-description">A graphical app for desktop and Android, plus a command line for supported systems. Android also supports CLI use through Termux. iOS requires the restricted jailbreak setup below.</p></div>
-    <div class="platform-list"><div>{{ platform_icon("windows") }}<h3>Windows</h3><p>Windows 10 and higher</p><span>x64 / ARM64</span></div><div>{{ platform_icon("linux") }}<h3>Linux</h3><p>Linux</p><span>x64 / ARM64</span></div><div>{{ platform_icon("macos") }}<h3>macOS</h3><p>14.4 (Sonoma) and higher</p><span>Intel / Apple Silicon</span></div><div>{{ platform_icon("android") }}<h3>Android</h3><p>Android 9.0 and higher</p><span>Installable Android GUI app</span></div><div>{{ platform_icon("ios") }}<h3>iOS</h3><p>Jailbroken iPhones only</p><span>CLI · palera1n / NewTerm</span></div></div>
-    <div id="ios-support">{% include "partials/ios_warning.html" %}<a class="text-link" href="/download/ios">iOS CLI requirements →</a></div>
+    <div class="section-heading"><div><p class="eyebrow">05 / Platforms</p><h2 id="platforms-title">At home on<br>your system.</h2></div><p class="section-description">A native graphical app for Windows, Linux, macOS, Android and iOS 15+. A command line is also available for supported systems.</p></div>
+    <div class="platform-list"><div>{{ platform_icon("windows") }}<h3>Windows</h3><p>Windows 10 and higher</p><span>x64 / ARM64</span></div><div>{{ platform_icon("linux") }}<h3>Linux</h3><p>Linux</p><span>x64 / ARM64</span></div><div>{{ platform_icon("macos") }}<h3>macOS</h3><p>14.4 (Sonoma) and higher</p><span>Intel / Apple Silicon</span></div><div>{{ platform_icon("android") }}<h3>Android</h3><p>Android 9.0 and higher</p><span>Installable Android GUI app</span></div><div>{{ platform_icon("ios") }}<h3>iOS</h3><p>iOS 15.0 and higher</p><span>Official native GUI · IPA</span></div></div>
+    <div id="ios-support">{% include "partials/ios_warning.html" %}<a class="text-link" href="/download/ios">iOS installation guide →</a></div>
     <div class="platform-note"><p><span class="small-indicator" aria-hidden="true"></span> Developed primarily on <strong>Arch Linux · Wayland · Hyprland.</strong></p><p>Platform support and published build availability can differ. <a href="/download">Check downloads →</a></p></div>
 </section>
 

@@ -15,6 +15,7 @@ from werkzeug.serving import WSGIRequestHandler
 from pf_server.checklist_routes import checklist_bp
 from pf_server.ci_routes import ci_bp
 from pf_server.config import load_environment_config
+from pf_server.direct_downloads import init_direct_downloads
 from pf_server.country_service import CheckoutCountryMiddleware, LocalCountryResolver
 from pf_server.docs_routes import docs_bp, handle_docs_subdomain
 from pf_server.extensions import csrf, db, limiter, migrate, talisman
@@ -83,6 +84,7 @@ def create_app(
         application.config["CHECKOUT_IP_HEADER"],
     )
 
+    init_direct_downloads(application)
     db.init_app(application)
     csrf.init_app(application)
     limiter.init_app(application)
@@ -95,7 +97,7 @@ def create_app(
             "img-src": ["'self'", "data:"],
             "style-src": ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
             "script-src": ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
-            "connect-src": ["'self'"],
+            "connect-src": ["'self'", application.config["DIRECT_DOWNLOAD_ORIGIN"]],
             "frame-src": ["'self'", "https://nowpayments.io"],
             "base-uri": ["'self'"],
             "form-action": ["'self'"],

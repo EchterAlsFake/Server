@@ -57,7 +57,7 @@ bundles CLI executables with their helpers, includes a tracked-source archive wi
 the stamped version, and uploads without needing a GitHub Release. Existing GUI,
 CLI updater, and GitHub publishers have no dependency on this website job. Android
 APK names follow `PornFetch_android_GUI_<ABI>.apk`. The app workflow now builds
-all four Android ABIs with the existing patch/build scripts, Python 3.14 wheels,
+all four Android ABIs with the existing patch/build scripts, Python 3.15 wheels,
 SDK 36 and NDK r28c. The website publisher waits for those builds except on CLI-only
 runs. Select `build_target: android` for Android-only iteration or publication.
 Public Android releases require `ANDROID_KEYSTORE_BASE64`,
@@ -96,9 +96,11 @@ Manifest: `schema: 1`, numeric `version` (optional alpha/beta/rc suffix), `chann
 and 1–150 `artifacts`. Each artifact declares `filename`, `platform`, `arch`,
 `kind`, positive byte `size`, lowercase hex `sha256`, optional `min_os`, and boolean
 `experimental`. Qt installers must set `experimental: true`. Kinds: `gui`, `cli`,
-`installer`, `apk`, `source`, `notices`. Architectures: `x64`, `arm64`, `x86`,
+`installer`, `apk`, `ipa`, `source`, `notices`. Architectures: `x64`, `arm64`, `x86`,
 `armv7`, `x32`, `riscv64`, `universal`, `any`. Android ABI labels are normalized by
 the CI publisher; the page and guide show their familiar names.
+
+Native iOS packages use `platform: ios`, `arch: arm64`, `kind: ipa` and a `.ipa` filename. iOS 15+ is officially supported with a native GUI; users re-sign and provision the IPA with a sideloading tool. No jailbreak is required. The shared cross-platform pipeline includes iOS in GUI builds and supports `build_target: ios` for iOS-only builds and publication.
 
 Recommended downloads select stable per platform/architecture/package variant,
 otherwise the newest beta. A new GUI-only or CLI-only release retains the other
@@ -137,3 +139,26 @@ hosts are not blanket-redirected. Test old-session recovery URLs before cutover.
 Verify both site origins in Search Console, submit the new sitemap, and inspect
 rendered product/platform pages after deployment. Indexing/rankings are not
 promised. Keep permanent redirects while older links are in use.
+
+## IPv6-first downloads
+
+Set `DIRECT_DOWNLOADS_ENABLED=true` after validating `DIRECT_DOWNLOAD_ORIGIN`
+(default `https://direct6.pornfetch.to`). This origin must have AAAA only and
+serve the same `/downloads/<version>/<filename>` bytes, with HEAD, Range,
+attachment headers and `Access-Control-Allow-Origin: https://pornfetch.to`.
+Website download buttons test the exact direct file with a three-second HEAD
+request before starting a normal browser transfer. An unavailable direct file
+falls back to its existing website URL. A visible compatibility link supports
+manual retry after an interrupted browser transfer, and works without JavaScript.
+Release history uses the same selector. Checksums and catalog URLs stay unchanged.
+Onion pages never probe or link to the direct origin.
+
+Set `DIRECT_DOWNLOADS_ENABLED=false` and redeploy to restore the original links.
+The origin remains allowed by CSP, but disabled pages do not contact it.
+No JSON publishing or catalog schema changes are needed. Infrastructure lives
+in `/srv/infra/msi/caddy/direct6.caddy`; operations are documented in
+`/srv/infra/docs/operations/DIRECT6.md`.
+
+Check the browser selector offline with
+`python scripts/check_direct_downloads_browser.py` in an environment with
+Playwright and Chromium installed. It intercepts all browser network traffic.

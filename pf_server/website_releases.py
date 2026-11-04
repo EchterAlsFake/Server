@@ -27,7 +27,7 @@ VERSION = re.compile(
 FILENAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,179}")
 PLATFORMS = {"windows", "linux", "macos", "android", "ios", "any"}
 ARCHITECTURES = {"x64", "arm64", "x86", "armv7", "x32", "riscv64", "universal", "any"}
-KINDS = {"gui", "cli", "installer", "apk", "source", "notices"}
+KINDS = {"gui", "cli", "installer", "apk", "ipa", "source", "notices"}
 EXTENSIONS = (
     ".zip",
     ".tar.gz",
@@ -37,6 +37,7 @@ EXTENSIONS = (
     ".dmg",
     ".run",
     ".apk",
+    ".ipa",
     ".whl",
     ".txt",
 )
@@ -119,13 +120,15 @@ def validate_manifest(value, *, uploading=False):
             raise ReleaseError("Unknown platform, architecture or package type.")
         if kind == "apk" and (platform != "android" or not name.endswith(".apk")):
             raise ReleaseError("APK artifacts must identify Android and use .apk.")
-        if platform == "ios" and kind not in {"source", "notices"}:
-            raise ReleaseError(
-                "iOS uses the source-based CLI setup, not a native binary."
-            )
+        if kind == "ipa" and (platform != "ios" or arch != "arm64" or not name.endswith(".ipa")):
+            raise ReleaseError("IPA artifacts must identify iOS ARM64 and use .ipa.")
+        if name.endswith(".ipa") and kind != "ipa":
+            raise ReleaseError("IPA files must use the IPA package type.")
+        if platform == "ios" and kind not in {"ipa", "source", "notices"}:
+            raise ReleaseError("iOS binaries must be ARM64 IPA packages.")
         if platform == "android" and kind not in {"apk", "source", "notices"}:
             raise ReleaseError("Android binaries must be APKs; CLI setup uses source.")
-        if kind in {"gui", "cli", "installer", "apk"}:
+        if kind in {"gui", "cli", "installer", "apk", "ipa"}:
             variant = (platform, arch, kind)
             if variant in variants:
                 raise ReleaseError("Duplicate platform/architecture/package variant.")

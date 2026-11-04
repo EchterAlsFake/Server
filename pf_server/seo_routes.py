@@ -120,7 +120,7 @@ def page_metadata():
                     "Linux",
                     "macOS",
                     "Android",
-                    "iOS: jailbroken iPhone, CLI only",
+                    "iOS 15.0 or later · native GUI",
                 ],
                 "publisher": {"@id": origin + "/#maintainer"},
                 "description": description,

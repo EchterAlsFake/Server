@@ -47,6 +47,7 @@ class ConfigurationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:
             for variable, value in (
                 ("APP_DOMAIN", "public.example"),
+                ("DIRECT_DOWNLOAD_ORIGIN", "http://direct.example"),
                 ("API_DOMAIN", "file:///tmp/api"),
                 ("APP_DOMAIN", "https://user:password@public.example"),
                 ("API_DOMAIN", "https://api.example/unexpected/path"),

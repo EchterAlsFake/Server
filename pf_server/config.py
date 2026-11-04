@@ -97,6 +97,9 @@ def load_environment_config(
     os.makedirs(data_directory, exist_ok=True)
 
     app_domain, _ = _origin(source, "APP_DOMAIN", "https://pornfetch.to")
+    direct_origin, _ = _origin(source, "DIRECT_DOWNLOAD_ORIGIN", "https://direct6.pornfetch.to")
+    if not direct_origin.startswith("https://"):
+        raise ValueError("DIRECT_DOWNLOAD_ORIGIN must use HTTPS")
     onion_origin, onion_host = _origin(source, "ONION_ORIGIN", DEFAULT_ONION_ORIGIN)
     if not re.fullmatch(r"[a-z2-7]{56}\.onion", onion_host):
         raise ValueError("ONION_ORIGIN must identify a v3 onion service")
@@ -220,6 +223,8 @@ def load_environment_config(
         "PROJECT_ROOT": project_root,
         "DATA_DIR": data_directory,
         "WEBSITE_RELEASES_DIR": os.path.abspath(source.get("WEBSITE_RELEASES_DIR", os.path.join(data_directory, "website-releases"))),
+        "DIRECT_DOWNLOADS_ENABLED": _boolean(source, "DIRECT_DOWNLOADS_ENABLED", False),
+        "DIRECT_DOWNLOAD_ORIGIN": direct_origin,
         "WEBSITE_RELEASE_TOKEN": source.get("WEBSITE_RELEASE_TOKEN", ""),
         "WEBSITE_MAX_ARTIFACT_BYTES": artifact_limit,
         "APP_DOMAIN": app_domain,

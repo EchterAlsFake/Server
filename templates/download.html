@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% from "partials/platform_icon.html" import platform_icon %}
 {% block title %}Download Porn Fetch — Choose your device{% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='downloads.js') }}" defer></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='direct-downloads.js') }}" defer></script><script src="{{ url_for('static', filename='downloads.js') }}" defer></script>{% endblock %}
 {% block content %}
-<div class="downloads-page download-picker" data-initial-platform="{{ selected_platform or '' }}">
+<div class="downloads-page download-picker" data-direct-origin="{{ direct_download_origin }}" data-initial-platform="{{ selected_platform or '' }}">
 <header class="page-heading"><p class="eyebrow">Official downloads</p><h1>Your videos. On your device.</h1><p>Get Porn Fetch for your computer or phone.</p></header>
 <nav class="platform-selector" aria-label="Choose your platform">
 {% for item in cards if item.key != 'cli' %}<a href="/download/{{ item.key }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
@@ -13,11 +13,12 @@
 {% for card in cards %}
 <section id="{{ card.key }}" class="platform-panel" aria-labelledby="{{ card.key }}-title"{% if card.key != (selected_platform or 'windows') %} hidden{% endif %}>
 <div class="primary-download">
-<p class="eyebrow">{{ 'Command line' if card.key in ['ios', 'cli'] else 'Get the app' }}</p>
+<p class="eyebrow">{{ 'Command line' if card.key == 'cli' else 'Get the app' }}</p>
 <h2 id="{{ card.key }}-title">Porn Fetch for {{ card.name }}</h2>
-{% if card.key in ['ios', 'cli'] %}
 <p class="primary-description">{{ card.summary }}</p>
-{% if card.key == 'ios' %}{% include 'partials/ios_warning.html' %}<p>There is no graphical iOS app or IPA. Follow the setup guide, then use the CLI source package in advanced downloads.</p>{% else %}<p>Choose a terminal package for your operating system in advanced downloads below.</p>{% endif %}
+{% if card.key == 'ios' %}{% include 'partials/ios_warning.html' %}{% endif %}
+{% if card.key == 'cli' %}
+<p>Choose a terminal package for your operating system in advanced downloads below.</p>
 <a href="#guide-{{ card.key }}" class="text-link guide-jump">Read the installation guide →</a>
 {% elif card.primary %}
 <p class="primary-version" aria-live="polite">{% if card.default %}Recommended version: {{ card.default.version }} · {{ card.default.channel|capitalize }}{% else %}Choose your device below to get the recommended version.{% endif %}</p>
@@ -29,8 +30,8 @@
 </select>
 <p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Use the Qt installer for automatic app updates.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
 </div>
-<a class="btn btn-primary primary-cta"{% if card.default %} href="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
-<p class="primary-installation">{% if card.default %}{{ card.default.installation_note }}{% elif card.key != 'android' %}Qt installers support component selection and automatic app updates. Portable packages require manual updates.{% endif %}</p>
+<a class="btn btn-primary primary-cta"{% if card.default %} href="{{ download_href(card.default.url) }}" data-vps-url="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
+<p class="primary-installation">{% if card.default %}{{ card.default.installation_note }}{% elif card.key not in ['android', 'ios'] %}Qt installers support component selection and automatic app updates. Portable packages require manual updates.{% endif %}</p>
 <p class="primary-requirements">{{ card.default.min_os if card.default and card.default.min_os else card.requirements }}</p>
 <button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>Different device type?</button>
 <noscript><p>Choose your download from the file list in advanced options below.</p></noscript>
@@ -39,13 +40,14 @@
 <details class="advanced-downloads"{% if card.key == 'cli' %} open{% endif %}>
 <summary>Other downloads &amp; advanced options</summary>
 <div class="advanced-content">
-{% if card.files %}<h3>{{ 'CLI source' if card.key == 'ios' else 'Application packages' }}</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
+{% if card.files %}<h3>Application packages</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
 <details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>Advanced / CLI downloads &amp; source</summary><p>Command-line packages require a terminal. Source packages require Python and the release’s dependencies. CLI packages require manual updates.</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>No command-line package published for this selection.</p>{% endfor %}</div><a href="/download/cli">CLI installation guide &amp; all platforms →</a></details>
 </div>
 </details>
 <details class="installation-guide compact-guide" id="guide-{{ card.key }}"><summary>Installation guide for {{ card.name }}</summary><ol>{% for step in card.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% if card.key == 'cli' %}{% include 'partials/ios_warning.html' %}<p><a href="/download/android">Android / Termux guide</a> · <a href="/download/ios">iOS guide</a></p>{% endif %}<p>Next: <a href="/guides">learn how to save your first video</a>. Need help? <a href="mailto:support@echteralsfake.me">Contact support</a> with your version, platform and exact error.</p></details>
 </section>
 {% endfor %}
+<p><a data-download-retry hidden>Download interrupted? Retry via compatibility server</a></p>
 <nav class="download-bottom" aria-label="Download help"><a href="#guide-{{ selected_platform or 'windows' }}" class="installation-link">Installation guide</a><a href="/releases">Previous releases &amp; changelog</a><a href="/help">Troubleshooting / activation help</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="#verify-download">Verify download (SHA-256)</a></nav>
 <details id="verify-download" class="installation-guide compact-guide"><summary>How to verify your download</summary><p>Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>Linux: <code>sha256sum &lt;filename&gt;</code><br>macOS: <code>shasum -a 256 &lt;filename&gt;</code></p><p>A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.</p></details>
 <p class="download-disclosure">App downloads and updates are free. Desktop download history and statistics are also free. Premium is a <a href="/porn_fetch">€19.99 one-time purchase</a> for higher quality, parallel downloads and full public collections, covering releases published within one year of first activation on up to 10 active installations. Keep Premium in eligible versions afterwards, subject to activation and periodic validation. Premium in later releases requires renewed entitlement. Processing fees may apply. No automatic renewal.</p>

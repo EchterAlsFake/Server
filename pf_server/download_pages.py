@@ -52,14 +52,14 @@ PLATFORMS = {
     },
     "ios": {
         "name": "iOS",
-        "summary": "CLI only on a compatible, jailbroken iPhone.",
-        "requirements": "palera1n · xz-kitty Python build · NewTerm",
-        "kinds": set(),
+        "summary": "Officially supported native GUI for iOS 15 and later.",
+        "requirements": "iOS 15.0 or later · ARM64 · sideloading",
+        "kinds": {"ipa"},
         "steps": [
-            "Use a compatible iPhone already jailbroken with palera1n. Device and iOS-version compatibility are determined by palera1n; this is not support for every iPhone.",
-            "Install the xz-kitty Python build and NewTerm in your jailbreak environment. A standard App Store Python app is not the supported setup.",
-            "Download the CLI source archive below and extract it in a writable folder. Run the CLI in NewTerm with the dependencies required by that release. There is no native IPA or graphical iOS app.",
-            "The current v3.9 CLI works in this setup. For installation help, contact me with your iPhone model, iOS version, Python version, and the exact error.",
+            "Use an ARM64 iPhone or iPad running iOS 15.0 or later and download the native GUI IPA package.",
+            "Import the IPA into your sideloading tool and re-sign and provision it with your own Apple account. A jailbreak is not required. The app is distributed here rather than through the App Store.",
+            "Follow your sideloading tool’s instructions to install and trust the app. Renew its signing when required by that tool and account.",
+            "Open Porn Fetch and paste a supported video URL. Download a newer IPA and repeat the installation steps for manual updates.",
         ],
     },
     "cli": {
@@ -94,6 +94,7 @@ PLATFORM_ARCH_LABELS = {
         "armv7": "armeabi-v7a",
         "x86": "x86",
     },
+    "ios": {"arm64": "iPhone / iPad · ARM64"},
 }
 
 
@@ -139,7 +140,7 @@ def download_context(selected_platform=None):
         # are now supported and recommended regardless of that historical flag.
         recommended = {}
         for file in files:
-            if file["kind"] not in {"gui", "apk", "installer"}:
+            if file["kind"] not in {"gui", "apk", "ipa", "installer"}:
                 continue
             if file["experimental"] and file["kind"] != "installer":
                 continue
@@ -148,6 +149,8 @@ def download_context(selected_platform=None):
                 if file["kind"] == "installer"
                 else "Portable app · Updates must be downloaded and installed manually."
                 if file["kind"] == "gui"
+                else "Native iOS app · Re-sign and provision the IPA with your sideloading tool. Manual updates required."
+                if file["kind"] == "ipa"
                 else "APK · Open the downloaded file to install."
             )
             rank = (file["channel"] != "stable", file["kind"] != "installer")
@@ -180,7 +183,7 @@ def download_context(selected_platform=None):
             # Ask for the chip rather than defaulting to a portable universal app
             # when an equally suitable managed installer is available.
             default = None
-        if key == "android":
+        if key in {"android", "ios"}:
             default = next(
                 (file for file in primary if file["arch"] == "arm64"), default
             )

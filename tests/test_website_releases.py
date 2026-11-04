@@ -31,6 +31,25 @@ class WebsiteReleaseTests(ServerTestCase):
         self.headers = {"Authorization": "Bearer synthetic-website-token"}
         self.payload = b"synthetic application package, not executable"
 
+    def test_ipv6_links_feature_switch_onion_and_csp(self):
+        manifest = self.manifest()
+        self.stage(manifest)
+        self.upload(manifest)
+        self.publish(manifest)
+        path = "/downloads/3.9.66/" + manifest["artifacts"][0]["filename"]
+        with patch.dict(main.app.config, DIRECT_DOWNLOADS_ENABLED=True):
+            response = self.client.get("/download/linux")
+            self.assertIn('href="https://direct6.pornfetch.to' + path + '"', response.text)
+            self.assertIn('data-vps-url="' + path + '"', response.text)
+            self.assertIn("https://direct6.pornfetch.to", response.headers["Content-Security-Policy"])
+            historic = self.client.get("/releases/3.9.66")
+            self.assertIn('href="https://direct6.pornfetch.to' + path + '"', historic.text)
+            onion = self.client.get("/download/linux", base_url=main.app.config["ONION_ORIGIN"])
+            self.assertNotIn('href="https://direct6.pornfetch.to', onion.text)
+            self.assertNotIn('data-direct-origin="https://', onion.text)
+        with patch.dict(main.app.config, DIRECT_DOWNLOADS_ENABLED=False):
+            self.assertNotIn('href="https://direct6.pornfetch.to', self.client.get("/download/linux").text)
+
     def manifest(self, version="3.9.66", channel="beta", kind="gui", arch="x64"):
         return {
             "schema": 1,
@@ -98,6 +117,39 @@ class WebsiteReleaseTests(ServerTestCase):
                 self.client.post("/ci/website-releases", json={}).status_code, 503
             )
         self.assertFalse((self.root / "public/3.9.66").exists())
+
+    def test_native_ios_ipa_is_published_and_recommended(self):
+        manifest = self.manifest(arch="arm64")
+        artifact = manifest["artifacts"][0]
+        artifact.update(filename="PornFetch_ios_GUI_arm64_resign.ipa", platform="ios", kind="ipa",
+                        min_os="iOS 15.0 or later")
+        self.complete(manifest)
+        url = f"/downloads/{manifest['version']}/{artifact['filename']}"
+        response = self.client.get(url, headers={"Range": "bytes=0-4"})
+        self.assertEqual(response.status_code, 206)
+        self.assertEqual(response.data, self.payload[:5])
+        self.assertIn(artifact["sha256"].encode(), self.client.get(url + ".sha256").data)
+        page = self.client.get("/download/ios").data
+        self.assertIn(f'href="{url}"'.encode(), page)
+        self.assertIn(b"Official native GUI", page)
+        self.assertIn(b"iOS 15", page)
+        self.assertIn(b"No jailbreak is required", page)
+        self.assertNotIn(b"There is no graphical iOS app", page)
+        from pf_server.download_pages import download_context
+        with main.app.test_request_context("/download/ios"):
+            card = next(card for card in download_context()["cards"] if card["key"] == "ios")
+            self.assertEqual(card["default"]["kind"], "ipa")
+            self.assertIn("Re-sign", card["default"]["installation_note"])
+
+    def test_ipa_requires_matching_ios_architecture_and_package_type(self):
+        for changes in ({"platform": "linux"}, {"arch": "x64"}, {"kind": "gui"}):
+            manifest = self.manifest(arch="arm64")
+            manifest["artifacts"][0].update(
+                filename="PornFetch_ios_GUI_arm64_resign.ipa", platform="ios", kind="ipa")
+            manifest["artifacts"][0].update(changes)
+            with self.subTest(changes=changes):
+                self.assertEqual(self.client.post(
+                    "/ci/website-releases", json=manifest, headers=self.headers).status_code, 400)
 
     def test_atomic_publication_download_range_headers_and_immutable_versions(self):
         manifest = self.manifest()

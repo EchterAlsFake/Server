@@ -8,6 +8,6 @@
         <summary>Choose your download <span aria-hidden="true">↓</span></summary>
         {% for file in card.files %}{% include "partials/download_file.html" %}{% endfor %}
     </details>
-    {% else %}<p class="download-unavailable">{% if card.key == 'ios' %}Source package not published yet. See the CLI setup requirements.{% else %}No {{ channel or 'current' }} package published yet.{% endif %}</p>{% endif %}
+    {% else %}<p class="download-unavailable">{% if card.key == 'ios' %}Native IPA not published yet. See the iOS 15+ installation guide.{% else %}No {{ channel or 'current' }} package published yet.{% endif %}</p>{% endif %}
     {% if not selected_platform %}<a class="text-link" href="/download/{{ card.key }}">{{ card.name }} installation guide <span aria-hidden="true">→</span></a>{% endif %}
 </article>

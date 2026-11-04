@@ -65,7 +65,7 @@ class MarketingTests(ServerTestCase):
             self.assertNotIn(b'id="age-overlay"', page.data)
             for platform in ('windows', 'linux', 'macos', 'android', 'ios', 'cli'):
                 self.assertEqual(self.client.get('/download/' + platform).status_code, 200)
-        self.assertIn(b'xz-kitty Python build', self.client.get('/download/ios').data)
+        self.assertIn(b'Official native GUI', self.client.get('/download/ios').data)
 
     def test_media_range_requests_support_seekable_video(self):
         response = self.client.get('/static/media/porn-fetch-promo.mp4', headers={'Range': 'bytes=0-99'})
