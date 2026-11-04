@@ -1,6 +1,7 @@
 """Checkout country evidence, local geolocation, and restriction tests."""
 
-from unittest.mock import Mock, patch
+from cryptography.fernet import Fernet
+from unittest.mock import ANY, Mock, patch
 
 from _support import ServerTestCase, main
 
@@ -16,6 +17,14 @@ from pf_server.tax_service import country_transaction_summary
 
 
 class CountryComplianceTests(ServerTestCase):
+    def setUp(self):
+        super().setUp()
+        self.accept_checkout()
+        mail_config = patch.dict(main.app.config, LICENSE_SMTP_HOST="localhost",
+            LICENSE_EMAIL_FROM="test@example.com", LICENSE_DELIVERY_ENCRYPTION_KEY=Fernet.generate_key().decode())
+        mail_config.start()
+        self.addCleanup(mail_config.stop)
+
     def test_checkout_middleware_uses_ip_once_then_strips_forwarding_headers(self):
         resolver = Mock()
         resolver.lookup.return_value = CountryEvidence(
@@ -141,13 +150,13 @@ class CountryComplianceTests(ServerTestCase):
                 database_label="DB-IP fixture",
             )
             mismatch = self.client.post(
-                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True}
+                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "delivery_email": "buyer@example.com"}
             )
             self.mock_country_lookup.return_value = CountryEvidence(
                 status="database_unavailable"
             )
             unavailable = self.client.post(
-                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True}
+                "/create-crypto-payment", json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "delivery_email": "buyer@example.com"}
             )
 
         self.assertEqual(restricted.status_code, 451)
@@ -170,7 +179,7 @@ class CountryComplianceTests(ServerTestCase):
         ):
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True},
+                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "delivery_email": "buyer@example.com"},
                 headers={"X-Forwarded-For": "203.0.113.10"},
             )
 
@@ -179,7 +188,8 @@ class CountryComplianceTests(ServerTestCase):
             "Germany",
             "customer_declaration+local_ip_geolocation",
             "DB-IP City Lite test fixture",
-            delivery_recipient_encrypted=None,
+            delivery_recipient_encrypted=ANY,
+            contract_snapshot=ANY,
         )
         self.assertNotIn("203.0.113.10", repr(create_invoice.call_args))
 

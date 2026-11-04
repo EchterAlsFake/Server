@@ -6,6 +6,10 @@
   const names = {crypto: 'Continue to crypto checkout', patreon: 'Preview Patreon checkout', card: 'Preview card checkout'};
   function update() {
     const method = form.querySelector('input[name="payment_method"]:checked')?.value;
+    const withdrawal = form.querySelector('#chk-withdrawal');
+    withdrawal.required = method !== 'patreon';
+    withdrawal.disabled = method === 'patreon';
+    withdrawal.closest('label').hidden = method === 'patreon';
     button.textContent = names[method] || 'Continue with selected method →';
   }
   form.addEventListener('change', update);

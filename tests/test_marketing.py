@@ -78,7 +78,9 @@ class MarketingTests(ServerTestCase):
         self.assertIn(b'App source', home)
         self.assertIn(b'Installable Android GUI app', home)
         self.assertIn(b'https://github.com/EchterAlsFake/Server', home)
-        self.assertIn(b'No IP logs. No viewing-history logs.', home)
+        self.assertIn(b'Your video history stays local.', home)
+        self.assertIn(b'IP-derived check values', home)
+        self.assertNotIn(b'No IP logs.', home)
         self.assertEqual(home.count(b'See source code'), 2)
         self.assertIn(b'class="github-nav"', home)
         options = self.client.get('/porn_fetch').data
@@ -101,6 +103,7 @@ class MarketingTests(ServerTestCase):
             self.assertIn(f'/static/media/payments/{brand}.'.encode(), page)
 
     def test_external_preview_requires_explicit_confirmation(self):
+        self.accept_checkout("patreon")
         page = self.client.get('/payment-preview/patreon')
         self.assertEqual(page.status_code, 200)
         self.assertIn(b'Do not send money', page.data)

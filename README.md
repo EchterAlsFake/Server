@@ -228,7 +228,7 @@ Flask-Limiter currently uses its in-memory backend, so limits are enforced per p
 
 - Alembic owns the managed SQLite schema. Importing the application does not query or mutate the database.
 - `flask --app main init-runtime` explicitly resets aggregate request/traffic counters and their start timestamp; run it once per deployment, not once per Gunicorn worker.
-- The payment schema retains the session/provider identifiers, expected amount/currency values needed to validate callbacks, selected country, evidence method, database label, processing state/lease, and timestamps. IP addresses, subdivisions, and card-flow email addresses are not stored locally; the email is forwarded only to the provider.
+- The payment schema retains the session/provider identifiers, expected amount/currency values needed to validate callbacks, selected country, evidence method, database label, processing state/lease, and timestamps. IP addresses and subdivisions are not retained. Required crypto/card email addresses are stored encrypted locally and passed to Proton Mail for delivery, not to NOWPayments or Keygen.
 - `flask --app main tax-country-summary --year YYYY` prints country/currency totals for completed transactions without transaction identifiers. Combine it with all other sales channels and professional tax advice.
 - NOWPayments fulfills only `finished` callbacks that match the stored provider reference, original fiat price/currency, and—where known—the expected crypto asset and paid amount. Unknown or busy orders return retryable `503` responses; permanent mismatches are acknowledged without fulfillment.
 - Application warnings and exceptions use a privacy-safe formatter. Never log webhook bodies or user identifiers, and keep Gunicorn/proxy/platform access logs disabled under the no-user-data policy.
@@ -251,13 +251,13 @@ See [LICENSE](LICENSE).
 Licenses now use self-hosted Keygen CE, schema-2 signed keys, ten UUID installation slots,
 and seven-day offline permits. See [application integration](docs/KEYGEN_CLIENT_INTEGRATION.md)
 and [operations](deploy/keygen/OPERATIONS.md). The reusable package is `license_client/`.
-New licenses include one year of updates from first activation, with continued access to eligible builds and no automatic license renewal. New Banxa purchases use this same offer; historical beta orders retain their original terms. Patreon memberships still recur until the customer cancels them.
+New licenses cover Premium features in releases published within one year of first activation, with continued Premium access in eligible builds and no automatic license renewal. App updates and desktop history/statistics are free. Free use supports up to 720p, one active download and the first five videos of each public profile, model, channel or playlist; account collections are exempt from that preview. Premium enables qualities above 720p, parallel downloads and full public collections. New Banxa purchases use this same offer; historical beta orders retain their original terms. Patreon memberships still recur until the customer cancels them.
 
 The purchase service no longer holds an Ed25519 private key. Configure `KEYGEN_PRODUCT_TOKEN`
 and `KEYGEN_POLICY_ID` before enabling fulfillment. The old `/check_license` route returns 410.
 
-Commercial MSI licensing uses a perpetual fallback with one calendar year of updates
-from first activation. Renewal checkout accepts `renewal_license_key` in the existing
+Commercial MSI licensing uses a perpetual fallback with one calendar year of Premium
+release coverage from first activation. Renewal checkout accepts `renewal_license_key` in the existing
 `POST /create-crypto-payment` JSON body; the server proves key possession and binds
 the resulting license UUID before payment. Verified renewal callbacks preserve the
 key, with atomic deduplication in Keygen and a durable provider-charge binding locally.
@@ -348,3 +348,134 @@ License emails contain English-first HTML and plain-text alternatives. Crypto/ca
 orders attach their existing PDF invoice alongside the signed license file.
 Sandbox messages and invoice PDFs are labelled as tests. Patreon delivery keeps
 using its provider receipt rather than inventing a local purchase invoice.
+
+### Required email and retained order contact
+
+New direct NOWPayments and Banxa/Onramp checkouts require a valid delivery email.
+The server validates it before creating the checkout. `Transaction.customer_email_encrypted`
+keeps the encrypted address as a later purchase/support reference, separate from
+short-lived delivery queues. Successful delivery and the existing seven-day outbox
+cleanup do not erase this order reference. The address is never included in signed
+license files, Keygen requests, public status responses or NOWPayments requests.
+Patreon continues using its existing webhook email flow.
+
+Run the database migration before starting the updated application:
+`uv run flask --app main db upgrade` (latest revision `c482e16d09a2`, including `ae902bd71c40` and `bf371c20a913`). Existing orders
+remain nullable and are not backfilled from addresses collected under the previous
+retention notice. Keep `LICENSE_DELIVERY_ENCRYPTION_KEY` (or the existing fallback
+`ONRAMP_ENCRYPTION_KEY`) available for as long as retained references need to be read;
+changing keys requires explicit re-encryption. Both payment paths use this key
+selection for order references, independently of Banxa's outbox encryption.
+
+Review retained order addresses manually and clear references once they are no
+longer needed for contractual processing/support or applicable legal obligations.
+This includes abandoned checkouts and backup copies; there is no automatic purge
+of the new field. Do not infer retention requirements from invoice retention alone.
+The separate contract-confirmation and electronic-withdrawal workflows are described
+below and in `docs/LEGAL_REVIEW_2026-10-31.md`.
+
+### Checkout evidence and durable confirmations
+
+New crypto and Banxa orders require a current, server-stored checkout agreement.
+The agreement records the exact bilingual terms, product information, withdrawal
+instructions and immediate-supply declarations, version and acceptance time, without
+an IP address. The order stores its own copy; changing templates later cannot rewrite it.
+The delivery message attaches the original confirmation PDF, license and invoice.
+The same PDF is also available through the private recovery page while access is valid.
+Historical orders have no fabricated agreement or confirmation added.
+
+Patreon sends a license benefit confirmation only: no inferred withdrawal waiver,
+no invented membership price or invoice. Patreon supplies the membership confirmation.
+The member's email is now encrypted in its outbox until successful SMTP handover;
+the original benefit PDF remains stored. A successful SMTP handover is not proof of
+receipt. Retries reuse the document and Message-ID; SMTP cannot guarantee exactly-once delivery.
+
+Deployment requires migration `bf371c20a913`, a stable `LICENSE_DELIVERY_ENCRYPTION_KEY`
+(or `ONRAMP_ENCRYPTION_KEY` fallback, including Patreon-only deployments), and working
+Proton Mail SMTP configuration. Enable both existing minute timers:
+`eaf-crypto-deliveries.timer` (now also Patreon and expired checkout-agreement cleanup)
+and `eaf-onramp-deliveries.timer`. Monitor failed queues and mail bounces; repeated
+SMTP failures require operator action and must not be treated as fulfilled confirmations.
+
+New paid orders with outstanding confirmations continue retrying beyond seven days.
+Unpaid/legacy delivery addresses and Banxa tracking secrets still expire after seven days;
+a subsequently verified new payment can restore its delivery address from the retained
+order reference. Successful delivery removes the outbox copy. Unbound checkout agreements
+expire for browser use after one hour and are purged by the crypto timer after one day.
+Review and delete order-linked evidence/PDFs manually when contractual and legal retention
+purposes end. Apply deletion to stored order contacts, outboxes, PDFs and backups as appropriate.
+
+The public `/withdrawal` page now implements the electronic withdrawal function under
+§ 356a BGB as described below, alongside bilingual instructions and the model form.
+
+### Electronic withdrawals
+
+`/withdrawal` is publicly linked as **Vertrag widerrufen / Withdraw from contract**
+outside the collapsible navigation and in the age gate. The first form collects name,
+contract/partial-contract identification and receipt email. A second page displays the
+exact declaration and has the separate **Widerruf bestätigen / Confirm withdrawal**
+button. It works without JavaScript, login, order-number validation or an unexpired
+purchase link. There is no age/checkout gate or automated 14-day rejection.
+The existing school-referral block also permits the withdrawal flow and its privacy/provider notices.
+On the read-only onion mirror, the link opens the configured HTTPS website.
+
+Final confirmation commits the declaration, original UTC receipt time and immutable
+bilingual receipt before attempting mail. Names, email and declaration/receipt contents
+are encrypted with the existing stable delivery key; drafts are encrypted hidden form
+values, not plaintext cookies or URL parameters. Replaying the same confirmation reuses
+the receipt. The receipt is emailed as text and a UTF-8 text attachment, with a private
+POST download on the acknowledgment page. The token grants access: do not log or share it.
+A separate email to `support@echteralsfake.me` notifies the operator. Both deliveries
+have independent leases and retry states, so an operator notification failure does not
+resend an already-sent consumer receipt. SMTP failure never withdraws the received declaration.
+
+Before serving this version, run `uv run flask --app main db upgrade` to revision
+`c482e16d09a2`, keep the existing encryption key available, configure Proton Mail SMTP,
+and install/enable `deploy/eaf-withdrawals.service` and `deploy/eaf-withdrawals.timer`.
+The timer runs `retry-withdrawal-deliveries` every minute, independently of payment timers.
+No emails are sent by the migration. Monitor pending/failed deliveries and bounced emails;
+a successful SMTP handover does not prove receipt, and SMTP retries may duplicate a message
+if a process crashes after handover but before recording success.
+
+Local operator commands (run under the service environment):
+
+- `uv run flask --app main list-withdrawals`: pending manual reviews with reference,
+  receipt time and delivery state; no names/emails. `--all-records` includes reviewed entries.
+- `uv run flask --app main show-withdrawal --reference WR-...`: decrypt the complete
+  declaration for processing. Its output is personal data; do not copy it into logs.
+- `uv run flask --app main mark-withdrawal-reviewed --reference WR-...`: record completed
+  manual review. This does not refund payments, cancel Patreon membership or revoke a license.
+
+Match the contract, determine the applicable rights and arrange any required reimbursement
+manually; receipt of a declaration is not automatic approval or rejection of the claim.
+Review retention after processing, including legal evidence/retention periods. When lawful,
+remove both `withdrawal_deliveries` entries and their `withdrawal_requests` row and account
+for correspondence and backups. These records are not purged by the seven-day checkout job.
+
+### Separate cryptocurrency refund agreement (2026-11-01)
+
+All three website checkout routes now require the separate, unchecked
+`refund_method_accepted` confirmation. `checkout-v3` invalidates earlier browser
+confirmations; `contract-2026-11-01-v3` includes the exact bilingual declaration and
+refund agreement. New crypto and Banxa orders retain that evidence in their existing
+snapshot and confirmation PDF. Older orders/PDFs acquire no retrospective consent.
+No additional migration is introduced by this change.
+
+`/checkout/agreement` provides a session-protected, no-store PDF receipt while the
+one-hour checkout confirmation remains valid. Links are shown in crypto/card checkout
+and both Patreon preview variants. The receipt is not a purchase or identity proof.
+Unbound evidence still expires after one day through the existing cleanup timer.
+
+Patreon webhooks cannot correlate website consent to a member. Do not infer consent
+from a webhook, membership or an unverified receipt. Direct Patreon purchases can
+bypass the website. Without attributable evidence, obtain an individual agreement
+before using a different refund method. This limitation is also stated in Patreon
+license benefit confirmations. No Patreon OAuth integration is introduced.
+
+Refunds remain manual: use Patreon to refund its original payment method within 90
+days of each original charge; afterward use cryptocurrency only under an applicable
+agreement. Match existing refunds/disputes before paying again. Agree currency, network,
+recipient address and any conversion quote, preserve the full amount legally owed,
+and cover necessary refund costs. If a timely cost-free alternative cannot be arranged,
+statutory repayment remains due; do not extend legal deadlines or treat 90 days as a
+claims cutoff. See the dated legal-review supplement for scope, sources and open issues.

@@ -111,6 +111,9 @@ def main():
                         assert key not in upstream, key
                     for method in ("GET", "OPTIONS", "PUT"):
                         assert request("api.echteralsfake.me", "/error_log", method)[0] == 405
+                    # Full tracebacks must reach PocketBase through the proxy too.
+                    assert request("api.echteralsfake.me", "/error_log", "POST",
+                                   json.dumps({"message": "traceback line\n" * 1000}))[0] == 200
                     for host in ("echteralsfake.me", "docs.echteralsfake.me"):
                         status, headers, _ = request(host, "/error_log", "POST", '{"message":"synthetic"}')
                         assert status == 200

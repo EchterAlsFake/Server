@@ -21,10 +21,16 @@ os.environ["SEO_INDEXING_ENABLED"] = "true"
 os.environ["APP_DOMAIN"] = "https://echteralsfake.me"
 
 
+from cryptography.fernet import Fernet
+os.environ["LICENSE_DELIVERY_ENCRYPTION_KEY"] = Fernet.generate_key().decode()
+
 import main  # noqa: E402
 from pf_server.country_service import CountryEvidence  # noqa: E402
 from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
+    WithdrawalRequest,
+    WithdrawalDelivery,
+    CheckoutAgreement,
     PaymentProgress,
     PaymentReceipt,
     CheckoutRecovery,
@@ -71,6 +77,9 @@ class ServerTestCase(unittest.TestCase):
         self.mock_country_lookup = self.country_lookup.start()
         with main.app.app_context():
             for model in (
+                WithdrawalDelivery,
+                WithdrawalRequest,
+                CheckoutAgreement,
                 PaymentProgress,
                 PaymentReceipt,
                 CheckoutRecovery,
@@ -85,6 +94,20 @@ class ServerTestCase(unittest.TestCase):
             ):
                 main.db.session.execute(main.db.delete(model))
             main.db.session.commit()
+
+    @staticmethod
+    def offer_digest():
+        from pf_server.contracts import offer_digest
+        with main.app.app_context():
+            return offer_digest()
+
+    def accept_checkout(self, method="crypto", country="DE", **request_options):
+        response = self.client.post("/checkout/start", json=dict(
+            payment_method=method, country=country, age_confirmed=True,
+            terms_accepted=True, withdrawal_accepted=method != "patreon",
+            test_acknowledged=True, refund_method_accepted=True, offer_digest=self.offer_digest()), **request_options)
+        self.assertEqual(response.status_code, 200, response.data)
+        return response
 
     def tearDown(self):
         self.country_lookup.stop()

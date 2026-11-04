@@ -42,6 +42,12 @@ def _valid_marker(value: str | None, key: bytes) -> bool:
 
 def block_vplan_referrals():
     """Use an app-lifetime signing key and a host-only browser marker."""
+    # Statutory declarations and their privacy/provider notices remain accessible.
+    if request.path == "/withdrawal" or request.path.startswith("/withdrawal/") or request.path in {
+        "/privacy_policy", "/impress", "/static/index.css", "/static/site.css",
+        "/static/withdrawal.css", "/static/media/web/logo.webp",
+    }:
+        return None
     origin = current_app.config["APP_DOMAIN"]
     if normalized_hostname(request.host) != urlsplit(origin).hostname:
         return None

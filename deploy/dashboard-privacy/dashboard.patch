@@ -1,0 +1,128 @@
+--- a/dashboard/app.py
++++ b/dashboard/app.py
+@@ -537,7 +537,7 @@
+                 pass
+         day = datetime.now(UTC).date().isoformat()
+         daily_key = hmac.new(
+-            active.secret_key.encode(), f"visit\0{day}\0{address}".encode(), hashlib.sha256
++            active.secret_key.encode(), f"visit\0{day}\0{host}\0{address}".encode(), hashlib.sha256
+         ).hexdigest()
+         # Route names are intentionally not client-controlled. Endpoint-level charts only need
+         # the host, and a fixed group prevents unbounded attacker-selected SQLite cardinality.
+--- a/dashboard/store.py
++++ b/dashboard/store.py
+@@ -322,8 +322,15 @@
+                 )
+             connection.execute(
+                 "DELETE FROM visitor_seen WHERE day < ?",
+-                ((utc_now().date() - timedelta(days=2)).isoformat(),),
+-            )
++                (utc_now().date().isoformat(),),
++            )
++
++    def purge_visitors(self) -> int:
++        """Delete past-day deduplication tokens independently of incoming visits."""
++        with self.connect() as connection:
++            return connection.execute(
++                "DELETE FROM visitor_seen WHERE day < ?", (utc_now().date().isoformat(),)
++            ).rowcount
+ 
+     def record_counter_delta(self, series: str, host: str, value: float) -> None:
+         now = utc_now()
+--- a/dashboard/cli.py
++++ b/dashboard/cli.py
+@@ -14,15 +14,18 @@
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser(description="Manage the local dashboard administrator")
+-    parser.add_argument("command", choices=("initialize", "enroll", "reset", "metrics", "node-token"))
++    parser.add_argument("command", choices=("initialize", "enroll", "reset", "metrics", "node-token", "purge-visitors"))
+     parser.add_argument("--node-id")
+     args = parser.parse_args()
+     # The metrics importer only needs the data directory and broker socket. The
+     # dashboard secret is injected into Gunicorn by the entrypoint and is
+     # intentionally unavailable to unrelated `podman exec` processes.
+-    settings = Settings.load(require_secret=args.command not in {"metrics", "node-token"})
++    settings = Settings.load(require_secret=args.command not in {"metrics", "node-token", "purge-visitors"})
+     store = Store(settings.database_path)
+     store.initialize()
++    if args.command == "purge-visitors":
++        print(f"Removed {store.purge_visitors()} expired visitor check values")
++        return 0
+     if args.command == "node-token":
+         if not args.node_id or args.node_id == "node-origin" or not store.get_node(args.node_id):
+             parser.error("Provide an existing remote --node-id")
+--- a/dashboard/static/visit.js
++++ b/dashboard/static/visit.js
+@@ -1 +1 @@
+-(()=>{const configured=document.documentElement.dataset.analyticsRoute,segment=location.pathname.split("/").filter(Boolean)[0]||"home",route=(configured||segment).toLowerCase().replace(/[^a-z0-9_-]/g,"").slice(0,40)||"page";fetch("/__eaf/visit",{method:"POST",credentials:"omit",headers:{"Content-Type":"application/json"},body:JSON.stringify({route}),keepalive:true}).catch(()=>{})})();
++(()=>{fetch("/__eaf/visit",{method:"POST",credentials:"omit",referrerPolicy:"no-referrer",headers:{"Content-Type":"application/json"},body:"{}",keepalive:true}).catch(()=>{})})();
+--- a/dashboard/static/dashboard.js
++++ b/dashboard/static/dashboard.js
+@@ -746,8 +746,8 @@
+       <p>${number(items.length)} published files · ${bytes(items.reduce((a,i) => a+i.bytes,0))} stored</p>
+       <h2>Download traffic</h2>
+       <p>${number(totals.requests)} successful requests · ${bytes(totals.bytes)} transferred</p>
+-      <p>Tracking since ${esc(traffic.started ? new Date(traffic.started * 1000).toLocaleString() : 'not yet enabled')}. Unique downloaders are estimates based on hashed IP addresses. Shared networks can merge people; changing IP addresses can count someone twice. Requests include resumed transfers; they do not prove a complete installation. Metadata requests are excluded. Statistics refresh within one minute.</p>
+-      ${table(traffic.items.map(i => ({source: i.source, file: i.path, estimated_downloaders: i.downloaders, successful_requests: i.requests, partial_requests: i.ranges, transferred: bytes(i.bytes)})), '', 'download-search')}
++      <p>Tracking since ${esc(traffic.started ? new Date(traffic.started * 1000).toLocaleString() : 'not yet enabled')}. Download statistics contain aggregate request and byte counts per file and day. No visitor identifiers are used; unique downloaders are not measured. Requests include resumed transfers; they do not prove a complete installation. Metadata requests are excluded. Statistics refresh within one minute.</p>
++      ${table(traffic.items.map(i => ({source: i.source, file: i.path, successful_requests: i.requests, partial_requests: i.ranges, transferred: bytes(i.bytes)})), '', 'download-search')}
+       <h2>Clean published updates</h2>
+       <p>Preview files and space before permanently removing a selection. Removing a current Qt archive withdraws its component and dependent components. Signed CLI and Android targets must first be removed by publishing new signed metadata.</p>
+       <label>Source <select id="update-source">${['website','qt','standalone','cli','android'].map(s => `<option>${s}</option>`).join('')}</select></label>
+--- a/tests/test_dashboard.py
++++ b/tests/test_dashboard.py
+@@ -92,6 +92,53 @@
+     ).status_code == 200
+     assert client.post("/__eaf/visit", json={"route": "home"}, headers={"Host": "brain.echteralsfake.me"}).status_code == 400
+ 
++
++
++def test_visit_tokens_differ_across_hosts_and_days(app, monkeypatch):
++    from datetime import UTC, datetime, timedelta
++    import dashboard.app as app_module
++    import dashboard.store as store_module
++    first_day = datetime(2026, 11, 1, 12, tzinfo=UTC)
++    class Clock:
++        value = first_day
++        @classmethod
++        def now(cls, tz=None):
++            return cls.value
++    monkeypatch.setattr(app_module, "datetime", Clock)
++    monkeypatch.setattr(store_module, "utc_now", lambda: Clock.value)
++    client = app.test_client()
++    store = Store(app.extensions["dashboard_settings"].database_path)
++    for host in ("echteralsfake.me", "vplan.echteralsfake.me"):
++        for _ in range(2):
++            assert client.post("/__eaf/visit", json={}, headers={"Host": host, "Origin": f"https://{host}"}).status_code == 204
++    with store.connect() as db:
++        tokens = [row[0] for row in db.execute("SELECT token_hash FROM visitor_seen")]
++        assert len(tokens) == 2 and tokens[0] != tokens[1]
++        assert db.execute("SELECT SUM(value) FROM daily_usage").fetchone()[0] == 2
++    Clock.value += timedelta(days=1)
++    assert client.post("/__eaf/visit", json={}, headers={"Host": "echteralsfake.me", "Origin": "https://echteralsfake.me"}).status_code == 204
++    with store.connect() as db:
++        rows = db.execute("SELECT day,token_hash FROM visitor_seen").fetchall()
++        assert len(rows) == 1 and rows[0][0] == "2026-11-02"
++        assert rows[0][1] not in tokens
++        assert db.execute("SELECT SUM(value) FROM daily_usage").fetchone()[0] == 3
++
++
++def test_purge_visitors_without_new_visit_preserves_aggregate(app, monkeypatch):
++    from datetime import UTC, datetime, timedelta
++    import dashboard.store as store_module
++    today = datetime(2026, 11, 1, 12, tzinfo=UTC)
++    monkeypatch.setattr(store_module, "utc_now", lambda: today - timedelta(days=1))
++    store = Store(app.extensions["dashboard_settings"].database_path)
++    store.record_visit("echteralsfake.me", "page", "old-test-value")
++    monkeypatch.setattr(store_module, "utc_now", lambda: today)
++    assert store.purge_visitors() == 1
++    assert store.purge_visitors() == 0
++    with store.connect() as db:
++        assert db.execute("SELECT COUNT(*) FROM visitor_seen").fetchone()[0] == 0
++        assert db.execute("SELECT SUM(value) FROM daily_usage").fetchone()[0] == 1
++    store.record_visit("echteralsfake.me", "page", "current-test-value")
++    assert store.purge_visitors() == 0
+ 
+ def test_visit_accepts_configured_production_domain(tmp_path):
+     settings = Settings(

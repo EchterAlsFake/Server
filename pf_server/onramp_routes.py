@@ -117,6 +117,8 @@ def create_payment():
         return jsonify(
             error="Read the disclosure for at least five seconds before continuing."
         ), 409
+    from .contracts import checkout_snapshot
+    snapshot = checkout_snapshot("card", data.get("country"))
     if checkout.stage != "ready":
         claim = db.session.execute(
             db.update(OnrampCheckout)
@@ -132,7 +134,7 @@ def create_payment():
                 error="This checkout is already being created or could not be completed. Reopen the disclosure to start a new checkout."
             ), 409
         try:
-            checkout = service.create_checkout(checkout, country, recipient)
+            checkout = service.create_checkout(checkout, country, recipient, contract_snapshot=snapshot)
         except PaymentProviderError as error:
             db.session.rollback()
             current_app.logger.warning("Onramp checkout creation failed")

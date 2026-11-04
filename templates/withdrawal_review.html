@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block html_lang %}de{% endblock %}
+{% block title %}Widerruf prüfen / Review withdrawal — Porn Fetch{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='withdrawal.css') }}">{% endblock %}
+{% block content %}
+<article class="withdrawal-page">
+    <h1>Widerruf prüfen / Review withdrawal</h1>
+    <p>Schritt 2 von 2. Ihre Erklärung wurde noch nicht abgesendet. <span lang="en">Step 2 of 2. Your declaration has not been submitted yet.</span></p>
+    {% if error %}<p class="withdrawal-error" role="alert">{{ error }}</p>{% endif %}
+    <p class="withdrawal-declaration">{{ statement }}</p>
+    <dl><dt>Name / Name</dt><dd>{{ values.name }}</dd><dt>Vertrag oder Teil des Vertrags / Contract or part of contract</dt><dd class="withdrawal-declaration">{{ values.contract }}</dd><dt>E-Mail für die Eingangsbestätigung / Email for your receipt</dt><dd>{{ values.email }}</dd></dl>
+    <form action="{{ url_for('withdrawal.confirm') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="draft" value="{{ draft }}">
+        <button type="submit" name="confirm" value="withdraw" class="btn btn-primary">Widerruf bestätigen / Confirm withdrawal</button>
+    </form>
+    <form action="{{ url_for('withdrawal.edit') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="draft" value="{{ draft }}">
+        <button type="submit" class="btn btn-secondary">Angaben ändern / Edit details</button>
+    </form>
+</article>
+{% endblock %}

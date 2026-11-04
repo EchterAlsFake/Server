@@ -18,7 +18,8 @@ from sqlalchemy import and_, or_
 
 from .extensions import db
 from .country_service import CheckoutCountryDecision
-from .licensing import build_license_file, get_or_create_license, send_license_email
+from .licensing import fulfill_transaction_license, send_license_email
+from .contracts import confirmation
 from .invoice_service import load_invoice
 from .models import OnrampCheckout, Transaction
 from .webhook_models import NowPaymentsWebhook
@@ -102,7 +103,7 @@ def _get_json(client: httpx.Client, url: str, **kwargs) -> dict:
 
 
 def create_checkout(
-    checkout: OnrampCheckout, country: CheckoutCountryDecision, recipient: str
+    checkout: OnrampCheckout, country: CheckoutCountryDecision, recipient: str, *, contract_snapshot: str | None = None
 ) -> OnrampCheckout:
     """Called only after an atomic claim. Never repeat an ambiguous creation."""
     session_id = checkout.session_id
@@ -183,6 +184,7 @@ def create_checkout(
                 or re.fullmatch(r"0x[0-9a-fA-F]{40}", address) is None
             ):
                 raise ValueError("Incompatible deposit payment")
+            from .crypto_delivery import cipher
             _store_pending_transaction(
                 session_id,
                 payment_id,
@@ -195,6 +197,8 @@ def create_checkout(
                 customer_country=country.country_name,
                 country_evidence=country.evidence_source,
                 geolocation_database=country.database_label,
+                contract_snapshot=contract_snapshot,
+                customer_email_encrypted=cipher().encrypt(recipient.encode()).decode(),
             )
             estimate = _get_json(
                 client,
@@ -318,6 +322,11 @@ def deliver_license(session_id: str) -> str:
     transaction = db.session.get(Transaction, session_id)
     if not checkout or not transaction or transaction.status != "finished":
         return "pending"
+    if transaction.contract_snapshot and transaction.customer_email_encrypted and checkout.delivery_status != "sent" and (not checkout.recipient_encrypted or checkout.delivery_status == "expired"):
+        from .crypto_delivery import cipher
+        checkout.recipient_encrypted = encrypt(cipher().decrypt(transaction.customer_email_encrypted.encode()).decode())
+        checkout.delivery_status = "pending"
+        db.session.commit()
     if checkout.delivery_status == "sent" or not checkout.recipient_encrypted:
         return checkout.delivery_status
     token = secrets.token_hex(24)
@@ -346,17 +355,13 @@ def deliver_license(session_id: str) -> str:
         return "busy"
     try:
         checkout = db.session.get(OnrampCheckout, session_id)
-        license_record = get_or_create_license(transaction.provider_payment_id)
-        license_file = build_license_file(
-            license_record.license_key,
-            license_record.issuance_reference,
-            license_record.created_at,
-        )
+        document = confirmation(transaction)
+        license_file = fulfill_transaction_license(transaction)
         invoice = load_invoice(session_id)
         if invoice is None:
             raise ValueError("Paid order invoice is unavailable")
         send_license_email(decrypt(checkout.recipient_encrypted), license_file,
-            beta=checkout.beta, invoice=invoice, payment_environment=transaction.environment)
+            beta=checkout.beta, invoice=invoice, payment_environment=transaction.environment, confirmation_pdf=document)
     except Exception:
         db.session.rollback()
         db.session.execute(
@@ -394,6 +399,8 @@ def retry_deliveries() -> int:
     db.session.execute(
         db.update(OnrampCheckout)
         .where(
+            ~OnrampCheckout.session_id.in_(db.select(Transaction.session_id).where(
+                Transaction.status == "finished", Transaction.contract_snapshot.is_not(None))),
             OnrampCheckout.created_at < cutoff,
             OnrampCheckout.recipient_encrypted.is_not(None),
             OnrampCheckout.delivery_status != "sent",
@@ -402,7 +409,7 @@ def retry_deliveries() -> int:
                 OnrampCheckout.lease_expires_at < now().isoformat(),
             ),
         )
-        .values(delivery_status="expired")
+        .values(delivery_status="expired", recipient_encrypted=None)
     )
     db.session.execute(
         db.update(OnrampCheckout)
@@ -414,7 +421,6 @@ def retry_deliveries() -> int:
             ),
         )
         .values(
-            recipient_encrypted=None,
             checkout_encrypted=None,
             tracking_encrypted=None,
             callback_digest=None,
@@ -430,7 +436,8 @@ def retry_deliveries() -> int:
             )
             .where(
                 Transaction.status == "finished",
-                OnrampCheckout.recipient_encrypted.is_not(None),
+                or_(OnrampCheckout.recipient_encrypted.is_not(None), and_(
+                    Transaction.contract_snapshot.is_not(None), Transaction.customer_email_encrypted.is_not(None))),
                 OnrampCheckout.delivery_status != "sent",
             )
             .limit(100)

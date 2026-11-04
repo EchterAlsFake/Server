@@ -158,8 +158,10 @@ class ApplicationTests(ServerTestCase):
         )
         self.assertIn("Privex-VPS &amp; WireGuard-Transport".encode(), german.data)
         self.assertIn("Acer Swift 3".encode(), german.data)
-        self.assertIn(b"Example Mail", english.data)
-        self.assertIn(b"Example Mail", german.data)
+        self.assertIn(b"Proton Mail", english.data)
+        self.assertIn(b"Electronic withdrawal function", english.data)
+        self.assertIn(b"Proton Mail", german.data)
+        self.assertIn("Elektronische Widerrufsfunktion".encode(), german.data)
 
     def test_documentation_paths_cannot_escape_the_generated_site(self):
         target, status = serve_docs_file("assets/../../main.py")
@@ -371,6 +373,9 @@ class ApplicationTests(ServerTestCase):
                 "provider_reference_type",
                 "environment",
                 "renewal_license_id",
+                "customer_email_encrypted",
+                "contract_snapshot",
+                "confirmation_pdf",
                 "expected_price_amount",
                 "expected_price_currency",
                 "expected_pay_amount",

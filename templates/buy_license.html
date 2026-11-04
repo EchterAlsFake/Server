@@ -28,27 +28,17 @@
 {% endcall %}
 {% call question('crypto-delivery', 'When will I receive my license?') %}
 <p>Your license and invoice become available on the payment status page after NOWPayments verifies receipt. Blockchain confirmations and settlement can take time; a sent transaction does not mean your license is ready.</p>
-<p>If you enter an email, your license is also sent there. Otherwise, save your license and invoice from the status page.</p>
+<p>Your license and invoice are also sent to the required email address. Save these documents for your records.</p>
 {% include "partials/checkout_license_terms.html" %}
 {% endcall %}
 {% call question('crypto-privacy', 'How private is cryptocurrency checkout?') %}
 <p>No Porn Fetch account is required. Blockchain transactions are generally public. NOWPayments may process transaction information under its <a href="https://nowpayments.io/doc/fd-privacy-policy.pdf?v=1.2" target="_blank" rel="noopener noreferrer">privacy policy ↗</a>; cryptocurrency checkout is not fully anonymous.</p>
-<p>Your optional delivery email is used only to send your license, never for advertising. It is encrypted while queued, is not sent to NOWPayments, and is deleted after sending or after 7 days. My mail system processes it for delivery. <a href="/privacy_policy">Privacy / Datenschutz</a>.</p>
+<p>Your email is required for delivery and retained encrypted with your order for purchase enquiries and support, never for advertising. It is not sent to NOWPayments or included in your license file. Proton Mail processes it for email delivery. <a href="/privacy_policy">Privacy / Datenschutz</a>.</p>
 {% endcall %}
 {% endblock %}
 {% block checkout_simulation %}
 <div class="tx-screen" id="tx-screen-container" hidden>
     <p class="eyebrow">No payment required</p><h2 tabindex="-1" id="simulation-heading">Local payment simulation</h2><p>The provider sandbox is unavailable. This local simulation does not send funds.</p><p class="nowpayments-label">Simulated session ID</p><code id="sim-session-id"></code><p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p><button type="button" id="simulate-success-btn" class="nowpayments-btn">Simulate successful payment</button>
 </div>
-{% endblock %}
-{% block checkout_dialogs %}
-<dialog id="no-email-dialog" class="information-dialog" aria-labelledby="no-email-heading">
-<p class="eyebrow">Keep your purchase safe</p><h2 id="no-email-heading">Continue without email delivery?</h2>
-<p>You haven’t provided a license delivery email. After checkout, your license key will be shown and you can download your license and invoice.</p>
-<p>Before paying, you can copy a private recovery link or save it as a small text file. It works while payment is pending (up to seven days), then for six hours after your license is ready.</p>
-<p><strong>Save both your license and invoice safely.</strong> After recovery access expires, losing them may mean losing access to your purchase.</p>
-<p>For help recovering a purchase, contact support with the crypto transaction ID or invoice reference and the approximate purchase time. A timestamp helps locate a payment, but I can only issue a replacement if I can verify it belongs to you.</p>
-<div class="checkout-actions"><button type="button" class="btn btn-secondary" id="add-email">Add an email</button><button type="button" class="btn btn-primary" id="continue-without-email">I’ll save them. Continue</button></div>
-</dialog>
 {% endblock %}
 {% block checkout_scripts %}<script src="/static/crypto-checkout.js" defer></script>{% endblock %}

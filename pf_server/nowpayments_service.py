@@ -77,6 +77,8 @@ def _store_pending_transaction(
     expected_pay_amount: str | None = None,
     expected_pay_currency: str | None = None,
     delivery_recipient_encrypted: str | None = None,
+    contract_snapshot: str | None = None,
+    customer_email_encrypted: str | None = None,
     hosted_url: str | None = None,
     renewal_license_id: str | None = None,
 ) -> None:
@@ -97,6 +99,8 @@ def _store_pending_transaction(
             expected_pay_currency=expected_pay_currency,
             status="pending",
             created_at=created_at,
+            contract_snapshot=contract_snapshot,
+            customer_email_encrypted=customer_email_encrypted or delivery_recipient_encrypted,
             renewal_license_id=renewal_license_id,
         )
     )
@@ -116,6 +120,7 @@ def create_crypto_invoice(
     country_evidence: str,
     geolocation_database: str,
     *,
+    contract_snapshot: str | None = None,
     delivery_recipient_encrypted: str | None = None,
     renewal_license_id: str | None = None,
 ) -> dict[str, str]:
@@ -164,6 +169,7 @@ def create_crypto_invoice(
             customer_country=customer_country,
             country_evidence=country_evidence,
             geolocation_database=geolocation_database,
+            contract_snapshot=contract_snapshot,
             delivery_recipient_encrypted=delivery_recipient_encrypted,
             renewal_license_id=renewal_license_id,
         )
@@ -182,6 +188,7 @@ def create_crypto_invoice(
         customer_country=customer_country,
         country_evidence=country_evidence,
         geolocation_database=geolocation_database,
+        contract_snapshot=contract_snapshot,
         delivery_recipient_encrypted=delivery_recipient_encrypted,
         hosted_url=invoice_url,
         renewal_license_id=renewal_license_id,

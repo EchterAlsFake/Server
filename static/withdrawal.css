@@ -1,0 +1,14 @@
+.withdrawal-page { max-width: 850px; margin: 2rem auto; line-height: 1.65; overflow-wrap: anywhere; }
+.withdrawal-page h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); line-height: 1.25; }
+.withdrawal-page form { margin: 1.5rem 0; }
+.withdrawal-form { display: grid; gap: .75rem; }
+.withdrawal-form label, .withdrawal-page dt { font-weight: 700; }
+.withdrawal-form input, .withdrawal-form textarea { width: 100%; box-sizing: border-box; color: #fff; background: #16161e; border: 1px solid #aaa; border-radius: 6px; padding: .85rem; font: inherit; }
+.withdrawal-page :focus-visible { outline: 3px solid #ffc66d; outline-offset: 4px; }
+.withdrawal-page dd { margin: .4rem 0 1.2rem; }
+.withdrawal-declaration, .withdrawal-receipt { white-space: pre-wrap; overflow-wrap: anywhere; }
+.withdrawal-receipt { padding: 1rem; border: 1px solid #aaa; font: inherit; }
+.withdrawal-error { padding: 1rem; border: 2px solid #ff9d9d; }
+.withdrawal-instructions { margin-top: 2rem; }
+.withdrawal-instructions summary { cursor: pointer; font-weight: 700; }
+.withdrawal-page .btn { white-space: normal; text-align: center; }

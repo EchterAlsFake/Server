@@ -3,6 +3,7 @@
 import json
 import os
 import string
+from cryptography.fernet import Fernet
 from unittest.mock import MagicMock, patch
 
 from _support import ServerTestCase, main, drain_payment_receipts
@@ -13,6 +14,14 @@ from pf_server.models import License, Transaction
 
 
 class PaymentTests(ServerTestCase):
+    def setUp(self):
+        super().setUp()
+        self.accept_checkout()
+        mail_config = patch.dict(main.app.config, LICENSE_SMTP_HOST="localhost",
+            LICENSE_EMAIL_FROM="test@example.com", LICENSE_DELIVERY_ENCRYPTION_KEY=Fernet.generate_key().decode())
+        mail_config.start()
+        self.addCleanup(mail_config.stop)
+
     def test_operator_sandbox_request_uses_real_invoice_without_locally_fulfilling(self):
         self.add_transaction("NP-sandbox-provider", "12345")
         with main.app.app_context():
@@ -49,7 +58,7 @@ class PaymentTests(ServerTestCase):
             patch.object(nowpayments_service.httpx, "post", side_effect=httpx.ConnectError("provider unavailable")):
             result = self.client.post("/create-crypto-payment", json={
                 "country": "DE", "terms_accepted": True, "age_confirmed": True,
-                "withdrawal_accepted": True, "test_acknowledged": True, "no_email_acknowledged": True})
+                "withdrawal_accepted": True, "test_acknowledged": True, "delivery_email": "buyer@example.com"})
             self.assertEqual(result.status_code, 500)
             self.assertEqual(self.client.post("/simulate-payment-success", json={}).status_code, 404)
         with main.app.app_context():
@@ -457,9 +466,10 @@ class PaymentTests(ServerTestCase):
                 return_value=FakeNowPaymentsResponse(),
             ) as post,
         ):
+            self.accept_checkout(base_url="https://attacker.invalid")
             response = self.client.post(
                 "/create-crypto-payment",
-                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "no_email_acknowledged": True},
+                json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "delivery_email": "buyer@example.com"},
                 base_url="https://attacker.invalid",
             )
 

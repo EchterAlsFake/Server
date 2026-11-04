@@ -132,8 +132,75 @@ def load_license_email_catalog(language: str) -> dict[str, str]:
 def send_license_email(
     recipient: str, license_file: bytes, *, beta: bool = False,
     invoice: dict | None = None, payment_environment: str = "production",
+    confirmation_pdf: bytes | None = None,
 ) -> None:
     """English-first plain text and HTML, with the license and original invoice."""
+    email_from = current_app.config.get("LICENSE_EMAIL_FROM")
+    if not email_from:
+        raise RuntimeError("License email SMTP configuration is incomplete")
+
+    filename = "porn_fetch.license"
+    german = load_license_email_catalog("de")
+    english = load_license_email_catalog("en")
+    message = EmailMessage()
+    message["From"] = email_from
+    message["To"] = recipient
+    sandbox = payment_environment == "sandbox"
+    message["Subject"] = ("[TEST] " if sandbox else "") + f"{english['subject']} / {german['subject']}"
+    message["Date"] = format_datetime(datetime.now(timezone.utc))
+    message_domain = email_from.rpartition("@")[2]
+    if message_domain:
+        # Retrying the same license keeps the same identity, helping receiving
+        # systems suppress the unavoidable SMTP accepted/DB commit crash window.
+        identity = license_file + (json.dumps(invoice, sort_keys=True, ensure_ascii=False).encode() if invoice else b"")
+        identity += confirmation_pdf or b""
+        delivery_id = hashlib.sha256(identity).hexdigest()[:32]
+        message["Message-ID"] = f"<license-{delivery_id}@{message_domain}>"
+    else:
+        message["Message-ID"] = make_msgid()
+    english_body = english["legacy_beta_body" if beta else "body"].format(filename=filename)
+    german_body = german["legacy_beta_body" if beta else "body"].format(filename=filename)
+    beta_en = "V3.9 BETA ONLY: This license will be deleted at product release. This real-money purchase does not grant a permanent release license."
+    beta_de = "NUR V3.9-BETA: Diese Lizenz wird zur Produktveröffentlichung gelöscht. Dieser Kauf mit echtem Geld gewährt keine dauerhafte Lizenz für die Veröffentlichung."
+    message.set_content(
+        "English\n-------\n"
+        + ("SANDBOX TEST: No real payment was received.\n\n" if sandbox else "")
+        + (beta_en + "\n\n" if beta else "") + english_body
+        + ("\n\nYour PDF invoice is attached. Save all attachments." if invoice else "")
+        + ("\n\nYour contract / license benefit confirmation is attached as confirmation.pdf." if confirmation_pdf else "")
+        + "\n\nDeutsch\n-------\n"
+        + ("SANDBOX-TEST: Es ist keine echte Zahlung eingegangen.\n\n" if sandbox else "")
+        + (beta_de + "\n\n" if beta else "") + german_body
+        + ("\n\nDeine PDF-Rechnung ist angehängt. Bewahre alle Anhänge auf." if invoice else "")
+        + ("\n\nDie Vertrags- bzw. Lizenzleistungsbestätigung ist als confirmation.pdf angehängt." if confirmation_pdf else "")
+    )
+    message.add_alternative(current_app.jinja_env.get_template("emails/license.html").render(
+        english_paragraphs=english_body.split("\n\n"),
+        german_paragraphs=german_body.split("\n\n"), beta=beta,
+        beta_en=beta_en, beta_de=beta_de, sandbox=sandbox, invoice=invoice, confirmation_pdf=confirmation_pdf,
+    ), subtype="html")
+    message.add_attachment(
+        license_file,
+        maintype="application",
+        subtype="json",
+        filename=filename,
+    )
+    if invoice is not None:
+        from .invoice_service import invoice_download_name, render_invoice_pdf
+        document = dict(invoice)
+        if sandbox:
+            document["Environment"] = "sandbox"
+        message.add_attachment(render_invoice_pdf(document), maintype="application",
+            subtype="pdf", filename=invoice_download_name(invoice))
+
+    if confirmation_pdf:
+        message.add_attachment(confirmation_pdf, maintype="application", subtype="pdf", filename="confirmation.pdf")
+
+    send_email_message(message)
+
+
+def send_email_message(message: EmailMessage) -> None:
+    """Shared SMTP transport with the same TLS and local-bridge safeguards."""
     config = current_app.config
     smtp_host = config.get("LICENSE_SMTP_HOST")
     email_from = config.get("LICENSE_EMAIL_FROM")
@@ -155,57 +222,6 @@ def send_license_email(
         raise RuntimeError("SMTP authentication requires TLS or SSL")
     if not (use_ssl or use_starttls) and not smtp_transport_is_local(smtp_host):
         raise RuntimeError("Remote SMTP delivery requires TLS or SSL")
-
-    filename = "porn_fetch.license"
-    german = load_license_email_catalog("de")
-    english = load_license_email_catalog("en")
-    message = EmailMessage()
-    message["From"] = email_from
-    message["To"] = recipient
-    sandbox = payment_environment == "sandbox"
-    message["Subject"] = ("[TEST] " if sandbox else "") + f"{english['subject']} / {german['subject']}"
-    message["Date"] = format_datetime(datetime.now(timezone.utc))
-    message_domain = email_from.rpartition("@")[2]
-    if message_domain:
-        # Retrying the same license keeps the same identity, helping receiving
-        # systems suppress the unavoidable SMTP accepted/DB commit crash window.
-        identity = license_file + (json.dumps(invoice, sort_keys=True, ensure_ascii=False).encode() if invoice else b"")
-        delivery_id = hashlib.sha256(identity).hexdigest()[:32]
-        message["Message-ID"] = f"<license-{delivery_id}@{message_domain}>"
-    else:
-        message["Message-ID"] = make_msgid()
-    english_body = english["legacy_beta_body" if beta else "body"].format(filename=filename)
-    german_body = german["legacy_beta_body" if beta else "body"].format(filename=filename)
-    beta_en = "V3.9 BETA ONLY: This license will be deleted at product release. This real-money purchase does not grant a permanent release license."
-    beta_de = "NUR V3.9-BETA: Diese Lizenz wird zur Produktveröffentlichung gelöscht. Dieser Kauf mit echtem Geld gewährt keine dauerhafte Lizenz für die Veröffentlichung."
-    message.set_content(
-        "English\n-------\n"
-        + ("SANDBOX TEST: No real payment was received.\n\n" if sandbox else "")
-        + (beta_en + "\n\n" if beta else "") + english_body
-        + ("\n\nYour PDF invoice is attached. Save both attachments." if invoice else "")
-        + "\n\nDeutsch\n-------\n"
-        + ("SANDBOX-TEST: Es ist keine echte Zahlung eingegangen.\n\n" if sandbox else "")
-        + (beta_de + "\n\n" if beta else "") + german_body
-        + ("\n\nDeine PDF-Rechnung ist angehängt. Bewahre beide Anhänge auf." if invoice else "")
-    )
-    message.add_alternative(current_app.jinja_env.get_template("emails/license.html").render(
-        english_paragraphs=english_body.split("\n\n"),
-        german_paragraphs=german_body.split("\n\n"), beta=beta,
-        beta_en=beta_en, beta_de=beta_de, sandbox=sandbox, invoice=invoice,
-    ), subtype="html")
-    message.add_attachment(
-        license_file,
-        maintype="application",
-        subtype="json",
-        filename=filename,
-    )
-    if invoice is not None:
-        from .invoice_service import invoice_download_name, render_invoice_pdf
-        document = dict(invoice)
-        if sandbox:
-            document["Environment"] = "sandbox"
-        message.add_attachment(render_invoice_pdf(document), maintype="application",
-            subtype="pdf", filename=invoice_download_name(invoice))
 
     tls_context = ssl.create_default_context()
     connection_args = {

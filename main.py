@@ -28,6 +28,7 @@ from pf_server.operations_routes import (
 from pf_server.page_routes import pages_bp
 from pf_server.payment_routes import payments_bp
 from pf_server.onramp_routes import onramp_bp
+from pf_server.withdrawal_routes import withdrawal_bp, register_withdrawal_commands
 from pf_server.referral_guard import block_vplan_referrals
 from pf_server.seo_routes import seo_bp
 from pf_server.guide_routes import guides_bp
@@ -114,6 +115,7 @@ def create_app(
         pages_bp,
         payments_bp,
         onramp_bp,
+        withdrawal_bp,
         seo_bp,
         guides_bp,
         docs_bp,
@@ -135,7 +137,7 @@ def create_app(
     def private_payment_response(response):
         from flask import request
         if request.path in {
-            "/buy_card", "/buy_success", "/download_license", "/download_invoice",
+            "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
             "/onramp-callback", "/download-recovery", "/create-crypto-payment",
             "/payment-preview/banxa",
@@ -192,15 +194,20 @@ def create_app(
 
     @application.cli.command("retry-crypto-deliveries")
     def retry_crypto_deliveries_command():
-        """Retry optional crypto license email and purge expired delivery data."""
+        """Retry crypto/Patreon delivery and purge expired checkout evidence."""
         from pf_server.crypto_delivery import retry_crypto_deliveries
-        click.echo(f"Processed {retry_crypto_deliveries()} delivery candidates.")
+        from pf_server.patreon_service import retry_patreon_deliveries
+        from pf_server.contracts import purge_checkout_agreements
+        purge_checkout_agreements()
+        click.echo(f"Processed {retry_crypto_deliveries()} crypto and {retry_patreon_deliveries()} Patreon delivery candidates.")
 
     @application.cli.command("retry-onramp-deliveries")
     def retry_onramp_deliveries_command():
         """Purge expired checkout PII and retry confirmed card-license emails."""
         from pf_server.onramp_service import retry_deliveries
         click.echo(f"Processed {retry_deliveries()} delivery candidates.")
+
+    register_withdrawal_commands(application)
 
     if initialize_runtime:
         initialize_runtime_state(application)

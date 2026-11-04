@@ -129,6 +129,7 @@ class OnrampTests(ServerTestCase):
             db.session.commit()
 
     def create(self, **overrides):
+        self.accept_checkout("card", overrides.get("country", "DE"))
         token, session_id = self.acknowledge()
         self.age_consent(session_id)
         data = self.form(token) | overrides
@@ -270,7 +271,7 @@ class OnrampTests(ServerTestCase):
         page = self.client.get(result["status_url"], base_url=BASE)
         self.assertIn(b'target="_blank"', page.data)
         self.assertNotIn(b"deleted at release", page.data)
-        self.assertIn(b"One year of updates", page.data)
+        self.assertIn(b"One year of Premium release coverage", page.data)
         self.assertFalse(result["beta"])
         self.assertEqual(result["payment_method"], "banxa")
         self.assertEqual(page.headers["Cache-Control"], "no-store")
@@ -335,6 +336,17 @@ class OnrampTests(ServerTestCase):
             "/download_license", query_string={"session_id": session_id}
         )
         self.assertEqual(downloaded.data, emailed)
+        self.assertNotIn(b"buyer@example.com", emailed)
+        self.assertNotIn(b"email", emailed)
+        with main.app.app_context():
+            from pf_server.crypto_delivery import cipher
+            reference = db.session.get(Transaction, session_id).customer_email_encrypted
+            self.assertNotIn("buyer@example.com", reference)
+            self.assertEqual(cipher().decrypt(reference.encode()).decode(), "buyer@example.com")
+            with patch.object(service, "now", return_value=service.now() + timedelta(days=8)):
+                service.retry_deliveries()
+            self.assertEqual(db.session.get(Transaction, session_id).customer_email_encrypted, reference)
+
         status = self.client.get(
             "/check-payment-status", query_string={"session_id": session_id}
         ).get_json()
@@ -493,6 +505,40 @@ class OnrampTests(ServerTestCase):
             with patch.object(service, "send_license_email") as send:
                 self.assertEqual(service.deliver_license(session_id), "sent")
                 self.assertEqual(send.call_count, 1)
+
+    def test_paid_contract_confirmation_survives_delivery_cleanup_and_retry(self):
+        _, session_id, _ = self.create()
+        with main.app.app_context():
+            accepted = json.loads(db.session.get(Transaction, session_id).contract_snapshot)
+            self.assertTrue(accepted['refund_method_accepted'])
+            self.assertEqual(accepted['payment_method'], 'card')
+            self.assertIn('Banxa', accepted['refund_de'])
+            self.assertIn('90 Tagen', accepted['refund_terms'])
+        with patch.object(service, "send_license_email", side_effect=RuntimeError("SMTP unavailable")) as send:
+            self.post_ipn(self.webhook(session_id))
+        original = send.call_args.kwargs["confirmation_pdf"]
+        self.assertTrue(original.startswith(b"%PDF"))
+        with main.app.app_context():
+            checkout = db.session.get(OnrampCheckout, session_id)
+            checkout.created_at = (service.now() - timedelta(days=8)).isoformat()
+            db.session.commit()
+            with patch.object(service, "send_license_email") as retry:
+                self.assertEqual(service.retry_deliveries(), 1)
+            self.assertEqual(retry.call_args.kwargs["confirmation_pdf"], original)
+            self.assertEqual(checkout.delivery_status, "sent")
+            self.assertIsNone(checkout.recipient_encrypted)
+            self.assertIsNone(checkout.tracking_encrypted)
+
+    def test_old_consent_cannot_create_card_payment_even_with_client_flags(self):
+        self.accept_checkout('card')
+        token, session_id = self.acknowledge()
+        self.age_consent(session_id)
+        with self.client.session_transaction() as state:
+            state['checkout_consent'] = dict(state['checkout_consent'], version='checkout-v2')
+        response = self.client.post('/create-onramp-payment',
+            json=self.form(token) | {'refund_method_accepted': True}, base_url=BASE)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(self.requests, [])
 
     def test_retention_clears_expired_recipient_and_tracking_secrets(self):
         _, session_id, _ = self.create()
@@ -696,9 +742,28 @@ class OnrampConfigTests(ServerTestCase):
                 db.session.get(Transaction, "NP-existing").provider_payment_id,
                 "existing",
             )
+            from pf_server.models import WithdrawalRequest, WithdrawalDelivery
+            from pf_server import withdrawal_service
+            for model in (WithdrawalRequest, WithdrawalDelivery):
+                self.assertEqual(
+                    {column["name"] for column in inspect(db.engine).get_columns(model.__tablename__)},
+                    set(model.__table__.columns.keys()),
+                )
+            details = dict(name="Migration Test", email="test@example.com", contract="NP-existing")
+            draft = withdrawal_service.make_draft(details)
+            received = withdrawal_service.receive(draft, withdrawal_service.read_draft(draft), withdrawal_service.now())
+            self.assertIn("NP-existing", withdrawal_service.decrypt_receipt(received))
+            self.assertEqual(WithdrawalDelivery.query.count(), 2)
+            self.assertIsNone(db.session.get(Transaction, "NP-existing").contract_snapshot)
+            self.assertIsNone(db.session.get(Transaction, "NP-existing").confirmation_pdf)
+            self.assertIsNone(db.session.get(Transaction, "NP-existing").customer_email_encrypted)
+            db.session.execute(sa.text('UPDATE "transaction" SET customer_email_encrypted = :value WHERE session_id = :id'), {"value": "synthetic-encrypted-reference", "id": "NP-existing"})
+            db.session.commit()
             downgrade(revision="6a30f2b917c4")
             self.assertNotIn("onramp_checkouts", inspect(db.engine).get_table_names())
-            self.assertIsNotNone(db.session.get(Transaction, "NP-existing"))
+            self.assertNotIn("withdrawal_requests", inspect(db.engine).get_table_names())
+            self.assertNotIn("withdrawal_deliveries", inspect(db.engine).get_table_names())
+            self.assertEqual(db.session.execute(sa.text('SELECT provider_payment_id FROM "transaction" WHERE session_id = :id'), {"id": "NP-existing"}).scalar_one(), "existing")
 
     def test_beta_email_contains_warning_in_both_languages(self):
         from unittest.mock import MagicMock

@@ -53,7 +53,7 @@
                 <h3 style="margin: 0; color: #090d16; font-size: 1.6rem; letter-spacing: 1px;">Crypto</h3>
             </div>
             <div style="font-size: 3rem; margin-bottom: 15px;">🪙</div>
-            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Prefer to stay anonymous and decentralized? Use the secure widget below to donate with 250+ cryptocurrencies.</p>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Donate in cryptocurrency using the optional NOWPayments widget below. Blockchain transactions are generally public; cryptocurrency payments are not necessarily anonymous.</p>
             <a href="#crypto-widget" class="btn donation-btn" style="background: var(--color-crypto); color: #090d16; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-decoration: none;">Scroll to Crypto Widget</a>
         </div>
     </div>
@@ -63,56 +63,18 @@
     <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">Pay with Crypto</h2>
     <p style="color: var(--color-text-muted); margin-bottom: 30px;">Powered securely by NowPayments</p>
     
-    <div style="background: #090d16; border-radius: 16px; padding: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); display: inline-block; position: relative;" id="iframe-wrapper">
-        <div id="iframe-overlay" role="status" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
-            <p style="color: white; font-weight: bold; padding: 20px;">Please accept the legal agreements above first.</p>
-        </div>
-        <iframe src="https://nowpayments.io/embeds/donation-widget?api_key=65b1acaf-735d-4d4b-b3d6-c2237c0b57e3" title="NOWPayments cryptocurrency donation" tabindex="-1" width="346" height="623" frameborder="0" scrolling="no" style="overflow-y: hidden; border-radius: 12px; background: transparent;">
-           Can't load widget
-        </iframe>
+    <div id="widget-consent" style="text-align: left;">
+        <p id="widget-privacy">The widget stays blocked until you choose “Agree and load”. Loading connects your browser to NOWPayments (FD Transfers LLC, Saint Vincent and the Grenadines), disclosing your IP address and browser information even if you do not donate. The provider may use cookies and other storage for its service, statistics and marketing, and process data outside the EU/EEA. <a href="/privacy_policy#nowpayments-donations-en">Our privacy information</a> · <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">NOWPayments privacy policy</a>.</p>
+        <p lang="de">Das Widget bleibt bis zu Ihrer Auswahl „Zustimmen und laden“ gesperrt. Beim Laden verbindet sich Ihr Browser mit NOWPayments (FD Transfers LLC, St. Vincent und die Grenadinen); dabei erhält der Anbieter Ihre IP-Adresse und Browserinformationen, auch ohne Spende. Der Anbieter kann Cookies und andere Speicher für seinen Dienst, Statistik und Marketing verwenden und Daten außerhalb der EU/des EWR verarbeiten. <a href="/privacy_policy#nowpayments-donations-de">Unsere Datenschutzhinweise</a>.</p>
+        <p>Loading is optional. Your choice applies only to this page view. You can withdraw it by unloading the widget; data already sent and provider cookies are not deleted by doing so.</p>
+        <p lang="de">Das Laden ist freiwillig. Ihre Auswahl gilt nur für diesen Seitenaufruf und kann durch Entladen des Widgets widerrufen werden. Bereits übermittelte Daten und Cookies des Anbieters werden dadurch nicht gelöscht.</p>
+        <button type="button" id="load-donation-widget" class="btn btn-primary" aria-describedby="widget-privacy widget-status" disabled>Agree and load NOWPayments / Zustimmen und laden</button>
+        <button type="button" id="unload-donation-widget" class="btn btn-secondary" hidden>Unload widget / Widget entladen</button>
+        <p id="widget-status" role="status">Please accept the age and country declarations above first. / Bitte bestätigen Sie zunächst Alter und Land.</p>
+        <noscript><p>JavaScript is required to load this optional widget. No connection to NOWPayments is made by this page without it.</p></noscript>
     </div>
+    <div id="iframe-wrapper" hidden data-widget-url="https://nowpayments.io/embeds/donation-widget?api_key=65b1acaf-735d-4d4b-b3d6-c2237c0b57e3" style="max-width: 346px; margin: 20px auto 0;"></div>
 </div>
 {% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const chkAge = document.getElementById("chk-age-donation");
-        const chkCountry = document.getElementById("chk-country-donation");
-        const optionsDiv = document.getElementById("donation-options");
-        const overlay = document.getElementById("iframe-overlay");
-        const donationWidget = document.querySelector("#iframe-wrapper iframe");
-        const donationBtns = document.querySelectorAll(".donation-btn");
-
-        function updateState() {
-            const allChecked = chkAge.checked && chkCountry.checked;
-            optionsDiv.inert = !allChecked;
-            donationWidget.tabIndex = allChecked ? 0 : -1;
-            if (allChecked) {
-                optionsDiv.style.opacity = "1";
-                optionsDiv.style.pointerEvents = "auto";
-                overlay.style.display = "none";
-            } else {
-                optionsDiv.style.opacity = "0.5";
-                optionsDiv.style.pointerEvents = "none";
-                overlay.style.display = "flex";
-            }
-        }
-
-        chkAge.addEventListener("change", updateState);
-        chkCountry.addEventListener("change", updateState);
-
-        donationBtns.forEach(btn => {
-            btn.addEventListener("click", function(e) {
-                if (!(chkAge.checked && chkCountry.checked)) {
-                    e.preventDefault();
-                    alert("Please accept all required legal agreements before proceeding.");
-                }
-            });
-        });
-        
-        // Initial state
-        updateState();
-    });
-</script>
-{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='donation.js') }}" defer></script>{% endblock %}

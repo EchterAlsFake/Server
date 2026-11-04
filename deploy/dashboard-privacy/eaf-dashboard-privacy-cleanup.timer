@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily dashboard visitor privacy cleanup
+
+[Timer]
+OnCalendar=*-*-* 00:05:00 UTC
+Persistent=true
+Unit=eaf-dashboard-privacy-cleanup.service
+
+[Install]
+WantedBy=timers.target

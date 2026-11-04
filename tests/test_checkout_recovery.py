@@ -2,6 +2,7 @@
 
 import hashlib
 from datetime import timedelta
+from cryptography.fernet import Fernet
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
@@ -16,6 +17,15 @@ from pf_server.models import CheckoutRecovery, Transaction
 class CheckoutRecoveryTests(ServerTestCase):
     def setUp(self):
         super().setUp()
+        self.accept_checkout()
+        mail_send = patch("pf_server.crypto_delivery.send_license_email")
+        mail_send.start()
+        self.addCleanup(mail_send.stop)
+        mail_config = patch.dict(main.app.config, LICENSE_SMTP_HOST="localhost",
+            LICENSE_EMAIL_FROM="test@example.com", LICENSE_DELIVERY_ENCRYPTION_KEY=Fernet.generate_key().decode())
+        mail_config.start()
+        self.addCleanup(mail_config.stop)
+
         self.settings = patch.dict(main.app.config, NOWPAYMENTS_SANDBOX=True, NOWPAYMENTS_API_KEY="test-api-key")
         self.settings.start()
         self.addCleanup(self.settings.stop)
@@ -26,7 +36,7 @@ class CheckoutRecoveryTests(ServerTestCase):
             created = self.client.post("/create-crypto-payment", json=dict(
                 country="DE", terms_accepted=True, age_confirmed=True,
                 withdrawal_accepted=True, test_acknowledged=True,
-                no_email_acknowledged=True))
+                delivery_email="buyer@example.com"))
         self.assertEqual(created.status_code, 200)
         self.created = created.json
         self.session_id = created.json["session_id"]

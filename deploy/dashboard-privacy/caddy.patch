@@ -1,0 +1,46 @@
+--- a/Caddyfile
++++ b/Caddyfile
+@@ -62,6 +62,7 @@
+ 	log updates {
+ 		output file /var/lib/caddy/update-downloads.json {
+ 			roll_size 20MiB
++			roll_interval 24h
+ 			roll_keep 10
+ 			roll_keep_for 168h
+ 			roll_uncompressed
+@@ -69,8 +70,10 @@
+ 		format filter {
+ 			wrap json
+ 			fields {
+-				request>remote_ip hash
+-				request>client_ip hash
++				request>remote_ip delete
++				request>client_ip delete
++				request>remote_port delete
++				request>tls delete
+ 				request>headers delete
+ 				resp_headers delete
+ 				request>uri regexp "[?].*$" ""
+--- a/direct6.caddy
++++ b/direct6.caddy
+@@ -15,6 +15,7 @@
+     log direct6 {
+         output file /var/lib/caddy/update-downloads-direct6.json {
+             roll_size 20MiB
++            roll_interval 24h
+             roll_keep 10
+             roll_keep_for 168h
+             roll_uncompressed
+@@ -22,8 +23,10 @@
+         format filter {
+             wrap json
+             fields {
+-                request>remote_ip hash
+-                request>client_ip hash
++                request>remote_ip delete
++                request>client_ip delete
++                request>remote_port delete
++                request>tls delete
+                 request>headers delete
+                 resp_headers delete
+                 request>uri regexp "[?].*$" ""

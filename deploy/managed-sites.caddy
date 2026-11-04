@@ -99,7 +99,7 @@ echteralsfake.me, docs.echteralsfake.me, api.echteralsfake.me {
         @not_post not method POST
         respond @not_post 405
         request_body {
-            max_size 4KB
+            max_size 1048576
         }
         header {
             Cache-Control "no-store"

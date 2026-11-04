@@ -35,6 +35,10 @@ class Transaction(db.Model):
     finished_at = db.Column(db.String(40), nullable=True)
     created_at = db.Column(db.String, nullable=False)
 
+    # Separate from the short-lived delivery outbox; never included in licenses.
+    customer_email_encrypted = db.Column(db.Text, nullable=True)
+    contract_snapshot = db.Column(db.Text, nullable=True)
+    confirmation_pdf = db.Column(db.LargeBinary, nullable=True)
     renewal_license_id = db.Column(db.String(36), nullable=True)
 
 
@@ -86,6 +90,8 @@ class PatreonLicenseDelivery(db.Model):
     __tablename__ = "patreon_license_deliveries"
 
     member_id = db.Column(db.String(128), primary_key=True)
+    recipient_encrypted = db.Column(db.Text, nullable=True)
+    confirmation_pdf = db.Column(db.LargeBinary, nullable=True)
     license_key = db.Column(
         db.String(64),
         db.ForeignKey("license.license_key"),
@@ -159,3 +165,35 @@ class CheckoutRecovery(db.Model):
     session_id = db.Column(db.String(64), primary_key=True)
     token_digest = db.Column(db.String(64), unique=True, nullable=True)
     created_at = db.Column(db.String(40), nullable=False)
+
+
+class CheckoutAgreement(db.Model):
+    """Server-side text snapshot accepted before redirecting to a provider."""
+    __tablename__ = "checkout_agreements"
+    id = db.Column(db.String(64), primary_key=True)
+    snapshot = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.String(40), nullable=False)
+
+
+class WithdrawalRequest(db.Model):
+    """Received declarations; independent of purchase matching or legal assessment."""
+    __tablename__ = "withdrawal_requests"
+    id = db.Column(db.String(64), primary_key=True)
+    submission_digest = db.Column(db.String(64), unique=True, nullable=False)
+    details_encrypted = db.Column(db.Text, nullable=False)
+    receipt_encrypted = db.Column(db.Text, nullable=False)
+    received_at = db.Column(db.String(40), nullable=False)
+    reviewed_at = db.Column(db.String(40), nullable=True)
+
+
+class WithdrawalDelivery(db.Model):
+    """Separate fenced outboxes for consumer receipt and operator notification."""
+    __tablename__ = "withdrawal_deliveries"
+    request_id = db.Column(db.String(64), db.ForeignKey("withdrawal_requests.id"), primary_key=True)
+    audience = db.Column(db.String(16), primary_key=True)
+    status = db.Column(db.String(16), nullable=False, default="pending")
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    next_attempt_at = db.Column(db.String(40), nullable=False)
+    lease_token = db.Column(db.String(64), nullable=True)
+    lease_expires_at = db.Column(db.String(40), nullable=True)
+    sent_at = db.Column(db.String(40), nullable=True)

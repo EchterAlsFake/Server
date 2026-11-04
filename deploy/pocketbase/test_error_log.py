@@ -27,6 +27,7 @@ def database_connection(path):
 
 ROOT = Path(__file__).resolve().parent
 POCKETBASE_BIN = Path(os.environ.get("POCKETBASE_BIN", "/srv/pocketbase/pocketbase"))
+MAX_BODY_BYTES = 1048576
 
 
 class ErrorLogIntegrationTests(unittest.TestCase):
@@ -112,7 +113,7 @@ class ErrorLogIntegrationTests(unittest.TestCase):
         with database_connection(self.data_directory / "data.db") as database:
             return [row[0] for row in database.execute("SELECT message FROM error_logs ORDER BY created")]
 
-    def test_valid_message_is_redacted_and_nothing_else_is_stored(self):
+    def test_valid_message_is_preserved_and_nothing_else_is_stored(self):
         message = (
             "failed for person@example.com from 192.0.2.4 and 2001:db8::1 "
             "url=https://example.test/path?token=visible "
@@ -122,18 +123,7 @@ class ErrorLogIntegrationTests(unittest.TestCase):
 
         self.assertEqual((status, body), (204, b""))
         stored = self.messages()[-1]
-        for private_value in (
-            "person@example.com",
-            "192.0.2.4",
-            "2001:db8::1",
-            "token=visible",
-            "credential",
-            "session=private",
-            "secret=visible",
-        ):
-            self.assertNotIn(private_value, stored)
-        self.assertIn("[REDACTED_EMAIL]", stored)
-        self.assertIn("[REDACTED_IP]", stored)
+        self.assertEqual(stored, message)
 
         with database_connection(self.data_directory / "data.db") as database:
             columns = {row[1] for row in database.execute("PRAGMA table_info(error_logs)")}
@@ -149,7 +139,7 @@ class ErrorLogIntegrationTests(unittest.TestCase):
             (json.dumps({"message": 123}), "application/json"),
             (json.dumps({"message": "ok", "telemetry": "forbidden"}), "application/json"),
             (json.dumps({"message": " "}), "application/json"),
-            (json.dumps({"message": "x" * 2001}), "application/json"),
+            (json.dumps({"message": "x" * MAX_BODY_BYTES}), "application/json"),
             (json.dumps({"message": "ok"}), "text/plain"),
         ]
         for body, content_type in cases:
@@ -182,41 +172,36 @@ class ErrorLogIntegrationTests(unittest.TestCase):
         connection.close()
         self.assertEqual(response.status, 403)
 
-    def test_quoted_credentials_and_url_credentials_are_redacted(self):
-        cases = [
-            ('{"password": "synthetic one two"}', "synthetic"),
-            ("access_token='synthetic token value'", "synthetic"),
-            ('Authorization: Bearer synthetic-value', "synthetic"),
-            ('{"Authorization": "Bearer synthetic-value"}', "synthetic"),
-            ('license_key=synthetic-license', "synthetic"),
-            ('https://synthetic-user:synthetic-password@example.test/private#synthetic-token', "synthetic"),
-            ('pa\x00ssword=synthetic-password', "synthetic"),
-        ]
-        for message, private in cases:
-            with self.subTest(message=message):
-                self.assertEqual(self.request(json.dumps({"message": message}))[0], 204)
-                self.assertNotIn(private, self.messages()[-1])
+    def test_full_traceback_and_video_url_survive_storage(self):
+        message = (
+            "Porn Fetch error report\n"
+            'context={"video_url":"https://example.test/watch?v=42&token=synthetic"}\n'
+            "Traceback (most recent call last):\n"
+            + '  File "/home/example/provider.py", line 42, in load_sources\n' * 100
+            + "RuntimeError: synthetic failure 漢\n"
+        )
+        self.assertGreater(len(message), 4096)
+        self.assertEqual(self.request(json.dumps({"message": message}))[0], 204)
+        self.assertEqual(self.messages()[-1], message)
 
-    def test_redaction_expansion_is_bounded_and_empty_result_rejected(self):
-        self.assertEqual(self.request(json.dumps({"message": "a@b.co " * 280}))[0], 204)
-        self.assertLessEqual(len(self.messages()[-1]), 2000)
+    def test_control_only_message_rejected(self):
         before = len(self.messages())
         self.assertEqual(self.request('{"message":"\\u0000\\u0001"}')[0], 400)
         self.assertEqual(len(self.messages()), before)
 
     def test_oversized_chunked_valid_prefix_is_rejected(self):
         prefix = json.dumps({"message": "synthetic oversized body"})
-        body = prefix + " " * (4096 - len(prefix)) + "trailing data"
+        body = prefix + " " * (MAX_BODY_BYTES - len(prefix)) + "trailing data"
         before = len(self.messages())
         self.assertEqual(self.request(body, chunked=True)[0], 413)
         self.assertEqual(len(self.messages()), before)
 
     def test_exact_byte_boundary_and_utf8(self):
         body = json.dumps({"message": "boundary"})
-        self.assertEqual(self.request(body + " " * (4096 - len(body)), chunked=True)[0], 204)
-        self.assertEqual(self.request(body + " " * (4097 - len(body)))[0], 413)
+        self.assertEqual(self.request(body + " " * (MAX_BODY_BYTES - len(body)), chunked=True)[0], 204)
+        self.assertEqual(self.request(body + " " * (MAX_BODY_BYTES + 1 - len(body)))[0], 413)
         self.assertEqual(self.request(json.dumps({"message": "é" * 1900}, ensure_ascii=False).encode())[0], 204)
-        self.assertEqual(self.request(json.dumps({"message": "漢" * 1500}, ensure_ascii=False).encode())[0], 413)
+        self.assertEqual(self.request(json.dumps({"message": "漢" * 1500}, ensure_ascii=False).encode())[0], 204)
 
     def test_queries_and_signups_rejected(self):
         self.assertEqual(self.request('{"message":"synthetic"}', path="/error_log?token=synthetic-credential")[0], 400)

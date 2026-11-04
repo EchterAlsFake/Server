@@ -71,7 +71,7 @@ def run(browser_name="chromium"):
             assert not fixture.requests, "Selecting a payment method must not create provider transactions"
             page.screenshot(path="/tmp/porn-fetch-payment-card-choice.png", full_page=True)
             page.locator("#checkout-country").select_option("DE")
-            for checkbox in ("chk-age-terms", "chk-withdrawal", "chk-test-site"):
+            for checkbox in ("chk-age-terms", "chk-refund-method", "chk-withdrawal", "chk-test-site"):
                 page.locator("#" + checkbox).check()
             page.locator("#checkout-continue").click()
             expect(page.locator("#payment-test-dialog")).to_be_visible()

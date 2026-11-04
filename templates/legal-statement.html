@@ -1,35 +1,32 @@
 {% extends "base.html" %}
-
 {% block title %}Legal Statement - Porn Fetch{% endblock %}
-
 {% block content %}
 <div class="card" style="margin-top: 40px;">
     <h1>Legal Statement</h1>
-    
-    <div style="padding: 15px; background-color: rgba(255, 60, 60, 0.1); border-left: 4px solid #ff3c3c; margin-bottom: 25px; border-radius: 4px;">
-        <p style="margin: 0; color: #d32f2f; font-weight: 500;">
-            <strong>Important Notice:</strong> The user is solely responsible for ensuring their use of this software complies with all applicable laws. The legal assessments provided below are strictly based on German jurisdiction and may not apply in other countries.
-        </p>
-    </div>
+    <p>Updated: 1 November 2026. These notes explain the intended lawful use of Porn Fetch under German law. They are not a blanket finding that every download or access method is lawful. Users must have the necessary rights; the supplier's own legal obligations remain unaffected.</p>
+    <h2>Technical basis</h2>
+    <p>Porn Fetch runs on the user's device. It retrieves media from supported third-party services using supplied video, profile or collection URLs, including batch downloads. Certain account functions use user-provided credentials or browser cookies. Keyword search is disabled in the current 3.9 application. This website distributes the software; the ordinary download workflow does not relay the user's downloaded videos through the Porn Fetch application server.</p>
 
-    <div style="margin-top: 25px; line-height: 1.8;">
-        <h2>1. Copyright & Private Copying</h2>
-        <p>Under German copyright law (§ 53(1) UrhG), downloading publicly accessible videos for private use is permissible provided the source is not obviously illegal and no technical protection measures (DRM) are circumvented (§ 95a UrhG). This software functions as a neutral tool that exclusively processes unencrypted data streams.</p>
+    <h2>1. Copyright &amp; private copying</h2>
+    <p>German law permits certain individual copies made by a natural person for private, non-commercial use, provided the source was not obviously unlawfully created or made publicly accessible. Public availability alone is not permission to copy or redistribute a video. Copies made under this exception must not be used for public distribution or public playback. Authorised downloads may also be possible under permission from the relevant rights holder. See <a href="https://www.gesetze-im-internet.de/urhg/__53.html" rel="noopener noreferrer" target="_blank">§ 53 UrhG</a>.</p>
+    <p>The app handles media URLs and streams exposed by its supported integrations. A stream's format or technical accessibility does not establish its legal status. Transport encryption such as HTTPS is distinct from copyright access protection. The private-copying exception does not generally authorise bypassing effective technical protection measures; <a href="https://www.gesetze-im-internet.de/urhg/__95a.html" rel="noopener noreferrer" target="_blank">§ 95a UrhG</a> must be considered separately.</p>
 
-        <h2>2. Database Rights</h2>
-        <p>Automated retrieval of content from an individual profile does not constitute the extraction of a "substantial part" of a platform's database under § 87b(1) UrhG, and therefore does not infringe upon database producer rights.</p>
+    <h2>2. Database rights</h2>
+    <p>A profile or playlist is not automatically an insignificant part of a platform's database. The amount and qualitative importance of the material matter. Repeated, systematic extraction of individually small parts may also infringe database rights when it conflicts with normal exploitation or unreasonably harms the database producer's legitimate interests. Porn Fetch supports batch retrieval and does not enforce a legal extraction quota. Users must assess their intended scope and permissions. See <a href="https://www.gesetze-im-internet.de/urhg/__87b.html" rel="noopener noreferrer" target="_blank">§ 87b UrhG</a>.</p>
 
-        <h2>3. Criminal Law</h2>
-        <p>The software only accesses publicly available data or data for which the user has a legitimate access right (e.g., via session cookies). As it does not bypass access controls, it does not violate § 202a StGB (data espionage).</p>
+    <h2>3. Access rights and protective measures</h2>
+    <p>The application supports account sessions, browser-like networking and optional proxy/SNI-fragmentation settings. Its networking dependency also handles certain anti-bot challenges. It would therefore be inaccurate to claim that the software never interacts with access restrictions. Cookies demonstrate a technical session, not necessarily the user's legal entitlement to access or copy particular data.</p>
+    <p><a href="https://www.gesetze-im-internet.de/stgb/__202a.html" rel="noopener noreferrer" target="_blank">§ 202a StGB</a> concerns unauthorised access to data not intended for the person and specially secured against unauthorised access, obtained by overcoming that protection. Whether a particular restriction and method meet these conditions requires assessment of the actual circumstances. Neither every automated request nor every network workaround is automatically a criminal offence. Use only accounts and content you are entitled to access; the app does not grant permission to circumvent legally protected restrictions.</p>
 
-        <h2>4. Competition Law & Terms of Service</h2>
-        <p>In accordance with the German Federal Court of Justice (BGH I ZR 154/16), providing client-side automation software does not constitute unfair competition (§ 4(4) UWG). Additionally, unacknowledged "browsewrap" Terms of Service are generally not legally binding for non-registered users in Germany (§ 305(2) BGB).</p>
+    <h2>4. Competition law and platform terms</h2>
+    <p>Client-side automation is not inherently unlawful, but its purpose and effects matter. The BGH decision <a href="https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Art=pm&amp;Blank=1&amp;Datum=2018&amp;Gericht=bgh&amp;Seite=4&amp;file=dokument.pdf&amp;linked=urt&amp;nr=88498" rel="noopener noreferrer" target="_blank">I ZR 154/16 (Werbeblocker II, 19 April 2018)</a> concerns an advertising blocker. It is not a general authorisation for scraping or downloading from third-party platforms.</p>
+    <p>Whether platform terms form part of a contract depends on the way the contract is concluded and the terms are incorporated, including notice, an opportunity to read them and agreement where <a href="https://www.gesetze-im-internet.de/bgb/__305.html" rel="noopener noreferrer" target="_blank">§ 305(2) BGB</a> applies. Registration or its absence alone does not settle this. Accounts may already be subject to accepted terms. Copyright, database rights and other applicable laws remain relevant even without an enforceable contractual scraping prohibition.</p>
 
-        <h2>5. Trademark Law</h2>
-        <p>The descriptive use of platform names is strictly necessary to indicate technical compatibility, which is permissible under § 23(1)(2) MarkenG. This does not imply any official association, sponsorship, or endorsement.</p>
+    <h2>5. Platform names and trademarks</h2>
+    <p>Platform names identify the services with which an integration is intended to work. Referential use can be permitted under <a href="https://www.gesetze-im-internet.de/markeng/__23.html" rel="noopener noreferrer" target="_blank">§ 23(1) no. 3 and (2) MarkenG</a>, subject to honest commercial practices. This is not a general permission to use every logo or presentation. Porn Fetch is not affiliated with, sponsored by or endorsed by the named video platforms.</p>
 
-        <h2>6. Youth Media Protection (JMStV)</h2>
-        <p>The software complies with the German Youth Media Protection State Treaty (JMStV) as it functions purely as a local application tool (§ 3 No. 9 JMStV) that processes user-supplied URLs. It does not host, distribute, or autonomously convey adult content, and thus does not qualify as a "provider" obligated to implement closed user groups (§§ 3, 4 JMStV). The legal obligation for age verification and access restriction remains exclusively with the operators of the respective third-party platforms (§ 5(1) JMStV).</p>
-    </div>
+    <h2>6. Protection of minors</h2>
+    <p>Porn Fetch is intended for adults. Its local operation and the absence of a supplier-hosted video catalogue are relevant characteristics, but do not by themselves establish an exemption from all youth-protection obligations. The actual content and functionality of the website and application must be considered, including any previews or ways of making content accessible.</p>
+    <p>Where an online offering makes pornographic content available, the requirements for closed user groups under § 4(2) JMStV can apply. A simple “I am 18” declaration is not equivalent to the age verification required for such a group. Obligations of third-party platforms do not automatically discharge obligations of this offering. See the <a href="https://www.kjm-online.de/themen/technischer-jugendmedienschutz/unzulaessige-inhalte/" rel="noopener noreferrer" target="_blank">KJM guidance on restricted content and age verification</a>. This statement does not assert that a closed user group is required solely because an app is a local downloader.</p>
 </div>
 {% endblock %}

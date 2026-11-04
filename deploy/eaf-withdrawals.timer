@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry withdrawal receipt delivery every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+Unit=eaf-withdrawals.service
+
+[Install]
+WantedBy=timers.target

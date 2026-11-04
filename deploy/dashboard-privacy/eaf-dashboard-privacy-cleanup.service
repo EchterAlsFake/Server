@@ -1,0 +1,6 @@
+[Unit]
+Description=Remove expired dashboard visitor check values
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec eaf-dashboard python -m dashboard.cli purge-visitors

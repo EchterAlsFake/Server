@@ -23,7 +23,8 @@ AGE_GATED_PATHS = {"/porn_fetch", "/donation", "/buy_license", "/buy_card", "/bu
 @pages_bp.app_context_processor
 def public_page_context():
     from .onion import is_onion
-    return {"age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent()}
+    from .contracts import IMMEDIATE_EN, IMMEDIATE_DE, REFUND_EN, REFUND_DE, offer_digest
+    return {"immediate_en": IMMEDIATE_EN, "immediate_de": IMMEDIATE_DE, "refund_en": REFUND_EN, "refund_de": REFUND_DE, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent()}
 
 
 @pages_bp.after_app_request
@@ -125,16 +126,40 @@ def checkout_start():
     def accepted(field):
         return data.get(field) == "yes" or data.get(field) is True
 
-    if not isinstance(method, str) or not isinstance(country, str) or method not in {"crypto", "patreon", "card"} or country not in dict(COUNTRY_OPTIONS) or not all(accepted(field) for field in FIELDS):
+    if not isinstance(method, str) or not isinstance(country, str) or method not in {"crypto", "patreon", "card"} or country not in dict(COUNTRY_OPTIONS) or not all(accepted(field) for field in FIELDS if field != "withdrawal_accepted" or method != "patreon"):
         error = "Choose your payment method and country, then accept all required confirmations."
         if request.is_json:
             return jsonify(error=error), 400
         return render_template("porn_fetch.html", countries=COUNTRY_OPTIONS, checkout_error=error), 400
-    session["checkout_consent"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: True for field in FIELDS})
+    from .contracts import offer_digest, record_agreement
+    from datetime import datetime, timezone
+    if data.get("offer_digest") != offer_digest():
+        return jsonify(error="The offer has changed. Reload the checkout information and confirm it again."), 409
+    agreement_id = record_agreement(method, country, datetime.now(timezone.utc).isoformat())
+    session["checkout_consent"] = dict(agreement_id=agreement_id, version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: accepted(field) for field in FIELDS})
     target = url_for("payments.buy_license") if method == "crypto" else url_for("pages.payment_preview", method=method)
     if request.is_json:
         return jsonify(next=target, method=method)
     return redirect(target, code=303)
+
+
+@pages_bp.get("/checkout/agreement")
+def download_checkout_agreement():
+    from .contracts import agreement_receipt
+    from .extensions import db
+    from .models import CheckoutAgreement
+    consent = current_consent()
+    if not consent:
+        abort(404)
+    agreement = db.session.get(CheckoutAgreement, consent.get("agreement_id"))
+    if agreement is None:
+        abort(404)
+    response = make_response(agreement_receipt(agreement))
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = 'attachment; filename="checkout-agreement.pdf"'
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
 
 
 @pages_bp.route("/donation", methods=["GET"])
@@ -162,6 +187,12 @@ def payment_preview(method):
     """Require explicit no-payment acknowledgment; never creates a provider order."""
     if method not in {"patreon", "card", "banxa"}:
         abort(404)
+    if method == "patreon":
+        consent = current_consent()
+        if not consent or consent.get("payment_method") != "patreon":
+            return redirect(url_for("pages.porn_fetch", method="patreon"), code=303)
+        from .contracts import checkout_snapshot
+        checkout_snapshot("patreon", consent["country"])
     provider = "Patreon" if method == "patreon" else "Onramp Pay / Banxa"
     session_id = request.values.get("session_id", "")
     target = (

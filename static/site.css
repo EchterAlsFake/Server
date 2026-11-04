@@ -587,3 +587,8 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .platform-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
 .hero-platforms a { color: inherit; text-decoration: underline; }
 @media (max-width: 540px) { .platform-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .platform-list > div:last-child { grid-column: 1 / -1; border-bottom: 0; } }
+
+/* Withdrawal remains visible outside the collapsible navigation. */
+.withdrawal-link { display: inline-block; padding: .55rem .75rem; border: 2px solid currentColor; border-radius: .5rem; font-weight: 700; line-height: 1.3; text-decoration: underline; }
+.withdrawal-link:focus-visible { outline: 3px solid #ffc66d; outline-offset: 3px; }
+@media (max-width: 700px) { .header-inner { flex-wrap: wrap; } .header-inner > .withdrawal-link { max-width: 100%; } }

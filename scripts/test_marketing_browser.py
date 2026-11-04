@@ -90,16 +90,18 @@ def run(browser_name='chromium'):
                 expect(page.locator(f'#method-{method}')).to_be_checked()
             page.locator('#method-patreon').check()
             page.locator('#checkout-country').select_option('DE')
-            for checkbox in ('chk-age-terms', 'chk-withdrawal', 'chk-test-site'):
-                page.locator('#' + checkbox).check()
+            for checkbox in ('chk-age-terms', 'chk-refund-method', 'chk-withdrawal', 'chk-test-site'):
+                if page.locator('#' + checkbox).is_visible():
+                    page.locator('#' + checkbox).check()
             page.locator('#checkout-continue').click()
             expect(page.locator('#payment-test-dialog')).to_be_visible()
             expect(page.locator('#payment-test-continue')).to_be_disabled()
             page.locator('#payment-test-cancel').click()
             expect(page.locator('#payment-test-dialog')).not_to_be_visible()
             page.locator('#checkout-country').select_option('DE')
-            for checkbox in ('chk-age-terms', 'chk-withdrawal', 'chk-test-site'):
-                page.locator('#' + checkbox).check()
+            for checkbox in ('chk-age-terms', 'chk-refund-method', 'chk-withdrawal', 'chk-test-site'):
+                if page.locator('#' + checkbox).is_visible():
+                    page.locator('#' + checkbox).check()
             page.locator('#checkout-continue').click()
             expect(page.locator('#payment-test-ack')).not_to_be_checked()
             page.locator('#payment-test-ack').check()
@@ -109,6 +111,7 @@ def run(browser_name='chromium'):
             expect(preview.get_by_role('heading', name='Mock Patreon page')).to_be_visible()
             preview.close()
             page.locator('#method-card').check()
+            page.locator('#chk-withdrawal').check()
             page.locator('#checkout-continue').click()
             expect(page.locator('#payment-test-dialog')).to_be_visible()
             expect(page.locator('#payment-test-ack')).not_to_be_checked()
@@ -183,7 +186,8 @@ def run(browser_name='chromium'):
             page.locator('#chk-age-donation').check()
             page.locator('#chk-country-donation').check()
             expect(page.locator('#donation-options')).not_to_have_attribute('inert')
-            expect(page.locator('#iframe-overlay')).to_be_hidden()
+            expect(page.locator('#iframe-wrapper iframe')).to_have_count(0)
+            expect(page.locator('#load-donation-widget')).to_be_enabled()
             page.locator('a[href="#crypto-widget"]').click()
             expect(page).to_have_url(origin + '/donation#crypto-widget')
             page.locator('#chk-country-donation').uncheck()
@@ -246,7 +250,7 @@ def run(browser_name='chromium'):
             expect(fallback.locator('#checkout-continue')).to_be_visible()
             fallback.locator('#method-crypto').check()
             fallback.locator('#checkout-country').select_option('DE')
-            for checkbox in ('chk-age-terms', 'chk-withdrawal', 'chk-test-site'):
+            for checkbox in ('chk-age-terms', 'chk-refund-method', 'chk-withdrawal', 'chk-test-site'):
                 fallback.locator('#' + checkbox).check()
             fallback.locator('#checkout-continue').click()
             expect(fallback).to_have_url(origin + '/buy_license')

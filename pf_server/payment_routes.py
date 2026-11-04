@@ -140,7 +140,7 @@ def buy_success():
             payment_url = hosted_checkout_url(progress.checkout_url)
     return render_template(
         "buy_success.html", session_id=session_id, **view_context(session_id), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
-        payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
+        has_contract=bool(transaction and transaction.contract_snapshot), payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
     )
 
 
@@ -338,16 +338,14 @@ def create_crypto_payment():
     if not isinstance(raw_email, str):
         return jsonify(error="Enter a valid license delivery email."), 400
     recipient = normalize_recipient_email(raw_email.strip()) if raw_email.strip() else None
-    if raw_email.strip() and recipient is None:
-        return jsonify(error="Enter a valid license delivery email."), 400
-    if not recipient and data.get("no_email_acknowledged") is not True:
-        return jsonify(error="Acknowledge that you will save your license and invoice without email delivery."), 400
-    encrypted_recipient = None
-    if recipient:
-        try:
-            encrypted_recipient = encrypt_recipient(recipient)
-        except (ValueError, TypeError, AttributeError):
-            return jsonify(error="Email delivery is not configured yet. Try again later, or leave the email blank and save your license after checkout."), 503
+    if recipient is None:
+        return jsonify(error="Enter a valid email for license delivery and your purchase reference."), 400
+    try:
+        encrypted_recipient = encrypt_recipient(recipient)
+    except (ValueError, TypeError, AttributeError):
+        return jsonify(error="Email delivery is not configured yet. Please try again later."), 503
+    from .contracts import checkout_snapshot
+    contract_snapshot = checkout_snapshot("crypto", data.get("country"))
     try:
         target = renewal_target(data['renewal_license_key']) if data.get('renewal_license_key') else None
         result = create_crypto_invoice(
@@ -355,6 +353,7 @@ def create_crypto_payment():
             country.evidence_source,
             country.database_label,
             delivery_recipient_encrypted=encrypted_recipient,
+            contract_snapshot=contract_snapshot,
             **({"renewal_license_id": target} if target else {}),
         )
     except ValueError:
@@ -483,3 +482,18 @@ def patreon_webhook():
         response.headers["Retry-After"] = "30"
         return response, 503
     return jsonify({"status": "ok"}), 200
+
+
+@payments_bp.get("/download_contract")
+@limiter.limit(DEFAULT_RATE_LIMIT)
+def download_contract():
+    from .contracts import confirmation
+    session_id = resolve_session_id()
+    transaction = db.session.get(Transaction, session_id) if session_id else None
+    if transaction is None or transaction.status != "finished":
+        abort(404)
+    document = confirmation(transaction)
+    if document is None:
+        abort(404)
+    return send_file(BytesIO(document), as_attachment=True,
+        download_name="confirmation.pdf", mimetype="application/pdf")

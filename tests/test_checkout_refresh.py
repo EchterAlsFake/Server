@@ -1,4 +1,4 @@
-"""Shared consent, optional delivery privacy, and signed-payment fulfillment."""
+"""Shared consent, required email privacy, and signed-payment fulfillment."""
 
 import json
 import time
@@ -17,6 +17,7 @@ from pf_server.models import CryptoLicenseDelivery, License, Transaction
 class CheckoutRefreshTests(ServerTestCase):
     def setUp(self):
         super().setUp()
+        self.accept_checkout()
         self.config = patch.dict(
             main.app.config,
             {
@@ -33,12 +34,14 @@ class CheckoutRefreshTests(ServerTestCase):
     @staticmethod
     def consent(method="crypto"):
         return dict(
+            offer_digest=ServerTestCase.offer_digest(),
             payment_method=method,
             country="DE",
             age_confirmed=True,
             terms_accepted=True,
             withdrawal_accepted=True,
             test_acknowledged=True,
+            refund_method_accepted=True,
         )
 
     @staticmethod
@@ -49,7 +52,8 @@ class CheckoutRefreshTests(ServerTestCase):
             terms_accepted=True,
             withdrawal_accepted=True,
             test_acknowledged=True,
-            no_email_acknowledged=True,
+            refund_method_accepted=True,
+            delivery_email="buyer@example.com",
         )
         value.update(changes)
         return value
@@ -59,7 +63,7 @@ class CheckoutRefreshTests(ServerTestCase):
             value = self.consent()
             del value[field]
             response = self.client.post("/checkout/start", json=value)
-            self.assertEqual(response.status_code, 400, field)
+            self.assertEqual(response.status_code, 409 if field == "offer_digest" else 400, field)
         for method, target in [
             ("crypto", "/buy_license"),
             ("patreon", "/payment-preview/patreon"),
@@ -122,6 +126,16 @@ class CheckoutRefreshTests(ServerTestCase):
         self.assertIn(b'data-confirmed="false"', page)
         self.assertIn(b'id="pay-btn" class="nowpayments-btn" disabled', page)
 
+    def test_both_checkout_forms_require_email_and_explain_retention(self):
+        import re
+        for route in ("/buy_license", "/buy_card"):
+            page = self.client.get(route).get_data(as_text=True)
+            field = re.search(r'<input id="delivery-email"[^>]*>', page).group()
+            self.assertIn('type="email"', field)
+            self.assertIn(' required', field)
+            self.assertIn('stored encrypted with your order', page)
+            self.assertNotIn('continue-without-email', page)
+
     def test_shared_start_is_csrf_protected(self):
         with patch.dict(main.app.config, {"WTF_CSRF_ENABLED": True}):
             self.assertEqual(
@@ -138,7 +152,9 @@ class CheckoutRefreshTests(ServerTestCase):
                 dict(withdrawal_accepted=False),
                 dict(delivery_email="bad-address"),
                 dict(delivery_email="x@example.com\r\nBcc: y@example.com"),
-                dict(no_email_acknowledged=False),
+                dict(delivery_email=""),
+                dict(delivery_email="   ", no_email_acknowledged=True),
+                dict(delivery_email=None),
                 dict(delivery_email=12),
             ]:
                 response = self.client.post(
@@ -196,26 +212,17 @@ class CheckoutRefreshTests(ServerTestCase):
         drain_payment_receipts()
         return response
 
-    def test_no_email_checkout_stores_no_recipient_and_shows_signed_license(self):
-        session_id = self.create_invoice()
+    def test_no_email_checkout_is_rejected_even_with_legacy_acknowledgment(self):
+        payload = self.payment()
+        del payload["delivery_email"]
+        payload["no_email_acknowledged"] = True
+        with patch.object(nowpayments_service.httpx, "post") as provider:
+            self.assertEqual(self.client.post("/create-crypto-payment", json=payload).status_code, 400)
+            provider.assert_not_called()
         with main.app.app_context():
-            self.assertIsNone(main.db.session.get(CryptoLicenseDelivery, session_id))
-        with patch.object(crypto_delivery, "send_license_email") as send:
-            self.assertEqual(self.finish(session_id).status_code, 200)
-            self.assertEqual(
-                self.client.get(
-                    "/check-payment-status", query_string={"session_id": session_id}
-                ).json["status"],
-                "finished",
-            )
-            status = self.client.get(
-                "/check-payment-status", query_string={"session_id": session_id}
-            ).json
-            self.assertTrue(status["license_key"].startswith("key/"))
-            self.assertNotIn("delivery_status", status)
-            send.assert_not_called()
+            self.assertEqual(Transaction.query.count(), 0)
 
-    def test_optional_email_is_encrypted_not_forwarded_and_sent_once_after_signed_payment(
+    def test_required_email_is_encrypted_not_forwarded_and_sent_once_after_signed_payment(
         self,
     ):
         session_id = self.create_invoice("buyer@example.com")
@@ -240,6 +247,18 @@ class CheckoutRefreshTests(ServerTestCase):
             self.assertEqual(record.delivery_status, "sent")
             self.assertIsNone(record.recipient_encrypted)
             self.assertEqual(License.query.count(), 1)
+            reference = main.db.session.get(Transaction, session_id).customer_email_encrypted
+            self.assertNotIn("buyer@example.com", reference)
+            self.assertEqual(crypto_delivery.cipher().decrypt(reference.encode()).decode(), "buyer@example.com")
+            crypto_delivery.retry_crypto_deliveries()
+            self.assertEqual(main.db.session.get(Transaction, session_id).customer_email_encrypted, reference)
+        self.assertNotIn(b"buyer@example.com", send.call_args.args[1])
+        self.assertNotIn(b"email", send.call_args.args[1])
+        public_status = self.client.get("/check-payment-status", query_string={"session_id": session_id})
+        self.assertNotIn(b"buyer@example.com", public_status.data)
+        self.assertNotIn(b"customer_email_encrypted", public_status.data)
+
+
 
     def test_failed_smtp_does_not_undo_payment_and_retry_reuses_license(self):
         session_id = self.create_invoice("buyer@example.com")
@@ -266,7 +285,7 @@ class CheckoutRefreshTests(ServerTestCase):
                 )
             self.assertEqual(License.query.count(), 1)
 
-    def test_delivery_lease_excludes_concurrent_send_and_purges_expired_pii(self):
+    def test_delivery_lease_excludes_concurrent_send_and_purges_legacy_pii(self):
         session_id = self.create_invoice("buyer@example.com")
         with main.app.app_context():
             transaction = main.db.session.get(Transaction, session_id)
@@ -282,6 +301,7 @@ class CheckoutRefreshTests(ServerTestCase):
                     crypto_delivery.deliver_crypto_license(session_id), "busy"
                 )
                 send.assert_not_called()
+            main.db.session.get(Transaction, session_id).contract_snapshot = None
             record.created_at = (
                 datetime.now(timezone.utc) - timedelta(days=8)
             ).isoformat()
@@ -293,10 +313,11 @@ class CheckoutRefreshTests(ServerTestCase):
             self.assertIsNone(record.recipient_encrypted)
             self.assertEqual(record.delivery_status, "expired")
 
-    def test_late_payment_does_not_revive_expired_email(self):
+    def test_legacy_late_payment_does_not_revive_expired_email(self):
         session_id = self.create_invoice("buyer@example.com")
         with main.app.app_context():
             record = main.db.session.get(CryptoLicenseDelivery, session_id)
+            main.db.session.get(Transaction, session_id).contract_snapshot = None
             record.created_at = (
                 datetime.now(timezone.utc) - timedelta(days=8)
             ).isoformat()

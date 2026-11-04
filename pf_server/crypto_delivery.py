@@ -1,4 +1,4 @@
-"""Optional crypto email delivery; no email reaches the payment provider or logs."""
+"""Crypto email delivery outbox; no email reaches the payment provider or logs."""
 
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -8,7 +8,8 @@ from flask import current_app
 from sqlalchemy import and_, or_
 
 from .extensions import db
-from .licensing import build_license_file, get_or_create_license, send_license_email
+from .licensing import fulfill_transaction_license, send_license_email
+from .contracts import confirmation
 from .models import CryptoLicenseDelivery, Transaction
 from .invoice_service import load_invoice
 
@@ -34,14 +35,18 @@ def deliver_crypto_license(session_id):
     delivery = db.session.get(CryptoLicenseDelivery, session_id)
     if not delivery or not transaction or transaction.status != "finished":
         return "pending"
+    if transaction.contract_snapshot and transaction.customer_email_encrypted and delivery.delivery_status != "sent" and (not delivery.recipient_encrypted or delivery.delivery_status == "expired"):
+        delivery.recipient_encrypted = transaction.customer_email_encrypted
+        delivery.delivery_status = "pending"
+        db.session.commit()
     if not delivery.recipient_encrypted or delivery.delivery_status in {
         "sent",
         "expired",
     }:
         return delivery.delivery_status
     timestamp = datetime.now(timezone.utc)
-    if delivery.created_at < (timestamp - timedelta(days=7)).isoformat():
-        # A late webhook must not revive an address past the retention window.
+    if not transaction.contract_snapshot and delivery.created_at < (timestamp - timedelta(days=7)).isoformat():
+        # Legacy orders retain their original seven-day delivery window.
         if (
             delivery.lease_expires_at
             and delivery.lease_expires_at >= timestamp.isoformat()
@@ -76,19 +81,15 @@ def deliver_crypto_license(session_id):
         return "busy"
     try:
         delivery = db.session.get(CryptoLicenseDelivery, session_id)
-        license_record = get_or_create_license(transaction.provider_payment_id)
-        license_file = build_license_file(
-            license_record.license_key,
-            license_record.issuance_reference,
-            license_record.created_at,
-        )
+        document = confirmation(transaction)
+        license_file = fulfill_transaction_license(transaction)
         invoice = load_invoice(session_id)
         if invoice is None:
             raise ValueError("Paid order invoice is unavailable")
         send_license_email(
             cipher().decrypt(delivery.recipient_encrypted.encode()).decode(),
             license_file,
-            invoice=invoice, payment_environment=transaction.environment,
+            invoice=invoice, payment_environment=transaction.environment, confirmation_pdf=document,
         )
     except Exception:
         db.session.rollback()
@@ -122,11 +123,13 @@ def deliver_crypto_license(session_id):
 
 
 def retry_crypto_deliveries():
-    """Purge unsent addresses after 7 days and retry up to 100 paid orders."""
+    """Purge abandoned/legacy addresses; retry up to 100 confirmed purchases."""
     timestamp = datetime.now(timezone.utc)
     db.session.execute(
         db.update(CryptoLicenseDelivery)
         .where(
+            ~CryptoLicenseDelivery.session_id.in_(db.select(Transaction.session_id).where(
+                Transaction.status == "finished", Transaction.contract_snapshot.is_not(None))),
             CryptoLicenseDelivery.created_at
             < (timestamp - timedelta(days=7)).isoformat(),
             CryptoLicenseDelivery.recipient_encrypted.is_not(None),
@@ -151,10 +154,9 @@ def retry_crypto_deliveries():
             )
             .where(
                 Transaction.status == "finished",
-                CryptoLicenseDelivery.recipient_encrypted.is_not(None),
-                CryptoLicenseDelivery.delivery_status.in_(
-                    ("pending", "failed", "sending")
-                ),
+                CryptoLicenseDelivery.delivery_status != "sent",
+                or_(CryptoLicenseDelivery.recipient_encrypted.is_not(None), and_(
+                    Transaction.contract_snapshot.is_not(None), Transaction.customer_email_encrypted.is_not(None))),
             )
             .limit(100)
         )

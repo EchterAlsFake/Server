@@ -52,7 +52,7 @@ class PatreonWebhookTests(ServerTestCase):
     def test_paid_member_receives_one_signed_license_for_both_events(self):
         deliveries = []
 
-        def capture_email(recipient, license_file):
+        def capture_email(recipient, license_file, **kwargs):
             deliveries.append((recipient, license_file))
 
         payload = self.eligible_patreon_payload()
@@ -90,7 +90,7 @@ class PatreonWebhookTests(ServerTestCase):
     def test_failed_email_is_retried_with_the_same_license(self):
         attempted_files = []
 
-        def fail_once(_recipient, license_file):
+        def fail_once(_recipient, license_file, **kwargs):
             attempted_files.append(license_file)
             if len(attempted_files) == 1:
                 raise RuntimeError("simulated SMTP failure")

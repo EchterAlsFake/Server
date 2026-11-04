@@ -1,4 +1,4 @@
-// This service handles tiny diagnostics, not large uploads or realtime streams.
+// Bounded diagnostic intake, including full tracebacks and reproduction URLs.
 $app.onServe().bindFunc((e) => {
     e.server.readHeaderTimeout = 5 * 1000000000
     e.server.readTimeout = 10 * 1000000000
@@ -42,14 +42,13 @@ routerAdd(
     "POST",
     "/error_log",
     (e) => {
-        const maxBodyBytes = 4096
-        const maxMessageLength = 2000
+        const maxBodyBytes = 1048576
         const contentType = e.request.header.get("Content-Type") || ""
         if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
             throw e.error(415, "Unsupported media type.", {})
         }
         if (e.request.contentLength > maxBodyBytes) {
-            throw e.error(413, "Request body exceeds 4096 bytes.", {})
+            throw e.error(413, "Request body exceeds 1 MiB.", {})
         }
         let body
         try {
@@ -58,12 +57,12 @@ routerAdd(
             body = readerToString(e.request.body, maxBodyBytes + 1)
         } catch (error) {
             if (String(error).includes("request body too large")) {
-                throw e.error(413, "Request body exceeds 4096 bytes.", {})
+                throw e.error(413, "Request body exceeds 1 MiB.", {})
             }
             throw e.badRequestError("Unable to read request body.", {})
         }
         if (toBytes(body).length > maxBodyBytes) {
-            throw e.error(413, "Request body exceeds 4096 bytes.", {})
+            throw e.error(413, "Request body exceeds 1 MiB.", {})
         }
         let payload
         try {
@@ -79,17 +78,15 @@ routerAdd(
         ) {
             throw e.badRequestError("Expected only a string message field.", {})
         }
-        const message = payload.message.trim()
-        if (!message || message.length > maxMessageLength) {
-            throw e.badRequestError("Message must contain 1 to 2000 UTF-16 code units.", {})
-        }
-        const safeMessage = require(__hooks + "/redact.js").redact(message)
-        if (!safeMessage) {
-            throw e.badRequestError("Message is empty after sanitization.", {})
+        const message = payload.message
+        if (!/[^\s\u0000-\u001f\u007f]/.test(message)) {
+            throw e.badRequestError("Message must contain diagnostic text.", {})
         }
         // Cached schema avoids an unnecessary metadata query on each report.
         const record = new Record(e.app.findCachedCollectionByNameOrId("error_logs"))
-        record.set("message", safeMessage)
+        // Preserve the opted-in diagnostic verbatim. Redaction would remove the
+        // video URLs, exception messages and source details needed to reproduce it.
+        record.set("message", message)
         try {
             e.app.save(record)
         } catch (_) {
@@ -106,7 +103,7 @@ routerAdd(
         }
         return e.noContent(204)
     },
-    // The extra byte is only a sentinel; the handler still enforces 4096 bytes.
-    $apis.bodyLimit(4097),
+    // The extra byte is only a sentinel; the handler still enforces 1 MiB.
+    $apis.bodyLimit(1048577),
     $apis.skipSuccessActivityLog(),
 )

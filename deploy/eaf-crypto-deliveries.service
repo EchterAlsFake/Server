@@ -1,5 +1,5 @@
 [Unit]
-Description=Retry optional crypto license emails and purge expired addresses
+Description=Retry crypto and Patreon confirmations and purge expired checkout evidence
 After=network-online.target eaf-server.service
 ConditionPathExists=/srv/server/.env
 

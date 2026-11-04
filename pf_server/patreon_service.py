@@ -195,6 +195,11 @@ def deliver_patreon_license(member_id: str, recipient: str) -> str:
         if delivery is None:
             raise RuntimeError("Patreon delivery record disappeared")
 
+        from .crypto_delivery import cipher
+        from .contracts import patreon_confirmation
+        delivery.recipient_encrypted = cipher().encrypt(recipient.encode()).decode()
+        db.session.commit()
+        document = patreon_confirmation(delivery)
         license_record = (
             db.session.get(License, delivery.license_key)
             if delivery.license_key
@@ -219,7 +224,7 @@ def deliver_patreon_license(member_id: str, recipient: str) -> str:
             license_record.issuance_reference,
             license_record.created_at,
         )
-        send_license_email(recipient, license_file)
+        send_license_email(recipient, license_file, confirmation_pdf=document)
     except Exception:
         db.session.rollback()
         try:
@@ -238,6 +243,7 @@ def deliver_patreon_license(member_id: str, recipient: str) -> str:
         )
         .values(
             status="sent",
+            recipient_encrypted=None,
             updated_at=sent_at,
             sent_at=sent_at,
             lease_expires_at=None,
@@ -250,3 +256,20 @@ def deliver_patreon_license(member_id: str, recipient: str) -> str:
         if delivery is None or delivery.status != "sent":
             raise RuntimeError("Patreon delivery claim was lost after SMTP delivery")
     return "sent"
+
+
+def retry_patreon_deliveries():
+    """Retry durable benefit confirmations independently of webhook redelivery."""
+    from .crypto_delivery import cipher
+    rows = db.session.execute(db.select(PatreonLicenseDelivery).where(
+        PatreonLicenseDelivery.status != "sent",
+        PatreonLicenseDelivery.recipient_encrypted.is_not(None),
+    ).limit(100)).scalars().all()
+    for row in rows:
+        try:
+            recipient = cipher().decrypt(row.recipient_encrypted.encode()).decode()
+            deliver_patreon_license(row.member_id, recipient)
+        except Exception:
+            db.session.rollback()
+            current_app.logger.warning("Patreon license email deferred for retry")
+    return len(rows)

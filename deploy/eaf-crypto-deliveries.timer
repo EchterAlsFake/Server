@@ -1,5 +1,5 @@
 [Unit]
-Description=Retry crypto license delivery and clean up addresses every minute
+Description=Retry crypto and Patreon delivery and clean up checkout evidence every minute
 
 [Timer]
 OnCalendar=*-*-* *:*:00

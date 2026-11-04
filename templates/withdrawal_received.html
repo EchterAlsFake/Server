@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block html_lang %}de{% endblock %}
+{% block title %}Widerruf eingegangen / Withdrawal received — Porn Fetch{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='withdrawal.css') }}">{% endblock %}
+{% block content %}
+<article class="withdrawal-page">
+    <h1>Widerruf eingegangen / Withdrawal received</h1>
+    <p>Ihre Erklärung wurde gespeichert. Referenz / Reference: <strong>{{ reference }}</strong></p>
+    {% if email_sent %}<p>Die Eingangsbestätigung wurde per E-Mail versandt. <span lang="en">Your receipt was sent by email.</span></p>
+    {% else %}<p role="status">Ihre Erklärung ist bereits eingegangen. Der E-Mail-Versand steht noch aus und wird erneut versucht. Sie müssen den Widerruf nicht noch einmal absenden. Bitte speichern Sie die Bestätigung unten. <span lang="en">Your declaration has been received. Email delivery is pending and will be retried. You do not need to submit again. Please save the receipt below.</span></p>{% endif %}
+    <form action="{{ url_for('withdrawal.download_receipt') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="draft" value="{{ draft }}">
+        <button type="submit" class="btn btn-primary">Eingangsbestätigung speichern / Save receipt</button>
+    </form>
+    <pre class="withdrawal-receipt">{{ receipt }}</pre>
+    <p>Rückfragen / Questions: <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a>. Bitte geben Sie die Eingangsreferenz an. <span lang="en">Please include your receipt reference.</span></p>
+</article>
+{% endblock %}

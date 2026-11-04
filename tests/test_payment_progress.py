@@ -3,6 +3,7 @@
 import hashlib
 import json
 from datetime import timedelta
+from cryptography.fernet import Fernet
 from unittest.mock import patch
 
 import httpx
@@ -19,6 +20,12 @@ HTTP_CLIENT = httpx.Client
 class PaymentProgressTests(ServerTestCase):
     def setUp(self):
         super().setUp()
+        self.accept_checkout()
+        mail_config = patch.dict(main.app.config, LICENSE_SMTP_HOST="localhost",
+            LICENSE_EMAIL_FROM="test@example.com", LICENSE_DELIVERY_ENCRYPTION_KEY=Fernet.generate_key().decode())
+        mail_config.start()
+        self.addCleanup(mail_config.stop)
+
         self.config = patch.dict(
             main.app.config,
             {
@@ -132,11 +139,13 @@ class PaymentProgressTests(ServerTestCase):
 
     def test_combined_age_and_terms_form_requires_one_explicit_choice(self):
         data = dict(
+            offer_digest=self.offer_digest(),
             payment_method="crypto",
             country="DE",
             age_terms_accepted="yes",
             withdrawal_accepted="yes",
             test_acknowledged="yes",
+            refund_method_accepted="yes",
         )
         self.assertEqual(
             self.client.post("/checkout/start", data=data).status_code, 303
@@ -155,6 +164,8 @@ class PaymentProgressTests(ServerTestCase):
         self.assertNotIn(b"identity verification", page)
 
     def test_card_design_explains_route_requirements_and_price(self):
+        with self.client.session_transaction() as state:
+            state.pop("checkout_consent", None)
         page = self.client.get("/buy_card").data
         for text in (
             b"checkout-card",
@@ -197,7 +208,7 @@ class PaymentProgressTests(ServerTestCase):
                     "age_confirmed": True,
                     "terms_accepted": True,
                     "withdrawal_accepted": True,
-                    "no_email_acknowledged": True,
+                    "delivery_email": "buyer@example.com",
                 },
             )
         self.assertEqual(result.status_code, 200)
@@ -225,7 +236,7 @@ class PaymentProgressTests(ServerTestCase):
                     "age_confirmed": True,
                     "terms_accepted": True,
                     "withdrawal_accepted": True,
-                    "no_email_acknowledged": True,
+                    "delivery_email": "buyer@example.com",
                 },
             )
         self.assertEqual(result.status_code, 500)

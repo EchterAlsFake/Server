@@ -231,3 +231,7 @@ website-releases/
 # Keygen credentials
 deploy/keygen/credentials/
 
+# Local external checkout and downloaded page snapshot
+/Prefix32/
+/index.html
+

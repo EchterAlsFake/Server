@@ -1,0 +1,35 @@
+--- a/update_admin.py
++++ b/update_admin.py
+@@ -344,7 +344,7 @@
+     STATE.mkdir(exist_ok=True, mode=0o700)
+     with sqlite3.connect(STATE / 'update-traffic.db', timeout=20) as db:
+         db.execute('CREATE TABLE IF NOT EXISTS cursor (inode INTEGER PRIMARY KEY, offset INTEGER)')
+-        db.execute('CREATE TABLE IF NOT EXISTS traffic (source TEXT, path TEXT, visitor TEXT, day TEXT, requests INTEGER, ranges INTEGER, bytes INTEGER, PRIMARY KEY(source,path,visitor,day))')
++        db.execute('CREATE TABLE IF NOT EXISTS download_daily (source TEXT, path TEXT, day TEXT, requests INTEGER, ranges INTEGER, bytes INTEGER, PRIMARY KEY(source,path,day))')
+         db.execute('CREATE TABLE IF NOT EXISTS route_traffic (route TEXT, day TEXT, requests INTEGER, bytes INTEGER, PRIMARY KEY(route,day))')
+         db.execute('CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT)')
+         db.execute("INSERT OR IGNORE INTO metadata VALUES ('started', ?)", (str(time.time()),))
+@@ -367,13 +367,10 @@
+                         source, path = result
+                         if path.endswith(('.json', '.xml', '.sha1', '.sha256', 'SHA256SUMS', 'meta.7z')):
+                             continue
+-                        visitor = req.get('client_ip') or req.get('remote_ip')
+-                        if not visitor:
+-                            continue
+                         day = time.strftime('%Y-%m-%d', time.gmtime(event['ts']))
+                         route = 'direct6' if req.get('host') == 'direct6.pornfetch.to' else 'vps'
+                         db.execute('INSERT INTO route_traffic VALUES (?,?,1,?) ON CONFLICT(route,day) DO UPDATE SET requests=requests+1,bytes=bytes+excluded.bytes', (route, day, event['size']))
+-                        db.execute('INSERT INTO traffic VALUES (?,?,?,?,1,?,?) ON CONFLICT(source,path,visitor,day) DO UPDATE SET requests=requests+1,ranges=ranges+excluded.ranges,bytes=bytes+excluded.bytes', (source, path, visitor, day, int(event['status'] == 206), event['size']))
++                        db.execute('INSERT INTO download_daily VALUES (?,?,?,1,?,?) ON CONFLICT(source,path,day) DO UPDATE SET requests=requests+1,ranges=ranges+excluded.ranges,bytes=bytes+excluded.bytes', (source, path, day, int(event['status'] == 206), event['size']))
+                     except (ValueError, KeyError, TypeError):
+                         continue
+                 db.execute('INSERT OR REPLACE INTO cursor VALUES (?,?)', (stat.st_ino, offset))
+@@ -386,7 +383,7 @@
+         return dict(started=None, items=[])
+     with sqlite3.connect(f'file:{path}?mode=ro', uri=True) as db:
+         db.row_factory = sqlite3.Row
+-        rows = db.execute('SELECT source,path,COUNT(DISTINCT visitor) AS downloaders,SUM(requests) AS requests,SUM(ranges) AS ranges,SUM(bytes) AS bytes FROM traffic GROUP BY source,path ORDER BY bytes DESC LIMIT 3000').fetchall()
++        rows = db.execute('SELECT source,path,NULL AS downloaders,SUM(requests) AS requests,SUM(ranges) AS ranges,SUM(bytes) AS bytes FROM download_daily GROUP BY source,path ORDER BY bytes DESC LIMIT 3000').fetchall()
+         started = db.execute("SELECT value FROM metadata WHERE key='started'").fetchone()
+         transports = [dict(row) for row in db.execute('SELECT route,SUM(requests) AS requests,SUM(bytes) AS bytes FROM route_traffic GROUP BY route')] if db.execute("SELECT 1 FROM sqlite_master WHERE name='route_traffic'").fetchone() else []
+     return dict(started=float(started[0]) if started else None, items=[dict(row) for row in rows], transports=transports)

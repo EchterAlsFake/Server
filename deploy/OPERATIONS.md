@@ -83,8 +83,11 @@ its contract or deployment. Production hooks live in /srv/pocketbase; private
 state lives in /var/lib/eaf-pocketbase. Changes require explicit migration and
 service restart; the normal server deployment does not install them.
 
-The audit added bounded requests/resources, stronger redaction, locked signup,
-and a 100,000-record ceiling. At capacity intake returns 503 without deleting
+The current source accepts complete diagnostic messages up to a 1 MiB JSON
+request, preserving tracebacks and video URLs after the client's updated opt-in.
+Deploy the hook, matching Caddy body limit and message-field migration together;
+the older deployed receiver redacts URLs and only accepts 4 KiB requests.
+Signup stays locked and the 100,000-record ceiling remains. At capacity intake returns 503 without deleting
 existing records. Activity logs stay disabled; there is no automatic record
 expiry. Retain rollback snapshots privately and retire them deliberately.
 
@@ -216,3 +219,33 @@ loads the existing stored invoice and attaches its PDF. Missing/unreadable invoi
 leave delivery failed and retryable, preserving the encrypted recipient. Stable
 Message-IDs include the invoice identity so a separate purchase/renewal is not
 suppressed merely because its signed license is unchanged.
+
+
+### Electronic withdrawal receipts
+
+Before serving the electronic withdrawal form, migrate the application database through
+`c482e16d09a2` with the same private environment as the web process. Retain
+`LICENSE_DELIVERY_ENCRYPTION_KEY` (or `ONRAMP_ENCRYPTION_KEY` fallback) and configure
+`LICENSE_SMTP_*` / `LICENSE_EMAIL_FROM` for Proton Mail. No production mail is sent by migration.
+
+Install the supplied `deploy/eaf-withdrawals.service` and `deploy/eaf-withdrawals.timer`
+under `/etc/systemd/system/`, then run `systemctl daemon-reload` and
+`systemctl enable --now eaf-withdrawals.timer`. The service runs as `eaf-server` in
+`/srv/server`, uses the same database and `.env`, and retries consumer confirmations and
+support notifications every minute. The form also attempts both immediately after storing
+receipt; this timer is required to recover mail failures and process interruptions.
+For another deployment layout, schedule `flask --app main retry-withdrawal-deliveries`
+every minute under the web service environment instead.
+
+Check `list-withdrawals` for pending reviews and mail status. Use `--all-records` when
+checking delivery failures, since manual review does not imply successful email delivery.
+`show-withdrawal --reference WR-...` reveals personal data locally; avoid capturing its
+output in deployment logs. After manual handling, use `mark-withdrawal-reviewed --reference
+WR-...`. Notifications go to `support@echteralsfake.me`. Observe that mailbox and delivery
+bounces even if the outbox says `sent`. Review contract identification and reimbursements
+manually; the form does not change payments, Patreon subscriptions or license status.
+
+Do not delete a received declaration just because mail delivery failed. Apply the documented
+purpose-based retention review to declarations, outboxes, mailbox copies and backups.
+A rollback below `c482e16d09a2` drops withdrawal tables: preserve and process received
+withdrawals before any such rollback. Stop the new timer before running older code.

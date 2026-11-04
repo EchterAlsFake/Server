@@ -4,7 +4,6 @@
   const email = document.querySelector('#delivery-email');
   const pay = document.querySelector('#pay-btn');
   const error = document.querySelector('#checkout-error');
-  const dialog = document.querySelector('#no-email-dialog');
   let sessionId = null;
   let statusUrl = null;
   let busy = false;
@@ -15,11 +14,11 @@
     if (!response.ok) throw new Error(data.error || 'Could not continue. Please try again.');
     return data;
   }
-  async function createPayment(noEmailAcknowledged) {
+  async function createPayment() {
     if (busy || root.dataset.confirmed !== 'true') return;
     busy = true; pay.disabled = true; error.textContent = ''; pay.textContent = 'Creating transaction…';
     try {
-      const data = await post('/create-crypto-payment', {country: root.dataset.country, age_confirmed: true, terms_accepted: true, withdrawal_accepted: true, test_acknowledged: true, delivery_email: email.value.trim(), no_email_acknowledged: noEmailAcknowledged});
+      const data = await post('/create-crypto-payment', {country: root.dataset.country, age_confirmed: true, terms_accepted: true, withdrawal_accepted: true, test_acknowledged: true, delivery_email: email.value.trim()});
       sessionId = data.session_id;
       statusUrl = data.status_url;
       email.value = '';
@@ -35,11 +34,8 @@
   form.addEventListener('submit', event => {
     event.preventDefault();
     if (!form.reportValidity()) return;
-    if (!email.value.trim()) dialog.showModal();
-    else createPayment(false);
+    createPayment();
   });
-  document.querySelector('#add-email').addEventListener('click', () => { dialog.close(); email.focus(); });
-  document.querySelector('#continue-without-email').addEventListener('click', () => { dialog.close(); createPayment(true); });
   document.querySelector('#simulate-success-btn').addEventListener('click', async event => {
     const button = event.currentTarget;
     button.disabled = true;
