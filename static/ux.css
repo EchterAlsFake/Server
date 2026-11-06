@@ -61,3 +61,41 @@
  .age-dialog h2 { font-size:1.7rem; }
  .age-dialog .age-symbol { font-size:1.8rem; }
 }
+
+/* Two audiences, one quiet hierarchy. */
+.site-header { background:#101012; }
+html { scroll-padding-top:110px; }
+:where(a, button, input, select, summary):focus { scroll-margin-block:110px 24px; }
+.legal-utility { background:#101012; }
+.legal-utility a:hover { color:var(--color-text); }
+.power-capabilities { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:30px; margin:30px 0; }
+.power-capabilities > div { border-top:1px solid var(--line); padding-top:18px; }
+.power-capabilities dt { font-weight:600; margin-bottom:10px; }
+.power-capabilities dd { margin:0; color:var(--color-text-muted); font-size:var(--text-secondary); line-height:1.8; }
+.premium-terms { margin-block:28px; }
+.premium-terms > div { display:grid; grid-template-columns:minmax(130px,.65fr) minmax(0,1.7fr); gap:16px; padding-block:16px; border-top:1px solid var(--line); }
+.premium-terms dt { font-weight:550; }
+.premium-terms dd { margin:0; color:var(--color-text-muted); line-height:1.75; }
+.tour-chapters { display:flex; flex-wrap:wrap; gap:8px 24px; margin-top:16px; }
+.tour-chapters[hidden] { display:none; }
+.tour-chapters button { background:none; border:0; border-bottom:1px solid transparent; color:var(--color-text-muted); font:inherit; font-size:var(--text-secondary); padding:10px 0; cursor:pointer; }
+.tour-chapters button:hover, .tour-chapters button[aria-current] { color:var(--color-text); border-bottom-color:var(--color-primary); }
+.purchase-summary .license-terms-heading { font-size:20px; font-weight:550; margin-top:28px; }
+.purchase-summary .premium-terms { font-size:var(--text-secondary); margin-block:16px; }
+.purchase-summary .premium-terms > div { grid-template-columns:1fr; gap:6px; }
+.purchase-layout { gap:56px; }
+.purchase-heading { margin-bottom:44px; }
+.payment-picker .checkout-step { margin-bottom:12px; }
+.payment-picker .method-title { line-height:1.5; }
+.purchase-page .compact-agreements { gap:0; }
+.purchase-page .compact-agreements label { padding:16px 0; border-bottom:1px solid var(--line); line-height:1.75; }
+.purchase-page .compact-agreements input { margin-top:5px; }
+.purchase-page #checkout-continue { margin-top:12px; }
+@media(max-width:700px) {
+ .power-capabilities { grid-template-columns:1fr; gap:18px; }
+ .power-overview .section-heading { gap:16px; }
+ .premium-terms > div { grid-template-columns:1fr; gap:6px; }
+ .purchase-layout { gap:32px; }
+ .purchase-page .payment-option { padding:18px 14px; }
+ .tour-chapters { gap:0 20px; }
+}

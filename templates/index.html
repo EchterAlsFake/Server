@@ -10,7 +10,7 @@
     <h1 id="hero-title">Download adult videos.<br><span>Keep them on your device.</span></h1>
     <p class="hero-description">Porn Fetch is a video downloader for PornHub, XHamster, XVideos, Eporner and other supported adult websites. Save videos to your computer or phone.</p>
     {% include "partials/actions.html" %}
-    <p class="free-summary">Free: up to 720p · One download at a time · First 5 videos per public collection</p>
+    <p class="free-summary">Free to start. No account needed for the app.</p>
     {% if config.PATREON_SHOP_ENABLED %}<p class="patreon-return"><a href="/activate">Already bought on Patreon? Get your license →</a></p>{% endif %}
     <p class="hero-platforms">Windows <span>·</span> Linux <span>·</span> macOS <span>·</span> Android™ <span>·</span> <a href="#ios-support">iOS 15+</a></p>
     <figure class="product-stage">
@@ -22,6 +22,11 @@
         <noscript><p class="video-noscript"><a href="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}">Watch the 40-second product tour</a></p></noscript>
         <figcaption class="stage-caption" id="video-description"><span>Paste URL <span aria-hidden="true">→</span> Fetch <span aria-hidden="true">→</span> Download locally</span><span>Illustrative demo · accelerated workflow</span></figcaption>
     </figure>
+    <nav class="tour-chapters" aria-label="Product tour chapters" hidden>
+        <button type="button" data-tour-time="0">1. Save a video</button>
+        <button type="button" data-tour-time="5.5">2. Collections &amp; accounts</button>
+        <button type="button" data-tour-time="17">3. Advanced controls</button>
+    </nav>
     <div class="hero-footnote"><span>No ads. Local files. Source available.</span><a href="#features">Explore the app <span aria-hidden="true">↓</span></a><span>Free to start · Premium optional</span></div>
 </section>
 
@@ -31,8 +36,18 @@
     <div class="download-facts"><div><span>01</span><h3>Paste a link</h3><p>A video, playlist, model or channel URL.</p></div><div><span>02</span><h3>Choose quality</h3><p>Choose the video quality. Advanced settings are optional.</p></div><div><span>03</span><h3>Save locally</h3><p>Download to a folder on your device.</p></div></div>
 </section>
 
+<section class="section-space power-overview" id="power" aria-labelledby="power-title">
+    <div class="section-heading"><div><p class="eyebrow">More control, when you need it</p><h2 id="power-title">Simple by default.<br>Powerful by design.</h2></div><p class="section-description">Paste a link and download. When you need more control, the settings are there.</p></div>
+    <dl class="power-capabilities">
+        <div><dt>Choose your connection</dt><dd>Tor and proxies, HTTP version, browser-style TLS fingerprints and network-interface binding.</dd></div>
+        <div><dt>Control local database writing</dt><dd>Turn desktop history tracking on or off and choose the local PocketBase data folder. History and statistics are unavailable on Android.</dd></div>
+        <div><dt>Shape your workflow</dt><dd>Filter by duration, quality, date or text patterns. Customize file names, download limits and output settings.</dd></div>
+    </dl>
+    <a class="text-link" href="#advanced">Explore advanced settings →</a>
+</section>
+
 <section class="websites-section section-space" id="websites" aria-labelledby="websites-title">
-    <div class="section-heading"><div><p class="eyebrow">06 / Compatibility</p><h2 id="websites-title">15 websites.<br>One workflow.</h2></div><p class="section-description">A factual look at what Porn Fetch 3.8.82 beta supports. Use a website’s full URL; keyword search is not available.</p></div>
+    <div class="section-heading"><div><p class="eyebrow">02 / Compatibility</p><h2 id="websites-title">15 websites.<br>One workflow.</h2></div><p class="section-description">A factual look at what Porn Fetch 3.8.82 beta supports. Use a website’s full URL; keyword search is not available.</p></div>
     <p class="affiliation-note">Porn Fetch is an independent project. It is not affiliated with, sponsored by, authorized by or endorsed by any of the listed websites. Names identify technical compatibility only.</p>
     <div class="website-picker" hidden><label for="website-choice">Which website do you use?</label><select id="website-choice">{% for website in websites %}<option value="{{ website[0]|lower }}">{{ website[0] }}</option>{% endfor %}</select></div>
     <div class="website-results">
@@ -51,12 +66,13 @@
     <div class="section-heading"><div><p class="eyebrow">Free &amp; Premium</p><h2 id="premium-title">Start free.<br>Choose more when you need it.</h2></div><p class="section-description">The app and its updates are free. Premium adds higher-quality downloads and full public collections.</p></div>
     <div class="plan-comparison"><article><h3>Free</h3><p class="plan-price">€0</p><ul><li>Available video qualities up to 720p</li><li>One active download</li><li>First 5 videos per public collection</li><li>Account collections are exempt from the 5-video preview</li><li>Desktop download history and statistics</li></ul><a class="btn btn-primary" href="/download">Download Free ↓</a></article>
     <article><h3>Premium</h3><p class="plan-price">€19.99 <span>one-time payment</span></p><ul><li>Higher qualities, including 4K when available</li><li>Download several videos at once</li><li>Full public profiles, channels and playlists</li><li>Up to 10 active installations</li></ul><a class="text-link" href="/porn_fetch">{{ 'Preview Premium Checkout' if config.NOWPAYMENTS_SANDBOX else 'Get Premium' }} →</a></article></div>
-    <p class="fine-print">Premium covers releases published within 1 year of first activation. Keep Premium in eligible releases afterwards; activation and periodic online validation still apply. Premium in later releases requires renewed entitlement. No automatic renewal. Provider, network and conversion fees may apply. Features and quality depend on the website and source video.</p>
+    {% include "partials/premium_terms.html" %}
+    <p class="fine-print">Provider, network and conversion fees may apply. Features and quality depend on the website and source video.</p>
     <details class="ux-disclosure"><summary>Premium activation and offline access</summary><p>Up to 10 active installations. Initial 3-day grace period for connection issues, then 7 days offline between successful online checks. The initial grace period covers network failures, not rejected licenses. <a href="/terms">Read the license terms</a>.</p></details>
 </section>
 
 <section class="platform-section section-space" id="platforms" aria-labelledby="platforms-title">
-    <div class="section-heading"><div><p class="eyebrow">05 / Platforms</p><h2 id="platforms-title">At home on<br>your system.</h2></div><p class="section-description">An app for Windows, Linux, macOS, Android and iOS 15+. Choose your device on the download page.</p></div>
+    <div class="section-heading"><div><p class="eyebrow">03 / Platforms</p><h2 id="platforms-title">At home on<br>your system.</h2></div><p class="section-description">An app for Windows, Linux, macOS, Android and iOS 15+. Choose your device on the download page.</p></div>
     <div class="platform-list"><div>{{ platform_icon("windows") }}<h3>Windows</h3><p>Windows 10 and higher</p><span>x64 / ARM64</span></div><div>{{ platform_icon("linux") }}<h3>Linux</h3><p>Linux</p><span>x64 / ARM64</span></div><div>{{ platform_icon("macos") }}<h3>macOS</h3><p>14.4 (Sonoma) and higher</p><span>Intel / Apple Silicon</span></div><div>{{ platform_icon("android") }}<h3>Android</h3><p>Android 9.0 and higher</p><span>Install the Android app</span></div><div>{{ platform_icon("ios") }}<h3>iOS</h3><p>iOS 15.0 and higher</p><span>Installation outside the App Store</span></div></div>
     <div id="ios-support">{% include "partials/ios_warning.html" %}<a class="text-link" href="/download/ios">iOS installation guide →</a></div>
     <details class="ux-disclosure"><summary>Platform availability and development details</summary><div class="platform-note"><p><span class="small-indicator" aria-hidden="true"></span> Developed primarily on <strong>Arch Linux · Wayland · Hyprland.</strong></p><p>Platform support and published build availability can differ. <a href="/download">Check downloads →</a></p></div></details>
@@ -81,7 +97,7 @@
     <div class="privacy-note"><p>Privacy controls offer different protections; none guarantees anonymity. Websites, network operators, licensing and payment services have their own data handling.</p><a class="text-link" href="/privacy_policy">Read the privacy policy <span aria-hidden="true">↗</span></a></div>
 </section>
 
-<section class="section-space advanced-features" aria-labelledby="advanced-title"><p class="eyebrow">More control, when you need it</p><h2 id="advanced-title">Make it work your way.</h2>
+<section class="section-space advanced-features" id="advanced" aria-labelledby="advanced-title"><p class="eyebrow">More control, when you need it</p><h2 id="advanced-title">Make it work your way.</h2>
 <details class="ux-disclosure"><summary>Filters, file names and download settings</summary><section class="feature-story section-space" aria-labelledby="filters-title">
     <div class="story-copy"><p class="eyebrow">02 / Configure</p><h2 id="filters-title">Your collection.<br>Your rules.</h2><p>Choose what makes it into your downloads, then decide how the files are named.</p><ul class="editorial-list"><li><strong>Filter before fetching</strong><span>Duration, quality range, publication date, and title, author or tag patterns.</span></li><li><strong>Name files your way</strong><span>Choose how saved files are named using the video’s title, creator and other details.</span></li><li><strong>Set the pace</strong><span>Choose how many videos download at once, set speed limits and choose where files go.</span></li></ul></div>
     <figure class="screenshot-frame"><a href="{{ url_for('static', filename='media/filters.png') }}" target="_blank" rel="noopener" aria-label="Open full-size configuration screenshot">{{ screenshot("filters", "Porn Fetch advanced configuration showing duration, regex, quality and date filters, plus custom title formatting", 1538, 935) }}</a><figcaption>Advanced configuration <span>Actual app interface ↗</span></figcaption></figure>

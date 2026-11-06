@@ -27,7 +27,7 @@
     "dev": "remotion studio",
     "build": "remotion bundle",
     "render": "remotion render MyComp out/porn-fetch-tour-40s.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p --concurrency=2",
-    "poster": "remotion still MyComp out/porn-fetch-tour-40s-poster.png --frame=570",
+    "poster": "remotion still MyComp out/porn-fetch-tour-40s-poster.png --frame=108",
     "review": "node scripts/review.mjs",
     "verify-export": "node scripts/verify-export.mjs",
     "upgrade": "remotion upgrade",

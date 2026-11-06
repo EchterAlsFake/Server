@@ -29,6 +29,29 @@
       video.pause();
     }
   }
+  const chapters = document.querySelector('.tour-chapters');
+  if (video && chapters) {
+    chapters.hidden = false;
+    chapters.querySelectorAll('[data-tour-time]').forEach(button => {
+      button.addEventListener('click', () => {
+        loadVideo();
+        const seek = () => {
+          video.currentTime = Number(button.dataset.tourTime);
+          if (!reducedMotion.matches) video.play().catch(() => {});
+        };
+        if (video.readyState >= 1) seek();
+        else video.addEventListener('loadedmetadata', seek, {once: true});
+      });
+    });
+    video.addEventListener('timeupdate', () => {
+      const buttons = [...chapters.querySelectorAll('[data-tour-time]')];
+      const active = buttons.filter(button => Number(button.dataset.tourTime) <= video.currentTime).at(-1);
+      buttons.forEach(button => {
+        if (button === active) button.setAttribute('aria-current', 'true');
+        else button.removeAttribute('aria-current');
+      });
+    });
+  }
   if (video) {
     new IntersectionObserver(entries => {
       videoVisible = entries[0].isIntersecting;

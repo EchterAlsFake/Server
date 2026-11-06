@@ -26,8 +26,8 @@ multi-copy blur wrapper, no experimental Chrome flag requirement and no audio.
 | ----------- | --------------------------------------------------------------------------------- |
 | 0–5.5s      | Type a video URL, fetch it, download to 100%                                      |
 | 5.5–11s     | Fetch a model collection, Select All, download together                           |
-| 11–16s      | Duration / regex / quality / date filters; filename template                      |
-| 16–22s      | PornHub, XHamster, XVideos: two seconds per tab, with the central account message |
+| 11–17s      | PornHub, XHamster, XVideos: two seconds per tab, with the central account message |
+| 17–22s      | Duration / regex / quality / date filters; filename template                      |
 | 22–33.5s    | Privacy controls with synchronized explanations and reading holds                 |
 | 33.5–36.5s  | HTTP version, browser identity, custom JA3 and interface binding                  |
 | 36.5–39.65s | Workers, parallel downloads, speed limit and concurrency                          |
@@ -76,3 +76,12 @@ Decoded PNGs remain in `out/encoded/`.
 
 For a website hero, use the MP4 in a `<video autoPlay muted loop playsInline>`
 element with the exported poster.
+
+The homepage opens with the single-video workflow (poster frame 108). Accounts
+precede advanced configuration; homepage chapter controls jump to 0, 5.5 and 17
+seconds. Keep those controls aligned when changing chapter timings.
+
+For the website copy, encode the reviewed master with H.264 CRF 22, yuv420p,
+no audio and `-movflags +faststart`. Verify that copy with
+`node scripts/verify-export.mjs ../static/media/porn-fetch-promo.mp4`.
+The WebP poster is made from reviewed frame 108.

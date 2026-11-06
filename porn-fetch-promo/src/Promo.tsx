@@ -170,19 +170,19 @@ const chapters = [
   },
   {
     from: 11,
-    to: 16,
-    lead: "Your library.",
-    accent: "Your rules.",
-    copy: "Regex filters. Quality and date ranges. Custom filename templates.",
-    label: "03 / ORGANIZE LIKE AN EXPERT",
-  },
-  {
-    from: 16,
-    to: 22,
+    to: 17,
     lead: "Your likes.",
     accent: "Your library.",
     copy: "Your account collections, across supported websites.",
-    label: "04 / ACCOUNT LIBRARIES",
+    label: "03 / ACCOUNT LIBRARIES",
+  },
+  {
+    from: 17,
+    to: 22,
+    lead: "Your library.",
+    accent: "Your rules.",
+    copy: "Regex filters. Quality and date ranges. Custom filename templates.",
+    label: "04 / ADVANCED CONFIGURATION",
   },
   {
     from: 22,
@@ -217,7 +217,7 @@ const chapters = [
     label: "01 / SINGLE VIDEO",
   },
 ];
-const boundaries = [5.5, 11, 16, 22, 33.5, 36.5, 39.65];
+const boundaries = [5.5, 11, 17, 22, 33.5, 36.5, 39.65];
 
 const Editorial = () => {
   const frame = useCurrentFrame();
@@ -314,7 +314,7 @@ const FeatureTour = () => {
       </Sequence>
       <Sequence
         name="Advanced Configuration · filters and naming"
-        from={11 * fps}
+        from={17 * fps}
         durationInFrames={Math.round(4.15 * fps)}
         playbackRate={0.83}
         layout="none"
@@ -323,7 +323,7 @@ const FeatureTour = () => {
       </Sequence>
       <Sequence
         name="Account tabs · two seconds per provider"
-        from={16 * fps}
+        from={11 * fps}
         durationInFrames={6 * fps}
         layout="none"
       >
@@ -399,9 +399,9 @@ const AppCamera = () => {
             10.7 * fps,
             11 * fps,
             12.4 * fps,
-            15.2 * fps,
-            16 * fps,
+            16.2 * fps,
             17 * fps,
+            18 * fps,
             21.5 * fps,
             22 * fps,
             23.2 * fps,
@@ -428,7 +428,7 @@ const AppCamera = () => {
           ],
           { ...smooth, output: "perceptual-scale" },
         ),
-        translate: `0 ${interpolate(frame, [0, 1.95 * fps, 2.71 * fps, 4.7 * fps, 5.53 * fps, 6.47 * fps, 7.76 * fps, 10.7 * fps, 11 * fps, 12.4 * fps, 16 * fps, 17 * fps, 21.5 * fps, 22 * fps, 23.2 * fps, 33.2 * fps, 33.5 * fps, 34.7 * fps, 36.5 * fps, 37.8 * fps, 39.3 * fps, 39.8 * fps, 40 * fps], [0, -15, -15, -5, 0, -8, -3, -3, 0, -4, 0, -3, -3, 0, -4, -4, 0, -3, 0, -3, -3, 0, 0], smooth)}px`,
+        translate: `0 ${interpolate(frame, [0, 1.95 * fps, 2.71 * fps, 4.7 * fps, 5.53 * fps, 6.47 * fps, 7.76 * fps, 10.7 * fps, 11 * fps, 12.4 * fps, 17 * fps, 18 * fps, 21.5 * fps, 22 * fps, 23.2 * fps, 33.2 * fps, 33.5 * fps, 34.7 * fps, 36.5 * fps, 37.8 * fps, 39.3 * fps, 39.8 * fps, 40 * fps], [0, -15, -15, -5, 0, -8, -3, -3, 0, -4, 0, -3, -3, 0, -4, -4, 0, -3, 0, -3, -3, 0, 0], smooth)}px`,
         filter:
           boundary === undefined
             ? "none"
@@ -446,7 +446,7 @@ const FeatureCopy = () => {
     <Track name="Readable feature explanations">
       <Sequence
         name="Account benefit · centered overlay"
-        from={16 * fps}
+        from={11 * fps}
         durationInFrames={6 * fps}
         layout="none"
       >
