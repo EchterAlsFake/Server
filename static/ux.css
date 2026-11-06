@@ -26,3 +26,23 @@
  .plan-comparison { grid-template-columns:1fr; gap:16px; }
  .plan-comparison article { padding:22px; }
 }
+
+.website-picker { display:flex; align-items:center; flex-wrap:wrap; gap:12px 24px; margin-block:24px; }
+.website-picker[hidden], .website-result[hidden] { display:none; }
+.website-picker label { font-weight:600; }
+.website-picker select { background:var(--color-surface); color:var(--color-text); border:1px solid var(--line); border-radius:8px; padding:12px; min-width:200px; font:inherit; }
+.website-result { border:1px solid var(--line); border-radius:12px; padding:24px; margin-block:20px; }
+.website-result h3 { font-size:1.5rem; }
+.website-result dl { display:grid; grid-template-columns:1fr 1fr; gap:12px 28px; margin-block:20px; }
+.website-result dt { color:var(--color-text-muted); font-size:var(--text-secondary); }
+.website-result dd { margin:4px 0 0; }
+.advanced-features .section-space { padding-block:24px; }
+@media(max-width:600px) {
+ .website-result dl { grid-template-columns:1fr; }
+ .platform-list { display:flex; flex-wrap:wrap; }
+ .platform-list > div { flex:1 1 140px; padding:16px; }
+ .platform-list h3 { font-size:1.15rem; }
+ .platform-list p, .platform-list span { font-size:14px; }
+ .privacy-controls { grid-template-columns:1fr; }
+ .product-stage .stage-heading { padding:12px; font-size:11px; gap:8px; }
+}
