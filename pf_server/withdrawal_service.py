@@ -19,10 +19,7 @@ from .models import WithdrawalRequest, WithdrawalDelivery
 
 PURPOSE = "withdrawal-declaration-v1"
 SUPPORT = "support@echteralsfake.me"
-STATEMENT = (
-    "Hiermit widerrufe ich den unten bezeichneten Vertrag bzw. den bezeichneten Teil des Vertrags.\n"
-    "I hereby withdraw from the contract or part of the contract identified below."
-)
+STATEMENT = "I hereby withdraw from the contract or part of the contract identified below."
 
 
 def now():
@@ -35,17 +32,17 @@ def validate_details(form):
     for field, limit in limits.items():
         value = form.get(field, "")
         if not isinstance(value, str):
-            raise ValueError("Bitte alle Felder ausfüllen. / Please complete all fields.")
+            raise ValueError("Please complete all fields.")
         value = value.replace("\r\n", "\n").strip()
         if not value or len(value) > limit or any(
             unicodedata.category(char) in {"Cc", "Cs"} and not (field == "contract" and char in "\n\t")
             for char in value
         ):
-            raise ValueError("Bitte Name, E-Mail und Vertragsangaben prüfen. / Please check your name, email and contract details.")
+            raise ValueError("Please check your name, email and contract details.")
         details[field] = value
     recipient = normalize_recipient_email(details["email"])
     if recipient is None:
-        raise ValueError("Bitte eine gültige E-Mail-Adresse angeben. / Please enter a valid email address.")
+        raise ValueError("Please enter a valid email address.")
     details["email"] = recipient
     return details
 
@@ -82,19 +79,16 @@ def receipt_text(reference, payload, received_at):
     details = payload["details"]
     local = received_at.astimezone(ZoneInfo("Europe/Berlin")).isoformat()
     return (
-        "Eingangsbestätigung Ihres Widerrufs / Withdrawal receipt\n\n"
-        f"Empfänger / Recipient: Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Deutschland\n{SUPPORT}\n"
-        f"Eingangsreferenz / Receipt reference: {reference}\n"
-        f"Eingang (Europe/Berlin): {local}\n"
+        "Withdrawal receipt\n\n"
+        f"Recipient: Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany\n{SUPPORT}\n"
+        f"Reference: {reference}\n"
+        f"Received (Europe/Berlin): {local}\n"
         f"Received (UTC): {received_at.isoformat()}\n\n"
-        f"Erklärung / Declaration:\n{payload['statement']}\n\n"
-        f"Name / Name:\n{details['name']}\n\n"
-        f"Vertrag oder Teil des Vertrags / Contract or part of contract:\n{details['contract']}\n\n"
-        f"E-Mail für die Eingangsbestätigung / Email for the receipt:\n{details['email']}\n\n"
-        "Der Eingang Ihrer Erklärung ist bestätigt. Vertragszuordnung, Widerrufsrecht und Rückzahlung werden gesondert geprüft. "
-        "Diese Bestätigung ist keine Entscheidung über die Wirksamkeit und keine Bestätigung einer bereits ausgeführten Erstattung.\n"
-        "Receipt of your declaration is confirmed. Contract identification, withdrawal rights and reimbursement are assessed separately. "
-        "This receipt is not a decision on validity or confirmation of an already completed refund.\n"
+        f"Declaration:\n{payload['statement']}\n\n"
+        f"Name: {details['name']}\n"
+        f"Contract or part: {details['contract']}\n"
+        f"Receipt email: {details['email']}\n\n"
+        "This confirms receipt only. Withdrawal validity and any refund will be assessed separately.\n"
     )
 
 
@@ -158,8 +152,8 @@ def deliver(reference, audience):
         message["From"] = sender
         message["To"] = recipient
         message["Reply-To"] = SUPPORT
-        message["Subject"] = ("Eingang Ihres Widerrufs / Withdrawal receipt" if audience == "consumer"
-                              else "Neuer Widerruf zur Bearbeitung / New withdrawal for review")
+        message["Subject"] = ("Withdrawal receipt" if audience == "consumer"
+                              else "New withdrawal for review")
         message["Date"] = format_datetime(datetime.fromisoformat(row.received_at))
         message["Message-ID"] = f"<withdrawal-{reference}-{audience}@{sender.rpartition('@')[2]}>"
         message.set_content(content)

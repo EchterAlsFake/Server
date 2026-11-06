@@ -49,7 +49,7 @@ def build(app):
     os.chown(stage, owner.pw_uid, owner.pw_gid)
     files = run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
                 cwd=source, user="asuna", capture=True).stdout
-    excluded = {".git", ".env", ".venv", ".validation", "data", "node_modules", "uv.lock"}
+    excluded = {".git", ".env", ".venv", ".validation", "data", "node_modules"}
     selected = [
         name for name in files.split("\0")
         if name and not (set(Path(name).parts) & excluded)
@@ -70,8 +70,13 @@ def build(app):
         return run(args, cwd=stage, user="asuna", **kwargs)
     build_run(["uv", "venv", "--python", version, stage / ".venv"])
     requirements = "mcp_service/pyproject.toml" if app == "mcp" else "pyproject.toml"
-    build_run(["uv", "pip", "install", "--python", stage / ".venv/bin/python",
-               "--upgrade", "-r", requirements])
+    if app in {"server", "mcp"}:
+        project = stage / "mcp_service" if app == "mcp" else stage
+        build_run(["uv", "sync", "--project", project, "--locked", "--no-dev", "--no-install-project"],
+                  extra={"UV_PROJECT_ENVIRONMENT": str(stage / ".venv")})
+    else:
+        build_run(["uv", "pip", "install", "--python", stage / ".venv/bin/python",
+                   "--upgrade", "-r", requirements])
     receipt = build_run(["uv", "pip", "freeze", "--python", stage / ".venv/bin/python"],
                         capture=True).stdout
     (stage / "installed-packages.txt").write_text(receipt)

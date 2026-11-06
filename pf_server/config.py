@@ -198,11 +198,6 @@ def load_environment_config(
                 raise ValueError("PATREON_SHOP_ENABLED requires " + name)
         if not smtp_host or not email_from:
             raise ValueError("PATREON_SHOP_ENABLED requires license SMTP configuration")
-    tier_ids = frozenset(
-        tier_id.strip()
-        for tier_id in source.get("PATREON_LICENSE_TIER_IDS", "").split(",")
-        if tier_id.strip()
-    )
     log_level = source.get("LOG_LEVEL", "INFO").strip().upper()
     if log_level not in LOG_LEVELS:
         raise ValueError(f"LOG_LEVEL must be one of: {', '.join(sorted(LOG_LEVELS))}")
@@ -227,6 +222,11 @@ def load_environment_config(
 
     return {
         "MAX_CONTENT_LENGTH": MAX_REQUEST_SIZE,
+        "TRUSTED_HOSTS": sorted({urlsplit(app_domain).hostname, api_public_host,
+            onion_host, "pornfetch.to", "www.pornfetch.to", "echteralsfake.me", "www.echteralsfake.me", "docs.echteralsfake.me", "api.pornfetch.to",
+            "localhost", "127.0.0.1", "::1"} | {
+            host.strip() for host in source.get("ADDITIONAL_TRUSTED_HOSTS", "").split(",") if host.strip()
+        }),
         "SECRET_KEY": _secret_key(source, data_directory),
         "WTF_CSRF_SSL_STRICT": False,
         "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path}",
@@ -244,16 +244,12 @@ def load_environment_config(
         "API_DOMAIN": api_domain,
         "API_PUBLIC_HOST": api_public_host,
         "GITHUB_TOKEN": source.get("GITHUB_TOKEN", ""),
-        "KILL_TOKEN": source.get("KILL_TOKEN"),
         "CI_TOKEN": source.get("CI_TOKEN"),
         "CHECKLIST_AUTH": source.get("CHECKLIST_AUTH"),
         "PATREON_SHOP_ENABLED": shop_enabled,
         "PATREON_SHOP_COOKIE_FILE": source.get("PATREON_SHOP_COOKIE_FILE", ""),
         "PATREON_SHOP_LOOKUP_KEY": source.get("PATREON_SHOP_LOOKUP_KEY", ""),
         "PATREON_SHOP_PRODUCT_VARIANT_ID": source.get("PATREON_SHOP_PRODUCT_VARIANT_ID", ""),
-        "PATREON_SECRET": source.get("PATREON_SECRET", ""),
-        "PATREON_PAYMENTS_ENABLED": source.get("PATREON_PAYMENTS_ENABLED", "false").lower() == "true",
-        "PATREON_LICENSE_TIER_IDS": tier_ids,
         "KEYGEN_INTERNAL_URL": keygen_url,
         "KEYGEN_PRODUCT_TOKEN": source.get("KEYGEN_PRODUCT_TOKEN", ""),
         "KEYGEN_POLICY_ID": source.get("KEYGEN_POLICY_ID", ""),

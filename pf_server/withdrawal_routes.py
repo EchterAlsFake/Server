@@ -49,9 +49,7 @@ def preview():
         token = service.make_draft(details)
     except (ValueError, TypeError, AttributeError):
         current_app.logger.error("Withdrawal encryption is not configured")
-        return form_page("Das Formular ist vorübergehend nicht verfügbar. Ihre Erklärung wurde noch nicht übermittelt. "
-                         "Bitte senden Sie Ihren Widerruf an support@echteralsfake.me. / "
-                         "The form is temporarily unavailable; nothing has been submitted. Please email your withdrawal to support@echteralsfake.me.", details, 503)
+        return form_page("The form is unavailable; nothing has been submitted. Email your withdrawal to support@echteralsfake.me.", details, 503)
     return render_template("withdrawal_review.html", values=details, draft=token, statement=service.STATEMENT)
 
 
@@ -59,7 +57,7 @@ def preview():
 def edit():
     _, payload = decode_submission()
     if payload is None:
-        return form_page("Bitte die Angaben erneut eintragen. / Please enter your details again.", status=400)
+        return form_page("Please enter your details again.", status=400)
     return form_page(values=payload["details"])
 
 
@@ -68,16 +66,14 @@ def confirm():
     received_at = service.now()
     token, payload = decode_submission()
     if payload is None or request.form.get("confirm") != "withdraw":
-        return form_page("Bitte prüfen und bestätigen Sie Ihre Angaben. Es wurde kein Widerruf übermittelt. / "
-                         "Please review and confirm your details. No withdrawal was submitted.", status=400)
+        return form_page("Please review and confirm your details. No withdrawal was submitted.", status=400)
     try:
         row = service.receive(token, payload, received_at)
     except (SQLAlchemyError, ValueError, TypeError, AttributeError):
         db.session.rollback()
         current_app.logger.error("Could not persist withdrawal declaration")
         return render_template("withdrawal_review.html", values=payload["details"], draft=token,
-            statement=payload["statement"], error="Der Eingang konnte nicht bestätigt werden. Bitte erneut versuchen oder "
-            "an support@echteralsfake.me schreiben. / Receipt could not be confirmed. Please retry or email support@echteralsfake.me."), 503
+            statement=payload["statement"], error="Receipt could not be confirmed. Retry or email support@echteralsfake.me."), 503
     reference = row.id
     service.deliver_received(reference)
     row = db.session.get(WithdrawalRequest, reference)

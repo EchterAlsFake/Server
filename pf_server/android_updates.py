@@ -1,7 +1,6 @@
 """Verify and atomically expose Android TUF metadata over HTTPS and onion."""
 import base64
 import hmac
-import json
 import os
 import re
 import shutil

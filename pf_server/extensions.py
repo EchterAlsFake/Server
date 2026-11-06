@@ -1,6 +1,9 @@
+import hashlib
+import secrets
+from flask import session
 import sqlite3
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
@@ -10,7 +13,7 @@ from sqlalchemy.engine import Engine
 
 db = SQLAlchemy()
 csrf = CSRFProtect()
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=lambda: "public-endpoint-budget")
 talisman = Talisman()
 migrate = Migrate(
     compare_type=True,
@@ -26,3 +29,9 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.execute("PRAGMA busy_timeout=15000;")
         cursor.execute("PRAGMA synchronous=NORMAL;")
         cursor.close()
+
+
+def browser_limit_key():
+    """Signed-session budget; shared endpoint budgets also bound cookie resets."""
+    identity = session.setdefault("request_budget", secrets.token_urlsafe(32))
+    return hashlib.sha256(identity.encode()).hexdigest()

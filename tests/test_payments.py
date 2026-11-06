@@ -160,8 +160,8 @@ class PaymentTests(ServerTestCase):
         return response
 
     def test_payment_webhooks_are_available_only_on_api_subdomain(self):
-        wrong_host = self.post_patreon(
-            self.eligible_patreon_payload(),
+        wrong_host = self.client.post(
+            "/nowpayments-ipn", json={},
             base_url="https://echteralsfake.me",
         )
         old_nowpayments_path = self.client.post(
@@ -466,11 +466,11 @@ class PaymentTests(ServerTestCase):
                 return_value=FakeNowPaymentsResponse(),
             ) as post,
         ):
-            self.accept_checkout(base_url="https://attacker.invalid")
+            self.accept_checkout(base_url="https://echteralsfake.me")
             response = self.client.post(
                 "/create-crypto-payment",
                 json={"country": "DE", "terms_accepted": True, "test_acknowledged": True, "age_confirmed": True, "withdrawal_accepted": True, "delivery_email": "buyer@example.com"},
-                base_url="https://attacker.invalid",
+                base_url="https://echteralsfake.me",
             )
 
         self.assertEqual(response.status_code, 200)

@@ -18,8 +18,8 @@ def check_ci_auth() -> bool:
     token = current_app.config.get("CI_TOKEN")
     if not token:
         return False
-    provided = request.headers.get("X-CI-TOKEN") or request.args.get("token")
-    return isinstance(provided, str) and hmac.compare_digest(provided, token)
+    provided = request.headers.get("X-CI-TOKEN")
+    return isinstance(provided, str) and hmac.compare_digest(provided.encode(), token.encode())
 
 
 def set_ci_status(test_name, status, details=None):

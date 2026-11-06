@@ -50,6 +50,11 @@ def get_metadata():
     return target_db.metadata
 
 
+def include_object(obj, name, type_, reflected, compare_to):
+    """Preserve historical membership records outside active application metadata."""
+    return not (type_ == "table" and name == "patreon_license_deliveries")
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -93,6 +98,7 @@ def run_migrations_online():
     if conf_args.get("process_revision_directives") is None:
         conf_args["process_revision_directives"] = process_revision_directives
 
+    conf_args["include_object"] = include_object
     connectable = get_engine()
 
     with connectable.connect() as connection:

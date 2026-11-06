@@ -6,24 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install runtime dependencies
-COPY pyproject.toml /app/
-RUN pip install --no-cache-dir \
-    "cryptography" \
-    "flask" \
-    "flask-limiter" \
-    "flask-migrate>=4.1.0" \
-    "flask-sqlalchemy>=3.1.1" \
-    "flask-talisman>=1.1.0" \
-    "flask-wtf>=1.3.0" \
-    "fpdf2>=2.8.7" \
-    "gunicorn" \
-    "httpx" \
-    "markdown" \
-    "maxminddb>=3.0.0" \
-    "python-dotenv>=1.2.2" \
-    "redis>=5.0.0" \
-    "werkzeug"
+# The same committed resolution is used by development and deployment.
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
+COPY pyproject.toml uv.lock /app/
+RUN uv sync --locked --no-dev --no-install-project
+ENV PATH="/app/.venv/bin:$PATH" PF_SERVER_DATA_DIR=/data
 
 # Copy application source
 COPY main.py /app/

@@ -23,3 +23,16 @@ dependencies = [
     "tuf>=7,<8",
     "werkzeug",
 ]
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["F", "E9"]
+
+[dependency-groups]
+dev = [
+    "pip-audit>=2.9,<3",
+    "playwright>=1.64,<2",
+    "ruff==0.15.20",
+]

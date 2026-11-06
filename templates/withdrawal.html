@@ -1,28 +1,24 @@
 {% extends "base.html" %}
-{% block html_lang %}de{% endblock %}
-{% block title %}Vertrag widerrufen / Withdraw from contract — Porn Fetch{% endblock %}
+{% block title %}Withdraw from contract — Porn Fetch{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='withdrawal.css') }}">{% endblock %}
 {% block content %}
 <article class="withdrawal-page">
-    <h1>Vertrag widerrufen <span lang="en">/ Withdraw from contract</span></h1>
-    <p>Hier können Sie Ihren Vertrag oder einen Teil davon widerrufen. Keine Anmeldung erforderlich. Eine Bestellnummer ist hilfreich, aber nicht erforderlich, wenn Sie den Vertrag anderweitig beschreiben können.</p>
-    <p lang="en">Withdraw from your contract or part of it here. No account is required. An order number helps, but you can identify your contract in another way.</p>
-    <p>Schritt 1 von 2: Angaben eintragen. Im nächsten Schritt prüfen Sie Ihre Erklärung und senden sie mit „Widerruf bestätigen“ ab. <span lang="en">Step 1 of 2: Enter your details. You will review and submit your declaration on the next page.</span></p>
+    <h1>Withdraw from contract</h1>
+    <p>Step 1 of 2. Enter your details, then review and confirm. No account or reason is required. Submission does not establish a refund entitlement.</p>
     {% if error %}<p class="withdrawal-error" role="alert">{{ error }}</p>{% endif %}
     <form action="{{ url_for('withdrawal.preview') }}" method="post" class="withdrawal-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="withdrawal-name">Name / Name</label>
+        <label for="withdrawal-name">Name</label>
         <input id="withdrawal-name" name="name" autocomplete="name" maxlength="200" required value="{{ values.get('name', '') }}">
-        <label for="withdrawal-contract">Vertrag oder Teil des Vertrags / Contract or part of contract</label>
-        <textarea id="withdrawal-contract" name="contract" rows="5" maxlength="2000" required aria-describedby="withdrawal-contract-help">{{ values.get('contract', '') }}</textarea>
-        <p id="withdrawal-contract-help">Zum Beispiel Bestell- oder Rechnungsnummer, Zahlungsreferenz, Patreon-Mitgliedschaft oder eine Beschreibung mit Kaufdatum. Bei einem teilweisen Widerruf bitte den betroffenen Teil angeben. Keine Begründung nötig. <span lang="en">For example an order, invoice or payment reference, Patreon membership, or a description with purchase date. For a partial withdrawal, identify the relevant part. No reason is required.</span></p>
-        <label for="withdrawal-email">E-Mail-Adresse für die Eingangsbestätigung / Email for your receipt</label>
+        <label for="withdrawal-contract">Contract or part to withdraw from</label>
+        <textarea id="withdrawal-contract" name="contract" rows="3" maxlength="2000" required aria-describedby="withdrawal-contract-help">{{ values.get('contract', '') }}</textarea>
+        <p id="withdrawal-contract-help">An order/payment reference or purchase description and date. Identify the relevant part for a partial withdrawal.</p>
+        <label for="withdrawal-email">Email for your receipt</label>
         <input id="withdrawal-email" name="email" type="email" autocomplete="email" maxlength="254" required value="{{ values.get('email', '') }}">
-        <p>Sie erhalten die Erklärung mit Eingangsdatum und Uhrzeit per E-Mail. Die Adresse muss nicht mit der Kaufadresse übereinstimmen. <span lang="en">I will email your declaration with its receipt date and time. This address may differ from the purchase address.</span></p>
-        <p>Ihre Angaben werden zur Bearbeitung Ihres Widerrufs und zur Bestätigung verarbeitet. <a href="/privacy_policy">Datenschutz / Privacy</a></p>
-        <button type="submit" class="btn btn-primary">Weiter zur Prüfung / Review declaration</button>
+        <p>Your declaration and its receipt date/time will be emailed here. <a href="/privacy_policy">Privacy</a>.</p>
+        <button type="submit" class="btn btn-primary">Review withdrawal</button>
     </form>
-    <p>Ein Widerruf ist auch per E-Mail an <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> oder per Post möglich. <span lang="en">You can also withdraw by email or letter.</span></p>
-    <details class="withdrawal-instructions"><summary>Widerrufsbelehrung und Musterformular / Instructions and model form</summary>{% include "partials/withdrawal_information.html" %}</details>
+    <p>You may also withdraw by email to <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> or letter.</p>
+    <details class="withdrawal-instructions"><summary>Withdrawal instructions and optional model form</summary>{% include "partials/withdrawal_information.html" %}</details>
 </article>
 {% endblock %}

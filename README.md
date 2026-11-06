@@ -5,7 +5,7 @@
 > I would probably run out of time in my life before publishing my first app. Going to school, writing the final exams,
 > while running a commercial site and doing fun side projects isn't possible without AI.
 
-This repository contains the Flask service behind Porn Fetch and several related project pages. It serves release metadata and documentation, handles license purchases and signed license files, receives NOWPayments and Patreon webhooks, exposes a small CI status API, and maintains a public development checklist.
+This repository contains the Flask service behind Porn Fetch and several related project pages. It serves release metadata and documentation, handles license purchases and signed license files, receives NOWPayments webhooks and verifies Patreon Shop purchases, exposes a small CI status API, and maintains a public development checklist.
 
 For a human-readable explanation of the refactor, its design decisions, and the new request flows, see [REFACTORING_GUIDE.md](REFACTORING_GUIDE.md). The provider-document audit, hardened retry rules, and privacy-safe logging design are documented in [docs/WEBHOOK_AND_LOGGING_HARDENING.md](docs/WEBHOOK_AND_LOGGING_HARDENING.md); canonical provider snapshots are in [docs/provider_api/](docs/provider_api/). The tax-country evidence design, sanctions-policy limitations, and official legal sources are collected in [docs/CHECKOUT_COUNTRY_COMPLIANCE.md](docs/CHECKOUT_COUNTRY_COMPLIANCE.md).
 
@@ -25,7 +25,7 @@ The project requires Python 3.14 or newer and uses [uv](https://docs.astral.sh/u
 
 ```bash
 uv venv --python 3.14
-uv pip install --python .venv/bin/python --upgrade -r pyproject.toml
+uv sync --locked
 cp deploy/server.env.example .env
 .venv/bin/python -m flask --app main db upgrade
 .venv/bin/python main.py
@@ -65,7 +65,7 @@ pf_server/update_routes.py  Release metadata and Sparkle update Blueprint
 pf_server/operations_routes.py Health, statistics, and administration Blueprint
 pf_server/payment_routes.py Purchase, license, invoice, and webhook Blueprint
 pf_server/licensing.py      License signing, email validation, and SMTP service
-pf_server/patreon_service.py Patreon eligibility and idempotent delivery service
+pf_server/patreon_shop.py    Email-only Shop order verification and license delivery
 pf_server/nowpayments_service.py Payment-provider and completion service
 pf_server/invoice_service.py Atomic invoice storage and PDF rendering service
 pf_server/time_utils.py     Shared RFC 3339 timestamp formatting
@@ -82,7 +82,7 @@ docs/build.py               Static documentation builder
 tests/_support.py           Shared isolated application and database fixture
 tests/test_application.py   Public pages, CI, updates, and operations tests
 tests/test_config.py        Environment parsing and fail-fast validation tests
-tests/test_patreon.py       Patreon eligibility and delivery tests
+tests/test_patreon_shop.py  Shop verification and delivery tests
 tests/test_payments.py      NOWPayments, invoice, and license tests
 tests/test_country_compliance.py Country evidence, restriction, and summary tests
 geoip/README.md             Local DB-IP installation and licensing notes
@@ -124,7 +124,6 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `PF_SERVER_DB` | SQLite database path override | `$PF_SERVER_DATA_DIR/server.db` |
 | `CHECKLIST_AUTH` | Password for the checklist editor | Unset; checklist editing is unavailable |
 | `CI_TOKEN` | Authorizes `POST /ci/<test_name>` | Unset; CI writes fail closed |
-| `KILL_TOKEN` | Authorizes the local poweroff endpoint | Unset; endpoint is unavailable |
 | `RATELIMIT_STORAGE_URI` | Flask-Limiter storage backend | `memory://` (per process) |
 | `LOG_LEVEL` | Application warning/error verbosity | `INFO` |
 | `CHECKOUT_IP_HEADER` | Trusted checkout client-address header; only `X-Forwarded-For` or empty is accepted | `X-Forwarded-For` |
@@ -138,8 +137,6 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `NOWPAYMENTS_SANDBOX` | Uses the sandbox API and enables local payment simulation | `true` |
 | `NOWPAYMENTS_API_KEY` | Creates NOWPayments invoices/payments | Unset |
 | `NOWPAYMENTS_IPN_SECRET` | Verifies NOWPayments callbacks | Unset |
-| `PATREON_SECRET` | Verifies Patreon callback signatures | Unset |
-| `PATREON_LICENSE_TIER_IDS` | Optional comma-separated eligible tier IDs | All paid entitled tiers |
 | `LICENSE_SMTP_*` | SMTP host, port, credentials, sender, TLS, and SSL settings | See `.env.example` |
 | `LICENSE_MAIL_PROVIDER_NAME` | Public name of the outgoing mail provider | Unset |
 
@@ -162,12 +159,12 @@ The commercial host returns a plain 403 page when the request's `Referer` has th
 The main API groups are:
 
 - Releases: `GET /update` and `GET /appcast.xml`
-- Licenses and payments: `GET /buy_license`, `POST /create-crypto-payment`, `GET /check-payment-status`, `GET /download_license`, `GET /download_invoice`, and `POST /check_license`. Patreon license delivery uses the webhook endpoint. Sandbox crypto checkout requires `test_acknowledged: true` in addition to terms acceptance.
-- Webhooks: `POST /nowpayments-ipn` and `POST /patreon-webhook`
+- Licenses and payments: `GET /buy_license`, `POST /create-crypto-payment`, `GET /check-payment-status`, `GET /download_license`, `GET /download_invoice`, and `POST /check_license`. Patreon Shop buyers request delivery by email at `/activate`. Sandbox crypto checkout requires `test_acknowledged: true` in addition to terms acceptance.
+- Webhooks: `POST /nowpayments-ipn`
 - CI: `POST /ci/<test_name>`, `GET /ci/<test_name>`, `GET /ci/<test_name>.json`, and `GET /ci/<test_name>/badge.svg`
 - Checklist: `/checklist`, `/checklist/login`, `/checklist/api/*`, and `/checklist/progress.svg`
 - Documentation: `/docs/` on the main origin or `/` on a `docs.*` host
-- Operations: `GET /ping` and `POST /killswitch`
+- Operations: `GET /ping`; host shutdown uses operator SSH/system administration.
 
 ## Public MCP documentation
 
@@ -184,12 +181,11 @@ Both payment-creation endpoints require a JSON `country` containing an ISO
 alpha-2 code from the checkout list. The customer selection must agree with
 the local IP-country evidence before a provider transaction is created.
 
-Both payment webhook routes require the hostname configured by `API_DOMAIN`. Configure the tunnel/DNS route for that host to reach this Flask service, then use:
+The NOWPayments webhook route requires the hostname configured by `API_DOMAIN`. Configure the tunnel/DNS route for that host to reach this Flask service, then use:
 
 - NOWPayments IPN: `https://api.echteralsfake.me/nowpayments-ipn`
-- Patreon webhook: `https://api.echteralsfake.me/patreon-webhook`
 
-Subscribe Patreon to `members:create`, `members:update`, `members:pledge:create`, and `members:pledge:update`. The update events allow delivery when an initially pending charge later becomes paid or an eligible pledge changes. Delivery is idempotent per Patreon member and retries reuse the same license.
+Patreon membership webhooks are retired. Shop activation verifies the creator sales records and sends licenses by email.
 
 ## Production deployment
 
@@ -216,7 +212,7 @@ Before enabling live payments (sandbox mode may intentionally remain enabled dur
 1. Review `geoip/README.md`, install the local database over an appropriate connection, and restart all workers. Checkout fails closed with `503` while it is absent.
 2. Set `NOWPAYMENTS_SANDBOX=false` and configure both NOWPayments secrets.
 3. Route `API_DOMAIN` to this service and verify webhook hostname isolation.
-4. Configure the Patreon secret and SMTP delivery settings.
+4. Configure SMTP and the Patreon Shop settings described in `docs/PATREON_SHOP.md`.
 5. Keep the reviewed German and English email catalogs accurate; production preflight rejects catalogs whose `reviewed` flag is not true.
 6. Set `LICENSE_MAIL_PROVIDER_NAME` so both privacy-policy templates identify the outgoing mail provider, and verify its data handling.
 7. Obtain professional review of the tax-evidence and geographic policy documented in `docs/CHECKOUT_COUNTRY_COMPLIANCE.md`.
@@ -234,11 +230,11 @@ Flask-Limiter currently uses its in-memory backend, so limits are enforced per p
 - Application warnings and exceptions use a privacy-safe formatter. Never log webhook bodies or user identifiers, and keep Gunicorn/proxy/platform access logs disabled under the no-user-data policy.
 - GitHub release metadata is cached for five minutes. A failed refresh uses stale cached data when available and otherwise returns an unavailable response instead of crashing `/update`.
 - Invoice JSON and the SQLite database contain purchase data. Restrict filesystem permissions and include them in the privacy/data-retention review.
-- The kill switch invokes the host `poweroff` command asynchronously and should only be exposed behind strong network controls in addition to `KILL_TOKEN`.
+- Host poweroff is unavailable over HTTP. CI writes require the `X-CI-TOKEN` header; query credentials are rejected.
 
 ## Tests
 
-The feature-focused regression suites share an isolated fixture and cover configuration validation, webhook signature ordering and schemas, Patreon eligibility, stale leases and idempotent delivery, payment callback isolation, local country matching and header removal, geographic policy failures, tax aggregation, atomic invoice generation, license reuse, documentation path containment, RFC 3339 timestamps, release-API failure and malformed-metadata behavior, operational authentication and counters, privacy pages, and translation-catalog consistency. The suite does not download the real GeoIP database.
+The feature-focused regression suites share an isolated fixture and cover configuration validation, webhook signature ordering and schemas, Patreon Shop order verification, stale leases and idempotent delivery, payment callback isolation, local country matching and header removal, geographic policy failures, tax aggregation, atomic invoice generation, license reuse, documentation path containment, RFC 3339 timestamps, release-API failure and malformed-metadata behavior, operational authentication and counters, privacy pages, and translation-catalog consistency. The suite does not download the real GeoIP database.
 
 When changing payment or authentication code, add a regression test before deployment. External scraper smoke tests in `api_tests.py` require network access and are intentionally separate from the deterministic unit suite.
 
@@ -251,7 +247,7 @@ See [LICENSE](LICENSE).
 Licenses now use self-hosted Keygen CE, schema-2 signed keys, ten UUID installation slots,
 and seven-day offline permits. See [application integration](docs/KEYGEN_CLIENT_INTEGRATION.md)
 and [operations](deploy/keygen/OPERATIONS.md). The reusable package is `license_client/`.
-New licenses cover Premium features in releases published within one year of first activation, with continued Premium access in eligible builds and no automatic license renewal. App updates and desktop history/statistics are free. Free use supports up to 720p, one active download and the first five videos of each public profile, model, channel or playlist; account collections are exempt from that preview. Premium enables qualities above 720p, parallel downloads and full public collections. New Banxa purchases use this same offer; historical beta orders retain their original terms. Patreon memberships still recur until the customer cancels them.
+New licenses cover Premium features in releases published within one year of first activation, with continued Premium access in eligible builds and no automatic license renewal. App updates and desktop history/statistics are free. Free use supports up to 720p, one active download and the first five videos of each public profile, model, channel or playlist; account collections are exempt from that preview. Premium enables qualities above 720p, parallel downloads and full public collections. New Banxa purchases use this same offer; historical beta orders retain their original terms. Patreon purchases use the one-time Shop flow.
 
 The purchase service no longer holds an Ed25519 private key. Configure `KEYGEN_PRODUCT_TOKEN`
 and `KEYGEN_POLICY_ID` before enabling fulfillment. The old `/check_license` route returns 410.
@@ -261,10 +257,7 @@ release coverage from first activation. Renewal checkout accepts `renewal_licens
 `POST /create-crypto-payment` JSON body; the server proves key possession and binds
 the resulting license UUID before payment. Verified renewal callbacks preserve the
 key, with atomic deduplication in Keygen and a durable provider-charge binding locally.
-NOWPayments remains sandboxed. Patreon requires explicit `PATREON_PAYMENTS_ENABLED=true`
-and a configured qualifying tier (minimum 1999 cents); it is disabled on MSI. Its
-`renew_verified_patreon_charge` adapter is internal, for a provider-verified annual
-renewal charge, and is deliberately not invoked by repeat membership updates.
+NOWPayments remains sandboxed. Patreon Shop uses its separate email activation queue.
 Desktop builds must supply their immutable `build_release_date` to `LicenseClient`.
 
 ## Website presentation and verification
@@ -291,8 +284,7 @@ option. Only the selected method’s detail panel is shown with JavaScript; no-J
 visitors get explicit checkout links. All three methods can be selected for preview.
 Patreon and card actions require an explicit no-payment acknowledgment before
 continuing. Real card link creation still follows the existing configuration gates.
-Patreon remains setup-pending until its license tier is ready; repeated
-Patreon purchases and customer renewal workflows are separate work.
+Patreon Shop activation is available at `/activate` when configured; see the Shop operations guide.
 
 The app source link and GitHub icon are local presentation assets; attribution and
 the icon license are served at `/static/notices/github-octicons.txt`. The app remains
@@ -357,7 +349,7 @@ keeps the encrypted address as a later purchase/support reference, separate from
 short-lived delivery queues. Successful delivery and the existing seven-day outbox
 cleanup do not erase this order reference. The address is never included in signed
 license files, Keygen requests, public status responses or NOWPayments requests.
-Patreon continues using its existing webhook email flow.
+Patreon Shop buyers submit their purchase email at `/activate`; the worker verifies Shop sales and sends the license. Membership webhooks are not supported.
 
 Run the database migration before starting the updated application:
 `uv run flask --app main db upgrade` (latest revision `c482e16d09a2`, including `ae902bd71c40` and `bf371c20a913`). Existing orders
@@ -377,23 +369,20 @@ below and in `docs/LEGAL_REVIEW_2026-10-31.md`.
 ### Checkout evidence and durable confirmations
 
 New crypto and Banxa orders require a current, server-stored checkout agreement.
-The agreement records the exact bilingual terms, product information, withdrawal
+The agreement records the exact English terms, product information, withdrawal
 instructions and immediate-supply declarations, version and acceptance time, without
 an IP address. The order stores its own copy; changing templates later cannot rewrite it.
 The delivery message attaches the original confirmation PDF, license and invoice.
 The same PDF is also available through the private recovery page while access is valid.
-Historical orders have no fabricated agreement or confirmation added.
-
-Patreon sends a license benefit confirmation only: no inferred withdrawal waiver,
-no invented membership price or invoice. Patreon supplies the membership confirmation.
-The member's email is now encrypted in its outbox until successful SMTP handover;
-the original benefit PDF remains stored. A successful SMTP handover is not proof of
-receipt. Retries reuse the document and Message-ID; SMTP cannot guarantee exactly-once delivery.
+Contracts are concluded in English, which is authoritative; mandatory consumer
+protections remain unaffected. New confirmations contain each section once. Existing
+PDFs remain unchanged, and pending older orders retain their accepted bilingual
+snapshots. Historical orders have no fabricated agreement or confirmation added.
 
 Deployment requires migration `bf371c20a913`, a stable `LICENSE_DELIVERY_ENCRYPTION_KEY`
 (or `ONRAMP_ENCRYPTION_KEY` fallback, including Patreon-only deployments), and working
 Proton Mail SMTP configuration. Enable both existing minute timers:
-`eaf-crypto-deliveries.timer` (now also Patreon and expired checkout-agreement cleanup)
+`eaf-crypto-deliveries.timer` (crypto delivery and expired checkout-agreement cleanup)
 and `eaf-onramp-deliveries.timer`. Monitor failed queues and mail bounces; repeated
 SMTP failures require operator action and must not be treated as fulfilled confirmations.
 
@@ -406,21 +395,22 @@ Review and delete order-linked evidence/PDFs manually when contractual and legal
 purposes end. Apply deletion to stored order contacts, outboxes, PDFs and backups as appropriate.
 
 The public `/withdrawal` page now implements the electronic withdrawal function under
-§ 356a BGB as described below, alongside bilingual instructions and the model form.
+§ 356a BGB as described below, alongside concise English instructions and the optional model form.
 
 ### Electronic withdrawals
 
 `/withdrawal` is publicly linked as **Vertrag widerrufen / Withdraw from contract**
 outside the collapsible navigation and in the age gate. The first form collects name,
 contract/partial-contract identification and receipt email. A second page displays the
-exact declaration and has the separate **Widerruf bestätigen / Confirm withdrawal**
+exact declaration and has the separate **Confirm withdrawal**
 button. It works without JavaScript, login, order-number validation or an unexpired
 purchase link. There is no age/checkout gate or automated 14-day rejection.
 The existing school-referral block also permits the withdrawal flow and its privacy/provider notices.
 On the read-only onion mirror, the link opens the configured HTTPS website.
 
 Final confirmation commits the declaration, original UTC receipt time and immutable
-bilingual receipt before attempting mail. Names, email and declaration/receipt contents
+English receipt before attempting mail. Previously stored receipts remain unchanged.
+Names, email and declaration/receipt contents
 are encrypted with the existing stable delivery key; drafts are encrypted hidden form
 values, not plaintext cookies or URL parameters. Replaying the same confirmation reuses
 the receipt. The receipt is emailed as text and a UTF-8 text attachment, with a private
@@ -444,7 +434,7 @@ Local operator commands (run under the service environment):
 - `uv run flask --app main show-withdrawal --reference WR-...`: decrypt the complete
   declaration for processing. Its output is personal data; do not copy it into logs.
 - `uv run flask --app main mark-withdrawal-reviewed --reference WR-...`: record completed
-  manual review. This does not refund payments, cancel Patreon membership or revoke a license.
+  manual review. This does not refund payments, cancel a Patreon Shop purchase or revoke a license.
 
 Match the contract, determine the applicable rights and arrange any required reimbursement
 manually; receipt of a declaration is not automatic approval or rejection of the claim.
@@ -452,11 +442,11 @@ Review retention after processing, including legal evidence/retention periods. W
 remove both `withdrawal_deliveries` entries and their `withdrawal_requests` row and account
 for correspondence and backups. These records are not purged by the seven-day checkout job.
 
-### Separate cryptocurrency refund agreement (2026-11-01)
+### Separate cryptocurrency refund agreement
 
 All three website checkout routes now require the separate, unchecked
-`refund_method_accepted` confirmation. `checkout-v3` invalidates earlier browser
-confirmations; `contract-2026-11-01-v3` includes the exact bilingual declaration and
+`refund_method_accepted` confirmation. `checkout-v4` invalidates earlier browser
+confirmations; `contract-2026-11-06-v6` includes the exact English declaration and
 refund agreement. New crypto and Banxa orders retain that evidence in their existing
 snapshot and confirmation PDF. Older orders/PDFs acquire no retrospective consent.
 No additional migration is introduced by this change.
@@ -466,11 +456,7 @@ one-hour checkout confirmation remains valid. Links are shown in crypto/card che
 and both Patreon preview variants. The receipt is not a purchase or identity proof.
 Unbound evidence still expires after one day through the existing cleanup timer.
 
-Patreon webhooks cannot correlate website consent to a member. Do not infer consent
-from a webhook, membership or an unverified receipt. Direct Patreon purchases can
-bypass the website. Without attributable evidence, obtain an individual agreement
-before using a different refund method. This limitation is also stated in Patreon
-license benefit confirmations. No Patreon OAuth integration is introduced.
+A direct Shop purchase does not establish website consent. Do not infer consent from an unverified receipt; obtain attributable agreement before using an alternative refund method.
 
 Refunds remain manual: use Patreon to refund its original payment method within 90
 days of each original charge; afterward use cryptocurrency only under an applicable
@@ -483,11 +469,21 @@ claims cutoff. See the dated legal-review supplement for scope, sources and open
 ### Patreon Shop email activation
 
 `/activate` accepts only a purchase email and never exposes a license in the browser.
-This is independent of membership webhooks. One eligible Shop order receives one
+Membership webhooks and subscription licensing have been removed. One eligible Shop order receives one
 normal annual Keygen license; repeated claims resend it, and another order gets a
 new license. Technical Patreon failures grant a normal fallback license, once per
 email; confirmed missing/ineligible purchases do not. This deliberately permits
-unverified claims during outages. Shared IP limits and mailbox cooldowns reduce abuse.
+unverified claims during outages. Shared request budgets and mailbox cooldowns reduce abuse.
 
 Setup, cookie rotation, failure handling and retention are documented in
 [Patreon Shop operations](docs/PATREON_SHOP.md). Activation defaults to disabled.
+
+## Architecture and security maintenance
+
+See [the architecture review](docs/ARCHITECTURE_REVIEW.md) for trust boundaries, changes, validation, and residual risks. Both Python services use committed `uv.lock` files. Install MCP with `uv sync --project mcp_service --locked --python 3.14`; install promo tooling with `npm ci`.
+
+Production requires Redis through `RATELIMIT_STORAGE_URI`. Aggregate statistics now live in Redis, outside payment database sessions; configure Redis persistence if counters must survive Redis restart. Development with `memory://` keeps process-local counters. Historical SQL statistics remain untouched but are no longer updated. `flask --app main init-runtime` explicitly resets the current counters.
+
+Host validation allows the documented public hosts, configured origins, and loopback. Set `ADDITIONAL_TRUSTED_HOSTS` (comma-separated exact hostnames) for staging domains. The application trusts one proxy hop for scheme, ignores forwarded host/prefix, and must remain bound behind the local proxy. Keep proxy and server access logs disabled.
+
+Retired membership delivery records remain in `patreon_license_deliveries` for historical recovery. The application no longer maps or processes this table; Alembic autogeneration excludes it to avoid accidental data loss. Historical migrations remain intact. Remove obsolete Patreon webhook secrets from deployment configuration and disable any old webhook subscriptions in the Patreon dashboard.

@@ -24,8 +24,8 @@ AGE_GATED_PATHS = {"/porn_fetch", "/donation", "/buy_license", "/buy_card", "/bu
 @pages_bp.app_context_processor
 def public_page_context():
     from .onion import is_onion
-    from .contracts import IMMEDIATE_EN, IMMEDIATE_DE, REFUND_EN, REFUND_DE, offer_digest
-    return {"immediate_en": IMMEDIATE_EN, "immediate_de": IMMEDIATE_DE, "refund_en": REFUND_EN, "refund_de": REFUND_DE, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
+    from .contracts import IMMEDIATE_EN, REFUND_EN, offer_digest
+    return {"immediate_en": IMMEDIATE_EN, "refund_en": REFUND_EN, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
 
 
 @pages_bp.after_app_request

@@ -8,7 +8,6 @@ from sqlalchemy.exc import OperationalError
 
 from _support import ServerTestCase, main
 from pf_server import withdrawal_service as service
-from pf_server.crypto_delivery import cipher
 from pf_server.extensions import db
 from pf_server.models import WithdrawalRequest, WithdrawalDelivery, Transaction, License
 
@@ -70,8 +69,8 @@ class WithdrawalTests(ServerTestCase):
 
     def test_preview_is_not_submission_and_keeps_pii_out_of_cookie(self):
         response = self.client.post('/withdrawal/preview', data=self.values)
-        self.assertIn('Widerruf bestätigen', response.get_data(as_text=True))
-        self.assertIn('noch nicht abgesendet', response.get_data(as_text=True))
+        self.assertIn('Confirm withdrawal', response.get_data(as_text=True))
+        self.assertIn('Not submitted yet', response.get_data(as_text=True))
         self.assertNotIn(self.values['email'], response.headers.get('Set-Cookie', ''))
         token = self.field(response, 'draft')
         self.assertNotIn(self.values['name'], token)
@@ -148,7 +147,7 @@ class WithdrawalTests(ServerTestCase):
         self.send.side_effect = RuntimeError('SMTP outage')
         response = self.confirm(token)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('bereits eingegangen', response.get_data(as_text=True))
+        self.assertIn('Your declaration has been received', response.get_data(as_text=True))
         first = self.send.call_args_list[0].args[0]
         with main.app.app_context():
             row = WithdrawalRequest.query.one()
@@ -223,7 +222,7 @@ class WithdrawalTests(ServerTestCase):
         with patch.object(service, 'receive', side_effect=OperationalError('insert', {}, Exception())):
             response = self.confirm(token)
         self.assertEqual(response.status_code, 503)
-        self.assertIn('konnte nicht bestätigt', response.get_data(as_text=True))
+        self.assertIn('Receipt could not be confirmed', response.get_data(as_text=True))
         self.assertEqual(self.field(response, 'draft'), token)
         self.send.assert_not_called()
         with main.app.app_context():

@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Terms of Service / AGB — Porn Fetch{% endblock %}
+{% block title %}Terms of Service — Porn Fetch{% endblock %}
 {% block content %}
-<article class="legal-document"><h1>Terms of Service /<br><span lang="de">Allgemeine Geschäftsbedingungen</span></h1>
-{% include "partials/languages.html" %}
-<section class="legal-language" id="en" lang="en" aria-labelledby="terms-en-title"><h2 id="terms-en-title">Terms of Service · English</h2>{% include "partials/terms_en.html" %}</section>
-<section class="legal-language" id="de" lang="de" aria-labelledby="terms-de-title"><h2 id="terms-de-title">Allgemeine Geschäftsbedingungen · Deutsch</h2>{% include "partials/terms_de.html" %}</section>
+<article class="legal-document" lang="en">
+<h1>Terms of Service</h1>
+<div id="de">{% include "partials/terms_de.html" %}</div>
+<section id="en">
+{% include "partials/contract_product.html" %}
+{% include "partials/terms_en.html" %}
+{% include "partials/refund_agreement_en.html" %}
+</section>
+<p><a href="/withdrawal">Withdrawal instructions and model form</a> · <a href="/refund_policy">Refund help</a> · <a href="/privacy_policy">Privacy</a></p>
 </article>
 {% endblock %}

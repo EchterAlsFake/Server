@@ -26,7 +26,6 @@ class ConfigurationTests(unittest.TestCase):
                     "NOWPAYMENTS_SANDBOX": "no",
                     "NOWPAYMENTS_API_KEY": "api-key",
                     "NOWPAYMENTS_IPN_SECRET": "ipn-secret",
-                    "PATREON_LICENSE_TIER_IDS": "first, second,first",
                     "LICENSE_SMTP_SSL": "yes",
                     "LICENSE_SMTP_STARTTLS": "false",
                 },
@@ -39,9 +38,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertFalse(config["NOWPAYMENTS_SANDBOX"])
         self.assertTrue(config["LICENSE_SMTP_SSL"])
         self.assertFalse(config["LICENSE_SMTP_STARTTLS"])
-        self.assertEqual(
-            config["PATREON_LICENSE_TIER_IDS"], frozenset({"first", "second"})
-        )
+
 
     def test_invalid_public_origins_fail_fast(self):
         with tempfile.TemporaryDirectory(prefix="server-config-") as directory:

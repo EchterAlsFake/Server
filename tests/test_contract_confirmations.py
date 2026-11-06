@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 from _support import ServerTestCase, main
 import test_checkout_refresh as checkout_helpers
-from pf_server import contracts, crypto_delivery, licensing, patreon_service
-from pf_server.models import CheckoutAgreement, CryptoLicenseDelivery, PatreonLicenseDelivery, Transaction
+from pf_server import contracts, crypto_delivery, licensing
+from pf_server.models import CheckoutAgreement, CryptoLicenseDelivery, Transaction
 
 
 class ContractConfirmationTests(ServerTestCase):
@@ -54,8 +54,14 @@ class ContractConfirmationTests(ServerTestCase):
             accepted = json.loads(CheckoutAgreement.query.one().snapshot)
         with patch.object(contracts, 'terms_snapshot', return_value={'version': 'changed'}):
             order = self.create_invoice('buyer@example.com')
-        with patch.object(crypto_delivery, 'send_license_email') as send:
+        with patch.object(crypto_delivery, 'send_license_email') as send, \
+             patch.object(contracts, 'render_pdf', wraps=contracts.render_pdf) as render:
             self.finish(order)
+        body = render.call_args.args[0]
+        for field in ('product', 'terms_en', 'withdrawal', 'refund_terms'):
+            self.assertEqual(body.count(accepted[field]), 1, field)
+        self.assertIn('English is authoritative', body)
+        self.assertNotIn('Vertragsbestätigung', body)
         document = send.call_args.kwargs['confirmation_pdf']
         self.assertTrue(document.startswith(b'%PDF'))
         self.assertNotIn(b'buyer@example.com', send.call_args.args[1])
@@ -63,12 +69,14 @@ class ContractConfirmationTests(ServerTestCase):
             tx = main.db.session.get(Transaction, order)
             self.assertEqual(json.loads(tx.contract_snapshot), accepted)
             self.assertEqual(contracts.confirmation(tx), document)
-            self.assertIn('Muster-Widerrufsformular', accepted['withdrawal'])
+            self.assertIn('Model withdrawal form', accepted['withdrawal'])
+            self.assertEqual(accepted['language'], 'en')
+            self.assertEqual(accepted['terms_de'], '')
             self.assertTrue(accepted['immediate_supply_consent'])
             self.assertTrue(accepted['withdrawal_acknowledged'])
             self.assertTrue(accepted['refund_method_accepted'])
-            self.assertEqual(accepted['refund_de'], contracts.REFUND_DE)
-            self.assertIn('90 Tagen', accepted['refund_terms'])
+            self.assertEqual(accepted['refund_en'], contracts.REFUND_EN)
+            self.assertIn('90 days', accepted['refund_terms'])
         response = self.client.get('/download_contract', query_string={'session_id': order})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, document)
@@ -92,6 +100,26 @@ class ContractConfirmationTests(ServerTestCase):
             self.assertEqual(delivery.delivery_status, 'sent')
             self.assertIsNone(delivery.recipient_encrypted)
             self.assertIsNotNone(main.db.session.get(Transaction, order).customer_email_encrypted)
+
+    def test_pending_older_order_keeps_its_accepted_bilingual_text(self):
+        self.accept_checkout()
+        order = self.create_invoice('buyer@example.com')
+        with main.app.app_context():
+            tx = main.db.session.get(Transaction, order)
+            data = json.loads(tx.contract_snapshot)
+            data.pop('language')
+            data.update(version='historical-version', terms_de='Historische deutsche Bedingungen.',
+                        terms_en='Historically accepted English terms.',
+                        immediate_de='Historische Zustimmung.', refund_de='Historischer Erstattungsweg.')
+            tx.contract_snapshot = json.dumps(data)
+            main.db.session.commit()
+        with patch.object(contracts, 'render_pdf', wraps=contracts.render_pdf) as render, \
+             patch.object(crypto_delivery, 'send_license_email'):
+            self.finish(order)
+        body = render.call_args.args[0]
+        for field in ('terms_de', 'terms_en', 'immediate_de', 'refund_de'):
+            self.assertIn(data[field], body)
+        self.assertNotIn('English is authoritative', body)
 
     def test_late_verified_payment_restores_unpaid_expired_outbox(self):
         self.accept_checkout()
@@ -153,10 +181,10 @@ class ContractConfirmationTests(ServerTestCase):
         self.assertIn('attachment', response.headers['Content-Disposition'])
         body = render.call_args.args[0]
         self.assertIn(reference, body)
-        self.assertIn(accepted['refund_de'], body)
+        self.assertIn(accepted['refund_en'], body)
         self.assertIn(accepted['refund_terms'], body)
         self.assertIn('Not automatically linked to a Patreon Shop purchase.', body)
-        self.assertNotIn(accepted['immediate_de'], body)
+        self.assertNotIn(accepted['immediate_en'], body)
         outsider = main.app.test_client()
         self.assertEqual(outsider.get('/checkout/agreement', query_string={'id': reference}).status_code, 404)
         with self.client.session_transaction() as state:
@@ -178,7 +206,7 @@ class ContractConfirmationTests(ServerTestCase):
     def test_old_checkout_version_cannot_start_a_new_payment(self):
         self.accept_checkout()
         with self.client.session_transaction() as state:
-            state['checkout_consent'] = dict(state['checkout_consent'], version='checkout-v2')
+            state['checkout_consent'] = dict(state['checkout_consent'], version='checkout-v3')
         with patch('pf_server.nowpayments_service.httpx.post') as provider:
             self.assertEqual(self.client.post('/create-crypto-payment', json=self.payment()).status_code, 409)
             provider.assert_not_called()
@@ -190,7 +218,7 @@ class ContractConfirmationTests(ServerTestCase):
             tx = main.db.session.get(Transaction, order)
             data = json.loads(tx.contract_snapshot)
             for field in ('refund_method_accepted', 'refund_de', 'refund_en', 'refund_terms'):
-                del data[field]
+                data.pop(field, None)
             tx.contract_snapshot = json.dumps(data)
             main.db.session.commit()
         with patch.object(contracts, 'render_pdf', wraps=contracts.render_pdf) as render, \
@@ -198,26 +226,6 @@ class ContractConfirmationTests(ServerTestCase):
             self.finish(order)
         self.assertNotIn('Refund method separately accepted:', render.call_args.args[0])
 
-    def test_patreon_timer_retries_benefit_confirmation_without_asserting_waiver(self):
-        with patch.object(contracts, 'render_pdf', wraps=contracts.render_pdf) as render, \
-             patch.object(patreon_service, 'send_license_email', side_effect=RuntimeError('SMTP unavailable')) as send:
-            self.assertEqual(self.post_patreon(self.eligible_patreon_payload()).status_code, 503)
-        body = render.call_args.args[0]
-        self.assertIn('This confirmation does not declare loss of withdrawal rights.', body)
-        self.assertIn('Patreon confirms your membership contract', body)
-        self.assertIn('This webhook does not establish a separate cryptocurrency refund agreement.', body)
-        original = send.call_args.kwargs['confirmation_pdf']
-        with main.app.app_context():
-            delivery = main.db.session.get(PatreonLicenseDelivery, 'member-123')
-            self.assertNotIn('member@example.com', delivery.recipient_encrypted)
-        with patch.object(patreon_service, 'send_license_email') as retry:
-            result = main.app.test_cli_runner().invoke(args=['retry-crypto-deliveries'])
-        self.assertEqual(result.exit_code, 0, result.output)
-        self.assertEqual(retry.call_args.kwargs['confirmation_pdf'], original)
-        with main.app.app_context():
-            delivery = main.db.session.get(PatreonLicenseDelivery, 'member-123')
-            self.assertEqual(delivery.status, 'sent')
-            self.assertIsNone(delivery.recipient_encrypted)
 
     def test_smtp_contains_original_confirmation_attachment_and_stable_identity(self):
         with main.app.app_context(), patch.object(licensing.smtplib, 'SMTP') as smtp:

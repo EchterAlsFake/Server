@@ -84,26 +84,6 @@ class License(db.Model):
     signed_key = db.Column(db.Text, nullable=True)
 
 
-class PatreonLicenseDelivery(db.Model):
-    """Minimal delivery record used to make Patreon webhook retries idempotent."""
-
-    __tablename__ = "patreon_license_deliveries"
-
-    member_id = db.Column(db.String(128), primary_key=True)
-    recipient_encrypted = db.Column(db.Text, nullable=True)
-    confirmation_pdf = db.Column(db.LargeBinary, nullable=True)
-    license_key = db.Column(
-        db.String(64),
-        db.ForeignKey("license.license_key"),
-        unique=True,
-        nullable=True,
-    )
-    status = db.Column(db.String(16), nullable=False, default="pending")
-    created_at = db.Column(db.String(40), nullable=False)
-    updated_at = db.Column(db.String(40), nullable=False)
-    sent_at = db.Column(db.String(40), nullable=True)
-    lease_expires_at = db.Column(db.String(40), nullable=True)
-    lease_token = db.Column(db.String(64), nullable=True)
 
 
 class CryptoLicenseDelivery(db.Model):
@@ -147,6 +127,7 @@ class PaymentReceipt(db.Model):
     """Minimal authenticated receipt, committed before webhook acknowledgment."""
 
     __tablename__ = "payment_receipts"
+    __table_args__ = (db.Index("ix_payment_receipts_due", "status", "next_attempt_at"),)
     receipt_id = db.Column(db.String(64), primary_key=True)
     payload = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(16), nullable=False, default="pending")

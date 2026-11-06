@@ -87,12 +87,16 @@ def ensure_license(issuance_id: str, *, test: bool = False) -> dict:
         raise KeygenUnavailable("Keygen issuance is unavailable")
     try:
         data = response.json()["data"]
-        assert data["id"] == issuance_id
-        assert data["relationships"]["policy"]["data"]["id"] == current_app.config["KEYGEN_POLICY_ID"]
-        assert data["attributes"]["scheme"] == "ED25519_SIGN"
-        assert data["attributes"]["key"].startswith("key/")
+        if not (data["id"] == issuance_id):
+            raise ValueError("Keygen response validation failed")
+        if not (data["relationships"]["policy"]["data"]["id"] == current_app.config["KEYGEN_POLICY_ID"]):
+            raise ValueError("Keygen response validation failed")
+        if not (data["attributes"]["scheme"] == "ED25519_SIGN"):
+            raise ValueError("Keygen response validation failed")
+        if not (data["attributes"]["key"].startswith("key/")):
+            raise ValueError("Keygen response validation failed")
         return data
-    except (ValueError, KeyError, TypeError, AssertionError):
+    except (ValueError, KeyError, TypeError, AttributeError):
         raise KeygenUnavailable("Unexpected Keygen issuance response") from None
 
 
@@ -105,11 +109,14 @@ def renewal_target(signed_key: str) -> str:
         raise KeygenUnavailable('Renewal validation unavailable')
     try:
         data = response.json()['data']
-        assert data['relationships']['policy']['data']['id'] == current_app.config['KEYGEN_POLICY_ID']
-        assert data['attributes']['expiry'] is not None and not data['attributes']['suspended']
-        assert data['attributes']['key'] == signed_key
+        if not (data['relationships']['policy']['data']['id'] == current_app.config['KEYGEN_POLICY_ID']):
+            raise ValueError("Keygen response validation failed")
+        if not (data['attributes']['expiry'] is not None and not data['attributes']['suspended']):
+            raise ValueError("Keygen response validation failed")
+        if not (data['attributes']['key'] == signed_key):
+            raise ValueError("Keygen response validation failed")
         return str(uuid.UUID(data['id']))
-    except (AssertionError, KeyError, TypeError, ValueError):
+    except (AttributeError, KeyError, TypeError, ValueError):
         raise ValueError('Renewal requires an activated commercial license') from None
 
 
@@ -123,7 +130,7 @@ def renew_verified_payment(provider: str, environment: str, payment_reference: s
     from sqlalchemy.exc import IntegrityError
     from .extensions import db
     from .models import LicenseRenewal
-    if provider not in ('nowpayments', 'patreon') or environment not in ('sandbox', 'production') or not payment_reference:
+    if provider != 'nowpayments' or environment not in ('sandbox', 'production') or not payment_reference:
         raise ValueError('Invalid payment identity')
     license_id = str(uuid.UUID(license_id))
     reference = hashlib.sha256(json.dumps([provider, environment, payment_reference], separators=(',', ':')).encode()).hexdigest()
@@ -144,10 +151,13 @@ def renew_verified_payment(provider: str, environment: str, payment_reference: s
         raise KeygenUnavailable('Renewal unavailable')
     try:
         data = response.json()['data']
-        assert data['id'] == license_id
-        assert data['relationships']['policy']['data']['id'] == current_app.config['KEYGEN_POLICY_ID']
-        assert reference in data['attributes']['metadata']['pfRenewals']
-    except (AssertionError, KeyError, TypeError, ValueError):
+        if not (data['id'] == license_id):
+            raise ValueError("Keygen response validation failed")
+        if not (data['relationships']['policy']['data']['id'] == current_app.config['KEYGEN_POLICY_ID']):
+            raise ValueError("Keygen response validation failed")
+        if not (reference in data['attributes']['metadata']['pfRenewals']):
+            raise ValueError("Keygen response validation failed")
+    except (AttributeError, KeyError, TypeError, ValueError):
         raise KeygenUnavailable('Unexpected renewal response') from None
     binding.completed = True
     db.session.commit()

@@ -1,4 +1,4 @@
-"""Versioned checkout evidence and immutable, bilingual delivery documents."""
+"""Versioned checkout evidence and immutable contract confirmations."""
 import hashlib
 import json
 import secrets
@@ -10,13 +10,11 @@ from fpdf import FPDF
 from sqlalchemy import update
 
 from .extensions import db
-from .models import CheckoutAgreement, Transaction, PatreonLicenseDelivery
+from .models import CheckoutAgreement, Transaction
 
-VERSION = "contract-2026-11-04-v5"
-IMMEDIATE_EN = "I expressly agree to digital delivery before the withdrawal period ends. I understand that my withdrawal right ends when delivery starts, once I receive the contract confirmation."
-IMMEDIATE_DE = "Ich stimme ausdrücklich zu, dass vor Ablauf der Widerrufsfrist mit der Bereitstellung der digitalen Inhalte begonnen wird. Mir ist bekannt, dass mein Widerrufsrecht mit Beginn der Vertragsausführung erlischt, sofern mir die gesetzlich erforderliche Vertragsbestätigung zur Verfügung gestellt wurde."
+VERSION = "contract-2026-11-06-v6"
+IMMEDIATE_EN = "I expressly consent to immediate digital supply before the 14-day withdrawal period ends. I understand that I lose my withdrawal right when supply starts, provided I receive the required contract confirmation."
 REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
-REFUND_DE = "Ich vereinbare ausdrücklich Krypto-Erstattungen für die Porn-Fetch-Lizenz nach der gesonderten Erstattungsvereinbarung, auch bei über Banxa finanzierten Zahlungen. Patreon-Zahlungen werden innerhalb von 90 Tagen über Patreon auf das ursprüngliche Zahlungsmittel erstattet; danach gilt die Krypto-Erstattung nach dieser Vereinbarung. Der Anbieter trägt die Erstattungskosten. Meine gesetzlichen Ansprüche und Fristen bleiben unverändert."
 
 
 class PlainText(HTMLParser):
@@ -42,14 +40,13 @@ def text_template(name):
 def terms_snapshot():
     return {
         "version": VERSION,
+        "language": "en",
         "product": text_template("partials/contract_product.html"),
-        "terms_de": text_template("partials/terms_de.html"),
+        "terms_de": "",  # Retain the field for older snapshot readers.
         "terms_en": text_template("partials/terms_en.html"),
         "withdrawal": text_template("partials/withdrawal_information.html"),
         "immediate_en": IMMEDIATE_EN,
-        "immediate_de": IMMEDIATE_DE,
         "refund_en": REFUND_EN,
-        "refund_de": REFUND_DE,
         "refund_terms": text_template("partials/refund_agreement.html"),
     }
 
@@ -93,6 +90,22 @@ def checkout_snapshot(method, country):
 def agreement_receipt(agreement):
     """Customer-held evidence; does not assert identity or a completed purchase."""
     data = json.loads(agreement.snapshot)
+    if data.get("language") == "en":
+        body = (
+            "Checkout agreement receipt\n"
+            f"Reference: {agreement.id}\n"
+            f"Accepted (UTC): {data['accepted_at']}\n"
+            f"Terms version: {data['version']}\n"
+            f"Payment route: {data['payment_method']}\n"
+            "Age 18+ and English terms confirmed. This is not proof of payment.\n"
+        )
+        if data.get("immediate_supply_consent") and data.get("withdrawal_acknowledged"):
+            body += data["immediate_en"] + "\n"
+        if data.get("refund_method_accepted"):
+            body += "Separately accepted: " + data["refund_en"] + "\n"
+        if data["payment_method"] == "patreon":
+            body += "Not automatically linked to a Patreon Shop purchase. Keep this receipt as consent evidence.\n"
+        return render_pdf(body + english_contract_text(data))
     body = ("Zustimmungsbeleg / Checkout agreement receipt\n"
             f"Referenz / Reference: {agreement.id}\n"
             f"Zeitpunkt / Time (UTC): {data['accepted_at']}\n"
@@ -116,6 +129,13 @@ def agreement_receipt(agreement):
     return render_pdf(body)
 
 
+def english_contract_text(data):
+    """Each accepted section appears once; never substitute current website text."""
+    return "\n" + "\n\n".join(data[field] for field in (
+        "product", "terms_en", "refund_terms", "withdrawal"
+    ) if data.get(field))
+
+
 def render_pdf(body):
     # The document uses German/English Latin characters; preserve typographic quotes.
     pdf = FPDF()
@@ -137,6 +157,36 @@ def confirmation(transaction):
     if transaction.confirmation_pdf:
         return transaction.confirmation_pdf
     data = json.loads(transaction.contract_snapshot)
+    if data.get("language") == "en":
+        body = (
+            "Contract confirmation\n"
+            f"Order: {transaction.session_id}\n"
+            f"License price: {transaction.expected_price_amount} {transaction.expected_price_currency.upper()}\n"
+            f"Supply: {'Existing license renewal' if transaction.renewal_license_id else 'New Premium license'}\n"
+            f"Payment route: {data['payment_method']}\n"
+            f"Accepted (UTC): {data['accepted_at']}\n"
+            f"Terms version: {data['version']}\n"
+            "Age 18+ and English terms confirmed.\n"
+        )
+        if transaction.environment == "sandbox":
+            body += "SANDBOX TEST - NO REAL PURCHASE\n"
+        if data.get("immediate_supply_consent") and data.get("withdrawal_acknowledged"):
+            body += "Express consent and acknowledgment recorded:\n" + data['immediate_en'] + "\n"
+        if data.get("refund_method_accepted"):
+            body += "Refund method separately accepted: " + data["refund_en"] + "\n"
+        body += english_contract_text(data)
+    else:
+        body = legacy_confirmation_text(transaction, data)
+    payload = render_pdf(body)
+    db.session.execute(update(Transaction).where(Transaction.session_id == transaction.session_id,
+        Transaction.confirmation_pdf.is_(None)).values(confirmation_pdf=payload))
+    db.session.commit()
+    db.session.refresh(transaction)
+    return transaction.confirmation_pdf
+
+
+def legacy_confirmation_text(transaction, data):
+    """Pending older purchases retain their accepted bilingual wording."""
     body = f"Vertragsbestätigung / Contract confirmation\nBestellung / Order: {transaction.session_id}\n"
     body += f"Zahlungsbestätigung verarbeitet / Payment confirmation processed (UTC): {transaction.finished_at}\n"
     body += "Dieser technische Zeitpunkt ersetzt nicht den tatsächlichen Zahlungseingang / This processing timestamp does not replace the actual payment time.\n"
@@ -159,41 +209,9 @@ def confirmation(transaction):
         body += data["refund_de"] + "\n" + data["refund_en"] + "\n" + data["refund_terms"] + "\n"
     for field in ("product", "terms_de", "terms_en", "withdrawal"):
         body += "\n" + data[field] + "\n"
-    payload = render_pdf(body)
-    db.session.execute(update(Transaction).where(Transaction.session_id == transaction.session_id,
-        Transaction.confirmation_pdf.is_(None)).values(confirmation_pdf=payload))
-    db.session.commit()
-    db.session.refresh(transaction)
-    return transaction.confirmation_pdf
+    return body
 
 
-def patreon_confirmation(delivery):
-    if delivery.confirmation_pdf:
-        return delivery.confirmation_pdf
-    # This is a license benefit confirmation, not a fabricated membership contract.
-    body = ("Bestätigung der Lizenzleistung / License benefit confirmation\n"
-        f"Patreon-Mitgliedsreferenz / Member reference: {delivery.member_id}\n"
-        f"Lizenzzuordnung erfasst / License assignment recorded (UTC): {delivery.created_at}\n"
-        "Die Berechtigung wurde anhand eines signierten Patreon-Webhooks geprüft.\n"
-        "Eligibility was checked using a signed Patreon webhook.\n"
-        "Es ist keine Zustimmung zum vorzeitigen Erlöschen des Widerrufsrechts nachgewiesen.\n"
-        "No consent to early expiry of withdrawal rights has been established.\n"
-        "Diese Bestätigung erklärt keinen Verlust des Widerrufsrechts.\n"
-        "This confirmation does not declare loss of withdrawal rights.\n"
-        "Eine gesonderte Krypto-Erstattungsvereinbarung ist durch diesen Webhook nicht nachgewiesen.\n"
-        "This webhook does not establish a separate cryptocurrency refund agreement.\n"
-        "Ohne zuordenbaren Nachweis wird ein abweichender Erstattungsweg im Einzelfall vereinbart.\n"
-        "Without attributable evidence, an alternative refund method must be agreed individually.\n"
-        "Den Mitgliedschaftsvertrag, Tarifpreis, Währung, Abrechnungsintervall und Zahlungsbeleg bestätigt Patreon.\n"
-        "Patreon confirms your membership contract, tier price, currency, billing interval and payment receipt.\n"
-        + text_template("partials/contract_product.html") + "\n"
-        + text_template("partials/withdrawal_information.html"))
-    payload = render_pdf(body)
-    db.session.execute(update(PatreonLicenseDelivery).where(PatreonLicenseDelivery.member_id == delivery.member_id,
-        PatreonLicenseDelivery.confirmation_pdf.is_(None)).values(confirmation_pdf=payload))
-    db.session.commit()
-    db.session.refresh(delivery)
-    return delivery.confirmation_pdf
 
 
 def purge_checkout_agreements():

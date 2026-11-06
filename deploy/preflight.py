@@ -12,7 +12,7 @@ load_dotenv(root / ".env")
 
 required = (
     "SECRET_KEY", "CHECKLIST_AUTH", "KEYGEN_PRODUCT_TOKEN", "KEYGEN_POLICY_ID",
-    "NOWPAYMENTS_API_KEY", "NOWPAYMENTS_IPN_SECRET", "PATREON_SECRET",
+    "NOWPAYMENTS_API_KEY", "NOWPAYMENTS_IPN_SECRET",
     "LICENSE_SMTP_HOST", "LICENSE_MAIL_PROVIDER_NAME",
 )
 missing = [name for name in required if not os.environ.get(name, "").strip()]
@@ -20,6 +20,8 @@ if missing:
     raise SystemExit("Fill required settings: " + ", ".join(missing))
 from pf_server.config import load_environment_config
 config = load_environment_config(str(root))
+if not config["RATELIMIT_STORAGE_URI"].startswith(("redis://", "rediss://")):
+    raise SystemExit("Production requires shared Redis RATELIMIT_STORAGE_URI")
 if not config["LICENSE_EMAIL_FROM"]:
     raise SystemExit("Fill LICENSE_EMAIL_FROM or LICENSE_SMTP_USERNAME")
 for language in ("de", "en"):

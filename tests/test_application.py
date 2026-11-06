@@ -12,7 +12,7 @@ import pf_server.operations_routes as operations_routes
 import pf_server.update_routes as update_routes
 from pf_server.ci_routes import generate_ci_badge_svg, set_ci_status
 from pf_server.docs_routes import serve_docs_file
-from pf_server.models import CiStatus, Stats
+from pf_server.models import CiStatus
 
 
 class ApplicationTests(ServerTestCase):
@@ -150,11 +150,11 @@ class ApplicationTests(ServerTestCase):
 
         self.assertEqual(english.status_code, 200)
         self.assertEqual(german.status_code, 200)
-        self.assertIn(b"Patreon Membership and License Delivery", english.data)
+        self.assertIn(b"Patreon Shop and License Delivery", english.data)
         self.assertIn(b"Privex VPS &amp; WireGuard Transport", english.data)
         self.assertIn(b"Google Pixel 7 Pro", english.data)
         self.assertIn(
-            "Patreon-Mitgliedschaft und Lizenzzustellung".encode(), german.data
+            "Patreon Shop und Lizenzzustellung".encode(), german.data
         )
         self.assertIn("Privex-VPS &amp; WireGuard-Transport".encode(), german.data)
         self.assertIn("Acer Swift 3".encode(), german.data)
@@ -332,20 +332,8 @@ class ApplicationTests(ServerTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'length="0"', response.data)
 
-    def test_killswitch_uses_its_own_token_instead_of_browser_csrf(self):
-        with (
-            patch.dict(
-                main.app.config,
-                {"KILL_TOKEN": "kill-secret", "WTF_CSRF_ENABLED": True},
-            ),
-            patch.object(operations_routes, "initiate_poweroff") as poweroff,
-        ):
-            response = self.client.post(
-                "/killswitch", headers={"X-KILL-TOKEN": "kill-secret"}
-            )
-
-        self.assertEqual(response.status_code, 200)
-        poweroff.assert_called_once_with()
+    def test_http_poweroff_is_removed(self):
+        self.assertNotIn("/killswitch", {rule.rule for rule in main.app.url_map.iter_rules()})
 
     def test_request_stats_initialize_before_the_first_request(self):
         isolated_app = main.create_app(
@@ -394,9 +382,9 @@ class ApplicationTests(ServerTestCase):
 
         self.assertEqual(response.status_code, 200)
         with isolated_app.app_context():
-            stats = main.db.session.get(Stats, 1)
-            self.assertEqual(stats.total_requests, 1)
-            self.assertGreaterEqual(stats.total_bytes_out, len(response.data))
+            stats = operations_routes.get_stats_snapshot()
+            self.assertEqual(stats["total_requests"], 1)
+            self.assertGreaterEqual(stats["total_bytes_out"], len(response.data))
 
     def test_application_factory_builds_an_independent_blueprint_app(self):
         with patch.dict(os.environ, {"CHECKLIST_AUTH": "fresh-factory-secret"}):

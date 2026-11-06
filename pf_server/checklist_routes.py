@@ -15,7 +15,7 @@ from flask import (
     session,
 )
 
-from .extensions import db
+from .extensions import db, limiter
 from .models import Checklist
 
 checklist_bp = Blueprint("checklist", __name__)
@@ -40,6 +40,7 @@ def check_checklist_auth() -> bool:
 
 
 @checklist_bp.route("/checklist/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute;20 per hour", methods=["POST"])
 def checklist_login():
     auth_secret = current_app.config.get("CHECKLIST_AUTH")
     if not auth_secret:

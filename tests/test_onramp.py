@@ -512,8 +512,9 @@ class OnrampTests(ServerTestCase):
             accepted = json.loads(db.session.get(Transaction, session_id).contract_snapshot)
             self.assertTrue(accepted['refund_method_accepted'])
             self.assertEqual(accepted['payment_method'], 'card')
-            self.assertIn('Banxa', accepted['refund_de'])
-            self.assertIn('90 Tagen', accepted['refund_terms'])
+            self.assertEqual(accepted['language'], 'en')
+            self.assertIn('Banxa', accepted['refund_terms'])
+            self.assertIn('90 days', accepted['refund_terms'])
         with patch.object(service, "send_license_email", side_effect=RuntimeError("SMTP unavailable")) as send:
             self.post_ipn(self.webhook(session_id))
         original = send.call_args.kwargs["confirmation_pdf"]
@@ -765,7 +766,7 @@ class OnrampConfigTests(ServerTestCase):
             self.assertNotIn("withdrawal_deliveries", inspect(db.engine).get_table_names())
             self.assertEqual(db.session.execute(sa.text('SELECT provider_payment_id FROM "transaction" WHERE session_id = :id'), {"id": "NP-existing"}).scalar_one(), "existing")
 
-    def test_beta_email_contains_warning_in_both_languages(self):
+    def test_beta_email_keeps_original_beta_restriction_in_english(self):
         from unittest.mock import MagicMock
         from pf_server import licensing
 
@@ -793,7 +794,6 @@ class OnrampConfigTests(ServerTestCase):
         body = message.get_body(preferencelist=("plain",)).get_content()
         self.assertIn("V3.9 BETA ONLY", body)
         self.assertIn("deleted at product release", body)
-        self.assertIn("NUR V3.9-BETA", body)
-        self.assertIn("gelöscht", body)
+        self.assertIn("does not grant a permanent release license", body)
         attachment = list(message.iter_attachments())[0]
         self.assertEqual(attachment.get_payload(decode=True), b"signed-beta-license")

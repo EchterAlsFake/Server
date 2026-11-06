@@ -2,7 +2,7 @@
 
 The email-only `/activate` queue uses the existing annual Keygen policy and SMTP
 transport. It never accepts an order ID or returns license data to the browser.
-Shop orders and membership webhooks have independent identities and entitlements.
+Patreon membership webhooks, tier checks and subscription delivery have been removed. Only Shop sales are verified.
 
 ## Configure and enable
 

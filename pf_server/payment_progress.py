@@ -101,7 +101,7 @@ def record_nowpayments(webhook):
         )
     ):
         return False
-    record = progress_record(transaction)
+    progress_record(transaction)
     # Different child/repeated deposits cannot replace the payment being tracked.
     predecessors = (
         list(PHASES)
@@ -186,7 +186,7 @@ def refresh_providers(transaction):
         return record
     unavailable = False
     try:
-        with httpx.Client(timeout=4.0, follow_redirects=False) as client:
+        with httpx.Client(timeout=4.0, follow_redirects=False, trust_env=False) as client:
             if query_now:
                 try:
                     payment_id = record.nowpayments_payment_id

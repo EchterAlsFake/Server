@@ -1,4 +1,4 @@
-"""Email language order, safe HTML, invoice attachments and retry identities."""
+"""English emails, safe HTML, invoice attachments and retry identities."""
 
 from unittest.mock import MagicMock, patch
 
@@ -20,13 +20,15 @@ class LicenseEmailTests(ServerTestCase):
                 invoice=invoice, payment_environment=environment)
         return smtp.send_message.call_args.args[0]
 
-    def test_english_first_with_readable_html_and_plain_text_fallback(self):
+    def test_english_only_with_readable_html_and_plain_text_fallback(self):
         message = self.send()
         plain = message.get_body(preferencelist=("plain",)).get_content()
         html = message.get_body(preferencelist=("html",)).get_content()
         self.assertTrue(str(message["Subject"]).startswith("Your Porn Fetch license"))
-        self.assertLess(plain.index("English"), plain.index("Deutsch"))
-        self.assertLess(html.index('<section lang="en">'), html.index('<section lang="de">'))
+        self.assertIn('license activation screen', plain)
+        self.assertIn('license activation screen', html)
+        self.assertNotIn('Deutsch', plain)
+        self.assertNotIn('lang="de"', html)
         self.assertIn("Arial,Helvetica,sans-serif", html)
         self.assertIn("font-size:16px", html)
         self.assertNotIn("<script", html)

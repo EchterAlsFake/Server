@@ -34,7 +34,7 @@ class MarketingTests(ServerTestCase):
                 self.assertEqual(response.headers['Location'], expected)
 
     def test_bilingual_documents_are_complete_and_accessible_before_confirmation(self):
-        for path in ('/impress', '/privacy_policy', '/terms'):
+        for path in ('/impress', '/privacy_policy'):
             page = self.client.get(path)
             self.assertEqual(page.status_code, 200)
             self.assertNotIn(b'id="age-overlay"', page.data)
@@ -45,6 +45,14 @@ class MarketingTests(ServerTestCase):
         self.assertIn(b'first-party session cookie', privacy)
         self.assertNotIn(b'uses <strong>no cookies</strong>', privacy)
         self.assertIn('Sitzungscookie'.encode(), privacy)
+
+        terms = self.client.get('/terms')
+        self.assertEqual(terms.status_code, 200)
+        self.assertNotIn(b'id="age-overlay"', terms.data)
+        self.assertIn(b'English is authoritative', terms.data)
+        self.assertIn(b'id="en"', terms.data)
+        self.assertIn(b'id="de"', terms.data)  # Old German links reach the language notice.
+        self.assertEqual(terms.data.count(b'<h2>Terms</h2>'), 1)
 
     def test_homepage_lists_all_fifteen_providers_and_factual_controls(self):
         page = self.client.get('/').data

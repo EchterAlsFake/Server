@@ -235,3 +235,6 @@ deploy/keygen/credentials/
 /Prefix32/
 /index.html
 
+
+# Local browser inspection snapshots
+/.playwright-mcp/

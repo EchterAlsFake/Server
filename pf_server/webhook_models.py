@@ -8,7 +8,7 @@ boundary easy to test and prevents permissive Python coercions (for example,
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 
 
@@ -39,17 +39,6 @@ def required_json_string(
     return value
 
 
-def optional_json_integer(
-    data: dict,
-    field_name: str,
-    minimum: int | None = None,
-) -> int | None:
-    value = data.get(field_name)
-    if value is None:
-        return None
-    if type(value) is not int or (minimum is not None and value < minimum):
-        raise ValueError(f"{field_name} must be an integer")
-    return value
 
 
 def optional_provider_identifier(data: dict, field_name: str) -> str | None:
@@ -94,13 +83,6 @@ def optional_json_decimal(
     return number
 
 
-def optional_json_boolean(data: dict, field_name: str) -> bool | None:
-    value = data.get(field_name)
-    if value is None:
-        return None
-    if type(value) is not bool:
-        raise ValueError(f"{field_name} must be a boolean")
-    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,74 +116,4 @@ class NowPaymentsWebhook:
             price_amount=optional_json_decimal(data, "price_amount", Decimal(0)),
             payin_hash=optional_json_string(data, "payin_hash", 255),
             hash=optional_json_string(data, "hash", 255),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class PatreonMemberAttributes:
-    email: str | None = None
-    patron_status: str | None = None
-    last_charge_status: str | None = None
-    currently_entitled_amount_cents: int | None = None
-    campaign_lifetime_support_cents: int | None = None
-    lifetime_support_cents: int | None = None
-    is_free_trial: bool | None = None
-    is_gifted: bool | None = None
-
-    @classmethod
-    def from_mapping(cls, raw_attributes: object) -> PatreonMemberAttributes:
-        data = require_json_object(raw_attributes, "data.attributes")
-        return cls(
-            email=optional_json_string(data, "email", 254),
-            patron_status=optional_json_string(data, "patron_status", 50),
-            last_charge_status=optional_json_string(data, "last_charge_status", 50),
-            currently_entitled_amount_cents=optional_json_integer(
-                data, "currently_entitled_amount_cents", 0
-            ),
-            campaign_lifetime_support_cents=optional_json_integer(
-                data, "campaign_lifetime_support_cents", 0
-            ),
-            lifetime_support_cents=optional_json_integer(data, "lifetime_support_cents", 0),
-            is_free_trial=optional_json_boolean(data, "is_free_trial"),
-            is_gifted=optional_json_boolean(data, "is_gifted"),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class PatreonMember:
-    type: str
-    id: str
-    attributes: PatreonMemberAttributes
-    relationships: dict = field(default_factory=dict)
-
-    @classmethod
-    def from_mapping(cls, raw_member: object) -> PatreonMember:
-        data = require_json_object(raw_member, "data")
-        relationships = require_json_object(data.get("relationships", {}), "data.relationships")
-        return cls(
-            type=required_json_string(data, "type", 6, r"member"),
-            id=required_json_string(data, "id", 128, r"[A-Za-z0-9_-]+"),
-            attributes=PatreonMemberAttributes.from_mapping(data.get("attributes")),
-            relationships=dict(relationships),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class PatreonWebhook:
-    data: PatreonMember
-    included: list[dict] = field(default_factory=list)
-
-    @classmethod
-    def from_mapping(cls, raw_payload: object) -> PatreonWebhook:
-        data = require_json_object(raw_payload, "payload")
-        included = data.get("included", [])
-        if (
-            not isinstance(included, list)
-            or len(included) > 100
-            or any(not isinstance(resource, dict) for resource in included)
-        ):
-            raise ValueError("included must be a list of at most 100 objects")
-        return cls(
-            data=PatreonMember.from_mapping(data.get("data")),
-            included=list(included),
         )

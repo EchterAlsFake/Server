@@ -1,3 +1,5 @@
+> Historical architecture reference: Patreon membership webhooks, membership delivery and tier configuration were removed on 2026-11-06. Use `docs/PATREON_SHOP.md` for current email-based Shop activation. Membership setup instructions below are obsolete.
+
 # Porn Fetch Server Refactoring Guide
 
 This document explains the server refactor in human terms. It describes what

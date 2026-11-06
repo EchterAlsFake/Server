@@ -142,7 +142,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
     const isAuth = {{ 'true' if is_auth else 'false' }};
     const taskList = document.getElementById('task-list');
     const addTaskForm = document.getElementById('add-task-form');

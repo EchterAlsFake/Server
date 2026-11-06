@@ -15,6 +15,8 @@ from werkzeug.serving import WSGIRequestHandler
 from pf_server.checklist_routes import checklist_bp
 from pf_server.ci_routes import ci_bp
 from pf_server.config import load_environment_config
+from pf_server.http import TrustedHostMiddleware
+from pf_server.statistics import RequestStatistics
 from pf_server.direct_downloads import init_direct_downloads
 from pf_server.country_service import CheckoutCountryMiddleware, LocalCountryResolver
 from pf_server.docs_routes import docs_bp, handle_docs_subdomain
@@ -61,17 +63,19 @@ def create_app(
     application.config.from_mapping(load_environment_config(BASE_DIR))
     if test_config:
         application.config.update(test_config)
+    application.extensions["request_statistics"] = RequestStatistics(application)
     init_onion(application)
     configure_logging(application)
     application.extensions["vplan_referral_key"] = secrets.token_bytes(32)
     application.before_request(block_vplan_referrals)
 
+    application.wsgi_app = TrustedHostMiddleware(application.wsgi_app, application.config["TRUSTED_HOSTS"])
     application.wsgi_app = ProxyFix(
         application.wsgi_app,
         x_for=0,
         x_proto=1,
-        x_host=1,
-        x_prefix=1,
+        x_host=0,
+        x_prefix=0,
     )
     country_resolver = LocalCountryResolver(
         application.config["GEOIP_DATABASE_PATH"],
@@ -92,11 +96,12 @@ def create_app(
     talisman.init_app(
         application,
         force_https=False,
+        content_security_policy_nonce_in=["script-src"],
         content_security_policy={
             "default-src": ["'self'"],
             "img-src": ["'self'", "data:"],
-            "style-src": ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
-            "script-src": ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "script-src": ["'self'"],
             "connect-src": ["'self'", application.config["DIRECT_DOWNLOAD_ORIGIN"]],
             "frame-src": ["'self'", "https://nowpayments.io"],
             "base-uri": ["'self'"],
@@ -214,12 +219,11 @@ def create_app(
 
     @application.cli.command("retry-crypto-deliveries")
     def retry_crypto_deliveries_command():
-        """Retry crypto/Patreon delivery and purge expired checkout evidence."""
+        """Retry crypto delivery and purge expired checkout evidence."""
         from pf_server.crypto_delivery import retry_crypto_deliveries
-        from pf_server.patreon_service import retry_patreon_deliveries
         from pf_server.contracts import purge_checkout_agreements
         purge_checkout_agreements()
-        click.echo(f"Processed {retry_crypto_deliveries()} crypto and {retry_patreon_deliveries()} Patreon delivery candidates.")
+        click.echo(f"Processed {retry_crypto_deliveries()} crypto delivery candidates.")
 
     @application.cli.command("retry-onramp-deliveries")
     def retry_onramp_deliveries_command():

@@ -14,7 +14,7 @@
             </fieldset>
             <details class="checkout-question"><summary>Product and contract details</summary>{% with english_only=true %}{% include "partials/contract_product.html" %}{% endwith %}</details><section class="shared-confirmations" aria-labelledby="confirmations-heading">
                 <p class="eyebrow checkout-step">02 / Confirmation</p><h3 id="confirmations-heading">Review and confirm.</h3>
-                <details class="checkout-question" id="refund-agreement"><summary>Refund agreement</summary>{% include "partials/refund_agreement_en.html" %}</details>
+                <details class="checkout-question" id="refund-agreement"><summary>Refund method</summary>{% include "partials/refund_agreement_en.html" %}</details>
                 <fieldset class="compact-agreements"><legend class="visually-hidden">Required confirmations</legend>
                     <label><input type="checkbox" name="age_terms_accepted" id="chk-age-terms" value="yes" required><span>I am 18+ and accept the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</span></label>
                     <label><input type="checkbox" name="refund_method_accepted" id="chk-refund-method" value="yes" required><span>{{ refund_en }} <a href="#refund-agreement">Refund details</a></span></label>

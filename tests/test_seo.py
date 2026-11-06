@@ -140,9 +140,9 @@ class SEOTests(ServerTestCase):
 
     def test_canonicals_drop_query_strings_and_ignore_forwarded_host_input(self):
         response = self.get(guide_path("pornhub") + "?utm_source=test", headers={"Host": "other.example"})
-        page = Page(response.text)
-        self.assertEqual(page.canonical, self.origin + guide_path("pornhub"))
-        self.assertEqual(page.meta["robots"], "noindex, nofollow")
+        self.assertEqual(response.status_code, 400)
+        response = self.get(guide_path("pornhub") + "?utm_source=test", headers={"X-Forwarded-Host": "attacker.invalid"})
+        self.assertEqual(Page(response.text).canonical, self.origin + guide_path("pornhub"))
 
     def test_www_redirect_preserves_path_and_query_only_for_safe_requests(self):
         path = guide_path("pornhub") + "?utm_source=test"

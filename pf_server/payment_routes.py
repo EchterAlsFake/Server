@@ -1,9 +1,7 @@
 """License purchase, invoice, and payment webhook routes."""
 
 import hashlib
-import hmac
 import json
-import re
 from datetime import datetime, timezone
 from io import BytesIO
 
@@ -22,7 +20,7 @@ from .checkout_recovery import issue as issue_recovery, resolve_session_id, view
 from .config import DEFAULT_RATE_LIMIT
 from .countries import COUNTRY_OPTIONS
 from .country_service import CheckoutCountryDecision, checkout_country_decision
-from .extensions import csrf, db, limiter
+from .extensions import csrf, db, limiter, browser_limit_key
 from .http import normalized_hostname
 from .invoice_service import (
     build_simulated_invoice,
@@ -38,7 +36,7 @@ from .licensing import (
     normalize_recipient_email,
 )
 from .logging_config import safe_log_reference
-from .models import CryptoLicenseDelivery, License, LicenseRenewal, OnrampCheckout, PaymentProgress, Transaction
+from .models import CryptoLicenseDelivery, License, OnrampCheckout, PaymentProgress, Transaction
 from .payment_progress import hosted_checkout_url, public_progress, record_nowpayments, refresh_providers
 from .crypto_delivery import deliver_crypto_license, encrypt_recipient
 from .keygen_service import KeygenUnavailable, renewal_target
@@ -47,13 +45,7 @@ from .nowpayments_service import (
     create_crypto_invoice,
     verify_ipn_signature,
 )
-from .patreon_service import (
-    calculate_patreon_signature,
-    deliver_patreon_license,
-    extract_patreon_email,
-    patreon_member_is_paid_and_entitled,
-)
-from .webhook_models import NowPaymentsWebhook, PatreonWebhook
+from .webhook_models import NowPaymentsWebhook
 
 payments_bp = Blueprint("payments", __name__)
 WEBHOOK_RATE_LIMIT = "20 per second"
@@ -62,8 +54,7 @@ WEBHOOK_RATE_LIMIT = "20 per second"
 def webhook_replay_rate_limit_key() -> str:
     """Isolate replay limits by signature without retaining an IP address."""
     signature = (
-        request.headers.get("X-Patreon-Signature")
-        or request.headers.get("x-nowpayments-sig")
+        request.headers.get("x-nowpayments-sig")
         or "missing"
     )
     material = f"{request.path}\0{signature.strip().lower()}".encode("utf-8")
@@ -181,7 +172,6 @@ def download_license():
     if transaction is None or transaction.status != "finished":
         return jsonify({"error": "Payment not approved or session not found"}), 402
 
-    issuance_reference = transaction.provider_payment_id
     try:
         license_file = fulfill_transaction_license(transaction)
     except KeygenUnavailable:
@@ -318,6 +308,7 @@ def simulate_payment_success():
 
 @payments_bp.route("/create-crypto-payment", methods=["POST"])
 @limiter.limit(DEFAULT_RATE_LIMIT)
+@limiter.limit("20 per hour", key_func=browser_limit_key)
 def create_crypto_payment():
     if not current_app.config.get("NOWPAYMENTS_API_KEY"):
         return jsonify({"error": "NOWPayments API key not configured on server."}), 500
@@ -428,63 +419,6 @@ def nowpayments_ipn():
     return "OK", 200
 
 
-@payments_bp.route("/patreon-webhook", methods=["POST"])
-@csrf.exempt
-@limiter.limit(WEBHOOK_RATE_LIMIT, key_func=webhook_replay_rate_limit_key)
-def patreon_webhook():
-    require_api_subdomain()
-    if not current_app.config.get('PATREON_PAYMENTS_ENABLED'):
-        return jsonify({'error': 'patreon_payments_disabled'}), 503
-    received_signature = request.headers.get("X-Patreon-Signature", "").strip()
-    signing_secret = current_app.config.get("PATREON_SECRET")
-    if not signing_secret:
-        current_app.logger.error("Patreon webhook secret is not configured")
-        return jsonify({"error": "secret_not_configured"}), 503
-    if re.fullmatch(r"[0-9A-Fa-f]{32}", received_signature) is None:
-        current_app.logger.warning("Patreon webhook signature is missing or malformed")
-        return jsonify({"error": "invalid_signature"}), 403
-
-    request_body = request.get_data(cache=False)
-    calculated_signature = calculate_patreon_signature(signing_secret, request_body)
-    if not hmac.compare_digest(received_signature.lower(), calculated_signature):
-        current_app.logger.warning("Patreon webhook signature is invalid")
-        return jsonify({"error": "invalid_signature"}), 403
-
-    event_type = request.headers.get("X-Patreon-Event", "").strip()
-    if event_type not in {
-        "members:create",
-        "members:pledge:create",
-        "members:pledge:update",
-        "members:update",
-    }:
-        return jsonify({"status": "ignored_event"}), 200
-    try:
-        payload = PatreonWebhook.from_mapping(json.loads(request_body))
-    except (json.JSONDecodeError, ValueError, TypeError):
-        current_app.logger.warning("Patreon webhook schema validation failed")
-        return jsonify({"error": "invalid_payload"}), 400
-    if not patreon_member_is_paid_and_entitled(payload.data):
-        return jsonify({"status": "not_eligible"}), 200
-
-    recipient = extract_patreon_email(payload)
-    if recipient is None:
-        current_app.logger.warning(
-            "Eligible Patreon member has no deliverable email address"
-        )
-        return jsonify({"status": "email_unavailable"}), 200
-    try:
-        delivery_status = deliver_patreon_license(payload.data.id, recipient)
-    except Exception:
-        current_app.logger.exception(
-            "Patreon license delivery failed (member=%s)",
-            safe_log_reference(payload.data.id),
-        )
-        return jsonify({"error": "delivery_failed"}), 503
-    if delivery_status == "busy":
-        response = jsonify({"error": "delivery_in_progress"})
-        response.headers["Retry-After"] = "30"
-        return response, 503
-    return jsonify({"status": "ok"}), 200
 
 
 @payments_bp.get("/download_contract")

@@ -10,12 +10,10 @@ from __future__ import annotations
 
 import base64
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
 import tempfile
-import time
 import unittest
 import uuid
 
@@ -23,7 +21,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 import httpx
 
-from license_client import LicenseClient, LicenseError
+from license_client import LicenseClient
 
 
 def _load_credentials() -> dict[str, str] | None:
@@ -94,6 +92,8 @@ class KeygenLiveIntegrationTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        if os.environ.get("RUN_LIVE_KEYGEN_TESTS") != "1":
+            raise unittest.SkipTest("Live Keygen mutations require RUN_LIVE_KEYGEN_TESTS=1")
         creds = _load_credentials()
         if not creds:
             raise unittest.SkipTest("Keygen credentials (product.json / product_token) not available.")
