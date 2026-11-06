@@ -85,7 +85,8 @@ class MarketingTests(ServerTestCase):
         self.assertIn(b'aria-label="Legal information"', home)
         options = self.client.get('/porn_fetch').data
         self.assertIn(b'No automatic renewal', options)
-        self.assertIn(b'recurring membership until cancelled', options)
+        self.assertIn(b'One-time Shop purchase', options)
+        self.assertNotIn(b'recurring membership until cancelled', options)
         self.assertIn(b'Test preview', options)
         self.assertNotIn(b'deleted at release', options)
         self.assertNotIn(b'service fee: 1%', options)
@@ -93,13 +94,13 @@ class MarketingTests(ServerTestCase):
 
     def test_every_payment_method_can_be_selected_without_repeated_detail_panels(self):
         page = self.client.get('/porn_fetch').data
-        for method in ('crypto', 'patreon', 'card'):
+        for method in ('crypto', 'patreon'):
             self.assertNotIn(f'id="details-{method}"'.encode(), page)
             self.assertIn(f'id="method-{method}"'.encode(), page)
             self.assertNotRegex(page, f'id="method-{method}"[^>]*disabled'.encode())
-        self.assertIn(b'Credit Card / Google Pay / Apple Pay', page)
+        self.assertNotIn(b'id="method-card"', page)
         self.assertIn(b'350+', page)
-        for brand in ('bitcoin', 'ethereum', 'solana', 'litecoin', 'nowpayments', 'patreon', 'google-pay', 'apple-pay'):
+        for brand in ('bitcoin', 'ethereum', 'solana', 'litecoin', 'nowpayments', 'patreon'):
             self.assertIn(f'/static/media/payments/{brand}.'.encode(), page)
 
     def test_external_preview_requires_explicit_confirmation(self):

@@ -51,3 +51,22 @@ images were discarded and recaptured. The Android preview screenshot is now
 optional, preventing it from pushing platform switching far down the page.
 Contract wording, consent fields, backend routes, payment processing, release
 selection rules, licensing and download fallback logic were not changed.
+
+## Patreon Shop follow-up
+
+The picker now offers only Cryptocurrency and Patreon Shop. Card/Onramp routes
+remain available internally. Patreon is described as a one-time purchase with a
+free account. Proceeding shows license-claim instructions before any external
+handoff, and the explicit continuation opens the creator's Shop URL. The dialog
+links directly to the email-claim form and notes its existing delivery window of
+up to 10 minutes. Test-checkout acknowledgments and server consent checks remain.
+
+Validated at both viewport sizes: no card option (including an old `?method=card`
+URL), instructions before navigation, Cancel/Escape, restored focus, crypto
+confirmation fields, and no horizontal overflow. Without JavaScript the form
+opens the local instructions/confirmation page before leaving the website.
+Marketing, application, contract-confirmation, Onramp, Patreon Shop and new
+checkout-specific suites passed: 101 tests.
+
+Dialog screenshots: [Desktop](patreon-shop-dialog-desktop.png) ·
+[Mobile](patreon-shop-dialog-mobile.png). The dialog scrolls within the viewport.

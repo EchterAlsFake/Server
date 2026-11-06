@@ -155,7 +155,7 @@ class ContractConfirmationTests(ServerTestCase):
         self.assertIn(reference, body)
         self.assertIn(accepted['refund_de'], body)
         self.assertIn(accepted['refund_terms'], body)
-        self.assertIn('Not automatically linked to a Patreon membership.', body)
+        self.assertIn('Not automatically linked to a Patreon Shop purchase.', body)
         self.assertNotIn(accepted['immediate_de'], body)
         outsider = main.app.test_client()
         self.assertEqual(outsider.get('/checkout/agreement', query_string={'id': reference}).status_code, 404)

@@ -1,7 +1,10 @@
 /* Deliberate test warnings. The server checks acknowledgment again before redirecting. */
 (() => {
   const dialog = document.querySelector('#payment-test-dialog');
-  if (!dialog || typeof dialog.showModal !== 'function') return;
+  if (!dialog || typeof dialog.showModal !== 'function') {
+    document.addEventListener('payment-preview', event => { location.assign(event.detail.url); });
+    return;
+  }
   const form = dialog.querySelector('form');
   const ack = dialog.querySelector('#payment-test-ack');
   const submit = dialog.querySelector('#payment-test-continue');
@@ -15,6 +18,7 @@
     submit.disabled = true;
     form.action = url.href;
     form.target = method === 'card' ? '_self' : '_blank';
+    dialog.querySelector('#payment-test-title').firstChild.textContent = method === 'patreon' ? 'Before you buy on ' : 'Preview ';
     dialog.querySelector('#payment-test-provider').textContent = method === 'patreon' ? 'Patreon' : 'Onramp Pay / Banxa';
     dialog.querySelector("#patreon-preview-details").hidden = method !== "patreon";
     dialog.showModal();

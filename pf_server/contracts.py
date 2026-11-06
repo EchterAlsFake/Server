@@ -106,9 +106,9 @@ def agreement_receipt(agreement):
     if data.get("refund_method_accepted"):
         body += "Gesondert bestätigt / Separately accepted:\n" + data["refund_de"] + "\n" + data["refund_en"] + "\n"
     if data["payment_method"] == "patreon":
-        body += ("Keine automatische Zuordnung zu einer Patreon-Mitgliedschaft. Bewahren Sie diesen Beleg auf; "
+        body += ("Keine automatische Zuordnung zu einem Patreon-Shop-Kauf. Bewahren Sie diesen Beleg auf; "
                  "ohne zuordenbaren Nachweis wird die abweichende Erstattung im Einzelfall vereinbart.\n"
-                 "Not automatically linked to a Patreon membership. Keep this receipt; without attributable "
+                 "Not automatically linked to a Patreon Shop purchase. Keep this receipt; without attributable "
                  "evidence, an alternative refund method must be agreed individually.\n")
     for field in ("product", "terms_de", "terms_en", "withdrawal", "refund_terms"):
         if data.get(field):

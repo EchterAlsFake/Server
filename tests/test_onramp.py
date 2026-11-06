@@ -574,7 +574,7 @@ class OnrampTests(ServerTestCase):
         page = self.client.get("/porn_fetch")
         for text in (
             b"Recommended",
-            b"Credit Card / Google Pay / Apple Pay",
+            b"One-time Shop purchase",
             b"No automatic renewal",
         ):
             self.assertIn(text, page.data)

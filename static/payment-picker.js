@@ -3,14 +3,14 @@
   if (!form) return;
   const button = form.querySelector('#checkout-continue');
   const error = form.querySelector('#choice-error');
-  const names = {crypto: 'Continue to crypto checkout', patreon: 'Preview Patreon checkout', card: 'Preview card checkout'};
+  const names = {crypto: 'Continue to crypto checkout', patreon: 'Proceed with selected payment method'};
   function update() {
     const method = form.querySelector('input[name="payment_method"]:checked')?.value;
     const withdrawal = form.querySelector('#chk-withdrawal');
     withdrawal.required = method !== 'patreon';
     withdrawal.disabled = method === 'patreon';
     withdrawal.closest('label').hidden = method === 'patreon';
-    button.textContent = names[method] || 'Continue with selected method →';
+    button.textContent = names[method] || 'Proceed with selected payment method →';
   }
   form.addEventListener('change', update);
   form.querySelector('a[href="#refund-agreement"]').addEventListener('click', () => {
@@ -33,6 +33,6 @@
     finally { button.disabled = false; }
   });
   const preferred = new URLSearchParams(location.search).get("method");
-  if (["crypto", "patreon", "card"].includes(preferred)) form.querySelector(`#method-${preferred}`).checked = true;
+  if (["crypto", "patreon"].includes(preferred)) form.querySelector(`#method-${preferred}`).checked = true;
   update();
 })();

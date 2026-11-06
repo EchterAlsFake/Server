@@ -197,7 +197,7 @@ def payment_preview(method):
     provider = "Patreon" if method == "patreon" else "Onramp Pay / Banxa"
     session_id = request.values.get("session_id", "")
     target = (
-        "https://www.patreon.com/profile/creators?u=214243387&vanity=profile"
+        "https://www.patreon.com/c/echteralsfake/shop"
         if method == "patreon" else url_for("onramp.buy_card")
     )
     if method == "banxa":
