@@ -46,3 +46,18 @@
  .privacy-controls { grid-template-columns:1fr; }
  .product-stage .stage-heading { padding:12px; font-size:11px; gap:8px; }
 }
+
+.download-picker .page-heading { margin-bottom:24px; }
+.download-picker .primary-download { padding-top:22px; }
+.download-picker .primary-requirements { margin-bottom:12px; }
+.device-switcher .platform-selector { margin-top:16px; }
+.age-dialog .eyebrow { margin-bottom:12px; }
+@media(max-width:600px) {
+ .download-picker .page-heading h1 { font-size:1.8rem; }
+ .download-picker .page-heading { padding-block:20px; }
+ .download-picker .primary-download { padding:20px; }
+ .download-picker .primary-download h2 { font-size:1.5rem; }
+ .age-dialog { padding:24px; }
+ .age-dialog h2 { font-size:1.7rem; }
+ .age-dialog .age-symbol { font-size:1.8rem; }
+}

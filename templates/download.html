@@ -5,17 +5,13 @@
 {% block content %}
 <div class="downloads-page download-picker" data-direct-origin="{{ direct_download_origin }}" data-initial-platform="{{ selected_platform or '' }}">
 <header class="page-heading"><p class="eyebrow">Official downloads</p><h1>Your videos. On your device.</h1><p>Get Porn Fetch for your computer or phone.</p></header>
-<nav class="platform-selector" aria-label="Choose your platform">
-{% for item in cards if item.key != 'cli' %}<a href="/download/{{ item.key }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
-</nav>
-{% include "partials/download_channels.html" %}
 {% if unavailable %}<p class="download-status" role="status">The release catalog is temporarily unavailable. Please try again later.</p>{% elif not releases %}<p class="download-status" role="status">The first website-hosted release has not been published yet. Installation guides are available below.</p>{% endif %}
 {% for card in cards %}
 <section id="{{ card.key }}" class="platform-panel" aria-labelledby="{{ card.key }}-title"{% if card.key != (selected_platform or 'windows') %} hidden{% endif %}>
 <div class="primary-download">
 <p class="eyebrow">{{ 'Command line' if card.key == 'cli' else 'Get the app' }}</p>
 <h2 id="{{ card.key }}-title">Porn Fetch for {{ card.name }}</h2>
-<p class="primary-description">{{ card.summary }}</p>
+<p class="primary-description">{% if card.key == 'android' %}Save videos on your Android phone or tablet.{% elif card.key == 'ios' %}The iPhone and iPad app, installed outside the App Store.{% elif card.key == 'cli' %}{{ card.summary }}{% else %}Save videos on your {{ card.name }} computer.{% endif %}</p>
 {% if card.key == 'ios' %}{% include 'partials/ios_warning.html' %}{% endif %}
 {% if card.key == 'cli' %}
 <p>Choose a terminal package for your operating system in advanced downloads below.</p>
@@ -31,7 +27,7 @@
 <p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Use the Qt installer for automatic app updates.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
 </div>
 <a class="btn btn-primary primary-cta"{% if card.default %} href="{{ download_href(card.default.url) }}" data-vps-url="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
-<p class="primary-installation">{% if card.default %}{{ card.default.installation_note }}{% elif card.key not in ['android', 'ios'] %}Qt installers support component selection and automatic app updates. Portable packages require manual updates.{% endif %}</p>
+
 <p class="primary-requirements">{{ card.default.min_os if card.default and card.default.min_os else card.requirements }}</p>
 <button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>Different device type?</button>
 <noscript><p>Choose your download from the file list in advanced options below.</p></noscript>
@@ -40,6 +36,7 @@
 <details class="advanced-downloads"{% if card.key == 'cli' %} open{% endif %}>
 <summary>Other downloads &amp; advanced options</summary>
 <div class="advanced-content">
+<p class="primary-installation advanced-installation-note">{% if card.default %}{{ card.default.installation_note }}{% elif card.key not in ['android', 'ios'] %}The installer includes automatic app updates. Portable downloads require manual updates.{% endif %}</p>
 {% if card.files %}<h3>Application packages</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
 <details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>Advanced / CLI downloads &amp; source</summary><p>Command-line packages require a terminal. Source packages require Python and the release’s dependencies. CLI packages require manual updates.</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>No command-line package published for this selection.</p>{% endfor %}</div><a href="/download/cli">CLI installation guide &amp; all platforms →</a></details>
 </div>
@@ -48,6 +45,12 @@
 {% if card.key == "android" %}{% include "partials/android_account_screenshot.html" %}{% endif %}
 </section>
 {% endfor %}
+<details class="ux-disclosure device-switcher"><summary>Choose another device</summary><nav class="platform-selector" aria-label="Choose your platform">
+{% for item in cards if item.key != 'cli' %}<a href="/download/{{ item.key }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
+</nav>
+
+</details>
+<details class="ux-disclosure"><summary>Choose a release channel</summary>{% include "partials/download_channels.html" %}</details>
 <p><a data-download-retry hidden>Download interrupted? Retry via compatibility server</a></p>
 <nav class="download-bottom" aria-label="Download help"><a href="#guide-{{ selected_platform or 'windows' }}" class="installation-link">Installation guide</a><a href="/releases">Previous releases &amp; changelog</a><a href="/help">Troubleshooting / activation help</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="#verify-download">Verify download (SHA-256)</a></nav>
 <details id="verify-download" class="installation-guide compact-guide"><summary>How to verify your download</summary><p>Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>Linux: <code>sha256sum &lt;filename&gt;</code><br>macOS: <code>shasum -a 256 &lt;filename&gt;</code></p><p>A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.</p></details>
