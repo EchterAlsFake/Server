@@ -70,3 +70,9 @@ checkout-specific suites passed: 101 tests.
 
 Dialog screenshots: [Desktop](patreon-shop-dialog-desktop.png) ·
 [Mobile](patreon-shop-dialog-mobile.png). The dialog scrolls within the viewport.
+
+## Beginner and advanced-user refinement
+
+See the [refinement comparisons and validation](refinement/README.md) for the
+simple opening tour, verified advanced capabilities, plain-language Premium
+terms, checkout hierarchy and reduced sticky navigation.
