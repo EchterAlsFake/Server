@@ -117,7 +117,10 @@ def validate_checkout_country(
 
 @payments_bp.route("/buy_license", methods=["GET"])
 def buy_license():
-    return render_template("buy_license.html", countries=COUNTRY_OPTIONS)
+    from .checkout_consent import current_consent
+    consent = current_consent()
+    return render_template("buy_license.html", countries=COUNTRY_OPTIONS,
+                           checkout_consent=consent if consent and consent.get("payment_method") == "crypto" else None)
 
 
 @payments_bp.route("/buy_success", methods=["GET"])

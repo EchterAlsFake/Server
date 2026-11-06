@@ -10,7 +10,7 @@ from flask import (
 )
 
 from .extensions import limiter
-from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent
+from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent, current_selection
 from .countries import COUNTRY_OPTIONS
 from .http import normalized_hostname
 from .product_catalog import WEBSITES
@@ -25,14 +25,14 @@ AGE_GATED_PATHS = {"/porn_fetch", "/donation", "/buy_license", "/buy_card", "/bu
 def public_page_context():
     from .onion import is_onion
     from .contracts import IMMEDIATE_EN, IMMEDIATE_DE, REFUND_EN, REFUND_DE, offer_digest
-    return {"immediate_en": IMMEDIATE_EN, "immediate_de": IMMEDIATE_DE, "refund_en": REFUND_EN, "refund_de": REFUND_DE, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent()}
+    return {"immediate_en": IMMEDIATE_EN, "immediate_de": IMMEDIATE_DE, "refund_en": REFUND_EN, "refund_de": REFUND_DE, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
 
 
 @pages_bp.after_app_request
 def private_age_state(response):
     if normalized_hostname(request.host).startswith("docs."):
         return response
-    if request.path in AGE_GATED_PATHS or request.path in {"/leave", "/checkout/start"}:
+    if request.path in AGE_GATED_PATHS or request.path in {"/leave", "/checkout/start", "/checkout/crypto-confirm"}:
         if "no-store" not in response.headers.get("Cache-Control", ""):
             response.headers["Cache-Control"] = "private, no-store"
     return response
@@ -127,21 +127,55 @@ def checkout_start():
     def accepted(field):
         return data.get(field) == "yes" or data.get(field) is True
 
-    if not isinstance(method, str) or not isinstance(country, str) or method not in {"crypto", "patreon", "card"} or country not in dict(COUNTRY_OPTIONS) or not all(accepted(field) for field in FIELDS if field != "withdrawal_accepted" or method != "patreon"):
-        error = "Choose your payment method and country, then accept all required confirmations."
+    shared_fields = tuple(field for field in FIELDS if field != "withdrawal_accepted")
+    if not isinstance(method, str) or method not in {"crypto", "patreon", "card"} or not all(accepted(field) for field in shared_fields):
+        error = "Choose your payment method and accept all required confirmations."
         if request.is_json:
             return jsonify(error=error), 400
         return render_template("porn_fetch.html", countries=COUNTRY_OPTIONS, checkout_error=error), 400
+    pending_crypto = method == "crypto" and country is None and not accepted("withdrawal_accepted")
+    if method != "patreon" and not pending_crypto and (not isinstance(country, str) or country not in dict(COUNTRY_OPTIONS) or not accepted("withdrawal_accepted")):
+        return jsonify(error="Select your country and consent to immediate digital supply on the crypto checkout."), 400
     from .contracts import offer_digest, record_agreement
     from datetime import datetime, timezone
     if data.get("offer_digest") != offer_digest():
         return jsonify(error="The offer has changed. Reload the checkout information and confirm it again."), 409
+    session.pop("checkout_selection", None)
+    session.pop("checkout_consent", None)
+    if pending_crypto:
+        session["checkout_selection"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), payment_method="crypto", offer_digest=data["offer_digest"], **{field: accepted(field) for field in shared_fields})
+        target = url_for("payments.buy_license")
+        if request.is_json:
+            return jsonify(next=target, method=method)
+        return redirect(target, code=303)
+    if method == "patreon":
+        country = None  # No tax-country declaration collected for Patreon Shop.
     agreement_id = record_agreement(method, country, datetime.now(timezone.utc).isoformat())
-    session["checkout_consent"] = dict(agreement_id=agreement_id, version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: accepted(field) for field in FIELDS})
+    session["checkout_consent"] = dict(agreement_id=agreement_id, offer_digest=data["offer_digest"], version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: accepted(field) for field in FIELDS})
     target = url_for("payments.buy_license") if method == "crypto" else url_for("pages.payment_preview", method=method)
     if request.is_json:
         return jsonify(next=target, method=method)
     return redirect(target, code=303)
+
+
+@pages_bp.post("/checkout/crypto-confirm")
+def confirm_crypto_checkout():
+    """Complete direct-purchase consent after the shared payment-method page."""
+    selection = current_selection() or current_consent()
+    if not selection or selection.get("payment_method") != "crypto":
+        return jsonify(error="Start with the payment methods and confirmations again."), 409
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not isinstance(data.get("country"), str) or data.get("country") not in dict(COUNTRY_OPTIONS) or data.get("withdrawal_accepted") is not True:
+        return jsonify(error="Select your country and consent to immediate digital supply."), 400
+    from .contracts import offer_digest, record_agreement
+    if selection.get("offer_digest") != offer_digest() or data.get("offer_digest") != selection.get("offer_digest"):
+        return jsonify(error="The offer has changed. Start checkout again and review the confirmations."), 409
+    from datetime import datetime, timezone
+    country = data["country"]
+    agreement_id = record_agreement("crypto", country, datetime.now(timezone.utc).isoformat())
+    session["checkout_consent"] = dict(selection, agreement_id=agreement_id, country=country, withdrawal_accepted=True)
+    session.pop("checkout_selection", None)
+    return jsonify(confirmed=True)
 
 
 @pages_bp.get("/checkout/agreement")

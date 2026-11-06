@@ -15,7 +15,7 @@
             <section class="checkout-method" aria-labelledby="method-heading">
                 {% block checkout_method %}{% endblock %}
             </section>
-            {% if not checkout_consent %}
+            {% if not checkout_consent and not checkout_selection %}
             <p class="checkout-confirmations" role="note">Start with the <a href="/porn_fetch">payment methods and required confirmations</a> to continue.</p>
             {% endif %}
             {% if checkout_consent %}<p><a href="/checkout/agreement" download>Download agreement receipt (PDF)</a></p>{% endif %}

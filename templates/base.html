@@ -43,7 +43,7 @@
             </div>
         </header>
         <nav class="legal-utility" aria-label="Legal information">
-            <span>Legal</span><a href="/impress">Impress / Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">Terms / AGB</a><a class="withdrawal-link" href="{{ config.APP_DOMAIN if is_onion else '' }}/withdrawal">Withdraw from contract</a>
+            <a class="legal-index" href="/impress">Legal</a><a href="/impress">Impress / Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">Terms / AGB</a><a class="withdrawal-link" href="{{ config.APP_DOMAIN if is_onion else '' }}/withdrawal">Withdraw from contract</a>
         </nav>
         <main class="container {% block main_class %}{% endblock %}" id="main-content" tabindex="-1">
             {% block content %}{% endblock %}

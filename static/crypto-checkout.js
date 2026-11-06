@@ -18,7 +18,14 @@
     if (busy || root.dataset.confirmed !== 'true') return;
     busy = true; pay.disabled = true; error.textContent = ''; pay.textContent = 'Creating transaction…';
     try {
-      const data = await post('/create-crypto-payment', {country: root.dataset.country, age_confirmed: true, terms_accepted: true, withdrawal_accepted: true, test_acknowledged: true, delivery_email: email.value.trim()});
+      const country = document.querySelector('#crypto-country').value;
+      const withdrawal = document.querySelector('#crypto-withdrawal').checked;
+      if (root.dataset.needsConfirmation === 'true' || root.dataset.country !== country) {
+        await post('/checkout/crypto-confirm', {country, withdrawal_accepted: withdrawal, offer_digest: root.dataset.offerDigest});
+        root.dataset.needsConfirmation = 'false';
+        root.dataset.country = country;
+      }
+      const data = await post('/create-crypto-payment', {country, age_confirmed: true, terms_accepted: true, withdrawal_accepted: withdrawal, test_acknowledged: true, delivery_email: email.value.trim()});
       sessionId = data.session_id;
       statusUrl = data.status_url;
       email.value = '';

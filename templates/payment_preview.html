@@ -6,7 +6,6 @@
     {% include "partials/payment_test_warning.html" %}
     {% if method == "patreon" %}
     {% include "partials/patreon_details.html" %}
-    {% include "partials/patreon_agreement_receipt.html" %}
     {% endif %}
     <form method="post" rel="noopener noreferrer"{% if method != 'card' %} target="_blank"{% endif %}>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

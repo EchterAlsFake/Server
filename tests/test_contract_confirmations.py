@@ -169,7 +169,7 @@ class ContractConfirmationTests(ServerTestCase):
             self.assertEqual(response.status_code, 303)
             self.assertIn('/porn_fetch?method=patreon', response.location)
         self.accept_checkout('patreon')
-        self.assertIn(b'/checkout/agreement', self.client.get('/payment-preview/patreon').data)
+        self.assertNotIn(b'/checkout/agreement', self.client.get('/payment-preview/patreon').data)
         with main.app.app_context():
             main.db.session.execute(main.db.delete(CheckoutAgreement))
             main.db.session.commit()

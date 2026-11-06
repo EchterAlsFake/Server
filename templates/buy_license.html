@@ -1,7 +1,7 @@
 {% extends "checkout_base.html" %}
 {% from "partials/checkout_fields.html" import email_field, question %}
 {% block title %}Crypto checkout — Porn Fetch{% endblock %}
-{% block checkout_attributes %}id="crypto-checkout" data-country="{{ checkout_consent.country if checkout_consent else '' }}" data-confirmed="{{ 'true' if checkout_consent else 'false' }}" data-sandbox="{{ 'true' if config.NOWPAYMENTS_SANDBOX else 'false' }}"{% endblock %}
+{% block checkout_attributes %}id="crypto-checkout" data-country="{{ checkout_consent.country if checkout_consent else '' }}" data-confirmed="{{ 'true' if (checkout_consent and checkout_consent.payment_method == 'crypto') or checkout_selection else 'false' }}" data-offer-digest="{{ offer_digest() }}" data-needs-confirmation="{{ 'true' if checkout_selection else 'false' }}" data-sandbox="{{ 'true' if config.NOWPAYMENTS_SANDBOX else 'false' }}"{% endblock %}
 {% block checkout_notice %}
 {% if config.NOWPAYMENTS_SANDBOX %}
 <aside class="sandbox-note checkout-notice" role="note"><strong>Test environment — do not send money.</strong><p>Provider sandbox or local simulation only. This is not a live purchase.</p></aside>
@@ -14,6 +14,12 @@
 {% endblock %}
 {% block checkout_form %}
 <form id="crypto-payment-form" method="post" action="/buy_license">
+    <div class="crypto-country">
+        <label for="crypto-country">Country for tax purposes</label>
+        <select id="crypto-country" name="country" required aria-describedby="crypto-country-help"><option value="">Select your country</option>{% for code, name in countries %}<option value="{{ code }}"{% if checkout_consent and checkout_consent.payment_method == 'crypto' and checkout_consent.country == code %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+        <p id="crypto-country-help" class="checkout-caption">Checked locally for tax purposes; this check does not store your IP. <a href="/privacy_policy">Privacy</a> · <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP</a></p>
+    </div>
+    <label class="crypto-supply-consent"><input type="checkbox" id="crypto-withdrawal" name="withdrawal_accepted" required{% if checkout_consent and checkout_consent.payment_method == 'crypto' and checkout_consent.withdrawal_accepted %} checked{% endif %}><span>{{ immediate_en }} <a href="/withdrawal" target="_blank" rel="noopener noreferrer">Withdrawal rights</a></span></label>
     {{ email_field() }}
     <p class="checkout-disclosure">NOWPayments shows the amount to send before payment. Review it, including any provider, exchange and network fees.</p>
     <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>

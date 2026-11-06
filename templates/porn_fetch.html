@@ -14,14 +14,10 @@
             </fieldset>
             <details class="checkout-question"><summary>Product and contract details</summary>{% with english_only=true %}{% include "partials/contract_product.html" %}{% endwith %}</details><section class="shared-confirmations" aria-labelledby="confirmations-heading">
                 <p class="eyebrow checkout-step">02 / Confirmation</p><h3 id="confirmations-heading">Review and confirm.</h3>
-                <label for="checkout-country">Country for tax purposes</label>
-                <select id="checkout-country" name="country" required aria-describedby="country-help"><option value="">Select your country</option>{% for code, name in countries %}<option value="{{ code }}"{% if checkout_consent and checkout_consent.country == code %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
-                <p id="country-help">Checked locally for tax purposes; this check does not store your IP. <a href="/privacy_policy">Privacy</a> · <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP</a></p>
                 <details class="checkout-question" id="refund-agreement"><summary>Refund agreement</summary>{% include "partials/refund_agreement_en.html" %}</details>
                 <fieldset class="compact-agreements"><legend class="visually-hidden">Required confirmations</legend>
                     <label><input type="checkbox" name="age_terms_accepted" id="chk-age-terms" value="yes" required><span>I am 18+ and accept the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</span></label>
                     <label><input type="checkbox" name="refund_method_accepted" id="chk-refund-method" value="yes" required><span>{{ refund_en }} <a href="#refund-agreement">Refund details</a></span></label>
-                    <label><input type="checkbox" name="withdrawal_accepted" id="chk-withdrawal" value="yes"><span>Cryptocurrency only: {{ immediate_en }} <a href="/withdrawal" target="_blank" rel="noopener noreferrer">Withdrawal rights</a></span></label>
                     <label><input type="checkbox" name="test_acknowledged" id="chk-test-site" value="yes" required><span>I understand this is a test checkout. No real purchase.</span></label>
                 </fieldset>
                 <p id="choice-error" class="checkout-error" role="alert" tabindex="-1">{{ checkout_error or '' }}</p>

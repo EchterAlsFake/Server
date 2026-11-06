@@ -99,3 +99,9 @@ html { scroll-padding-top:110px; }
  .purchase-page .payment-option { padding:18px 14px; }
  .tour-chapters { gap:0 20px; }
 }
+
+.crypto-country { margin-bottom:24px; }
+.crypto-country label { display:block; margin-bottom:10px; }
+.crypto-country select { width:100%; min-height:49px; border:1px solid var(--line); border-radius:7px; padding:12px 14px; background:#17151b; color:var(--color-text); font:inherit; }
+.crypto-supply-consent { display:flex; align-items:flex-start; gap:12px; margin-block:24px; font-size:var(--text-secondary); line-height:1.75; }
+.crypto-supply-consent input { flex-shrink:0; margin-top:7px; width:18px; height:18px; accent-color:var(--color-primary); }

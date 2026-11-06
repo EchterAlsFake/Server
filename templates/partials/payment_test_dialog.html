@@ -1,6 +1,6 @@
 <dialog id="payment-test-dialog" class="payment-test-dialog" aria-labelledby="payment-test-title" aria-describedby="patreon-preview-details payment-test-description">
     <p class="eyebrow">Before you continue</p><h2 id="payment-test-title">Preview <span id="payment-test-provider">this payment method</span>.</h2>
-    <div id="patreon-preview-details" hidden>{% include "partials/patreon_details.html" %}<details><summary>Checkout agreement receipt</summary>{% include "partials/patreon_agreement_receipt.html" %}</details></div>
+    <div id="patreon-preview-details" hidden>{% include "partials/patreon_details.html" %}</div>
     <div id="payment-test-description">{% include "partials/payment_test_warning.html" %}</div>
     <form method="post" id="payment-test-form" rel="noopener noreferrer">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
