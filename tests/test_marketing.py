@@ -76,13 +76,13 @@ class MarketingTests(ServerTestCase):
     def test_source_android_gui_and_payment_choices_are_explicit(self):
         home = self.client.get('/').data
         self.assertIn(b'App source', home)
-        self.assertIn(b'Installable Android GUI app', home)
+        self.assertIn(b'Install the Android app', home)
         self.assertIn(b'https://github.com/EchterAlsFake/Server', home)
         self.assertIn(b'Your video history stays local.', home)
         self.assertIn(b'IP-derived check values', home)
         self.assertNotIn(b'No IP logs.', home)
-        self.assertEqual(home.count(b'See source code'), 2)
-        self.assertIn(b'class="github-nav"', home)
+        self.assertEqual(home.count(b'Download Free'), 3)
+        self.assertIn(b'aria-label="Legal information"', home)
         options = self.client.get('/porn_fetch').data
         self.assertIn(b'No automatic renewal', options)
         self.assertIn(b'recurring membership until cancelled', options)
