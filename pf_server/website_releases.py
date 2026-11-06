@@ -250,6 +250,8 @@ def latest_artifacts(releases, platform=None, kinds=None, channel=None):
     """Keep older variants when a newer publication is GUI-only or CLI-only."""
     selected = {}
     for release in sorted(releases, key=version_key, reverse=True):
+        if release["version"] == "3.8":
+            continue
         for artifact in release["artifacts"]:
             if platform and artifact["platform"] != platform:
                 continue

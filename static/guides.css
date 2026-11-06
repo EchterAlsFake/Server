@@ -23,3 +23,12 @@
 .guide-related a { font-size: var(--text-secondary); line-height: 1.8; }
 @media (max-width: 800px) { .guide-grid-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 540px) { .guide-grid, .guide-grid-compact { grid-template-columns: minmax(0, 1fr); } .guides-page .page-heading h1 { font-size: 39px; } .guide-card { padding: 20px; } }
+
+.guide-platforms { padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--color-surface); }
+.guide-platforms ul { display: flex; flex-wrap: wrap; gap: 12px; padding: 0; list-style: none; }
+.guide-platforms a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; }
+.guide-platforms p, .guide-screenshot figcaption { color: #c0b3c9; font-size: var(--text-small); line-height: 1.7; }
+.guide-screenshot { margin: 28px 0; }
+.guide-screenshot img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.guide-screenshot figcaption { margin-top: 12px; }
+.guide-toc a { display: inline-flex; align-items: center; min-height: 44px; }

@@ -5,7 +5,7 @@ from xml.sax.saxutils import escape
 
 from flask import Blueprint, Response, abort, current_app, g, redirect, request
 
-from .guide_content import GUIDES, GUIDE_DATE, guide_for_path, guide_path
+from .guide_content import GUIDES, GUIDE_DATE, GUIDE_PUBLISHED, guide_for_path, guide_path
 from .http import normalized_hostname
 
 seo_bp = Blueprint("seo", __name__)
@@ -66,7 +66,7 @@ def page_metadata():
     if guide:
         title_description = (
             f"How to Download {guide['name']} Videos — Porn Fetch",
-            f"Learn how to download {guide['name']} videos with Porn Fetch. Follow the app’s actual steps, choose an available quality, and check supported links and limitations.",
+            f"Download {guide['name']} videos with Porn Fetch. {guide['summary']} Read desktop and Android steps, supported links, and troubleshooting.",
         )
     if path.startswith("/download/"):
         from .download_pages import PLATFORMS
@@ -158,7 +158,8 @@ def page_metadata():
             "description": description,
             "mainEntityOfPage": origin + path,
             "inLanguage": "en",
-            "datePublished": GUIDE_DATE,
+            "datePublished": GUIDE_PUBLISHED,
+            "image": origin + "/static/media/web/downloads-960.webp",
             "dateModified": guide.get("updated", GUIDE_DATE),
             "author": {"@id": origin + "/#maintainer"},
             "publisher": {"@id": origin + "/#maintainer"},
@@ -169,6 +170,10 @@ def page_metadata():
         "canonical": origin + path,
         "breadcrumbs": breadcrumbs,
         "og_type": "article" if guide else "website",
+        "image": origin + ("/static/media/web/downloads-960.webp" if guide else "/static/media/promo-poster.jpg"),
+        "image_alt": "Porn Fetch desktop download controls" if guide else "Porn Fetch video downloader interface",
+        "image_width": 960 if guide else 1920,
+        "image_height": 549 if guide else 1080,
         "structured": {"@context": "https://schema.org", "@graph": graph},
     }
     return g.page_meta

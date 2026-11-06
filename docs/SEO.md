@@ -4,7 +4,103 @@ Research and source review: **25 October 2026**. Initial audience: English-speak
 adults looking for a supported video-downloading workflow. Canonical product
 origin: `https://pornfetch.to`.
 
-## Findings and priorities
+## Current implementation: 5 November 2026
+
+The October launch findings below are historical. A fresh live crawl covered all
+34 sitemap URLs: all returned HTTP 200, matching self-canonicals, and indexable
+HTML/HTTP directives. Search Console reported no sitemap errors or warnings.
+The local SEO and release regression suites cover these contracts.
+
+### Release accuracy and content
+
+The published **3.8.82 beta** catalog identifies source commit
+`7ec6ddb759cd5a7dbd259ef92344cfb8afdb15f0` in the sibling Porn_Fetch repository.
+This is a beta from the 3.9 development cycle, not the vulnerable legacy 3.8 release.
+Guides and homepage identify the published version. Desktop Video URL/Get Video/
+Download Selected and Android Add videos/Get Video/Output folder/Choose folder
+were checked against that exact commit. Android now saves completed downloads
+to the selected output folder automatically, without a separate Save action.
+The public-collection preview is limited to the first five entries before filters;
+account collections are exempt. Source inspection does not establish live provider
+success. An earlier local draft targeted 3.8.2 (b38c98e), whose Android Save action
+differs; that draft was superseded before deployment.
+
+The exact `3.8` release is excluded from current package selection, including
+stable-channel and architecture fallbacks. Historical release pages retain their
+files with a security warning; no artifacts or historical terms are deleted.
+This rule does not classify 3.8.1, 3.8.2, or every 3.8.x build as vulnerable.
+
+All guides offer explicit platform installation choices near the introduction,
+including the iOS sideloading limitation and CLI. Links use recommended channel
+selection instead of forcing beta. Existing provider-specific URL guidance and
+troubleshooting remain intact. Metadata descriptions use provider summaries.
+Four editorially related workflows replace the first-five-provider bias.
+
+The real desktop download-controls screenshot contains no video URLs or account
+data. Responsive 480/960 WebP derivatives preserve the original and supply a
+visible Article/social image. The caption identifies this as the shared interface,
+not evidence of a successful provider download. The maintainer supplied a real Android Account-tab screenshot on 5 November.
+It contains empty login fields, with PornHub selected, and is displayed on the
+Android download page and the three account-capable provider guides only. Its
+caption distinguishes account collections from individual video downloads. The
+original JPEG is preserved; 360/720 WebP delivery copies contain no EXIF metadata.
+Publication dates remain 25 October; the actual editorial revision is 5 November.
+
+The footer and /transparency redirect now target the working documentation host.
+Privacy/terms retain their text with only one page-level H1. Decorative images
+retain empty alt text; automated audit warnings do not justify redundant labels.
+
+### Measurement and repeatable checks
+
+No Google Analytics, new visitor identifiers, or new page-level tracking has been
+added. Search Console measures search visibility; aggregate download requests,
+partial requests, and bytes measure delivery activity separately. Neither clicks
+nor requests prove installation or completed downloads. The current visitor script
+groups every guide into `guides`, so it cannot attribute individual guide journeys.
+Prepared patches under deploy/dashboard-privacy remain outside this change and
+must not be described as activated. Deployment examples are not live-state proof.
+
+The dated Search Console snapshot is `seo-search-baseline.json`. To refresh it,
+use GSC Wizard generate_seo_report (compact, 28 days, includeSitemap), query_top_pages
+(limit 100, paginate if needed), and query_search_analytics by device/country.
+Record the returned date range and settledThrough; use property totals, not summed
+query rows. Retain unknown/hidden query coverage and compare full equivalent windows.
+Review after two weeks for regressions and after 28 complete days for associations;
+country, device, release changes and short history prevent causal claims.
+
+For repeatable live mobile lab checks (homepage, two leading guides, download hub,
+Android and iOS), install Lighthouse as developer tooling and run:
+
+```sh
+CHROME_PATH=/path/to/chromium python scripts/audit_seo_performance.py --lighthouse /path/to/lighthouse --output /tmp/seo-performance.json
+```
+
+This measures the actual live catalog, visit script and production compression.
+The live pre-deployment run is recorded in `seo-live-lab-results.json` (Lighthouse
+13.5.0, simulated mobile throttling). All six pages scored 98–100 for performance
+and 100 for accessibility and SEO. LCP ranged from 1.11 to 1.44 seconds; CLS and
+total blocking time were zero. No broad performance rewrite is justified by this
+sample. Re-run after deploying the responsive guide image to compare delivery cost.
+
+Results are lab observations, not field INP or proof that local changes are deployed.
+CrUX readings through GSC Wizard require its API key; absence of that configuration
+is not evidence of poor performance. Do not add visitor tracking to fill that gap.
+
+Local verification uses synthetic test state and writes screenshots to /tmp:
+
+```sh
+.venv/bin/python -m unittest discover -s tests -p test_seo.py -q
+.venv/bin/python -m unittest discover -s tests -p test_website_releases.py -q
+uv run --with playwright python scripts/check_seo_browser.py
+```
+
+Deploy accuracy/link fixes first, then guide improvements. Re-run the crawl and
+mobile lab measurements after deployment. Keep staging unindexed, private flows
+excluded, adult classification accurate, and canonical URLs unchanged. Record
+release dates alongside future comparisons without bulk sitemap resubmissions.
+
+## Historical launch findings (25 October 2026)
+
 
 The live audit on 25 October found HTTP 200 for the product homepage, but its HTML
 contained `noindex, nofollow`. The robots file returned `Disallow: /`, and the
@@ -182,7 +278,7 @@ Common instructions were checked against:
 - `src/frontend/UI/DownloadsPage.qml`: Video URL → Get Video; quality per row;
   Download and Download Selected; distinct Model URL and Playlist URL inputs.
 - `src/frontend/UI/AndroidDownloadsPage.qml`: Add videos; URL-kind selector;
-  Get Video/Get Videos; quality per card; Download; Save export; folder control.
+  Get Video/Get Videos; quality per card; Download; automatic output-folder saving; folder control (published 3.8.82).
 - `src/frontend/UI/SettingsPage.qml`: Output Path, Max Result Limit.
 - `src/frontend/UI/AccountPage.qml` and `AndroidAccountPage.qml`: provider-specific
   account authentication and lists. Avoid implying browser-cookie import is
@@ -194,7 +290,7 @@ Common instructions were checked against:
   `flows/accounts.py`, `downloads.py`, and `batch.py`: terminal workflows.
 
 Do not advertise HQporner or MissAV based on the separate API documentation: they
-are not supported app providers. Do not imply native iPhone GUI support, universal
+are not supported app providers. Native iOS 15+ GUI support is now available through a sideloaded IPA. Do not imply universal
 account access, every source resolution, or in-app keyword search.
 
 ## Updating content

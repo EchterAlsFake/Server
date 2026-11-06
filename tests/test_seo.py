@@ -169,11 +169,57 @@ class SEOTests(ServerTestCase):
             self.assertIn(guide_path(provider), home.links)
 
     def test_empty_and_unavailable_catalogs_do_not_invent_downloads(self):
-        for unavailable, expected in ((False, "first website-hosted packages"), (True, "temporarily unavailable")):
+        for unavailable, expected in ((False, "No website-hosted packages"), (True, "temporarily unavailable")):
             with patch("pf_server.guide_routes.load_catalog", return_value={"releases": [], "unavailable": unavailable}):
                 response = self.get(guide_path("pornhub"))
                 self.assertIn(expected, response.text)
                 self.assertNotIn('/downloads/3.9', response.text)
+
+    def test_guides_offer_platforms_relevant_links_and_consistent_images(self):
+        from pathlib import Path
+        from pf_server.guide_content import RELATED_GUIDES, GUIDE_PUBLISHED
+        for provider in GUIDES:
+            response = self.get(guide_path(provider))
+            page = Page(response.text)
+            self.assertIn("3.8.82 beta", response.text)
+            self.assertNotIn("?channel=beta", response.text)
+            for platform in ("windows", "macos", "linux", "android", "ios", "cli"):
+                self.assertIn("/download/" + platform, page.links)
+            related = RELATED_GUIDES[provider]
+            self.assertEqual(len(set(related)), 4)
+            self.assertNotIn(provider, related)
+            for key in related:
+                self.assertIn(guide_path(key), page.links)
+            article = next(row for row in page.structured[0]["@graph"] if row["@type"] == "Article")
+            self.assertEqual(article["datePublished"], GUIDE_PUBLISHED)
+            self.assertEqual(article["image"], page.meta["og:image"])
+            self.assertEqual(page.meta["og:image"], page.meta["twitter:image"])
+            self.assertIn('media/downloads.png', response.text)
+            image_path = Path(main.app.static_folder) / urlsplit(article["image"]).path.removeprefix("/static/")
+            self.assertTrue(image_path.is_file())
+
+    def test_android_screenshot_and_current_release_instructions(self):
+        from pathlib import Path
+        screenshot = "/static/media/android-account.jpg"
+        for provider in GUIDES:
+            response = self.get(guide_path(provider))
+            self.assertIn("3.8.82 beta", response.text)
+            self.assertIn("saved to your selected folder automatically", response.text)
+            self.assertNotIn("A completed card also has", response.text)
+            self.assertEqual(screenshot in response.text, provider in {"pornhub", "xhamster", "xvideos"})
+        android = self.get("/download/android")
+        self.assertIn(screenshot, android.text)
+        for filename in ("android-account.jpg", "web/android-account-360.webp", "web/android-account-720.webp"):
+            self.assertTrue((Path(main.app.static_folder) / "media" / filename).is_file())
+        self.assertIn("first five videos", self.get(guide_path("xvideos")).text)
+
+    def test_legal_pages_have_one_heading_and_transparency_redirect_works(self):
+        for path in ("/privacy_policy", "/terms"):
+            self.assertEqual(len(Page(self.get(path).text).h1s), 1)
+        response = self.get("/transparency")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.headers["Location"], "https://docs.echteralsfake.me/transparency/")
+        self.assertIn(response.headers["Location"], Page(self.get("/").text).links)
 
     def test_onion_guides_remain_public_read_only_and_unindexed(self):
         response = self.client.get(guide_path("pornhub"), base_url=main.app.config["ONION_ORIGIN"])

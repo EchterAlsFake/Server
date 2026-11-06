@@ -97,7 +97,7 @@ def impress():
 
 @pages_bp.route("/transparency", methods=["GET"])
 def transparency():
-    return redirect("/docs/transparency/", code=301)
+    return redirect("https://docs.echteralsfake.me/transparency/", code=301)
 
 
 @pages_bp.route("/refund_policy", methods=["GET"])

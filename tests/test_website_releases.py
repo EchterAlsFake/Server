@@ -304,6 +304,18 @@ class WebsiteReleaseTests(ServerTestCase):
             len(self.client.get("/download/catalog.json").json["releases"]), 2
         )
 
+    def test_vulnerable_38_is_not_a_download_fallback(self):
+        vulnerable = self.manifest("3.8", "stable")
+        supported = self.manifest("3.8.2", "beta")
+        self.assertEqual(service.latest_artifacts([vulnerable]), [])
+        for channel, expected in ((None, ["3.8.2"]), ("beta", ["3.8.2"]), ("stable", [])):
+            selected = service.latest_artifacts([vulnerable, supported], channel=channel)
+            self.assertEqual([file["version"] for file in selected], expected)
+        with patch("pf_server.download_pages.catalog", return_value=[vulnerable]):
+            page = self.client.get("/download/linux").text
+            self.assertNotIn('/downloads/3.8/', page)
+            self.assertIn("No recommended graphical app", page)
+
     def test_gui_cli_channel_selection_preserves_original_versions(self):
         for manifest in (
             self.manifest("3.9.60", "stable"),

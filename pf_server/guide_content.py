@@ -1,11 +1,12 @@
-"""Editorial guide content for the v3.9 workflow, checked against the app source.
+"""Editorial guide content for published 3.8.82 beta, checked against 7ec6ddb.
 
 See docs/SEO.md for the source checklist. Dates change only with editorial updates.
 The ordering is editorial priority, not a measured market-share claim.
 """
 
-GUIDE_DATE = "2026-10-25"
-GUIDE_VERSION = "3.9 beta"
+GUIDE_PUBLISHED = "2026-10-25"
+GUIDE_DATE = "2026-11-05"
+GUIDE_VERSION = "3.8.82 beta"
 
 # Each section contains a heading followed by independently authored paragraphs.
 GUIDES = {
@@ -243,3 +244,23 @@ def guide_for_path(path):
     if path.startswith(prefix) and path.endswith(suffix):
         return GUIDES.get(path[len(prefix):-len(suffix)])
     return None
+
+
+# Related workflows, independent of provider insertion order or traffic volume.
+RELATED_GUIDES = {
+    "pornhub": ("xhamster", "xvideos", "youporn", "thumbzilla"),
+    "xhamster": ("xvideos", "pornhub", "redtube", "porntrex"),
+    "xvideos": ("xhamster", "pornhub", "youporn", "redtube"),
+    "eporner": ("xnxx", "beeg", "xfreehd", "spankbang"),
+    "xnxx": ("eporner", "spankbang", "beeg", "xfreehd"),
+    "spankbang": ("xnxx", "eporner", "porntrex", "tube8"),
+    "youporn": ("redtube", "thumbzilla", "pornhub", "xvideos"),
+    "beeg": ("eporner", "xnxx", "xfreehd", "spankbang"),
+    "porntrex": ("xhamster", "spankbang", "tnaflix", "empflix"),
+    "xfreehd": ("beeg", "eporner", "xnxx", "porntrex"),
+    "redtube": ("youporn", "thumbzilla", "tube8", "xvideos"),
+    "thumbzilla": ("redtube", "youporn", "pornhub", "tube8"),
+    "tube8": ("redtube", "thumbzilla", "empflix", "tnaflix"),
+    "empflix": ("tnaflix", "tube8", "porntrex", "spankbang"),
+    "tnaflix": ("empflix", "porntrex", "tube8", "spankbang"),
+}

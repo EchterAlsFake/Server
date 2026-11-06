@@ -20,12 +20,19 @@ def build():
     with Image.open(MEDIA / "promo-poster.jpg") as original:
         poster = original.resize((1280, 720), Image.Resampling.LANCZOS)
         poster.save(output / "promo-poster.webp", quality=88, method=6)
-    for name in ("filters", "accounts", "privacy"):
+    for name in ("filters", "accounts", "privacy", "downloads"):
         with Image.open(MEDIA / f"{name}.png") as original:
             for width in (480, 960):
                 height = round(original.height * width / original.width)
                 image = original.resize((width, height), Image.Resampling.LANCZOS)
                 image.save(output / f"{name}-{width}.webp", quality=90, method=6)
+
+    with Image.open(MEDIA / "android-account.jpg") as original:
+        for width in (360, 720):
+            height = round(original.height * width / original.width)
+            original.resize((width, height), Image.Resampling.LANCZOS).save(
+                output / f"android-account-{width}.webp", quality=90, method=6
+            )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='guides.css') }}">{% endblock %}
+{% from "partials/screenshot.html" import screenshot %}
 {% block content %}
 <article class="product-document video-guide">
     {% include "partials/breadcrumbs.html" %}
@@ -9,7 +10,12 @@
         <p>{{ guide.intro }}</p>
         <p class="guide-byline">By <a href="/about">Johannes Habel</a> · Updated <time datetime="{{ guide_date }}">{{ guide_date_label }}</time></p>
     </header>
-    <p class="guide-version">This guide describes the {{ guide_version }} app. {% if catalog_unavailable %}The release catalog is temporarily unavailable; <a href="/download?channel=beta">check downloads again shortly</a>.{% elif not releases_available %}The first website-hosted packages are being prepared. <a href="/download?channel=beta">Check beta availability</a>; there may not be a build for your device yet.{% else %}<a href="/download?channel=beta">Check published beta builds</a> for your device.{% endif %} Older releases can have different features.</p>
+    <p class="guide-version">These instructions describe {{ guide_version }}, a published beta from the 3.9 development cycle. {% if catalog_unavailable %}The release catalog is temporarily unavailable; <a href="/download">check downloads again shortly</a>.{% elif not releases_available %}No website-hosted packages are available right now. <a href="/download">Check download availability</a>; there may not be a build for your device yet.{% else %}<a href="/download">Choose a recommended download</a>; each package lists its version and channel.{% endif %} Later builds may differ. Do not install the old 3.8 release: it contains known security vulnerabilities.</p>
+    <nav class="guide-platforms" aria-label="Choose your installation guide">
+        <strong>Get Porn Fetch for your device</strong>
+        <ul><li><a href="/download/windows">Windows</a></li><li><a href="/download/macos">macOS</a></li><li><a href="/download/linux">Linux</a></li><li><a href="/download/android">Android APK</a></li><li><a href="/download/ios">iOS IPA · sideloading</a></li><li><a href="/download/cli">Command line</a></li></ul>
+        <p>Check the installation page for compatible packages and requirements. iOS requires re-signing and provisioning; it is not an App Store install.</p>
+    </nav>
     <nav class="guide-toc" aria-label="On this page">
         <a href="#download-steps">Desktop steps</a><a href="#android">Android</a><a href="#site-details">{{ guide.name }} details</a><a href="#cli">CLI</a><a href="#troubleshooting">Troubleshooting</a>
     </nav>
@@ -24,10 +30,15 @@
         </ol>
         <p>Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use <strong>Download Selected</strong>.</p>
     </section>
+    <figure class="guide-screenshot">
+        <a href="{{ url_for('static', filename='media/downloads.png') }}" aria-label="Open full-size desktop download controls">{{ screenshot("downloads", "Porn Fetch desktop Video URL, Model URL and Playlist URL fields with Get Video and Get Videos controls", 1458, 834) }}</a>
+        <figcaption>Desktop download controls. Paste an individual video page into Video URL; fetching adds it to the list before downloading. This shared interface is used for all supported providers.</figcaption>
+    </figure>
     <section id="android" aria-labelledby="android-title">
         <h2 id="android-title">Downloading on Android</h2>
         <p>Install a compatible APK from the <a href="/download/android">Android downloads page</a>. Open <strong>Add videos</strong>, choose <strong>Video URL</strong>, paste the complete {{ guide.name }} address, and tap <strong>Get Video</strong>.</p>
-        <p>Choose a quality on the returned video card and tap <strong>Download</strong>. The add-video panel shows <strong>Save to</strong> and a <strong>Choose folder</strong> control. A completed card also has a <strong>Save</strong> action for exporting the downloaded file through Android’s file picker.</p>
+        <p>Choose a quality on the returned video card and tap <strong>Download</strong>. The add-video panel shows <strong>Output folder</strong> and a <strong>Choose folder</strong> control. Completed files are saved to your selected folder automatically; there is no separate per-video Save action. Use your file manager to open the saved file.</p>
+        {% if provider in ("pornhub", "xhamster", "xvideos") %}{% include "partials/android_account_screenshot.html" %}{% endif %}
     </section>
     <div id="site-details">
         {% for heading, paragraphs in guide.sections %}
@@ -45,7 +56,7 @@
         <h3>The video loads, but I cannot choose the quality I want</h3>
         <p>Choose from the streams returned for that video. Qualities above 720p require a valid Porn Fetch license, and the source must expose a usable stream. Premium does not upscale videos or remove website-side restrictions. <a href="/help">Read the license activation guide</a> if your purchased entitlement is not active.</p>
         {% if supports_profiles %}<h3>A profile or playlist is empty</h3>
-        <p>Check the URL type, <strong>Max Result Limit</strong> in Settings, and any filters in <strong>Advanced Configuration</strong>. Duration, quality, date, and text filters can remove entries. Some pages also depend on region or account access. Only use the profile and playlist workflows supported for {{ guide.name }}.</p>
+        <p>Check the URL type, <strong>Max Result Limit</strong> in Settings, and any filters in <strong>Advanced Configuration</strong>. Free use previews the first five videos of a public model, channel, or playlist before filters are applied; a license is needed for the full collection. Account collections are exempt from this preview. Duration, quality, date, and text filters can remove entries. Some pages also depend on region or account access. Only use the profile and playlist workflows supported for {{ guide.name }}.</p>
         {% endif %}
         <h3>The video still fails</h3>
         <p>Check your app version against the <a href="/releases">release notes</a>, confirm that the page is accessible in your browser, and try fetching it again. Website changes can break support. If it continues, <a href="/help">contact support</a> with the app version, operating system, and exact error. Keep passwords, session tokens, and cookies out of your message.</p>
@@ -57,7 +68,7 @@
     </section>
     <aside class="guide-related" aria-labelledby="related-title">
         <h2 id="related-title">More download guides</h2>
-        <ul>{% for key, related in guides.items() %}{% if loop.index <= 5 and key != provider %}<li><a href="/guides/download-{{ key }}-videos">{{ related.name }} videos</a></li>{% endif %}{% endfor %}</ul>
+        <ul>{% for key, related in related_guides.items() %}<li><a href="/guides/download-{{ key }}-videos">{{ related.name }} videos</a></li>{% endfor %}</ul>
         <a href="/guides">All 15 supported website guides →</a>
     </aside>
 </article>

@@ -52,7 +52,7 @@ class MarketingTests(ServerTestCase):
             self.assertIn(f'<th scope="row"><a href="/guides/download-{website[0].lower()}-videos">{website[0]}</a></th>'.encode(), page)
         self.assertEqual(page.count(b'<th scope="row">'), 15)
         self.assertIn(b'not affiliated with', page)
-        self.assertIn(b'Introducing v3.9', page)
+        self.assertIn(b'Porn Fetch 3.8.82 beta', page)
         self.assertIn(b'Arch Linux', page)
         self.assertIn(b'preload="none"', page)
         self.assertIn(b'data-src="/static/media/porn-fetch-promo.mp4"', page)

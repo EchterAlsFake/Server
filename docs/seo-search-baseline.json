@@ -1,0 +1,72 @@
+{
+  "recordedAt": "2026-11-05",
+  "source": "GSC Wizard, live Search Console API",
+  "range": {
+    "startDate": "2026-10-06",
+    "endDate": "2026-11-02"
+  },
+  "settledThrough": "2026-11-03",
+  "site": "sc-domain:pornfetch.to",
+  "totals": {
+    "clicks": 2529,
+    "impressions": 26153,
+    "ctrPercent": 9.67001873590028,
+    "averagePosition": 7.574924482850916
+  },
+  "guideClicks": 2479,
+  "deviceClicks": {
+    "mobile": 2129,
+    "desktop": 375,
+    "tablet": 25
+  },
+  "leadingPages": [
+    {
+      "provider": "xvideos",
+      "clicks": 764,
+      "impressions": 7329
+    },
+    {
+      "provider": "xhamster",
+      "clicks": 354,
+      "impressions": 5407
+    },
+    {
+      "provider": "beeg",
+      "clicks": 334,
+      "impressions": 1857
+    },
+    {
+      "provider": "eporner",
+      "clicks": 284,
+      "impressions": 3279
+    },
+    {
+      "provider": "xnxx",
+      "clicks": 236,
+      "impressions": 2028
+    }
+  ],
+  "sitemap": {
+    "urls": 34,
+    "urlsWithImpressions": 32,
+    "errors": 0,
+    "warnings": 0
+  },
+  "limitations": [
+    "Fewer than 14 settled days since first data; prior comparison has no data.",
+    "Query rows omit approximately 34.64 percent of property clicks.",
+    "GA4 disconnected by choice; no individual search-to-download attribution.",
+    "CrUX API key not configured; field performance unavailable through this connection.",
+    "Requests, partial requests and bytes are not completed downloads or installations."
+  ],
+  "annotations": [
+    {
+      "date": "2026-10-25",
+      "event": "Initial guides published and indexing configuration corrected; see historical operations notes."
+    },
+    {
+      "date": "2026-11-05",
+      "event": "Follow-up implementation prepared locally; deployment date not established."
+    }
+  ]
+}

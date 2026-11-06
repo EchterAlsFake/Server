@@ -1,0 +1,123 @@
+{
+  "measuredAt": "2026-11-05T14:10:40.603464+00:00",
+  "origin": "https://pornfetch.to",
+  "lighthouseVersion": "13.5.0",
+  "settings": {
+    "formFactor": "mobile",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "throttlingMethod": "simulate",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    }
+  },
+  "pages": [
+    {
+      "path": "/",
+      "finalUrl": "https://pornfetch.to/",
+      "scores": {
+        "performance": 0.98,
+        "accessibility": 1,
+        "seo": 1
+      },
+      "metrics": {
+        "largest-contentful-paint": 1437.713,
+        "cumulative-layout-shift": 0,
+        "total-blocking-time": 0,
+        "total-byte-weight": 97299
+      },
+      "warnings": []
+    },
+    {
+      "path": "/guides/download-xvideos-videos",
+      "finalUrl": "https://pornfetch.to/guides/download-xvideos-videos",
+      "scores": {
+        "performance": 1,
+        "accessibility": 1,
+        "seo": 1
+      },
+      "metrics": {
+        "largest-contentful-paint": 1110.482,
+        "cumulative-layout-shift": 0,
+        "total-blocking-time": 0,
+        "total-byte-weight": 52140
+      },
+      "warnings": []
+    },
+    {
+      "path": "/guides/download-xhamster-videos",
+      "finalUrl": "https://pornfetch.to/guides/download-xhamster-videos",
+      "scores": {
+        "performance": 1,
+        "accessibility": 1,
+        "seo": 1
+      },
+      "metrics": {
+        "largest-contentful-paint": 1113.551,
+        "cumulative-layout-shift": 0,
+        "total-blocking-time": 0,
+        "total-byte-weight": 52184
+      },
+      "warnings": []
+    },
+    {
+      "path": "/download",
+      "finalUrl": "https://pornfetch.to/download",
+      "scores": {
+        "performance": 1,
+        "accessibility": 1,
+        "seo": 1
+      },
+      "metrics": {
+        "largest-contentful-paint": 1194.304,
+        "cumulative-layout-shift": 0,
+        "total-blocking-time": 0,
+        "total-byte-weight": 95473
+      },
+      "warnings": []
+    },
+    {
+      "path": "/download/android",
+      "finalUrl": "https://pornfetch.to/download/android",
+      "scores": {
+        "performance": 1,
+        "accessibility": 1,
+        "seo": 1
+      },
+      "metrics": {
+        "largest-contentful-paint": 1130.929,
+        "cumulative-layout-shift": 0,
+        "total-blocking-time": 0,
+        "total-byte-weight": 95462
+      },
+      "warnings": []
+    },
+    {
+      "path": "/download/ios",
+      "finalUrl": "https://pornfetch.to/download/ios",
+      "scores": {
+        "performance": 0.98,
+        "accessibility": 1,
+        "seo": 1
+      },
+      "metrics": {
+        "largest-contentful-paint": 1138.1019999999999,
+        "cumulative-layout-shift": 0,
+        "total-blocking-time": 0,
+        "total-byte-weight": 95450
+      },
+      "warnings": []
+    }
+  ],
+  "stage": "Production baseline before local SEO follow-up deployment; includes real visit script and release catalog."
+}

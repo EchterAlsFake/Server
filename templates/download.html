@@ -45,6 +45,7 @@
 </div>
 </details>
 <details class="installation-guide compact-guide" id="guide-{{ card.key }}"><summary>Installation guide for {{ card.name }}</summary><ol>{% for step in card.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% if card.key == 'cli' %}{% include 'partials/ios_warning.html' %}<p><a href="/download/android">Android / Termux guide</a> · <a href="/download/ios">iOS guide</a></p>{% endif %}<p>Next: <a href="/guides">learn how to save your first video</a>. Need help? <a href="mailto:support@echteralsfake.me">Contact support</a> with your version, platform and exact error.</p></details>
+{% if card.key == "android" %}{% include "partials/android_account_screenshot.html" %}{% endif %}
 </section>
 {% endfor %}
 <p><a data-download-retry hidden>Download interrupted? Retry via compatibility server</a></p>
