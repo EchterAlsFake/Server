@@ -1,0 +1,28 @@
+/* UX hierarchy: reuse the existing dark palette, type and pink accent. */
+.legal-utility { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px 22px; padding:8px 25px; border-top:1px solid var(--line); font-size:var(--text-caption); }
+.legal-utility > span { color:var(--color-text-muted); }
+.legal-utility a { color:var(--color-text-muted); text-underline-offset:3px; }
+.legal-utility .withdrawal-link { color:var(--color-accent); font-weight:650; }
+.free-summary { color:var(--color-text-muted); font-size:var(--text-secondary); margin:18px 0; }
+.product-actions { align-items:center; }
+.plan-comparison { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-block:28px; }
+.plan-comparison article { padding:28px; border:1px solid var(--line); border-radius:12px; background:var(--color-surface); }
+.plan-comparison h3 { font-size:1.5rem; }
+.plan-comparison li { margin-block:10px; }
+.plan-price { font-size:2rem; margin-block:12px; }
+.plan-price span { font-size:var(--text-secondary); color:var(--color-text-muted); }
+.ux-disclosure { border-block:1px solid var(--line); padding:18px 0; }
+.ux-disclosure > summary { cursor:pointer; font-weight:600; padding:10px 0; }
+.ux-disclosure > :not(summary) { margin-top:20px; }
+@media(max-width:600px) {
+ .legal-utility { justify-content:flex-start; gap:4px 16px; padding:8px 20px; font-size:12px; }
+ .legal-utility a { padding-block:5px; }
+ .legal-utility > span { display:none; }
+ .product-hero { padding-top:28px; }
+ .hero-description { font-size:17px; line-height:1.6; }
+ .product-actions { display:flex; flex-direction:column; gap:12px; }
+ .product-actions .btn { width:100%; }
+ .product-actions .text-link { padding:10px; }
+ .plan-comparison { grid-template-columns:1fr; gap:16px; }
+ .plan-comparison article { padding:22px; }
+}
