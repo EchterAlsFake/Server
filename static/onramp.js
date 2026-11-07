@@ -56,7 +56,7 @@
                 acknowledgment_token: token, delivery_email: document.getElementById('delivery-email').value,
                 country: form.dataset.country,
                 age_confirmed: checked('card-age'), terms_accepted: checked('card-terms'),
-                withdrawal_accepted: checked('card-withdrawal'), annual_terms_acknowledged: checked('card-annual'), kyc_acknowledged: accepted.checked
+                withdrawal_accepted: checked('card-withdrawal'), lifetime_terms_acknowledged: checked('card-lifetime'), kyc_acknowledged: accepted.checked
             });
             window.location.assign(data.status_url);
         } catch (e) {

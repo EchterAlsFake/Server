@@ -92,7 +92,7 @@ class MarketingTests(ServerTestCase):
         self.assertEqual(home.count(b'Download Free'), 3)
         self.assertIn(b'aria-label="Legal information"', home)
         options = self.client.get('/porn_fetch').data
-        self.assertIn(b'No automatic renewal', options)
+        self.assertIn(b'No subscription or renewal payments', options)
         self.assertIn(b'One-time Shop purchase', options)
         self.assertNotIn(b'recurring membership until cancelled', options)
         self.assertIn(b'Test preview', options)
@@ -119,8 +119,7 @@ class MarketingTests(ServerTestCase):
         self.assertEqual(self.client.post('/payment-preview/patreon', data={}).status_code, 400)
         accepted = self.client.post('/payment-preview/patreon', data={'confirm_no_payment': 'yes'})
         self.assertEqual(accepted.status_code, 200)
-        self.assertIn(b'id="provider-launch"', accepted.data)
-        self.assertIn(b'https://www.patreon.com/', accepted.data)
+        self.assertIn(b'https://www.patreon.com/c/echteralsfake/shop', accepted.data)
         card = self.client.post('/payment-preview/card', data={'confirm_no_payment': 'yes'})
         self.assertEqual(card.headers['Location'], '/buy_card')
         self.assertEqual(self.client.get('/payment-preview/unknown').status_code, 404)

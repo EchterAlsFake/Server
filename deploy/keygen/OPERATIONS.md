@@ -4,7 +4,9 @@
 > MSI uses rootless Podman, systemd TPM credentials and Keygen CE 1.8. The authoritative
 > current runbook is `/srv/infra/msi/KEYGEN-PRODUCTION-LICENSING.md`. Do not run the
 > historical Docker/bootstrap/backup commands on MSI. The current commercial policy
-> is `7038281b-2429-4aa4-81db-4f04a87e7184`; the earlier beta policy is preserved.
+> must be verified against the lifetime offer before accepting payments. The bundled
+> public configuration records the previous policy ID; reconcile it with the explicitly
+> provisioned lifetime policy and the actual application build.
 
 Production: `/srv/keygen`; API: `https://licenses.pornfetch.to`.
 The loopback API listens on port 8004. PostgreSQL and Redis have no host port bindings.
@@ -28,15 +30,14 @@ The product token has the product's CE permissions and no expiry; rotate it expl
 by creating a replacement locally, updating the purchase service, verifying issuance,
 and revoking the old token. CE does not provide EE's granular permission management.
 
-The bootstrap script provisions a separate protected annual-update Ed25519 policy:
-`duration=31556952`, `expirationBasis=FROM_FIRST_ACTIVATION`,
+The bootstrap script provisions a protected lifetime Ed25519 policy with
+`duration=null`, `expirationBasis=FROM_FIRST_ACTIVATION`,
 `expirationStrategy=MAINTAIN_ACCESS`, `renewalBasis=FROM_NOW_IF_EXPIRED`, ten
-installations and license authentication. The update year starts on first activation;
-eligible older builds remain usable after that year, with normal periodic validation.
-No payment or automatic renewal is initiated by this policy.
+installations and license authentication. License expiry remains null after activation;
+o release-date cutoff or renewal payment applies. Offline permits still expire.
 
 An existing policy supplied through `KEYGEN_POLICY_ID` is verified, never rewritten.
-Without an ID, bootstrap uses the named annual policy and leaves old perpetual/beta
+Without an ID, bootstrap uses the named lifetime policy and leaves old perpetual/beta
 policies untouched. If saved credentials point to another policy, bootstrap stops
 without overwriting them. Reconcile server configuration and the public client policy
 explicitly; do not silently repoint existing licenses or regenerate signing keys.
@@ -49,7 +50,7 @@ from the actual client build you will distribute:
 .venv/bin/python -m flask --app main verify-license-policy --client-config /path/to/Porn_Fetch/src/licensing/production.json
 ```
 
-New issuance also verifies the remote annual policy before creating a license. A
+New issuance also verifies the remote lifetime policy before creating a license. A
 mismatch stops issuance safely for retry; the existing signed license path is retained
 for historical delivery. Run the verification before accepting money, rather than
 waiting for a fulfillment failure. This repository change does not provision or alter
@@ -126,3 +127,28 @@ database together if a migration was applied.
 
 Deploy purchase code with `sudo eaf-deploy server`. Preserve existing sandbox/live mode
 and provider credentials. No schema-1 license compatibility is provided.
+
+## Permanent shutdown
+
+The published lifetime offer commits to an offline unlock before permanent shutdown.
+Before retiring licensing: publish a signed application release that verifies existing
+signed lifetime keys locally, removes periodic validation and server-side installation
+registration, and preserves Premium in every released version it supports. Provide
+migration/import instructions and retain a downloadable unlock release and license
+recovery long enough for buyers to save them. Test with networking disabled, expired
+cached permits, restart, and reinstallation from a saved license file. Announce the
+closure and download location on the website and in the app before disabling service.
+Do not shut down validation until the offline release is publicly available. The
+current release still needs periodic validation; an offline unlock is a future shutdown
+obligation, not a feature already shipped.
+
+## Lifetime launch checklist
+
+Provision and verify the lifetime policy explicitly (never mutate live policy through
+website startup). Match server `KEYGEN_POLICY_ID`, bundled public client configuration,
+and the actual app's configuration; keep signing keys unchanged. Run the read-only
+`verify-license-policy` command and a synthetic issue/activate/check-out cycle to prove
+expiry stays null. Publish the updated client before enabling the offer. Set Patreon
+Shop to EUR 29.99 and lifetime copy; verify its product variant. Confirm direct provider
+quotes, settlement amounts and invoices agree on EUR 29.99. No live configuration is
+changed by this repository update.

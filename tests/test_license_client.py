@@ -51,7 +51,7 @@ class ClientTests(unittest.TestCase):
     def test_provisional_deadline_survives_restart_and_reimport(self):
         first = self.import_file()
         self.assertEqual(first.state, "provisional")
-        self.now += 604799
+        self.now += 3 * 86400 - 1
         self.client = self.make_client()
         self.assertTrue(self.import_file().allowed)
         self.now += 1

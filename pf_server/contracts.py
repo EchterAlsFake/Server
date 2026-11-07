@@ -12,7 +12,7 @@ from sqlalchemy import update
 from .extensions import db
 from .models import CheckoutAgreement, Transaction
 
-VERSION = "contract-2026-11-06-v6"
+VERSION = "contract-2026-11-07-lifetime-v1"
 IMMEDIATE_EN = "I expressly consent to immediate digital supply before the 14-day withdrawal period ends. I understand that I lose my withdrawal right when supply starts, provided I receive the required contract confirmation."
 REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
 
@@ -31,9 +31,11 @@ class PlainText(HTMLParser):
             self.parts.append("\n")
 
 
-def text_template(name):
+def text_template(name, **context):
+    from .offer import PREMIUM_PRICE_TEXT
+    context.setdefault("premium_price", PREMIUM_PRICE_TEXT)
     parser = PlainText()
-    parser.feed(current_app.jinja_env.get_template(name).render())
+    parser.feed(current_app.jinja_env.get_template(name).render(**context))
     return "\n".join(line.strip() for line in "".join(parser.parts).splitlines() if line.strip())
 
 

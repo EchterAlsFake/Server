@@ -196,9 +196,9 @@ class CountryComplianceTests(ServerTestCase):
     def test_tax_summary_aggregates_country_totals_without_identifiers(self):
         with main.app.app_context():
             for suffix, country, amount in (
-                ("fr-one", "France", "19.99"),
+                ("fr-one", "France", "29.99"),
                 ("fr-two", "France", "30"),
-                ("de", "Germany", "19.99"),
+                ("de", "Germany", "29.99"),
             ):
                 main.db.session.add(
                     Transaction(
@@ -222,7 +222,7 @@ class CountryComplianceTests(ServerTestCase):
             summary = country_transaction_summary(2026)
 
         self.assertEqual(
-            summary["eu_cross_border_configured_price_total_eur"], "49.99"
+            summary["eu_cross_border_configured_price_total_eur"], "59.99"
         )
         self.assertEqual(len(summary["rows"]), 2)
         self.assertNotIn("NP-tax", repr(summary))

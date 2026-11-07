@@ -64,26 +64,15 @@ class PaymentTests(ServerTestCase):
         with main.app.app_context():
             self.assertEqual(Transaction.query.count(), 0)
 
-    def test_verified_renewal_replay_and_download_keep_same_license(self):
-        from license_fixtures import LICENSE, signed_key
+    def test_retired_renewal_transaction_cannot_issue_a_new_license(self):
+        from license_fixtures import LICENSE
         self.add_transaction('NP-renewal', 'invoice-renewal')
         with main.app.app_context():
             transaction = main.db.session.get(Transaction, 'NP-renewal')
             transaction.renewal_license_id = LICENSE
             main.db.session.commit()
-        payload = {'order_id': 'NP-renewal', 'invoice_id': 'invoice-renewal',
-                   'payment_id': 'payment-renewal', 'payment_status': 'finished',
-                   'price_amount': 19.99, 'price_currency': 'eur'}
-        with patch.object(licensing, 'renew_verified_payment', return_value={
-                'attributes': {'key': signed_key()}}) as renew:
-            self.assertEqual(self.post_nowpayments(payload).status_code, 200)
-            self.assertEqual(self.post_nowpayments(payload).status_code, 200)
-            self.assertEqual(renew.call_count, 1)
-            response = self.client.get('/download_license?session_id=NP-renewal')
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(json.loads(response.data)['license_key'], signed_key())
-            self.assertEqual(renew.call_args_list[0], renew.call_args_list[1])
-        with main.app.app_context():
+            with self.assertRaisesRegex(ValueError, 'no longer supported'):
+                licensing.fulfill_transaction_license(transaction)
             self.assertEqual(License.query.count(), 0)
 
     def test_checkout_requires_explicit_terms_acceptance(self):
@@ -135,7 +124,7 @@ class PaymentTests(ServerTestCase):
                     session_id=session_id,
                     provider_payment_id=provider_id,
                     provider_reference_type=reference_type,
-                    expected_price_amount="30" if reference_type == "payment" else "19.99",
+                    expected_price_amount="30" if reference_type == "payment" else "29.99",
                     expected_price_currency="eur",
                     customer_country="Germany",
                     country_evidence="customer_declaration+local_ip_geolocation",
@@ -228,7 +217,7 @@ class PaymentTests(ServerTestCase):
             "payment_id": "payment-456",
             "invoice_id": "invoice-123",
             "payment_status": "finished",
-            "price_amount": 19.99,
+            "price_amount": 29.99,
             "price_currency": "EUR",
             "pay_amount": 0.01,
             "actually_paid": 0.01,
@@ -289,7 +278,7 @@ class PaymentTests(ServerTestCase):
                     "payment_id": f"payment-{suffix}",
                     "invoice_id": f"invoice-{suffix}",
                     "payment_status": "finished",
-                    "price_amount": 19.99,
+                    "price_amount": 29.99,
                     "price_currency": "eur",
                     "actually_paid": 0.01,
                     "pay_currency": "btc",
@@ -338,7 +327,7 @@ class PaymentTests(ServerTestCase):
             "payment_id": "payment-unknown",
             "invoice_id": "invoice-unknown",
             "payment_status": "finished",
-            "price_amount": 19.99,
+            "price_amount": 29.99,
             "price_currency": "eur",
             "actually_paid": 0.01,
             "pay_currency": "btc",
@@ -370,7 +359,7 @@ class PaymentTests(ServerTestCase):
                 "payment_id": "payment-stale",
                 "invoice_id": "invoice-stale",
                 "payment_status": "finished",
-                "price_amount": 19.99,
+                "price_amount": 29.99,
                 "price_currency": "eur",
                 "actually_paid": 0.01,
                 "pay_currency": "btc",
@@ -390,7 +379,7 @@ class PaymentTests(ServerTestCase):
             "payment_id": "payment-storage-retry",
             "invoice_id": "invoice-storage-retry",
             "payment_status": "finished",
-            "price_amount": 19.99,
+            "price_amount": 29.99,
             "price_currency": "eur",
             "actually_paid": 0.01,
             "pay_currency": "btc",
@@ -427,7 +416,7 @@ class PaymentTests(ServerTestCase):
                     "order_id": session_id,
                     "payment_id": f"payment-{suffix}",
                     "invoice_id": f"invoice-{suffix}",
-                    "price_amount": 19.99,
+                    "price_amount": 29.99,
                     "price_currency": "eur",
                     "actually_paid": 0.01,
                     "pay_currency": "btc",
@@ -488,7 +477,7 @@ class PaymentTests(ServerTestCase):
                 Transaction, response.get_json()["session_id"]
             )
             self.assertEqual(transaction.provider_reference_type, "invoice")
-            self.assertEqual(transaction.expected_price_amount, "19.99")
+            self.assertEqual(transaction.expected_price_amount, "29.99")
             self.assertEqual(transaction.expected_price_currency, "eur")
             self.assertIsNone(transaction.expected_pay_amount)
             self.assertEqual(transaction.customer_country, "Germany")
@@ -589,7 +578,7 @@ class PaymentTests(ServerTestCase):
                     session_id="NP-repeat-download",
                     provider_payment_id="invoice-repeat-download",
                     provider_reference_type="invoice",
-                    expected_price_amount="19.99",
+                    expected_price_amount="29.99",
                     expected_price_currency="eur",
                     customer_country="Germany",
                     country_evidence="customer_declaration+local_ip_geolocation",
@@ -624,7 +613,7 @@ class PaymentTests(ServerTestCase):
                     session_id="NP-simulated-invoice",
                     provider_payment_id="mock-invoice",
                     provider_reference_type="invoice",
-                    expected_price_amount="19.99",
+                    expected_price_amount="29.99",
                     expected_price_currency="eur",
                     customer_country="Germany",
                     country_evidence="customer_declaration+local_ip_geolocation",

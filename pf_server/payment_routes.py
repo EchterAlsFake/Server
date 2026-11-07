@@ -39,7 +39,7 @@ from .logging_config import safe_log_reference
 from .models import CryptoLicenseDelivery, License, OnrampCheckout, PaymentProgress, Transaction
 from .payment_progress import hosted_checkout_url, public_progress, record_nowpayments, refresh_providers
 from .crypto_delivery import deliver_crypto_license, encrypt_recipient
-from .keygen_service import KeygenUnavailable, renewal_target
+from .keygen_service import KeygenUnavailable
 from .nowpayments_service import (
     PaymentProviderError,
     create_crypto_invoice,
@@ -322,6 +322,8 @@ def create_crypto_payment():
         return jsonify({
             "error": "Please acknowledge that this is a test site and no real purchase is made."
         }), 400
+    if "renewal_license_key" in data or "renewal_license_id" in data:
+        return jsonify(error="Lifetime Premium does not require renewal. Start a new lifetime purchase."), 400
     country, country_error = validate_checkout_country(data)
     if country_error:
         return country_error
@@ -341,17 +343,13 @@ def create_crypto_payment():
     from .contracts import checkout_snapshot
     contract_snapshot = checkout_snapshot("crypto", data.get("country"))
     try:
-        target = renewal_target(data['renewal_license_key']) if data.get('renewal_license_key') else None
         result = create_crypto_invoice(
             country.country_name,
             country.evidence_source,
             country.database_label,
             delivery_recipient_encrypted=encrypted_recipient,
             contract_snapshot=contract_snapshot,
-            **({"renewal_license_id": target} if target else {}),
         )
-    except ValueError:
-        return jsonify({'error': 'Renewal requires an activated commercial license.'}), 400
     except KeygenUnavailable:
         return jsonify({'error': 'Licensing is temporarily unavailable.'}), 503
     except (PaymentProviderError, SQLAlchemyError):

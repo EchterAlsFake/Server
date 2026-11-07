@@ -24,7 +24,7 @@
         {% endif %}
         <p><strong>Additional fees:</strong> 3% Onramp Pay fee, plus possible provider, network and exchange-rate costs. Banxa displays the final quote in USD before payment.</p>
     </div>
-    <label class="card-annual-agreement"><input id="card-annual" type="checkbox" required><span>I understand this is one payment for Premium access in releases published within one year of first activation. Premium remains available in eligible versions afterwards. App updates are free; Premium in later releases requires renewed entitlement.</span></label>
+    <label class="card-lifetime-agreement"><input id="card-lifetime" type="checkbox" required><span>I understand this is one payment for lifetime Premium, including every future Porn Fetch update and feature released. Future development has no guaranteed duration. Activation and periodic validation apply.</span></label>
     <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
     <button id="card-review" class="nowpayments-btn" type="submit" disabled>Continue to secure checkout <span aria-hidden="true">→</span></button>
     <p id="card-js-help" class="checkout-caption">Enable JavaScript to review the payment route.</p>
@@ -38,7 +38,7 @@
 <p>Porn Fetch does not receive Banxa’s KYC submissions. I receive only the separate license-delivery email entered here. Providers have their own policies: <a href="https://banxa.com/privacy-policy/" target="_blank" rel="noopener noreferrer">Banxa ↗</a> · <a href="https://www.onramp-pay.com/privacy-policy" target="_blank" rel="noopener noreferrer">Onramp Pay ↗</a>. See my <a href="/privacy_policy">privacy policy</a> for license delivery.</p>
 {% endcall %}
 {% call question('card-fees', 'Are there additional fees?') %}
-<p>Yes. The €19.99 license price excludes the 3% Onramp Pay fee and any Banxa/provider fees, network costs or currency conversion. The provider quote is in USD; exchange-rate differences can affect what you pay.</p>
+<p>Yes. The €{{ premium_price }} license price excludes the 3% Onramp Pay fee and any Banxa/provider fees, network costs or currency conversion. The provider quote is in USD; exchange-rate differences can affect what you pay.</p>
 <p>The funding estimate covers the Onramp Pay deduction, but is not a final all-inclusive quote. Review Banxa’s final quote before payment. An insufficient deposit needs support and does not automatically issue a license.</p>
 {% endcall %}
 {% call question('card-route', 'How does my payment work?') %}
@@ -64,10 +64,10 @@
         <p>Email verification is mandatory. Eligible Express verification asks for personal details such as your name, residential address and date of birth; EU residents need a Tax identification number (TIN). US customers may need their SSN.</p>
         <p>Express checks do not require ID documents or a selfie. Eligibility depends on your region, payment history and provider risk checks. Banxa can require documents, a selfie or additional information; Express verification is not guaranteed.</p>
         <p>I do not receive Banxa’s KYC submissions. I receive only the separate license-delivery email entered on this website for license delivery.</p>
-        <p>Your purchase covers Premium in releases published within one year of first activation, continued Premium access in eligible builds afterwards and no automatic license renewal. App updates and desktop download history and statistics are free.</p>
+        <p>Your lifetime Premium license never expires. Every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. No renewal payments.</p>
         <p><a href="https://docs.banxa.com/reference/global-kyc-framework" target="_blank" rel="noopener noreferrer">Banxa verification requirements ↗</a></p>
     </div>
-    <label class="card-annual-agreement"><input id="card-kyc" type="checkbox"><span>I understand the route, possible verification requirements and annual Premium release entitlement.</span></label>
+    <label class="card-lifetime-agreement"><input id="card-kyc" type="checkbox"><span>I understand the route, possible verification requirements and lifetime Premium entitlement.</span></label>
     <p id="kyc-countdown" role="status" aria-live="polite"></p><p id="kyc-error" class="checkout-error" role="alert" tabindex="-1"></p>
     <div class="checkout-actions"><button id="kyc-cancel" type="button" class="btn btn-secondary">Cancel</button><button id="kyc-continue" type="button" class="btn btn-primary" disabled>Continue</button></div>
 </dialog>

@@ -137,7 +137,7 @@ Keep Node 24, the shared uv binary and `/usr/local/share/eaf-python` maintained.
 Existing environments reference installed Python runtimes; preserve those runtimes
 while any deployment or rollback environment still uses them.
 
-Optional Banxa annual-license checkout setup, token compatibility verification, delivery
+Optional Banxa lifetime-license checkout setup, token compatibility verification, delivery
 timer installation and rollback: [Onramp checkout operations](../docs/ONRAMP_CHECKOUT.md).
 
 

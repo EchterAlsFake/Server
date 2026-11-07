@@ -1,8 +1,13 @@
 # Patreon Shop operations
 
-The email-only `/activate` queue uses the existing annual Keygen policy and SMTP
+The email-only `/activate` queue uses the verified lifetime Keygen policy and SMTP
 transport. It never accepts an order ID or returns license data to the browser.
 Patreon membership webhooks, tier checks and subscription delivery have been removed. Only Shop sales are verified.
+
+There is no separate security-period agreement or mailbox challenge before purchase.
+Set the Patreon Shop listing to EUR 29.99 for lifetime Premium, including every future
+Porn Fetch update and feature released, before enabling purchases. Patreon still
+handles its own fees and taxes. Update `PATREON_SHOP_PRODUCT_VARIANT_ID` if needed.
 
 ## Configure and enable
 
@@ -53,7 +58,7 @@ plus tags or dots. Purchases are keyed by internal Patreon order ID. A request
 selects the newest eligible order without a license; otherwise it resends the
 latest eligible issued license. Multiple historical unissued purchases are handled
 one per claim, subject to the fifteen-minute cooldown. A later purchase creates a
-new annual license, not an extension of the previous key.
+new lifetime Premium license, not an extension of the previous key.
 
 Timeouts, redirects, authentication failures, blocks, 429s, invalid JSON/schema,
 and incomplete scans open a durable circuit breaker. 429 retry delays are honored;

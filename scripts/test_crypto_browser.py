@@ -98,7 +98,7 @@ def run(browser_name="chromium"):
                 page.locator("#" + checkbox).check()
             page.locator("#checkout-continue").click()
             expect(page).to_have_url(origin + "/buy_license")
-            expect(page.locator(".nowpayments-amount")).to_have_text("€19.99")
+            expect(page.locator(".nowpayments-amount")).to_have_text("€29.99")
             expect(page.locator("#checkout-country")).to_have_count(0)
             expect(page.locator("#chk-age")).to_have_count(0)
             expect(page.locator("#pay-btn")).to_be_enabled()

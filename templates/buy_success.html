@@ -5,7 +5,7 @@
     <a href="/porn_fetch" class="text-link">← Payment methods</a>
     <header class="crypto-heading"><p class="eyebrow">Every step, in view.</p><h1>Your payment, on its way.</h1></header>
     <section class="tracking-card" aria-labelledby="payment-progress-title">
-        {% if beta %}{% include "onramp_beta_notice.html" %}{% else %}<p class="widget-delivery-note">One year of Premium release coverage from first activation. Keep Premium in eligible builds afterwards. App updates and desktop download history and statistics are free. No automatic license renewal.</p>{% endif %}
+        {% if beta %}{% include "onramp_beta_notice.html" %}{% else %}<p class="widget-delivery-note">Lifetime Premium. Your license never expires, and every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. No renewal payments.</p>{% endif %}
         <div class="tracking-card-heading"><span class="tracking-pulse" aria-hidden="true"></span><span>{{ 'Banxa → Onramp Pay → NOWPayments' if is_card_checkout else 'NOWPayments cryptocurrency checkout' }}</span></div>
         <div id="loading-container"><h2 id="payment-progress-title">Checking your payment status…</h2><p id="payment-progress-message">This page follows the payment through to your license. Keep it open while you complete checkout.</p></div>
         <ol id="payment-progress-steps" class="payment-timeline" aria-label="Payment progress"></ol>
@@ -43,7 +43,7 @@
         <p class="invoice-reference">Invoice <strong id="invoice-display"></strong></p>
         <div class="checkout-actions"><a href="/download_license?{{ access_query }}" class="btn btn-primary">Download License Key File</a><a href="/download_invoice?{{ access_query }}" class="btn btn-secondary">Download Invoice</a>{% if has_contract %}<a href="/download_contract?{{ access_query }}" class="btn btn-secondary">Contract confirmation / Vertragsbestätigung</a>{% endif %}</div>
         {% if is_card_checkout %}<p id="card-delivery-status" role="status"></p><code id="card-license-key" aria-label="Your signed license" class="signed-license"></code>{% else %}<div class="crypto-license-result"><label for="crypto-license-key">Your signed license key</label><textarea id="crypto-license-key" readonly rows="4"></textarea><p id="crypto-delivery-status" role="status"></p></div>{% endif %}
-        <details class="activation-instructions"><summary>How to activate Porn Fetch</summary><ol><li>Download the <code>porn_fetch.license</code> file above.</li><li>Open settings in the app.</li><li>Choose <strong>Activate License</strong> and select your downloaded file.</li><li>Your year of Premium release coverage starts at first activation. Keep Premium in eligible versions afterwards, subject to normal validation. App updates are free.</li></ol></details>
+        <details class="activation-instructions"><summary>How to activate Porn Fetch</summary><ol><li>Download the <code>porn_fetch.license</code> file above.</li><li>Open settings in the app.</li><li>Choose <strong>Activate License</strong> and select your downloaded file.</li><li>Your Premium license never expires. Every future Porn Fetch update and feature I release is included. Activation and periodic validation apply.</li></ol></details>
     </section>
     <p id="payment-status-announcement" class="visually-hidden" role="status" aria-live="polite"></p>
 </div>

@@ -35,6 +35,8 @@ def run():
             page.locator('#method-crypto').check()
             for name in ('chk-age-terms', 'chk-refund-method', 'chk-test-site'):
                 page.locator('#' + name).check()
+            expect(page.locator('#security-updates-agreement')).to_have_count(0)
+            expect(page.locator('#chk-security-updates')).to_have_count(0)
             page.locator('#checkout-continue').click()
             expect(page).to_have_url(origin + '/buy_license')
             page.locator('#crypto-country').select_option('DE')
@@ -44,7 +46,7 @@ def run():
             expect(page.locator('#simulation-heading')).to_be_visible()
             assert not failures, failures
             browser.close()
-        print('Passed: CSP, CSRF, selection, consent, encrypted email and simulated payment creation.')
+        print('Passed: CSP, CSRF, selection, lifetime offer, encrypted email and simulated payment creation.')
     finally:
         server.shutdown()
         server.server_close()

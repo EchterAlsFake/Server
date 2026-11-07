@@ -52,7 +52,7 @@ def get_metadata():
 
 def include_object(obj, name, type_, reflected, compare_to):
     """Preserve historical membership records outside active application metadata."""
-    return not (type_ == "table" and name == "patreon_license_deliveries")
+    return not (type_ == "table" and name in {"patreon_license_deliveries", "patreon_email_challenges", "purchase_conditions", "purchase_consents", "purchase_consent_matches"})
 
 
 def run_migrations_offline():

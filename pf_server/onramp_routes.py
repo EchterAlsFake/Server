@@ -1,4 +1,4 @@
-"""Browser consent and Banxa annual-license checkout endpoints."""
+"""Browser consent and Banxa lifetime-license checkout endpoints."""
 
 import hashlib
 import secrets
@@ -79,12 +79,12 @@ def create_payment():
             "age_confirmed",
             "terms_accepted",
             "withdrawal_accepted",
-            "annual_terms_acknowledged",
+            "lifetime_terms_acknowledged",
             "kyc_acknowledged",
         )
     ):
         return jsonify(
-            error="Please accept all purchase, annual-license and KYC confirmations."
+            error="Please accept all purchase, lifetime-license and KYC confirmations."
         ), 400
     recipient = (
         normalize_recipient_email(data.get("delivery_email"))

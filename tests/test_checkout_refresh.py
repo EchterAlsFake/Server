@@ -193,7 +193,7 @@ class CheckoutRefreshTests(ServerTestCase):
             invoice_id="invoice-test",
             payment_id="payment-test",
             payment_status="finished",
-            price_amount=19.99,
+            price_amount=29.99,
             price_currency="eur",
             pay_amount=0.01,
             actually_paid=0.01,

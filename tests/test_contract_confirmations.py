@@ -61,6 +61,7 @@ class ContractConfirmationTests(ServerTestCase):
         for field in ('product', 'terms_en', 'withdrawal', 'refund_terms'):
             self.assertEqual(body.count(accepted[field]), 1, field)
         self.assertIn('English is authoritative', body)
+        self.assertNotIn('Security-update period separately accepted:', body)
         self.assertNotIn('Vertragsbestätigung', body)
         document = send.call_args.kwargs['confirmation_pdf']
         self.assertTrue(document.startswith(b'%PDF'))
@@ -75,6 +76,10 @@ class ContractConfirmationTests(ServerTestCase):
             self.assertTrue(accepted['immediate_supply_consent'])
             self.assertTrue(accepted['withdrawal_acknowledged'])
             self.assertTrue(accepted['refund_method_accepted'])
+            self.assertNotIn('security_updates_accepted', accepted)
+            self.assertNotIn('security_updates_en', accepted)
+            self.assertIn('perpetual license', accepted['terms_en'])
+            self.assertIn('Future development has no guaranteed duration', accepted['terms_en'])
             self.assertEqual(accepted['refund_en'], contracts.REFUND_EN)
             self.assertIn('90 days', accepted['refund_terms'])
         response = self.client.get('/download_contract', query_string={'session_id': order})
@@ -138,7 +143,7 @@ class ContractConfirmationTests(ServerTestCase):
 
     def test_legacy_orders_do_not_gain_fabricated_consent(self):
         with main.app.app_context():
-            tx = Transaction(session_id='legacy', status='finished', provider_payment_id='legacy-payment', provider_reference_type='invoice', expected_price_amount='19.99', expected_price_currency='eur', customer_country='Germany', country_evidence='test', geolocation_database='fixture', created_at=datetime.now(timezone.utc).isoformat())
+            tx = Transaction(session_id='legacy', status='finished', provider_payment_id='legacy-payment', provider_reference_type='invoice', expected_price_amount='29.99', expected_price_currency='eur', customer_country='Germany', country_evidence='test', geolocation_database='fixture', created_at=datetime.now(timezone.utc).isoformat())
             main.db.session.add(tx)
             main.db.session.commit()
             self.assertIsNone(contracts.confirmation(tx))
@@ -166,6 +171,21 @@ class ContractConfirmationTests(ServerTestCase):
         with main.app.app_context():
             self.assertEqual(CheckoutAgreement.query.count(), 0)
 
+    def test_security_period_consent_is_not_required_or_recorded(self):
+        for method in ('crypto', 'card', 'patreon'):
+            self.assertEqual(self.accept_checkout(method).status_code, 200)
+        with main.app.app_context():
+            for row in CheckoutAgreement.query.all():
+                data = json.loads(row.snapshot)
+                self.assertNotIn('security_updates_accepted', data)
+                self.assertNotIn('security_updates_en', data)
+                self.assertNotIn('12 months', data['terms_en'])
+
+    def test_price_change_changes_offer_digest(self):
+        original = self.offer_digest()
+        with patch('pf_server.offer.PREMIUM_PRICE_TEXT', '39.99'):
+            self.assertNotEqual(self.offer_digest(), original)
+
     def test_receipt_uses_accepted_text_and_is_private_to_current_session(self):
         self.accept_checkout('patreon')
         with main.app.app_context():
@@ -183,6 +203,9 @@ class ContractConfirmationTests(ServerTestCase):
         self.assertIn(reference, body)
         self.assertIn(accepted['refund_en'], body)
         self.assertIn(accepted['refund_terms'], body)
+        self.assertNotIn('Security-update period separately accepted:', body)
+        self.assertNotIn('security_updates_accepted', accepted)
+        self.assertIn(accepted['terms_en'], body)
         self.assertIn('Not automatically linked to a Patreon Shop purchase.', body)
         self.assertNotIn(accepted['immediate_en'], body)
         outsider = main.app.test_client()
@@ -206,18 +229,19 @@ class ContractConfirmationTests(ServerTestCase):
     def test_old_checkout_version_cannot_start_a_new_payment(self):
         self.accept_checkout()
         with self.client.session_transaction() as state:
-            state['checkout_consent'] = dict(state['checkout_consent'], version='checkout-v3')
+            state['checkout_consent'] = dict(state['checkout_consent'], version='checkout-v5')
         with patch('pf_server.nowpayments_service.httpx.post') as provider:
             self.assertEqual(self.client.post('/create-crypto-payment', json=self.payment()).status_code, 409)
             provider.assert_not_called()
 
-    def test_old_order_snapshot_does_not_gain_refund_consent(self):
+    def test_old_order_snapshot_does_not_gain_new_separate_consents(self):
         self.accept_checkout()
         order = self.create_invoice('buyer@example.com')
         with main.app.app_context():
             tx = main.db.session.get(Transaction, order)
             data = json.loads(tx.contract_snapshot)
-            for field in ('refund_method_accepted', 'refund_de', 'refund_en', 'refund_terms'):
+            for field in ('refund_method_accepted', 'refund_de', 'refund_en', 'refund_terms',
+                          'security_updates_accepted', 'security_updates_en'):
                 data.pop(field, None)
             tx.contract_snapshot = json.dumps(data)
             main.db.session.commit()
@@ -225,6 +249,7 @@ class ContractConfirmationTests(ServerTestCase):
              patch.object(crypto_delivery, 'send_license_email'):
             self.finish(order)
         self.assertNotIn('Refund method separately accepted:', render.call_args.args[0])
+        self.assertNotIn('Security-update period separately accepted:', render.call_args.args[0])
 
 
     def test_smtp_contains_original_confirmation_attachment_and_stable_identity(self):

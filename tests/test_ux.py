@@ -33,22 +33,22 @@ class SimplifiedUXTests(ServerTestCase):
     def test_free_start_and_essential_disclosures_are_available_without_scripts(self):
         page = self.client.get('/').text
         for text in ('Download Free', 'up to 720p', 'One active download', '5-video preview',
-                     'within 1 year of first activation', 'periodic online validation',
-                     'No automatic renewal', 'none guarantees anonymity', 'IP-derived check values'):
+                     'A perpetual Premium license', 'periodic online validation',
+                     'No subscription or renewal payments', 'none guarantees anonymity', 'IP-derived check values'):
             self.assertIn(text, page)
         self.assertLess(page.index('id="features"'), page.index('id="websites"'))
         self.assertLess(page.index('id="websites"'), page.index('id="premium"'))
         self.assertLess(page.index('id="premium"'), page.index('id="advanced-title"'))
-        self.assertIn('Preview Premium Checkout', page)
+        self.assertIn('Get lifetime Premium', page)
         with patch.dict(__import__('_support').main.app.config, NOWPAYMENTS_SANDBOX=False):
-            self.assertIn('Get Premium', self.client.get('/').text)
+            self.assertIn('Get lifetime Premium', self.client.get('/').text)
 
     def test_premium_summary_explains_the_same_entitlement_in_both_places(self):
         for path in ('/', '/porn_fetch'):
             page = self.client.get(path).text
-            for text in ('within 1 year of first activation', 'not the date you buy',
-                         'Keep Premium in eligible releases afterwards',
-                         'periodic online validation', 'No automatic renewal',
+            for text in ('A perpetual Premium license', 'Future development has no guaranteed duration',
+                         'Every future Porn Fetch update and feature I release is included',
+                         'periodic online validation', 'No subscription or renewal payments',
                          'Up to 10 active installations'):
                 self.assertIn(text, page)
 

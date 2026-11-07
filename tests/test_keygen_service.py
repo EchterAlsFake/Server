@@ -11,7 +11,7 @@ class KeygenTests(ServerTestCase):
         identity = str(uuid.uuid4())
         with main.app.app_context(), patch.dict(main.app.config, {"KEYGEN_POLICY_ID": POLICY}), patch.object(
             keygen_service, "request", side_effect=[
-                httpx.Response(404), httpx.Response(200, json={"data": {"id": POLICY, "attributes": keygen_service.ANNUAL_POLICY_ATTRIBUTES}}), httpx.Response(422), httpx.Response(200,json={"data": issuance(identity)})
+                httpx.Response(404), httpx.Response(200, json={"data": {"id": POLICY, "attributes": keygen_service.LIFETIME_POLICY_ATTRIBUTES}}), httpx.Response(422), httpx.Response(200,json={"data": issuance(identity)})
             ]) as request:
             result = keygen_service.ensure_license(identity)
             self.assertEqual(result["id"], identity)
@@ -36,17 +36,17 @@ class KeygenTests(ServerTestCase):
     def test_old_validation_endpoint_is_retired(self):
         self.assertEqual(self.client.post("/check_license", json={"license_key": "old"}).status_code, 410)
 
-    def test_annual_policy_is_verified_without_modifying_existing_policies(self):
+    def test_lifetime_policy_is_verified_without_modifying_existing_policies(self):
         with main.app.app_context(), patch.dict(main.app.config, {"KEYGEN_POLICY_ID": POLICY}):
-            for changes in ({"duration": None}, {"expirationBasis": "FROM_CREATION"}, {"expirationStrategy": "RESTRICT_ACCESS"}, {"maxMachines": 1}):
+            for changes in ({"duration": 31556952}, {"expirationBasis": "FROM_CREATION"}, {"expirationStrategy": "RESTRICT_ACCESS"}, {"maxMachines": 1}):
                 with self.subTest(changes=changes), patch.object(keygen_service, "request", side_effect=[
-                    httpx.Response(404), httpx.Response(200, json={"data": {"id": POLICY, "attributes": keygen_service.ANNUAL_POLICY_ATTRIBUTES | changes}})
+                    httpx.Response(404), httpx.Response(200, json={"data": {"id": POLICY, "attributes": keygen_service.LIFETIME_POLICY_ATTRIBUTES | changes}})
                 ]) as remote:
                     with self.assertRaises(keygen_service.KeygenUnavailable):
                         keygen_service.ensure_license(str(uuid.uuid4()))
                     self.assertEqual([call.args[0] for call in remote.call_args_list], ["GET", "GET"])
-            with patch.object(keygen_service, "request", return_value=httpx.Response(200, json={"data": {"id": POLICY, "attributes": keygen_service.ANNUAL_POLICY_ATTRIBUTES}})) as remote:
-                self.assertEqual(keygen_service.verify_annual_policy()["attributes"]["expirationStrategy"], "MAINTAIN_ACCESS")
+            with patch.object(keygen_service, "request", return_value=httpx.Response(200, json={"data": {"id": POLICY, "attributes": keygen_service.LIFETIME_POLICY_ATTRIBUTES}})) as remote:
+                self.assertEqual(keygen_service.verify_lifetime_policy()["attributes"]["expirationStrategy"], "MAINTAIN_ACCESS")
                 remote.assert_called_once_with("GET", "/policies/" + POLICY)
 
     def test_read_only_cli_requires_matching_shipped_client_policy(self):
@@ -56,12 +56,30 @@ class KeygenTests(ServerTestCase):
         with tempfile.TemporaryDirectory() as directory, patch.dict(main.app.config, {"KEYGEN_POLICY_ID": POLICY}):
             public = Path(directory) / 'production.json'
             public.write_text(json.dumps({'policy_id': POLICY}))
-            with patch.object(keygen_service, 'verify_annual_policy') as verify:
+            with patch.object(keygen_service, 'verify_lifetime_policy') as verify:
                 result = main.app.test_cli_runner().invoke(args=['verify-license-policy', '--client-config', str(public)])
                 self.assertEqual(result.exit_code, 0, result.output)
                 verify.assert_called_once_with()
             public.write_text(json.dumps({'policy_id': 'different-policy'}))
-            with patch.object(keygen_service, 'verify_annual_policy') as verify:
+            with patch.object(keygen_service, 'verify_lifetime_policy') as verify:
                 result = main.app.test_cli_runner().invoke(args=['verify-license-policy', '--client-config', str(public)])
                 self.assertNotEqual(result.exit_code, 0)
                 verify.assert_not_called()
+
+    def test_policy_with_missing_duration_is_not_treated_as_lifetime(self):
+        attributes = dict(keygen_service.LIFETIME_POLICY_ATTRIBUTES)
+        del attributes['duration']
+        with main.app.app_context(), patch.dict(main.app.config, KEYGEN_POLICY_ID=POLICY), patch.object(
+            keygen_service, 'request', return_value=httpx.Response(200, json={
+                'data': {'id': POLICY, 'attributes': attributes}})):
+            with self.assertRaises(keygen_service.KeygenUnavailable):
+                keygen_service.verify_lifetime_policy()
+
+    def test_issuance_rejects_a_license_with_an_expiration(self):
+        identity = str(uuid.uuid4())
+        data = issuance(identity)
+        data['attributes']['expiry'] = '2027-01-01T00:00:00Z'
+        with main.app.app_context(), patch.dict(main.app.config, KEYGEN_POLICY_ID=POLICY), patch.object(
+            keygen_service, 'request', return_value=httpx.Response(200, json={'data': data})):
+            with self.assertRaises(keygen_service.KeygenUnavailable):
+                keygen_service.ensure_license(identity)

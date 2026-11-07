@@ -1,18 +1,16 @@
-# Banxa annual-license checkout
+# Banxa lifetime-license checkout
 
-The optional `/buy_card` flow charges real money and grants the same annual-update
-entitlement as other live methods: one year from first activation, continued use of
-eligible versions, and no automatic Porn Fetch license renewal. New consent records
-use `banxa-annual-v1` with `beta=false`. Historical `banxa-beta-v1` orders retain their
-stored beta flag, original notices and email terms; no release-day deletion is automated.
-NOWPayments crypto remains recommended. The separate delivery mailbox is not sent
-to Banxa. Patreon membership itself must be cancelled to stop recurring Patreon bills.
+The optional `/buy_card` flow charges EUR 29.99 for lifetime Premium, including every
+future Porn Fetch update and feature released. Future development has no guaranteed
+duration. New consent records use `banxa-lifetime-v1` with `beta=false`. Ten installation
+slots and periodic validation remain. NOWPayments crypto remains recommended. The
+separate delivery mailbox is not sent to Banxa. Patreon Shop is a one-time purchase.
 
 ## Enablement
 
 1. Apply migrations with `uv run flask --app main db upgrade`.
 2. Configure production NOWPayments credentials, its signed `/nowpayments-ipn`
-   webhook, Keygen issuance and SMTP. Verify the annual policy and its match to the
+   webhook, Keygen issuance and SMTP. Verify the lifetime policy and its match to the
    shipped client using `flask --app main verify-license-policy --client-config /path/to/production.json`. `NOWPAYMENTS_SANDBOX` must be false for
    real-money Onramp checkout. Sandbox API addresses can never receive real
    customer funds. To offer a separate crypto sandbox, run it separately with
@@ -28,7 +26,7 @@ to Banxa. Patreon membership itself must be cancelled to stop recurring Patreon 
    native USDC and bridged USDC are distinct. Verify that the optional email
    parameter can be omitted and Banxa collects verification email directly.
 5. Verify fee behavior and a complete production deposit with a controlled
-   annual-license purchase before opening public traffic. Set `ONRAMP_ENABLED=true` only
+   lifetime-license purchase before opening public traffic. Set `ONRAMP_ENABLED=true` only
    for that operator-run test, then leave enabled after successful validation.
    The test costs real money. No automated test calls a live creation endpoint.
 6. Install `deploy/eaf-onramp-deliveries.{service,timer}` in `/etc/systemd/system/`
@@ -44,7 +42,7 @@ checkouts; keep existing NOWPayments callbacks and the retry job working.
 
 ## Funding and callbacks
 
-The server requests a floating-rate €19.99 NOWPayments payment in `usdcmatic`.
+The server requests a floating-rate €29.99 NOWPayments payment in `usdcmatic`.
 A USD-to-USDC estimate converts the required crypto amount into USD and divides
 by 0.97, rounding up to cents, to cover the documented 3% deduction. Banxa's
 final quote can add processing/network fees and currency conversion costs.
@@ -61,8 +59,8 @@ used. Ambiguous creation failures are not retried automatically.
 
 Onramp's GET callback stores only a receipt timestamp, ignoring all payment
 fields. It cannot fulfill orders. Signed NOWPayments `finished` or settled `partially_paid` events must
-match the stored payment ID, €19.99 price and currencies and report at least
-90% of the original quoted crypto amount. The stored €19.99 order price must
+match the stored payment ID, €29.99 price and currencies and report at least
+90% of the original quoted crypto amount. The stored €29.99 order price must
 still match exactly; the tolerance applies to actual crypto received, not to
 replacement order metadata. Overpayments issue one license. Lower
 payments, failures and expiry are displayed for support review. Direct crypto
@@ -114,7 +112,7 @@ browser delivery and mobile overflow. Screenshots go to `/tmp`, outside the repo
 
 ## Offer compatibility
 
-`POST /create-onramp-payment` requires `annual_terms_acknowledged: true` instead of
+`POST /create-onramp-payment` requires `lifetime_terms_acknowledged: true` instead of
 the former beta acknowledgment. Consent tokens with an obsolete offer version are
 rejected before any provider request. Existing ready/paid orders remain recoverable
 through their original status URL and retain their accepted terms.
@@ -128,7 +126,7 @@ sets false. No live payments, licensing mutations or deployment are part of this
 
 ## Current preview UI
 
-All payment methods are selectable for inspection. The card form and KYC disclosure
+The main payment picker offers crypto and Patreon. The separate card form and KYC disclosure
 can be viewed before the merchant configuration is ready; its acknowledgment and
 creation endpoints still return an explicit unavailable response without contacting
 providers until the existing configuration checks pass. This is not a direct Banxa

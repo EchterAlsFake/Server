@@ -17,16 +17,13 @@ from sqlalchemy.exc import IntegrityError
 from .extensions import db
 from .config import smtp_transport_is_local
 from .models import License, Transaction
-from .keygen_service import ensure_license, renew_verified_payment
+from .keygen_service import ensure_license
 
 
 def fulfill_transaction_license(transaction) -> bytes:
     """Call only for a verified payment (or the explicitly labelled sandbox)."""
     if transaction.renewal_license_id:
-        remote = renew_verified_payment('nowpayments', transaction.environment,
-                                        transaction.provider_payment_id, transaction.renewal_license_id)
-        return (json.dumps({'schema': 2, 'product': 'porn-fetch',
-                            'license_key': remote['attributes']['key']}) + '\n').encode()
+        raise ValueError("License renewal purchases are no longer supported")
     record = get_or_create_license(transaction.provider_payment_id)
     return build_license_file(record.license_key, record.issuance_reference, record.created_at)
 from .time_utils import rfc3339_utc

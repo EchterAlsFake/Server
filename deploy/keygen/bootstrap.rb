@@ -3,13 +3,13 @@
 account = Account.find(ENV.fetch('KEYGEN_ACCOUNT_ID'))
 product = account.products.find_or_create_by!(name: 'Porn Fetch')
 expected = {
-  scheme: 'ED25519_SIGN', duration: 31_556_952,
+  scheme: 'ED25519_SIGN', duration: nil,
   expiration_basis: 'FROM_FIRST_ACTIVATION', expiration_strategy: 'MAINTAIN_ACCESS',
   renewal_basis: 'FROM_NOW_IF_EXPIRED', max_machines: 10,
   authentication_strategy: 'LICENSE'
 }
 if ENV['KEYGEN_POLICY_ID'].to_s.empty?
-  policy = product.policies.find_or_create_by!(name: 'Annual updates - 10 installations') do |p|
+  policy = product.policies.find_or_create_by!(name: 'Lifetime Premium - 10 installations') do |p|
     p.account = account
     expected.each { |field, value| p.public_send("#{field}=", value) }
     p.strict = true
@@ -23,7 +23,7 @@ else
   policy = product.policies.find(ENV.fetch('KEYGEN_POLICY_ID'))
 end
 # Never rewrite an existing perpetual/beta policy or retroactively change licenses.
-abort 'Policy does not match the annual commercial offer; existing policy was not modified.' unless expected.all? { |field, value| policy.public_send(field) == value }
+abort 'Policy does not match the lifetime commercial offer; existing policy was not modified.' unless expected.all? { |field, value| policy.public_send(field) == value }
 path = '/app/credentials/product.json'
 if File.exist?(path)
   saved = JSON.parse(File.read(path))
@@ -35,4 +35,4 @@ else
     public_key: account.ed25519_public_key, product_token: token.raw
   ), mode: 'w', perm: 0600)
 end
-puts 'Annual product policy verified; credentials saved privately. Match the shipped client policy before enabling purchases.'
+puts 'Lifetime product policy verified; credentials saved privately. Match the shipped client policy before enabling purchases.'

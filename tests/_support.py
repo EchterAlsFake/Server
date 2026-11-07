@@ -101,7 +101,8 @@ class ServerTestCase(unittest.TestCase):
         response = self.client.post("/checkout/start", json=dict(
             payment_method=method, country=country, age_confirmed=True,
             terms_accepted=True, withdrawal_accepted=method != "patreon",
-            test_acknowledged=True, refund_method_accepted=True, offer_digest=self.offer_digest()), **request_options)
+            test_acknowledged=True, refund_method_accepted=True,
+            offer_digest=self.offer_digest()), **request_options)
         self.assertEqual(response.status_code, 200, response.data)
         return response
 

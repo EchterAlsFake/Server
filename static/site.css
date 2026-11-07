@@ -350,9 +350,9 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .license-price { font-size: 45px; letter-spacing: -.05em; margin: 25px 0 14px; }
 .license-price span { display: block; font-size: var(--text-secondary); color: #b6a5c2; letter-spacing: 0; }
 .price-note, .license-extra { color: #b4a6c0; font-size: var(--text-secondary); line-height: 1.8; }
-.annual-offer { margin-block: 25px; padding: 20px; border: 1px solid #f18bb036; border-radius: 8px; background: #f18bb006; text-align: left; }
-.annual-offer strong { font-size: var(--text-body); font-weight: 600; color: #f3cfde; }
-.annual-offer p { margin: 10px 0 0; font-size: var(--text-secondary); color: #c2b5ce; line-height: 1.8; }
+.lifetime-offer { margin-block: 25px; padding: 20px; border: 1px solid #f18bb036; border-radius: 8px; background: #f18bb006; text-align: left; }
+.lifetime-offer strong { font-size: var(--text-body); font-weight: 600; color: #f3cfde; }
+.lifetime-offer p { margin: 10px 0 0; font-size: var(--text-secondary); color: #c2b5ce; line-height: 1.8; }
 .payment-picker h2 { font-size: 24px; font-weight: 550; letter-spacing: -.025em; margin-bottom: 10px; }
 .method-intro { font-size: var(--text-secondary); color: #b4a7bf; margin-bottom: 24px; }
 .payment-methods { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
@@ -463,6 +463,7 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .compact-agreements { border: 0; padding: 0; margin: 16px 0 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; }
 .compact-agreements label { display: flex; align-items: flex-start; gap: 10px; font-size: var(--text-secondary); line-height: 1.5; color: #d5cbdc; cursor: pointer; }
 .compact-agreements input { width: 18px; height: 18px; flex: 0 0 18px; margin-top: 3px; }
+[data-direct-security][hidden] { display: none; }
 .compact-agreements label:nth-of-type(n+3) { grid-column: 1/-1; }
 #checkout-continue { width: 100%; }
 .checkout-back-note { margin: 12px 0 0; font-size: var(--text-small); color: #9e91a5; text-align: center; }
@@ -547,8 +548,8 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .widget-fee-note, .widget-configuration-note { font-size: var(--text-small); line-height: 1.75; color: #b8adbf; }
 .widget-configuration-note { padding-top: 15px; }
 .card-widget .delivery-email-block { margin-top: 23px; }
-.card-annual-agreement { display: flex; align-items: flex-start; gap: 11px; font-size: var(--text-secondary); line-height: 1.7; color: #cbbdd3; margin-top: 20px; cursor: pointer; }
-.card-annual-agreement input { flex: 0 0 18px; width: 18px; height: 18px; margin: 3px 0 0; }
+.card-lifetime-agreement { display: flex; align-items: flex-start; gap: 11px; font-size: var(--text-secondary); line-height: 1.7; color: #cbbdd3; margin-top: 20px; cursor: pointer; }
+.card-lifetime-agreement input { flex: 0 0 18px; width: 18px; height: 18px; margin: 3px 0 0; }
 #kyc-dialog { max-width: 650px; }
 @media (max-width: 480px) { .card-cost-breakdown > div { flex-wrap: wrap; } }
 .payment-tracking-page { max-width: 850px; margin: 32px auto 80px; }
@@ -596,3 +597,7 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .android-account-screenshot { max-width: 320px; margin: 28px auto; }
 .android-account-screenshot img { display: block; width: 100%; height: auto; border-radius: 10px; }
 .android-account-screenshot figcaption { margin-top: 12px; font-size: var(--text-small); line-height: 1.7; color: #c0b3c9; }
+
+.hero-lifetime { max-width: 680px; margin: 20px auto; color: var(--color-text-muted); line-height: 1.7; }
+.hero-lifetime strong { color: var(--color-text); }
+.hero-lifetime a { white-space: nowrap; }

@@ -203,6 +203,7 @@ class PatreonShopPurchase(db.Model):
     purchased_at = db.Column(db.Float, nullable=False)
     eligible = db.Column(db.Boolean, nullable=False)
     license_key = db.Column(db.String, db.ForeignKey('license.license_key'), unique=True)
+    license_sent_at = db.Column(db.Float)
 
 
 class PatreonShopHealth(db.Model):

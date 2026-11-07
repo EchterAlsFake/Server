@@ -1,8 +1,5 @@
 """Private, retry-safe communication with the locally hosted Keygen CE API."""
 
-import hashlib
-import json
-import uuid
 import httpx
 from flask import current_app
 
@@ -37,9 +34,9 @@ def request(method: str, path: str, **kwargs) -> httpx.Response:
         raise KeygenUnavailable("Keygen request failed") from None
 
 
-ANNUAL_POLICY_ATTRIBUTES = {
+LIFETIME_POLICY_ATTRIBUTES = {
     "scheme": "ED25519_SIGN",
-    "duration": 31556952,
+    "duration": None,
     "expirationBasis": "FROM_FIRST_ACTIVATION",
     "expirationStrategy": "MAINTAIN_ACCESS",
     "renewalBasis": "FROM_NOW_IF_EXPIRED",
@@ -48,31 +45,31 @@ ANNUAL_POLICY_ATTRIBUTES = {
 }
 
 
-def verify_annual_policy() -> dict:
+def verify_lifetime_policy() -> dict:
     """Read-only verification; never modify policies or historical entitlements."""
     policy_id = current_app.config.get("KEYGEN_POLICY_ID")
     if not policy_id:
-        raise KeygenUnavailable("Annual licensing policy is not configured")
+        raise KeygenUnavailable("Lifetime licensing policy is not configured")
     response = request("GET", "/policies/" + policy_id)
     if response.status_code != 200:
-        raise KeygenUnavailable("Annual licensing policy could not be verified")
+        raise KeygenUnavailable("Lifetime licensing policy could not be verified")
     try:
         data = response.json()["data"]
         if data["id"] != policy_id or any(
-            data["attributes"].get(name) != value
-            for name, value in ANNUAL_POLICY_ATTRIBUTES.items()
+            name not in data["attributes"] or data["attributes"][name] != value
+            for name, value in LIFETIME_POLICY_ATTRIBUTES.items()
         ):
             raise ValueError("Policy mismatch")
         return data
     except (ValueError, KeyError, TypeError, AttributeError):
-        raise KeygenUnavailable("Configured policy does not match the annual offer") from None
+        raise KeygenUnavailable("Configured policy does not match the lifetime offer") from None
 
 
 def ensure_license(issuance_id: str, *, test: bool = False) -> dict:
     """Caller persists a random UUID first; Keygen's primary key deduplicates it."""
     response = request("GET", "/licenses/" + issuance_id)
     if response.status_code == 404:
-        verify_annual_policy()
+        verify_lifetime_policy()
         response = request("POST", "/licenses", json={"data": {
             "type": "licenses", "id": issuance_id,
             "attributes": {"metadata": {"lifecycle": "test" if test else "commercial"}},
@@ -93,72 +90,10 @@ def ensure_license(issuance_id: str, *, test: bool = False) -> dict:
             raise ValueError("Keygen response validation failed")
         if not (data["attributes"]["scheme"] == "ED25519_SIGN"):
             raise ValueError("Keygen response validation failed")
+        if data["attributes"]["expiry"] is not None:
+            raise ValueError("Lifetime licenses must not expire")
         if not (data["attributes"]["key"].startswith("key/")):
             raise ValueError("Keygen response validation failed")
         return data
     except (ValueError, KeyError, TypeError, AttributeError):
         raise KeygenUnavailable("Unexpected Keygen issuance response") from None
-
-
-def renewal_target(signed_key: str) -> str:
-    """Prove key possession in a POST body before binding a checkout to a license."""
-    if not isinstance(signed_key, str) or not signed_key.startswith('key/') or len(signed_key) > 16384:
-        raise ValueError('Invalid renewal license')
-    response = request('POST', '/licenses/actions/validate-key', json={'meta': {'key': signed_key}})
-    if response.status_code != 200:
-        raise KeygenUnavailable('Renewal validation unavailable')
-    try:
-        data = response.json()['data']
-        if not (data['relationships']['policy']['data']['id'] == current_app.config['KEYGEN_POLICY_ID']):
-            raise ValueError("Keygen response validation failed")
-        if not (data['attributes']['expiry'] is not None and not data['attributes']['suspended']):
-            raise ValueError("Keygen response validation failed")
-        if not (data['attributes']['key'] == signed_key):
-            raise ValueError("Keygen response validation failed")
-        return str(uuid.UUID(data['id']))
-    except (AttributeError, KeyError, TypeError, ValueError):
-        raise ValueError('Renewal requires an activated commercial license') from None
-
-
-def renew_verified_payment(provider: str, environment: str, payment_reference: str, license_id: str) -> dict:
-    """Internal only: caller must verify settlement and bind the customer's target.
-
-    Persist the target before I/O. Keygen commits expiry and deduplication together,
-    so timeout, process death and concurrent delivery all retry the same operation.
-    Never use a webhook delivery ID: use the stable settled payment/charge ID.
-    """
-    from sqlalchemy.exc import IntegrityError
-    from .extensions import db
-    from .models import LicenseRenewal
-    if provider != 'nowpayments' or environment not in ('sandbox', 'production') or not payment_reference:
-        raise ValueError('Invalid payment identity')
-    license_id = str(uuid.UUID(license_id))
-    reference = hashlib.sha256(json.dumps([provider, environment, payment_reference], separators=(',', ':')).encode()).hexdigest()
-    binding = db.session.get(LicenseRenewal, reference)
-    if binding is None:
-        binding = LicenseRenewal(reference_hash=reference, keygen_id=license_id)
-        db.session.add(binding)
-        try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            binding = db.session.get(LicenseRenewal, reference)
-    if binding is None or binding.keygen_id != license_id:
-        raise ValueError('Payment is already bound to a different license')
-    response = request('POST', '/licenses/' + license_id + '/actions/renew',
-                       headers={'Idempotency-Key': reference})
-    if response.status_code != 200:
-        raise KeygenUnavailable('Renewal unavailable')
-    try:
-        data = response.json()['data']
-        if not (data['id'] == license_id):
-            raise ValueError("Keygen response validation failed")
-        if not (data['relationships']['policy']['data']['id'] == current_app.config['KEYGEN_POLICY_ID']):
-            raise ValueError("Keygen response validation failed")
-        if not (reference in data['attributes']['metadata']['pfRenewals']):
-            raise ValueError("Keygen response validation failed")
-    except (AttributeError, KeyError, TypeError, ValueError):
-        raise KeygenUnavailable('Unexpected renewal response') from None
-    binding.completed = True
-    db.session.commit()
-    return data

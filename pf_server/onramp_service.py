@@ -16,6 +16,7 @@ from cryptography.fernet import Fernet
 from flask import current_app
 from sqlalchemy import and_, or_
 
+from .offer import PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_TEXT
 from .extensions import db
 from .country_service import CheckoutCountryDecision
 from .licensing import fulfill_transaction_license, send_license_email
@@ -30,7 +31,7 @@ from .nowpayments_service import (
     _store_pending_transaction,
 )
 
-CONSENT_VERSION = "banxa-annual-v1"
+CONSENT_VERSION = "banxa-lifetime-v1"
 API_BASE = "https://api.onramp-pay.com"
 CHECKOUT_BASE = "https://checkout.onramp-pay.com/process-payment.php"
 POLYGON_USDC_CONTRACT = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
@@ -156,13 +157,13 @@ def create_checkout(
                 config["NOWPAYMENTS_API_URL"] + "/payment",
                 headers=_headers(),
                 json={
-                    "price_amount": 19.99,
+                    "price_amount": PREMIUM_PRICE_AMOUNT,
                     "price_currency": "eur",
                     "pay_currency": "usdcmatic",
                     "is_fixed_rate": False,
                     "is_fee_paid_by_user": False,
                     "order_id": session_id,
-                    "order_description": "Porn Fetch annual update license",
+                    "order_description": "Porn Fetch lifetime Premium license",
                     "ipn_callback_url": config["API_DOMAIN"] + "/nowpayments-ipn",
                 },
             )
@@ -176,7 +177,7 @@ def create_checkout(
             if (
                 payment.get("pay_currency", "").lower() != "usdcmatic"
                 or payment.get("network", "").lower() not in {"matic", "polygon"}
-                or positive_decimal(payment.get("price_amount")) != Decimal("19.99")
+                or positive_decimal(payment.get("price_amount")) != Decimal(PREMIUM_PRICE_TEXT)
                 or payment.get("price_currency", "").lower() != "eur"
                 or payment.get("order_id") != session_id
                 or payment.get("payin_extra_id")
@@ -190,7 +191,7 @@ def create_checkout(
                 payment_id,
                 checkout.created_at,
                 provider_reference_type="payment",
-                expected_price_amount="19.99",
+                expected_price_amount=PREMIUM_PRICE_TEXT,
                 expected_price_currency="eur",
                 expected_pay_amount=str(pay_amount),
                 expected_pay_currency="usdcmatic",

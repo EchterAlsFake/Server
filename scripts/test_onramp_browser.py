@@ -85,7 +85,7 @@ def run(browser_name="chromium"):
             expect(page.locator("#card-review")).to_have_css("background-color", "rgb(241, 139, 176)")
             page.evaluate('window.scrollTo({top: 0, behavior: "instant"})')
             page.screenshot(path="/tmp/porn-fetch-card-desktop.png", full_page=True)
-            expect(page.locator(".nowpayments-amount")).to_have_text("€19.99")
+            expect(page.locator(".nowpayments-amount")).to_have_text("€29.99")
             expect(page.locator("#delivery-email")).to_have_attribute("required", "")
             expect(page.locator(".checkout-tax-id")).to_contain_text("requires your Tax ID")
             expect(page.locator(".checkout-disclosure")).to_contain_text("3% Onramp Pay fee")
@@ -109,7 +109,7 @@ def run(browser_name="chromium"):
                     page.screenshot(path="/tmp/porn-fetch-card-mobile.png", full_page=True)
             page.set_viewport_size({"width": 1100, "height": 900})
             page.locator("#delivery-email").fill("buyer@example.com")
-            page.locator("#card-annual").check()
+            page.locator("#card-lifetime").check()
             page.get_by_role(
                 "button", name="Continue to secure checkout"
             ).click()

@@ -250,6 +250,7 @@ def load_environment_config(
         "PATREON_SHOP_COOKIE_FILE": source.get("PATREON_SHOP_COOKIE_FILE", ""),
         "PATREON_SHOP_LOOKUP_KEY": source.get("PATREON_SHOP_LOOKUP_KEY", ""),
         "PATREON_SHOP_PRODUCT_VARIANT_ID": source.get("PATREON_SHOP_PRODUCT_VARIANT_ID", ""),
+        "PATREON_SHOP_PRODUCT_URL": source.get("PATREON_SHOP_PRODUCT_URL", "https://www.patreon.com/c/echteralsfake/shop"),
         "KEYGEN_INTERNAL_URL": keygen_url,
         "KEYGEN_PRODUCT_TOKEN": source.get("KEYGEN_PRODUCT_TOKEN", ""),
         "KEYGEN_POLICY_ID": source.get("KEYGEN_POLICY_ID", ""),

@@ -21,9 +21,16 @@ class CheckoutSimplificationTests(ServerTestCase):
         self.assertIn(b'one-time purchase', page.data)
         self.assertEqual(self.client.post('/payment-preview/patreon', data={}).status_code, 400)
         accepted = self.client.post('/payment-preview/patreon', data={'confirm_no_payment':'yes'})
+        self.assertEqual(accepted.status_code, 200)
         self.assertIn(b'https://www.patreon.com/c/echteralsfake/shop', accepted.data)
 
     def test_homepage_links_to_enabled_shop_claim_form(self):
         with patch.dict(main.app.config, PATREON_SHOP_ENABLED=True):
             self.assertIn(b'Already bought on Patreon? Get your license', self.client.get('/').data)
             self.assertEqual(self.client.get('/activate').status_code, 200)
+
+    def test_security_period_pages_and_admin_are_retired(self):
+        for path in ('/patreon/consent', '/patreon/consent/receipt', '/admin/patreon-consents'):
+            self.assertEqual(self.client.get(path).status_code, 404)
+        with main.app.app_context():
+            self.assertNotIn('patreon-consent-purge', main.app.cli.commands)

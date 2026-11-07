@@ -11,7 +11,7 @@ class CheckoutStageTests(ServerTestCase):
                     refund_method_accepted='yes', test_acknowledged='yes',
                     offer_digest=self.offer_digest())
 
-    def test_main_page_has_only_three_shared_confirmations(self):
+    def test_main_page_has_three_shared_confirmations(self):
         page = self.client.get('/porn_fetch').text
         form = page.split('id="payment-choice-form"')[1].split('</form>')[0]
         self.assertEqual(form.count('type="checkbox"'), 3)
@@ -60,6 +60,7 @@ class CheckoutStageTests(ServerTestCase):
             self.assertEqual(snapshot['country'], 'DE')
             self.assertTrue(snapshot['immediate_supply_consent'])
             self.assertTrue(snapshot['refund_method_accepted'])
+            self.assertNotIn('security_updates_accepted', snapshot)
 
     def test_expired_selection_or_changed_offer_cannot_complete(self):
         self.client.post('/checkout/start', json=self.selection())
@@ -68,6 +69,17 @@ class CheckoutStageTests(ServerTestCase):
         with self.client.session_transaction() as state:
             state['checkout_selection'] = dict(state['checkout_selection'], accepted_at=time.time()-3601)
         self.assertEqual(self.client.post('/checkout/crypto-confirm', json=data).status_code, 409)
+
+    def test_pending_selection_without_refund_consent_cannot_complete(self):
+        self.client.post('/checkout/start', json=self.selection())
+        with self.client.session_transaction() as state:
+            selection = dict(state['checkout_selection'])
+            selection.pop('refund_method_accepted')
+            state['checkout_selection'] = selection
+        data = dict(country='DE', withdrawal_accepted=True, offer_digest=self.offer_digest())
+        self.assertEqual(self.client.post('/checkout/crypto-confirm', json=data).status_code, 409)
+        with main.app.app_context():
+            self.assertEqual(CheckoutAgreement.query.count(), 0)
 
     def test_patreon_confirmation_does_not_unlock_the_crypto_page(self):
         self.client.post('/checkout/start', json=self.selection('patreon'))

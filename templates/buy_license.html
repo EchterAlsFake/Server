@@ -29,7 +29,7 @@
 {% endblock %}
 {% block checkout_faq %}
 {% call question('crypto-fees', 'What fees will I pay?') %}
-<p>The €19.99 license price excludes additional fees. NOWPayments lists a 1% service fee without exchange, or 1.5% for multi-currency, fixed-rate or user-paid-fee payments. Exchange costs and blockchain network fees can also apply.</p>
+<p>The €{{ premium_price }} license price excludes additional fees. NOWPayments lists a 1% service fee without exchange, or 1.5% for multi-currency, fixed-rate or user-paid-fee payments. Exchange costs and blockchain network fees can also apply.</p>
 <p>Review the provider’s final amount before sending funds. <a href="https://nowpayments.io/help/about-nowpayments/about/what-are-your-fees" target="_blank" rel="noopener noreferrer">Fee details ↗</a></p>
 {% endcall %}
 {% call question('crypto-delivery', 'When will I receive my license?') %}

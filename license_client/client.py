@@ -116,12 +116,10 @@ class LicenseClient:
             if (payload["account"]["id"] != self.account_id
                 or payload["product"]["id"] != self.product_id
                 or payload["policy"]["id"] != self.policy_id
-                or payload["policy"]["duration"] not in (None, 31556952)):
-                raise ValueError()
-            if payload["policy"]["duration"] is not None and self.build_release_time is None:
+                or payload["policy"]["duration"] is not None):
                 raise ValueError()
             if payload["license"]["expiry"] is not None:
-                timestamp(payload["license"]["expiry"])
+                raise ValueError()
             uuid.UUID(payload["license"]["id"])
             timestamp(payload["license"]["created"])
             return payload
@@ -162,11 +160,9 @@ class LicenseClient:
                 raise ValueError()
             if licenses[0]["relationships"]["policy"]["data"]["id"] != self.policy_id:
                 raise ValueError()
-            updates_end = timestamp(attributes["expiry"]) if attributes["expiry"] is not None else None
-            if self.build_release_time is not None and updates_end is None:
+            if attributes["expiry"] is not None:
                 raise ValueError()
-            return {"issued": issued, "expiry": expiry, "machine_id": machine["id"],
-                    "updates_end": updates_end}
+            return {"issued": issued, "expiry": expiry, "machine_id": machine["id"]}
         except (ValueError, KeyError, TypeError, UnicodeError, InvalidSignature):
             raise LicenseError("Machine permit signature or signed claims are invalid") from None
 
@@ -287,15 +283,10 @@ class LicenseClient:
                 except (LicenseError, KeyError):
                     return LicenseStatus("invalid_signature", False)
                 expiry = permit["expiry"]
-                if (self.build_release_time is not None and
-                    self.build_release_time > permit["updates_end"]):
-                    return LicenseStatus("renewal_required", False, expiry)
                 return LicenseStatus("expired_grace" if now >= expiry else
                                      "offline_grace" if record.get("offline") else "valid",
                                      now < expiry, expiry)
-            if self.build_release_time is not None:
-                return LicenseStatus("activation_required", False)
-            expiry = record["first_import"] + WEEK
+            expiry = record["first_import"] + 3 * DAY
             return LicenseStatus("provisional" if now < expiry else "expired_grace", now < expiry, expiry)
 
     def deactivate(self) -> LicenseStatus:

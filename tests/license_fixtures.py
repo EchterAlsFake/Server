@@ -25,7 +25,7 @@ def signed_key(license_id=LICENSE, duration=None):
     return message + "." + base64.urlsafe_b64encode(PRIVATE.sign(message.encode())).decode()
 
 def issuance(license_id, **kwargs):
-    return {"id": license_id, "attributes": {"key": signed_key(license_id), "scheme": "ED25519_SIGN"},
+    return {"id": license_id, "attributes": {"key": signed_key(license_id), "scheme": "ED25519_SIGN", "expiry": None},
             "relationships": {"policy": {"data": {"id": POLICY}}}}
 
 def permit(fingerprint, now=NOW, ttl=604800, updates_end=None, **changes):

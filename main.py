@@ -170,17 +170,17 @@ def create_app(
     @application.cli.command("verify-license-policy")
     @click.option("--client-config", type=click.Path(exists=True, dir_okay=False), required=True)
     def verify_license_policy_command(client_config):
-        """Read-only check of annual entitlement and the shipped client policy ID."""
-        from pf_server.keygen_service import KeygenUnavailable, verify_annual_policy
+        """Read-only check of lifetime entitlement and the shipped client policy ID."""
+        from pf_server.keygen_service import KeygenUnavailable, verify_lifetime_policy
         try:
             with open(client_config, encoding="utf-8") as source:
                 public_client = json.load(source)
             if public_client["policy_id"] != application.config["KEYGEN_POLICY_ID"]:
                 raise click.ClickException("Server and client policy IDs do not match")
-            verify_annual_policy()
+            verify_lifetime_policy()
         except (OSError, ValueError, KeyError, TypeError, KeygenUnavailable):
-            raise click.ClickException("Could not verify the annual policy and client configuration") from None
-        click.echo("Verified: one year from first activation, continued access, ten installations; client policy matches.")
+            raise click.ClickException("Could not verify the lifetime policy and client configuration") from None
+        click.echo("Verified: non-expiring lifetime Premium, all future releases, ten installations; client policy matches.")
 
     @application.cli.command("request-sandbox-payment")
     @click.option("--order-id", required=True)

@@ -19,6 +19,7 @@ jobs:
       - run: uv run --locked python -m unittest discover -s tests
       - run: uv run --locked playwright install --with-deps chromium
       - run: uv run --locked python scripts/test_security_browser.py
+      - run: uv run --locked python scripts/test_lifetime_browser.py
       - run: uv run --locked python -O -m unittest discover -s tests -p test_security_hardening.py
       - run: uv export --locked --no-dev --no-emit-project -o /tmp/server-requirements.txt
       - run: uv run --locked pip-audit --no-deps --disable-pip -r /tmp/server-requirements.txt

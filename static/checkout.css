@@ -26,11 +26,11 @@
 .checkout-disclosure p { margin: 0 0 12px; }
 .checkout-disclosure p:last-child { margin-bottom: 0; }
 .checkout-disclosure strong { color: #e4dce5; font-weight: 550; }
-.checkout-card .card-annual-agreement { margin-top: 0; font-size: var(--text-caption); line-height: 1.65; color: #c7c0c9; }
-.checkout-card .card-annual-agreement input { accent-color: var(--color-primary); }
+.checkout-card .card-lifetime-agreement { margin-top: 0; font-size: var(--text-caption); line-height: 1.65; color: #c7c0c9; }
+.checkout-card .card-lifetime-agreement input { accent-color: var(--color-primary); }
 .checkout-card .checkout-error:empty { display: none; }
 .checkout-card .nowpayments-btn { margin-top: 0; min-height: 52px; padding: 14px 12px; border-radius: 8px; font-size: var(--text-body); line-height: 1.6; font-weight: 650; }
-.checkout-card .card-annual-agreement + .checkout-error:empty + .nowpayments-btn { margin-top: 20px; }
+.checkout-card .card-lifetime-agreement + .checkout-error:empty + .nowpayments-btn { margin-top: 20px; }
 .checkout-card .nowpayments-btn:hover:not(:disabled) { box-shadow: none; transform: none; }
 .checkout-reassurance { margin: 14px 0 0; font-size: var(--text-caption); line-height: 1.8; text-align: center; color: var(--color-text-muted); }
 .checkout-alternatives { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin-top: 16px; font-size: var(--text-caption); }

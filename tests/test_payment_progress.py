@@ -74,7 +74,7 @@ class PaymentProgressTests(ServerTestCase):
                     session_id="NP-test",
                     provider_payment_id="invoice-test" if invoice else "payment-test",
                     provider_reference_type="invoice" if invoice else "payment",
-                    expected_price_amount="19.99",
+                    expected_price_amount="29.99",
                     expected_price_currency="eur",
                     expected_pay_currency="usdcmatic" if card else None,
                     customer_country="Germany",
@@ -88,7 +88,7 @@ class PaymentProgressTests(ServerTestCase):
                 main.db.session.add(
                     OnrampCheckout(
                         session_id="NP-test",
-                        consent_version="banxa-annual-v1",
+                        consent_version="banxa-lifetime-v1",
                         beta=False,
                         stage="ready",
                         tracking_encrypted=encrypt("private-tracking-token"),
@@ -107,7 +107,7 @@ class PaymentProgressTests(ServerTestCase):
             payment_id="payment-test",
             invoice_id="invoice-test",
             payment_status=state,
-            price_amount=19.99,
+            price_amount=29.99,
             price_currency="eur",
             pay_currency="usdcmatic",
             pay_amount=24,
@@ -175,7 +175,7 @@ class PaymentProgressTests(ServerTestCase):
             b"Prefer Patreon?",
             b"NOWPayments",
             b"onramp-pay.com",
-            "€19.99".encode(),
+            "€29.99".encode(),
         ):
             self.assertIn(text, page)
         self.assertNotIn(b"crypto-checkout-grid", page)

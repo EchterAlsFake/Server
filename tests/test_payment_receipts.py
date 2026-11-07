@@ -17,7 +17,7 @@ class PaymentReceiptTests(ServerTestCase):
         with main.app.app_context():
             db.session.add(Transaction(
                 session_id="NP-receipt", provider_payment_id="invoice-receipt",
-                provider_reference_type="invoice", expected_price_amount="19.99",
+                provider_reference_type="invoice", expected_price_amount="29.99",
                 expected_price_currency="eur", customer_country="Germany",
                 country_evidence="test", geolocation_database="test", status="pending",
                 created_at=now().isoformat(),
@@ -25,7 +25,7 @@ class PaymentReceiptTests(ServerTestCase):
             db.session.commit()
         self.payload = dict(order_id="NP-receipt", payment_id="payment-receipt",
             invoice_id="invoice-receipt", payment_status="finished",
-            price_amount=19.99, price_currency="eur", pay_currency="btc", actually_paid=0.01)
+            price_amount=29.99, price_currency="eur", pay_currency="btc", actually_paid=0.01)
 
     def post(self, valid=True):
         return self.client.post("/nowpayments-ipn", json=self.payload,

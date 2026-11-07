@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from flask import current_app
 from fpdf import FPDF
 
+from .offer import PREMIUM_PRICE_AMOUNT
+
 SESSION_REFERENCE_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,255}")
 
 
@@ -82,7 +84,7 @@ def build_invoice(
         "Invoice Date": invoice_date,
         "Delivery Date": invoice_date,
         "Invoice Number": invoice_number,
-        "Description": "Porn Fetch License",
+        "Description": "Porn Fetch lifetime Premium license",
         "Quantity": 1,
         "Tax Info": "Hinweis: Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
         "Base Price in EUR": f"{fiat_amount:.2f} EUR",
@@ -94,7 +96,7 @@ def build_invoice(
 
 def build_simulated_invoice() -> dict:
     return build_invoice(
-        fiat_amount=19.99,
+        fiat_amount=PREMIUM_PRICE_AMOUNT,
         crypto_amount=0.00016,
         pay_currency="BTC",
         transaction_hash="mock-tx-hash-12345",

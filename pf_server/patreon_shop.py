@@ -296,7 +296,10 @@ def process_claims():
                     record = db.session.get(License, key)
                     content = build_license_file(key, record.issuance_reference, record.created_at)
                     recipient = cipher().decrypt(row.recipient_encrypted.encode()).decode()
+                    purchase = Purchase.query.filter_by(license_key=key).first()
                     send_license_email(recipient, content)
+                    if purchase and purchase.license_sent_at is None:
+                        purchase.license_sent_at = time.time()
                     row.last_key = key
                 row.pending, row.delivery_key = False, None
                 row.completed_at = time.time()

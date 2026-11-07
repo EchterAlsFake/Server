@@ -5,12 +5,12 @@ from collections.abc import Mapping
 from urllib.parse import parse_qs, urlsplit
 
 from flask import (
-    Blueprint, abort, jsonify, make_response, redirect, render_template,
+    Blueprint, abort, current_app, jsonify, make_response, redirect, render_template,
     request, session, url_for,
 )
 
 from .extensions import limiter
-from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent, current_selection
+from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent, current_selection, required_fields
 from .countries import COUNTRY_OPTIONS
 from .http import normalized_hostname
 from .product_catalog import WEBSITES
@@ -25,7 +25,8 @@ AGE_GATED_PATHS = {"/porn_fetch", "/donation", "/buy_license", "/buy_card", "/bu
 def public_page_context():
     from .onion import is_onion
     from .contracts import IMMEDIATE_EN, REFUND_EN, offer_digest
-    return {"immediate_en": IMMEDIATE_EN, "refund_en": REFUND_EN, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
+    from .offer import PREMIUM_PRICE_TEXT
+    return {"premium_price": PREMIUM_PRICE_TEXT, "immediate_en": IMMEDIATE_EN, "refund_en": REFUND_EN, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
 
 
 @pages_bp.after_app_request
@@ -127,7 +128,7 @@ def checkout_start():
     def accepted(field):
         return data.get(field) == "yes" or data.get(field) is True
 
-    shared_fields = tuple(field for field in FIELDS if field != "withdrawal_accepted")
+    shared_fields = tuple(field for field in required_fields(method) if field != "withdrawal_accepted")
     if not isinstance(method, str) or method not in {"crypto", "patreon", "card"} or not all(accepted(field) for field in shared_fields):
         error = "Choose your payment method and accept all required confirmations."
         if request.is_json:
@@ -258,6 +259,8 @@ def payment_preview(method):
     error = None
     if request.method == "POST":
         if request.form.get("confirm_no_payment") == "yes":
+            if method == 'patreon':
+                return render_template("payment_preview_launch.html", target=current_app.config["PATREON_SHOP_PRODUCT_URL"], provider=provider)
             if method == "card":
                 return redirect(target, code=303)
             # A cross-origin HTTP redirect after POST is blocked by form-action

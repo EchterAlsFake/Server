@@ -15,6 +15,7 @@ from flask import current_app
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import SQLAlchemyError
 
+from .offer import PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_TEXT
 from .extensions import db
 from .invoice_service import build_invoice, load_invoice, save_invoice
 from .models import CryptoLicenseDelivery, OnrampCheckout, PaymentProgress, Transaction
@@ -80,7 +81,6 @@ def _store_pending_transaction(
     contract_snapshot: str | None = None,
     customer_email_encrypted: str | None = None,
     hosted_url: str | None = None,
-    renewal_license_id: str | None = None,
 ) -> None:
     db.session.add(
         Transaction(
@@ -101,7 +101,6 @@ def _store_pending_transaction(
             created_at=created_at,
             contract_snapshot=contract_snapshot,
             customer_email_encrypted=customer_email_encrypted or delivery_recipient_encrypted,
-            renewal_license_id=renewal_license_id,
         )
     )
     from .payment_progress import hosted_checkout_url
@@ -122,15 +121,14 @@ def create_crypto_invoice(
     *,
     contract_snapshot: str | None = None,
     delivery_recipient_encrypted: str | None = None,
-    renewal_license_id: str | None = None,
 ) -> dict[str, str]:
     session_id, created_at = _new_session()
     payload = {
-        "price_amount": 19.99,
+        "price_amount": PREMIUM_PRICE_AMOUNT,
         "price_currency": "eur",
         "ipn_callback_url": f"{current_app.config['API_DOMAIN']}/nowpayments-ipn",
         "order_id": session_id,
-        "order_description": "Porn Fetch License Key",
+        "order_description": "Porn Fetch lifetime Premium license",
         "success_url": f"{current_app.config['APP_DOMAIN']}/buy_success?session_id={session_id}",
         "cancel_url": f"{current_app.config['APP_DOMAIN']}/buy_cancel",
     }
@@ -164,14 +162,13 @@ def create_crypto_invoice(
             invoice_id,
             created_at,
             provider_reference_type="invoice",
-            expected_price_amount="19.99",
+            expected_price_amount=PREMIUM_PRICE_TEXT,
             expected_price_currency="eur",
             customer_country=customer_country,
             country_evidence=country_evidence,
             geolocation_database=geolocation_database,
             contract_snapshot=contract_snapshot,
             delivery_recipient_encrypted=delivery_recipient_encrypted,
-            renewal_license_id=renewal_license_id,
         )
         return {
             "session_id": session_id,
@@ -183,7 +180,7 @@ def create_crypto_invoice(
         invoice_id,
         created_at,
         provider_reference_type="invoice",
-        expected_price_amount="19.99",
+        expected_price_amount=PREMIUM_PRICE_TEXT,
         expected_price_currency="eur",
         customer_country=customer_country,
         country_evidence=country_evidence,
@@ -191,7 +188,6 @@ def create_crypto_invoice(
         contract_snapshot=contract_snapshot,
         delivery_recipient_encrypted=delivery_recipient_encrypted,
         hosted_url=invoice_url,
-        renewal_license_id=renewal_license_id,
     )
     return {"session_id": session_id, "invoice_url": invoice_url}
 

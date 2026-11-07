@@ -78,7 +78,7 @@ class ApplicationTests(ServerTestCase):
         self.assertIn(b"NOWPayments", options.data)
         self.assertIn(b"Patreon", options.data)
         self.assertIn(b'action="/checkout/start"', options.data)
-        self.assertIn("19.99€".encode(), options.data)
+        self.assertIn("€29.99".encode(), options.data)
         self.assertNotIn(b"SubscribeStar", options.data)
         self.assertNotIn(b"Transak", checkout.data)
         self.assertNotIn(b"pay-fiat-btn", checkout.data)

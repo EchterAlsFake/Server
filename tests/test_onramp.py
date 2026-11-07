@@ -72,7 +72,7 @@ class OnrampTests(ServerTestCase):
                 json={
                     "payment_id": "payment-" + payload["order_id"],
                     "order_id": payload["order_id"],
-                    "price_amount": 19.99,
+                    "price_amount": 29.99,
                     "price_currency": "eur",
                     "pay_amount": "24",
                     "pay_currency": "usdc" if self.malformed_payment else "usdcmatic",
@@ -84,7 +84,7 @@ class OnrampTests(ServerTestCase):
             return httpx.Response(200, json={"estimated_amount": "1"})
         if request.url.path.startswith("/v1/payment/"):
             payment_id = request.url.path.rsplit("/", 1)[-1]
-            return httpx.Response(200, json={"order_id": payment_id.removeprefix("payment-"), "payment_id": payment_id, "price_amount": 19.99, "price_currency": "eur", "pay_currency": "usdcmatic", "payment_status": "waiting"})
+            return httpx.Response(200, json={"order_id": payment_id.removeprefix("payment-"), "payment_id": payment_id, "price_amount": 29.99, "price_currency": "eur", "pay_currency": "usdcmatic", "payment_status": "waiting"})
         if request.url.path == "/control/payment-status.php":
             return httpx.Response(200, json={"status": "waiting"})
         if request.url.path == "/control/wallet.php":
@@ -118,7 +118,7 @@ class OnrampTests(ServerTestCase):
             age_confirmed=True,
             terms_accepted=True,
             withdrawal_accepted=True,
-            annual_terms_acknowledged=True,
+            lifetime_terms_acknowledged=True,
             kyc_acknowledged=True,
         )
 
@@ -142,7 +142,7 @@ class OnrampTests(ServerTestCase):
                 order_id=session_id,
                 payment_id="payment-" + session_id,
                 payment_status="finished",
-                price_amount=19.99,
+                price_amount=29.99,
                 price_currency="eur",
                 pay_currency="usdcmatic",
                 pay_amount=24,
@@ -208,7 +208,7 @@ class OnrampTests(ServerTestCase):
             "age_confirmed",
             "terms_accepted",
             "withdrawal_accepted",
-            "annual_terms_acknowledged",
+            "lifetime_terms_acknowledged",
             "kyc_acknowledged",
         ):
             response = self.client.post(
@@ -271,7 +271,7 @@ class OnrampTests(ServerTestCase):
         page = self.client.get(result["status_url"], base_url=BASE)
         self.assertIn(b'target="_blank"', page.data)
         self.assertNotIn(b"deleted at release", page.data)
-        self.assertIn(b"One year of Premium release coverage", page.data)
+        self.assertIn(b"Lifetime Premium", page.data)
         self.assertFalse(result["beta"])
         self.assertEqual(result["payment_method"], "banxa")
         self.assertEqual(page.headers["Cache-Control"], "no-store")
@@ -571,12 +571,12 @@ class OnrampTests(ServerTestCase):
                 self.assertEqual(response.status_code, 400)
         self.assertEqual(self.requests, [])
 
-    def test_ui_contains_annual_offer_payment_conditions_and_kyc_disclosures(self):
+    def test_ui_contains_lifetime_offer_payment_conditions_and_kyc_disclosures(self):
         page = self.client.get("/porn_fetch")
         for text in (
             b"Recommended",
             b"One-time Shop purchase",
-            b"No automatic renewal",
+            b"No subscription or renewal payments",
         ):
             self.assertIn(text, page.data)
         card = self.client.get("/buy_card")
@@ -623,13 +623,13 @@ class OnrampTests(ServerTestCase):
                 service._get_json(client, service.API_BASE + "/control/wallet.php")
 
 
-    def test_new_card_offer_is_annual_and_old_beta_consent_is_rejected(self):
+    def test_new_card_offer_is_lifetime_and_old_beta_consent_is_rejected(self):
         token, session_id = self.acknowledge()
         self.age_consent(session_id)
         with main.app.app_context():
             checkout = db.session.get(OnrampCheckout, session_id)
             self.assertFalse(checkout.beta)
-            self.assertEqual(checkout.consent_version, 'banxa-annual-v1')
+            self.assertEqual(checkout.consent_version, 'banxa-lifetime-v1')
             checkout.consent_version = 'banxa-beta-v1'
             checkout.beta = True
             db.session.commit()
@@ -727,7 +727,7 @@ class OnrampConfigTests(ServerTestCase):
             db.session.execute(
                 sa.text(
                     "INSERT INTO \"transaction\" (session_id, provider_payment_id, provider_reference_type, environment, expected_price_amount, expected_price_currency, customer_country, country_evidence, geolocation_database, status, created_at) "
-                    "VALUES ('NP-existing', 'existing', 'invoice', 'production', '19.99', 'eur', 'Germany', 'local', 'test', 'pending', '2026-10-01T00:00:00+00:00')"
+                    "VALUES ('NP-existing', 'existing', 'invoice', 'production', '29.99', 'eur', 'Germany', 'local', 'test', 'pending', '2026-10-01T00:00:00+00:00')"
                 )
             )
             db.session.commit()

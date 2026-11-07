@@ -7,6 +7,7 @@
   function update() {
     const method = form.querySelector('input[name="payment_method"]:checked')?.value;
     button.textContent = names[method] || 'Proceed with selected payment method →';
+
   }
   form.addEventListener('change', update);
   form.querySelector('a[href="#refund-agreement"]').addEventListener('click', () => {

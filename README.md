@@ -247,18 +247,19 @@ See [LICENSE](LICENSE).
 Licenses now use self-hosted Keygen CE, schema-2 signed keys, ten UUID installation slots,
 and seven-day offline permits. See [application integration](docs/KEYGEN_CLIENT_INTEGRATION.md)
 and [operations](deploy/keygen/OPERATIONS.md). The reusable package is `license_client/`.
-New licenses cover Premium features in releases published within one year of first activation, with continued Premium access in eligible builds and no automatic license renewal. App updates and desktop history/statistics are free. Free use supports up to 720p, one active download and the first five videos of each public profile, model, channel or playlist; account collections are exempt from that preview. Premium enables qualities above 720p, parallel downloads and full public collections. New Banxa purchases use this same offer; historical beta orders retain their original terms. Patreon purchases use the one-time Shop flow.
+Lifetime Premium costs EUR 29.99 once and covers every future Porn Fetch update
+and feature released. Licenses never expire; future development has no guaranteed
+duration. Free use retains its current limits. All payment channels sell this offer.
+There is no separate security-maintenance period agreement; statutory rights remain.
 
 The purchase service no longer holds an Ed25519 private key. Configure `KEYGEN_PRODUCT_TOKEN`
 and `KEYGEN_POLICY_ID` before enabling fulfillment. The old `/check_license` route returns 410.
 
-Commercial MSI licensing uses a perpetual fallback with one calendar year of Premium
-release coverage from first activation. Renewal checkout accepts `renewal_license_key` in the existing
-`POST /create-crypto-payment` JSON body; the server proves key possession and binds
-the resulting license UUID before payment. Verified renewal callbacks preserve the
-key, with atomic deduplication in Keygen and a durable provider-charge binding locally.
-NOWPayments remains sandboxed. Patreon Shop uses its separate email activation queue.
-Desktop builds must supply their immutable `build_release_date` to `LicenseClient`.
+Commercial fulfillment verifies a non-expiring Keygen policy before issuance.
+Renewal purchases are rejected before creating payments. Ten installation slots and
+seven-day offline permits remain. If licensing permanently closes, provide an offline
+unlock before closure; see [shutdown procedure](deploy/keygen/OPERATIONS.md#permanent-shutdown).
+No customer migration is required. This change does not modify live infrastructure.
 
 ## Website presentation and verification
 
@@ -274,16 +275,20 @@ ffmpeg -ss 3 -i porn-fetch-promo/out/MyComp.mp4 -frames:v 1 -q:v 3 static/media/
 Run the isolated HTTPS browser checks without live provider requests or payments:
 
 ```bash
-uv run --with playwright python scripts/test_marketing_browser.py
+uv run --locked python scripts/test_lifetime_browser.py
+uv run --locked python scripts/test_security_browser.py
 ```
 
-The script uses a temporary test database, exercises desktop/mobile layouts, session confirmation, the no-JavaScript fallback, legal anchors, reduced motion and actual video playback, then shuts down its local server. Screenshots are written to `/tmp/porn-fetch-*.png`. It requires Playwright Chromium (`uv run --with playwright python -m playwright install chromium`); pass `--browser firefox` or `--browser webkit` to check other installed browsers. The capability inventory in `pf_server/product_catalog.py` mirrors the app's `docs/WEBSITES.md`; update both when support changes.
+These checks use a temporary database and local HTTPS server, block external traffic,
+and cover lifetime copy, desktop/mobile layouts, no-script pricing and terms, Patreon
+handoff, CSRF and simulated crypto checkout. Screenshots go to `/tmp/porn-fetch-*.png`.
+Install Chromium using `uv run --locked playwright install chromium` once.
+The capability inventory in `pf_server/product_catalog.py` mirrors the app's
+`docs/WEBSITES.md`; update both when support changes.
 
-The payment selector uses three compact, unselected choices with a recommended crypto
-option. Only the selected method’s detail panel is shown with JavaScript; no-JavaScript
-visitors get explicit checkout links. All three methods can be selected for preview.
-Patreon and card actions require an explicit no-payment acknowledgment before
-continuing. Real card link creation still follows the existing configuration gates.
+The payment selector offers crypto and Patreon. Both require purchase confirmations;
+Patreon has an additional no-payment preview acknowledgment before opening the Shop.
+The separate card preview and its provider configuration gates remain available.
 Patreon Shop activation is available at `/activate` when configured; see the Shop operations guide.
 
 The app source link and GitHub icon are local presentation assets; attribution and
@@ -291,9 +296,9 @@ the icon license are served at `/static/notices/github-octicons.txt`. The app re
 source-available under its custom license; the server/payment implementation is GPL.
 Android v3.9 GUI support is listed independently of published build availability.
 
-Before enabling annual purchases, verify the configured Keygen policy against the
+Before enabling lifetime purchases, verify the configured Keygen policy against the
 client’s public configuration using `flask --app main verify-license-policy --client-config /path/to/production.json`.
-See `deploy/keygen/OPERATIONS.md` for annual policy provisioning and historical-policy
+See `deploy/keygen/OPERATIONS.md` for lifetime policy provisioning and historical-policy
 preservation. This command only reads the policy; no running service was changed.
 
 ## Payment identity and preview testing
@@ -305,7 +310,7 @@ text references until merchant acceptance/brand permissions are established; att
 alone is not sufficient for their acceptance marks. The 350+ cryptocurrency statement
 refers to NOWPayments' overall advertised catalog, not every individual checkout.
 
-`/payment-preview/patreon` opens the project profile after confirmation.
+`/payment-preview/patreon` opens the configured Patreon Shop after confirmation.
 `/payment-preview/card` continues to the inspectable card form, and
 `/payment-preview/banxa?session_id=...` opens only the stored link of an existing,
 ready, unpaid Onramp order after confirmation. These routes do not create payments.
@@ -470,13 +475,15 @@ claims cutoff. See the dated legal-review supplement for scope, sources and open
 
 `/activate` accepts only a purchase email and never exposes a license in the browser.
 Membership webhooks and subscription licensing have been removed. One eligible Shop order receives one
-normal annual Keygen license; repeated claims resend it, and another order gets a
+normal lifetime Keygen license; repeated claims resend it, and another order gets a
 new license. Technical Patreon failures grant a normal fallback license, once per
 email; confirmed missing/ineligible purchases do not. This deliberately permits
 unverified claims during outages. Shared request budgets and mailbox cooldowns reduce abuse.
 
 Setup, cookie rotation, failure handling and retention are documented in
 [Patreon Shop operations](docs/PATREON_SHOP.md). Activation defaults to disabled.
+
+Evidence status does not control license entitlement or establish legal enforceability.
 
 ## Architecture and security maintenance
 
