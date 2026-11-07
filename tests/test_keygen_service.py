@@ -16,6 +16,7 @@ class KeygenTests(ServerTestCase):
             result = keygen_service.ensure_license(identity)
             self.assertEqual(result["id"], identity)
             self.assertEqual(request.call_args_list[2].kwargs["json"]["data"]["id"], identity)
+            self.assertIsNone(request.call_args_list[2].kwargs["json"]["data"]["attributes"]["expiry"])
 
     def test_timeout_retries_same_persisted_identity(self):
         self.keygen_mock.stop()

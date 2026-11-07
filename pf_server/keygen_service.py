@@ -72,7 +72,7 @@ def ensure_license(issuance_id: str, *, test: bool = False) -> dict:
         verify_lifetime_policy()
         response = request("POST", "/licenses", json={"data": {
             "type": "licenses", "id": issuance_id,
-            "attributes": {"metadata": {"lifecycle": "test" if test else "commercial"}},
+            "attributes": {"expiry": None, "metadata": {"lifecycle": "test" if test else "commercial"}},
             "relationships": {"policy": {"data": {
                 "type": "policies", "id": current_app.config["KEYGEN_POLICY_ID"],
             }}},

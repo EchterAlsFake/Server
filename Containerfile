@@ -19,6 +19,8 @@ COPY templates /app/templates
 COPY static /app/static
 COPY migrations /app/migrations
 COPY i18n /app/i18n
+COPY docs/dist /app/docs/dist
+COPY media_archiver_changelog.md /app/media_archiver_changelog.md
 
 # Create unprivileged user and required directories
 RUN useradd -u 1000 -U -d /app -s /bin/sh app && \

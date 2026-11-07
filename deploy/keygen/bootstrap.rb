@@ -8,10 +8,14 @@ expected = {
   renewal_basis: 'FROM_NOW_IF_EXPIRED', max_machines: 10,
   authentication_strategy: 'LICENSE'
 }
-if ENV['KEYGEN_POLICY_ID'].to_s.empty?
+path = '/app/credentials/product.json'
+saved = JSON.parse(File.read(path)) if File.exist?(path)
+policy_id = ENV['KEYGEN_POLICY_ID'].presence || saved&.fetch('policy_id')
+if policy_id.to_s.empty?
   policy = product.policies.find_or_create_by!(name: 'Lifetime Premium - 10 installations') do |p|
     p.account = account
     expected.each { |field, value| p.public_send("#{field}=", value) }
+    p.metadata = { commercial_model: 'pornfetch-permanent-v1', price_eur: '29.99' }
     p.strict = true
     p.floating = true
     p.protected = true
@@ -20,13 +24,11 @@ if ENV['KEYGEN_POLICY_ID'].to_s.empty?
     p.machine_uniqueness_strategy = 'UNIQUE_PER_LICENSE'
   end
 else
-  policy = product.policies.find(ENV.fetch('KEYGEN_POLICY_ID'))
+  policy = product.policies.find(policy_id)
 end
 # Never rewrite an existing perpetual/beta policy or retroactively change licenses.
 abort 'Policy does not match the lifetime commercial offer; existing policy was not modified.' unless expected.all? { |field, value| policy.public_send(field) == value }
-path = '/app/credentials/product.json'
-if File.exist?(path)
-  saved = JSON.parse(File.read(path))
+if saved
   abort 'Existing credential policy differs. Reconcile public client and server configuration explicitly; credentials were not overwritten.' unless saved.fetch('policy_id') == policy.id
 else
   token = account.tokens.create!(bearer: product, name: 'Purchase fulfillment', expiry: nil)

@@ -5,8 +5,9 @@
 > current runbook is `/srv/infra/msi/KEYGEN-PRODUCTION-LICENSING.md`. Do not run the
 > historical Docker/bootstrap/backup commands on MSI. The current commercial policy
 > must be verified against the lifetime offer before accepting payments. The bundled
-> public configuration records the previous policy ID; reconcile it with the explicitly
-> provisioned lifetime policy and the actual application build.
+> public configuration and live purchase service retain policy ID
+> `7038281b-2429-4aa4-81db-4f04a87e7184`, now configured with `duration=null`.
+> See `PERMANENT.md` for the actual deployment record and backup.
 
 Production: `/srv/keygen`; API: `https://licenses.pornfetch.to`.
 The loopback API listens on port 8004. PostgreSQL and Redis have no host port bindings.
@@ -37,8 +38,9 @@ installations and license authentication. License expiry remains null after acti
 o release-date cutoff or renewal payment applies. Offline permits still expire.
 
 An existing policy supplied through `KEYGEN_POLICY_ID` is verified, never rewritten.
-Without an ID, bootstrap uses the named lifetime policy and leaves old perpetual/beta
-policies untouched. If saved credentials point to another policy, bootstrap stops
+Without an explicit ID, bootstrap verifies the policy in saved credentials, or creates
+the named lifetime policy on a fresh installation. Other policies remain untouched.
+If saved credentials conflict with an explicit policy ID, bootstrap stops
 without overwriting them. Reconcile server configuration and the public client policy
 explicitly; do not silently repoint existing licenses or regenerate signing keys.
 Historical purchases keep their accepted terms.
