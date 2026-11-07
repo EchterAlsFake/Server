@@ -72,28 +72,12 @@
                     </header>
 
                     <article class="content-area">
-                        <div class="mcp-banner" role="region" aria-label="Official MCP Server Notice">
-                            <div class="mcp-banner-header">
-                                <span class="mcp-banner-badge">⚡ Recommended AI Workflow</span>
-                                <span class="mcp-banner-title">Official MCP Server: <code>https://mcp.echteralsfake.me/mcp</code></span>
-                            </div>
-                            <p class="mcp-banner-desc">
-                                Supercharge your development by connecting your AI coding assistant (Cursor, VS Code / Copilot, Claude Desktop, Windsurf, Zed, Antigravity).
-                                <strong>No authentication required</strong> · <strong>No strict rate limits</strong> · <strong>Covers all 16 APIs</strong> · <strong>Always up to date</strong> · <strong>Completely anonymous (0 logs, no profiling)</strong>.
-                                Connecting this MCP server to your AI assistant is absolutely the recommended way to work on and build with these APIs.
-                            </p>
-                            <div class="mcp-banner-actions">
-                                <a href="../#mcp" class="mcp-banner-btn primary">Add to Your Editor (Setup Guides & Configs) →</a>
-                                <button class="mcp-banner-btn secondary" type="button" onclick="navigator.clipboard.writeText('https://mcp.echteralsfake.me/mcp');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Server URL',2000)">Copy Server URL</button>
-                            </div>
-                        </div>
-
-                        <!-- SLOT:MAIN_CONTENT -->
+<!-- SLOT:MCP_BANNER -->                        <!-- SLOT:MAIN_CONTENT -->
                     </article>
 
                     <footer class="page-footer">
-                        <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · AGPLv3</span>
-                        <span>Built on <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
+                        <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · <!-- SLOT:LICENSE_LABEL --></span>
+                        <span>Built on <a href="<!-- SLOT:ENGINE_URL -->"><!-- SLOT:ENGINE_NAME --></a></span>
                     </footer>
                 </main>
 

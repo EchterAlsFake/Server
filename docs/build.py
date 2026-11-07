@@ -108,6 +108,12 @@ def build_docs():
             "pypi_package": slots.get("PYPI_PACKAGE", "")
         })
 
+        # Optional page metadata keeps clients with different engines and licenses accurate.
+        slots.setdefault("LICENSE_LABEL", "AGPLv3")
+        slots.setdefault("ENGINE_URL", "https://github.com/EchterAlsFake/eaf_base_api")
+        slots.setdefault("ENGINE_NAME", "eaf_base_api")
+        slots.setdefault("MCP_BANNER", (base_dir / "mcp_banner.html").read_text(encoding="utf-8").rstrip() + "\n\n")
+
         # 3. Inject into template
         final_html = template_html
         for slot_name, slot_value in slots.items():
