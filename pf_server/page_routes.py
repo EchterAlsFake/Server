@@ -267,7 +267,7 @@ def payment_preview(method):
             # 'self' in some browsers. Keep form submissions same-origin and
             # navigate from a local launch page without weakening the CSP.
             return render_template("payment_preview_launch.html", target=target, provider=provider)
-        error = "Confirm that you will not send money or start a paid membership while testing."
+        error = "Confirm that you will not send money or make a purchase while testing."
     response = make_response(render_template(
         "payment_preview.html", provider=provider, method=method,
         session_id=session_id, recovery_token=request.values.get("token"), error=error,

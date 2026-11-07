@@ -12,7 +12,7 @@ from sqlalchemy import update
 from .extensions import db
 from .models import CheckoutAgreement, Transaction
 
-VERSION = "contract-2026-11-07-lifetime-v1"
+VERSION = "contract-2026-11-07-lifetime-v2"
 IMMEDIATE_EN = "I expressly consent to immediate digital supply before the 14-day withdrawal period ends. I understand that I lose my withdrawal right when supply starts, provided I receive the required contract confirmation."
 REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
 

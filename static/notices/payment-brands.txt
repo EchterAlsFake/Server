@@ -32,8 +32,8 @@ Official artwork: Patreon Symbol.
 https://c14.patreon.com/thumbnail_Patreon_Symbol_6fff9723d3.png
 Usage: https://www.patreon.com/brand
 https://support.patreon.com/hc/en-gb/articles/216539323-Use-Patreon-s-logo-to-promote-my-Patreon
-Used to identify and link to the project's Patreon presence. The membership/license
-purchase route is unfinished; do not subscribe or send money while testing.
+Used to identify and link to the project's Patreon Shop. The website handoff is a
+test preview; do not make a purchase or send money while testing.
 
 NOWPayments
 Owner: NOWPayments / the applicable NOWPayments rights holder.

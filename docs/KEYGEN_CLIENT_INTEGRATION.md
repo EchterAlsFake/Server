@@ -66,12 +66,12 @@ policy. The client verifies the separate signed machine permit and seven-day exp
 
 Use `LicenseStatus.allowed` to gate premium features; keep existing free functionality,
 license import, support and data access available. Never delete customer data or abort
-an already-running export/download because renewal failed.
+an already-running export/download because license validation failed.
 
 | State | Display and action |
 | --- | --- |
 | valid | Licensed; show installation management and optional expiry of offline permit. |
-| activation_required | Connect once to start the update entitlement and obtain a signed machine permit. |
+| activation_required | Connect once to activate Premium and obtain a signed machine permit. |
 | provisional | Server unavailable; temporary access ends at `expires_at`; offer Retry. |
 | offline_grace | Previously activated; offline access ends at `expires_at`; offer Retry. |
 | expired_grace | Premium access paused; reconnect and retry. |
