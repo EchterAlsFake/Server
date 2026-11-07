@@ -1,0 +1,302 @@
+<!-- SLOT:TITLE = ClashRoyaleAPI -->
+<!-- SLOT:HERO_TITLE = ClashRoyaleAPI -->
+<!-- SLOT:HERO_SUBTITLE = Async Python client for all 30 documented official Clash Royale API endpoints. -->
+<!-- SLOT:VERSION = 1.0.0 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/ClashRoyaleAPI -->
+<!-- SLOT:PYPI_PACKAGE = ClashRoyaleAPI -->
+<!-- BEGIN:SIDEBAR_NAV -->
+<a href="#getting-started" class="nav-link">Getting started</a><a href="#guide" class="nav-link">User guide</a><a href="#get_clan_war_log" class="nav-link">get_clan_war_log</a><a href="#search_clans" class="nav-link">search_clans</a><a href="#get_clan_river_race_log" class="nav-link">get_clan_river_race_log</a><a href="#get_current_war" class="nav-link">get_current_war</a><a href="#get_clan" class="nav-link">get_clan</a><a href="#get_clan_members" class="nav-link">get_clan_members</a><a href="#get_current_river_race" class="nav-link">get_current_river_race</a><a href="#get_player" class="nav-link">get_player</a><a href="#get_player_upcoming_chests" class="nav-link">get_player_upcoming_chests</a><a href="#get_player_battle_log" class="nav-link">get_player_battle_log</a><a href="#get_cards" class="nav-link">get_cards</a><a href="#search_tournaments" class="nav-link">search_tournaments</a><a href="#get_tournament" class="nav-link">get_tournament</a><a href="#get_clan_ranking" class="nav-link">get_clan_ranking</a><a href="#get_player_ranking" class="nav-link">get_player_ranking</a><a href="#get_clan_wars_ranking" class="nav-link">get_clan_wars_ranking</a><a href="#get_top_player_path_of_legend_season_rankings" class="nav-link">get_top_player_path_of_legend_season_rankings</a><a href="#get_season" class="nav-link">get_season</a><a href="#get_top_player_league_season_rankings" class="nav-link">get_top_player_league_season_rankings</a><a href="#get_seasons" class="nav-link">get_seasons</a><a href="#get_locations" class="nav-link">get_locations</a><a href="#get_seasons_v2" class="nav-link">get_seasons_v2</a><a href="#get_location" class="nav-link">get_location</a><a href="#get_global_tournament_ranking" class="nav-link">get_global_tournament_ranking</a><a href="#get_player_path_of_legend_ranking" class="nav-link">get_player_path_of_legend_ranking</a><a href="#get_events" class="nav-link">get_events</a><a href="#get_leaderboard" class="nav-link">get_leaderboard</a><a href="#get_leaderboards" class="nav-link">get_leaderboards</a><a href="#get_leaderboard_league" class="nav-link">get_leaderboard_league</a><a href="#get_global_tournaments" class="nav-link">get_global_tournaments</a><a href="#model-APIModel" class="nav-link">APIModel</a><a href="#model-Arena" class="nav-link">Arena</a><a href="#model-Battle" class="nav-link">Battle</a><a href="#model-Chest" class="nav-link">Chest</a><a href="#model-Clan" class="nav-link">Clan</a><a href="#model-ClanMember" class="nav-link">ClanMember</a><a href="#model-ClanRanking" class="nav-link">ClanRanking</a><a href="#model-ClanWarClan" class="nav-link">ClanWarClan</a><a href="#model-ClanWarLogEntry" class="nav-link">ClanWarLogEntry</a><a href="#model-ClanWarParticipant" class="nav-link">ClanWarParticipant</a><a href="#model-ClanWarStanding" class="nav-link">ClanWarStanding</a><a href="#model-CurrentClanWar" class="nav-link">CurrentClanWar</a><a href="#model-CurrentRiverRace" class="nav-link">CurrentRiverRace</a><a href="#model-Cursors" class="nav-link">Cursors</a><a href="#model-GameMode" class="nav-link">GameMode</a><a href="#model-Item" class="nav-link">Item</a><a href="#model-Items" class="nav-link">Items</a><a href="#model-LadderTournament" class="nav-link">LadderTournament</a><a href="#model-LadderTournamentRanking" class="nav-link">LadderTournamentRanking</a><a href="#model-Leaderboard" class="nav-link">Leaderboard</a><a href="#model-LeaderboardEntry" class="nav-link">LeaderboardEntry</a><a href="#model-LeagueSeason" class="nav-link">LeagueSeason</a><a href="#model-LeagueSeasonResult" class="nav-link">LeagueSeasonResult</a><a href="#model-Location" class="nav-link">Location</a><a href="#model-Page" class="nav-link">Page</a><a href="#model-Paging" class="nav-link">Paging</a><a href="#model-PathOfLegendSeasonResult" class="nav-link">PathOfLegendSeasonResult</a><a href="#model-PeriodLog" class="nav-link">PeriodLog</a><a href="#model-PeriodLogEntry" class="nav-link">PeriodLogEntry</a><a href="#model-PeriodLogEntryClan" class="nav-link">PeriodLogEntryClan</a><a href="#model-Player" class="nav-link">Player</a><a href="#model-PlayerAchievementBadge" class="nav-link">PlayerAchievementBadge</a><a href="#model-PlayerAchievementProgress" class="nav-link">PlayerAchievementProgress</a><a href="#model-PlayerBattleData" class="nav-link">PlayerBattleData</a><a href="#model-PlayerClan" class="nav-link">PlayerClan</a><a href="#model-PlayerItemLevel" class="nav-link">PlayerItemLevel</a><a href="#model-PlayerLeagueStatistics" class="nav-link">PlayerLeagueStatistics</a><a href="#model-PlayerPathOfLegendRanking" class="nav-link">PlayerPathOfLegendRanking</a><a href="#model-PlayerRanking" class="nav-link">PlayerRanking</a><a href="#model-PlayerRankingClan" class="nav-link">PlayerRankingClan</a><a href="#model-RiverRaceClan" class="nav-link">RiverRaceClan</a><a href="#model-RiverRaceLogEntry" class="nav-link">RiverRaceLogEntry</a><a href="#model-RiverRaceParticipant" class="nav-link">RiverRaceParticipant</a><a href="#model-RiverRaceStanding" class="nav-link">RiverRaceStanding</a><a href="#model-Tournament" class="nav-link">Tournament</a><a href="#model-TournamentHeader" class="nav-link">TournamentHeader</a><a href="#model-TournamentMember" class="nav-link">TournamentMember</a><a href="#model-TrailEvent" class="nav-link">TrailEvent</a><a href="#model-UpcomingChests" class="nav-link">UpcomingChests</a>
+<!-- END:SIDEBAR_NAV -->
+<!-- BEGIN:MAIN_CONTENT -->
+<section id="getting-started"><h1>ClashRoyaleAPI</h1>
+<p>Typed, async-only Python client for all <strong>30 documented GET endpoints</strong> of the official Clash Royale REST API. Requires Python 3.12+; uses <code>curl_cffi</code> and Pydantic v2.</p>
+<pre><code class="language-sh">pip install ClashRoyaleAPI
+</code></pre>
+<pre><code class="language-python">import asyncio
+import os
+from clashroyaleapi import Client
+
+async def main():
+    async with Client(os.environ[&quot;CLASH_ROYALE_API_TOKEN&quot;]) as client:
+        player = await client.get_player(&quot;#2VVYYRVYP&quot;)
+        print(player.name, player.trophies)
+        async for card in client.iter_get_cards(limit=100):
+            print(card.name)
+
+asyncio.run(main())
+</code></pre>
+<p>Create your own token at https://developer.clashroyale.com and allowlist the public IP making requests. Authentication failures may indicate an IP mismatch rather than an invalid token.</p>
+<p><a href="https://docs.echteralsfake.me/clashroyaleapi/">Documentation</a> · <a href="https://github.com/EchterAlsFake/ClashRoyaleAPI/blob/main/docs/guide.md">User guide</a> · <a href="https://github.com/EchterAlsFake/ClashRoyaleAPI/blob/main/docs/endpoints.md">Endpoint reference</a> · <a href="https://github.com/EchterAlsFake/ClashRoyaleAPI/blob/main/docs/models.md">Models</a></p>
+<h2>Behavior</h2>
+<ul>
+<li>Every network operation is async. Use <code>async with Client(...)</code> or <code>await client.close()</code>.</li>
+<li>Individual resources return Pydantic models, paginated endpoints return <code>Page[T]</code>, and unpaginated arrays return lists. <code>iter_&lt;method_name&gt;</code> methods traverse cursor pages.</li>
+<li>Models expose snake_case fields and retain unknown fields. <code>model.to_dict()</code> exports JSON-compatible data with original API aliases.</li>
+<li>Up to three attempts for GET requests encountering transport failures, 429, or 5xx. Retry delays are bounded to 30 seconds. Caching is opt-in.</li>
+<li>Complete endpoint coverage refers to the supplied official documentation snapshot, not a guarantee of upstream availability. Nested model definitions collapsed in that snapshot cannot be exhaustively validated. Deprecated endpoints remain supported.</li>
+</ul>
+<h2>Development</h2>
+<pre><code class="language-sh">uv sync --locked --python 3.12
+uv run pytest
+uv run ruff check src scripts tests
+uv run mypy
+uv run python scripts/build_docs.py
+uv build
+uv run twine check dist/*
+</code></pre>
+<p>The endpoint manifest is <code>docs/api-reference.json</code>. Explicit endpoint methods and response models are generated by <code>scripts/generate_client.py</code>; review changes to the manifest and generator before regeneration. Raw browser exports are excluded from Git because they may contain credentials. See <a href="https://github.com/EchterAlsFake/ClashRoyaleAPI/blob/main/docs/releasing.md">release instructions</a>.</p>
+<h2>Migration</h2>
+<p>The unfinished <code>api.api.RoyaleAPI</code> interface is replaced by <code>clashroyaleapi.Client</code>. Add <code>await</code> to network calls and use async context management. Replace <code>get_player_chest_cycle</code> with <code>get_player_upcoming_chests</code> and read <code>.items</code>; battle logs are lists from <code>get_player_battle_log</code>. Model fields replace the old cached properties and generator accessors: use <code>player.cards</code>, <code>player.clan</code>, and <code>player.league_statistics</code>.</p>
+<h2>License and affiliation</h2>
+<p>GPL-3.0-only; see LICENSE. This project is unofficial and is not affiliated with, endorsed, sponsored, or approved by Supercell. Supercell is not responsible for its operation or content. Clash Royale trademarks and game content belong to their respective owners.</p></section><section id="guide"><h1>User guide</h1>
+<h2>Authentication and lifecycle</h2>
+<p>Generate a token in the official Clash Royale developer dashboard and allowlist your outgoing public IP. Pass the token explicitly; examples read <code>CLASH_ROYALE_API_TOKEN</code>. Never embed credentials in code. Use the client within one asyncio event loop and close it before that loop ends.</p>
+<h2>Configuration</h2>
+<p><code>Client(api_token, *, timeout=20, proxy=None, verify=True, max_clients=10, base_url="https://api.clashroyale.com/v1", max_attempts=3, cache_ttl=0, cache_size=256)</code></p>
+<p>Timeout is in seconds; <code>max_clients</code> bounds pooled curl handles. <code>proxy</code> accepts a proxy URL. TLS certificate verification defaults to enabled. A custom base URL allows a caller-selected API proxy or local testing; your bearer token is sent to that URL. Redirects are disabled. There is no browser impersonation requirement.</p>
+<p><code>max_attempts</code> is 1–3. Retried failures are network errors, HTTP 429, and HTTP 5xx. Backoff starts at 0.5 seconds. Retry-After supports seconds and HTTP dates, capped at 30 seconds. Cancellation propagates immediately.</p>
+<p><code>cache_ttl=0</code> disables caching. Positive TTL enables a bounded per-client LRU cache. Keys include path and query parameters. Only successful JSON results are cached; empty results are valid cache entries. Cached data is copied before conversion to prevent mutation of later responses.</p>
+<h2>Responses and pagination</h2>
+<p>Models use snake_case attributes; missing optional fields are None. Unknown fields survive <code>to_dict()</code>. Known nested resources are typed; unresolved or undocumented structures remain JSON values. This export included nine expanded object schemas; conservative convenience fields supplement collapsed nested schemas. This is endpoint-complete coverage, not a claim of an exhaustive upstream schema.</p>
+<p>Paginated methods return <code>Page[T]</code>. Access <code>.items</code>, <code>.paging.cursors.after</code> and <code>.paging.cursors.before</code>. Additional envelope fields, such as card catalog <code>supportItems</code>, remain accessible as retained extras and through <code>to_dict()</code>.</p>
+<p>Call <code>iter_get_clan_members(clan_tag, limit=100)</code> or the corresponding <code>iter_</code> method to traverse pages. <code>limit</code> is the upstream page size, not a total item limit. Passing <code>before</code> traverses backwards; otherwise iterators follow <code>after</code>. Iteration stops at an empty page or missing cursor. A repeated cursor raises InvalidResponse to prevent an endless loop. Do not pass both cursors.</p>
+<p>Tags accept <code>ABC</code>, <code>#ABC</code>, or <code>%23ABC</code> and are encoded once. Query parameters use Python snake_case and are serialized with official camelCase names. Clan search requires at least one filter; name searches require at least three characters. Search ordering is unspecified upstream.</p>
+<h2>Errors</h2>
+<p>All library request exceptions inherit APIError, with <code>.status</code>, <code>.reason</code>, and <code>.detail</code>. Catch AuthenticationError for 401/403, InvalidParameter for 400, NotFound for 404, RateLimitExceeded for 429, ServerError for 5xx, NetworkError for transfer failures, and InvalidResponse for malformed JSON or response shapes. Other non-200 responses raise APIError. Invalid local arguments raise ValueError. Closed clients raise RuntimeError.</p>
+<pre><code class="language-python">from clashroyaleapi import Client, AuthenticationError, RateLimitExceeded
+
+async def lookup(token, tag):
+    async with Client(token) as client:
+        try:
+            return await client.get_player(tag)
+        except AuthenticationError:
+            print(&quot;Check the token and your public IP allowlist&quot;)
+        except RateLimitExceeded:
+            print(&quot;The API remains rate limited after retries&quot;)
+</code></pre>
+<h2>Upstream limitations</h2>
+<p>The reference is the user-provided rendered official Swagger UI export, identified by SHA-256 in api-reference.json. Its leaderboard models reference a missing <code>List</code> definition. Those fields retain raw data. Location Trophy Road player rankings are deprecated and documented to always return an empty list; use Path of Legend endpoints instead. Legacy clan-war endpoints may be unavailable upstream. Related models such as VerifyTokenRequest or RegisterMatchRequest do not establish public routes; no speculative endpoints are implemented. There is no standalone challenges operation in this snapshot.</p></section><section class="section" id="get_clan_war_log"><h2>get_clan_war_log</h2><pre><code>GET /clans/{clanTag}/warlog</code></pre><pre><code>get_clan_war_log(self, clan_tag: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[ClanWarLogEntry]</code></pre><p>Retrieve clan&#x27;s clan war log</p></section><section class="section" id="search_clans"><h2>search_clans</h2><pre><code>GET /clans</code></pre><pre><code>search_clans(self, *, name: str | None = None, location_id: int | None = None, min_members: int | None = None, max_members: int | None = None, min_score: int | None = None, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[Clan]</code></pre><p>Search all clans by name and/or filtering the results using various criteria. At least one filtering criteria must be defined and if name is used as part of search, it is required to be at least three characters long It is not possible to specify ordering for results so clients should not rely on any specific ordering as that may change in the future releases of the API.</p></section><section class="section" id="get_clan_river_race_log"><h2>get_clan_river_race_log</h2><pre><code>GET /clans/{clanTag}/riverracelog</code></pre><pre><code>get_clan_river_race_log(self, clan_tag: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[RiverRaceLogEntry]</code></pre><p>Retrieve clan&#x27;s river race log</p></section><section class="section" id="get_current_war"><h2>get_current_war</h2><pre><code>GET /clans/{clanTag}/currentwar</code></pre><pre><code>get_current_war(self, clan_tag: str) -&gt; clashroyaleapi.models.CurrentClanWar</code></pre><p>Retrieve information about clan&#x27;s current clan war</p></section><section class="section" id="get_clan"><h2>get_clan</h2><pre><code>GET /clans/{clanTag}</code></pre><pre><code>get_clan(self, clan_tag: str) -&gt; clashroyaleapi.models.Clan</code></pre><p>Get information about a single clan by clan tag. Clan tags can be found using clan search operation. Note that clan tags start with hash character &#x27;#&#x27; and that needs to be URL-encoded properly to work in URL, so for example clan tag &#x27;#2ABC&#x27; would become &#x27;%232ABC&#x27; in the URL.</p></section><section class="section" id="get_clan_members"><h2>get_clan_members</h2><pre><code>GET /clans/{clanTag}/members</code></pre><pre><code>get_clan_members(self, clan_tag: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[ClanMember]</code></pre><p>List clan members.</p></section><section class="section" id="get_current_river_race"><h2>get_current_river_race</h2><pre><code>GET /clans/{clanTag}/currentriverrace</code></pre><pre><code>get_current_river_race(self, clan_tag: str) -&gt; clashroyaleapi.models.CurrentRiverRace</code></pre><p>Retrieve information about clan&#x27;s current river race</p></section><section class="section" id="get_player"><h2>get_player</h2><pre><code>GET /players/{playerTag}</code></pre><pre><code>get_player(self, player_tag: str) -&gt; clashroyaleapi.models.Player</code></pre><p>Get information about a single player by player tag. Player tags can be found either in game or by from clan member lists. Note that player tags start with hash character &#x27;#&#x27; and that needs to be URL-encoded properly to work in URL, so for example player tag &#x27;#2ABC&#x27; would become &#x27;%232ABC&#x27; in the URL.</p></section><section class="section" id="get_player_upcoming_chests"><h2>get_player_upcoming_chests</h2><pre><code>GET /players/{playerTag}/upcomingchests</code></pre><pre><code>get_player_upcoming_chests(self, player_tag: str) -&gt; clashroyaleapi.models.UpcomingChests</code></pre><p>Get list of reward chests that the player will receive next in the game.</p></section><section class="section" id="get_player_battle_log"><h2>get_player_battle_log</h2><pre><code>GET /players/{playerTag}/battlelog</code></pre><pre><code>get_player_battle_log(self, player_tag: str) -&gt; list[clashroyaleapi.models.Battle]</code></pre><p>Get list of recent battles for a player</p></section><section class="section" id="get_cards"><h2>get_cards</h2><pre><code>GET /cards</code></pre><pre><code>get_cards(self, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[Item]</code></pre><p>Get list of available cards</p></section><section class="section" id="search_tournaments"><h2>search_tournaments</h2><pre><code>GET /tournaments</code></pre><pre><code>search_tournaments(self, *, name: str | None = None, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[TournamentHeader]</code></pre><p>Search all tournaments by name. It is not possible to specify ordering for results so clients should not rely on any specific ordering as that may change in the future releases of the API.</p></section><section class="section" id="get_tournament"><h2>get_tournament</h2><pre><code>GET /tournaments/{tournamentTag}</code></pre><pre><code>get_tournament(self, tournament_tag: str) -&gt; clashroyaleapi.models.Tournament</code></pre><p>Get information about a single tournament by a tournament tag.</p></section><section class="section" id="get_clan_ranking"><h2>get_clan_ranking</h2><pre><code>GET /locations/{locationId}/rankings/clans</code></pre><pre><code>get_clan_ranking(self, location_id: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[ClanRanking]</code></pre><p>Get clan rankings for a specific location</p></section><section class="section" id="get_player_ranking"><h2>get_player_ranking</h2><pre><code>GET /locations/{locationId}/rankings/players</code></pre><pre><code>get_player_ranking(self, location_id: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[PlayerRanking]</code></pre><p>Deprecated: this endpoint always returns an empty list and will be removed in a future version. Trophy road player rankings no longer exist; use the Path of Legend ranking endpoints instead.</p></section><section class="section" id="get_clan_wars_ranking"><h2>get_clan_wars_ranking</h2><pre><code>GET /locations/{locationId}/rankings/clanwars</code></pre><pre><code>get_clan_wars_ranking(self, location_id: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[ClanRanking]</code></pre><p>Get clan war rankings for a specific location</p></section><section class="section" id="get_top_player_path_of_legend_season_rankings"><h2>get_top_player_path_of_legend_season_rankings</h2><pre><code>GET /locations/global/pathoflegend/{seasonId}/rankings/players</code></pre><pre><code>get_top_player_path_of_legend_season_rankings(self, season_id: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[PlayerPathOfLegendRanking]</code></pre><p>Get top Path of Legend players for given season.</p></section><section class="section" id="get_season"><h2>get_season</h2><pre><code>GET /locations/global/seasons/{seasonId}</code></pre><pre><code>get_season(self, season_id: str) -&gt; clashroyaleapi.models.LeagueSeason</code></pre><p>Get top player league season.</p></section><section class="section" id="get_top_player_league_season_rankings"><h2>get_top_player_league_season_rankings</h2><pre><code>GET /locations/global/seasons/{seasonId}/rankings/players</code></pre><pre><code>get_top_player_league_season_rankings(self, season_id: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[PlayerRanking]</code></pre><p>Get top player rankings for a season.</p></section><section class="section" id="get_seasons"><h2>get_seasons</h2><pre><code>GET /locations/global/seasons</code></pre><pre><code>get_seasons(self) -&gt; list[clashroyaleapi.models.LeagueSeason]</code></pre><p>Lists top player league seasons.</p></section><section class="section" id="get_locations"><h2>get_locations</h2><pre><code>GET /locations</code></pre><pre><code>get_locations(self, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[Location]</code></pre><p>List locations</p></section><section class="section" id="get_seasons_v2"><h2>get_seasons_v2</h2><pre><code>GET /locations/global/seasonsV2</code></pre><pre><code>get_seasons_v2(self) -&gt; list[clashroyaleapi.models.LeagueSeason]</code></pre><p>Lists league seasons with unique season IDs and season end times.</p></section><section class="section" id="get_location"><h2>get_location</h2><pre><code>GET /locations/{locationId}</code></pre><pre><code>get_location(self, location_id: str) -&gt; clashroyaleapi.models.Location</code></pre><p>Get information about specific location</p></section><section class="section" id="get_global_tournament_ranking"><h2>get_global_tournament_ranking</h2><pre><code>GET /locations/global/rankings/tournaments/{tournamentTag}</code></pre><pre><code>get_global_tournament_ranking(self, tournament_tag: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[LadderTournamentRanking]</code></pre><p>Get global tournament rankings</p></section><section class="section" id="get_player_path_of_legend_ranking"><h2>get_player_path_of_legend_ranking</h2><pre><code>GET /locations/{locationId}/pathoflegend/players</code></pre><pre><code>get_player_path_of_legend_ranking(self, location_id: str, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[PlayerPathOfLegendRanking]</code></pre><p>Get player rankings in Path of Legend for a specific location</p></section><section class="section" id="get_events"><h2>get_events</h2><pre><code>GET /events</code></pre><pre><code>get_events(self) -&gt; list[clashroyaleapi.models.TrailEvent]</code></pre><p>Get current events. Returns a list of ongoing events with its Title and Description localized.</p></section><section class="section" id="get_leaderboard"><h2>get_leaderboard</h2><pre><code>GET /leaderboard/{leaderboardId}</code></pre><pre><code>get_leaderboard(self, leaderboard_id: int, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[Leaderboard]</code></pre><p>Get players on a specific leaderboard</p></section><section class="section" id="get_leaderboards"><h2>get_leaderboards</h2><pre><code>GET /leaderboards</code></pre><pre><code>get_leaderboards(self) -&gt; list[clashroyaleapi.models.Leaderboard]</code></pre><p>List leaderboards for different trophy roads. A leaderboard with a board per competitive League lists its Leagues in leagues.</p></section><section class="section" id="get_leaderboard_league"><h2>get_leaderboard_league</h2><pre><code>GET /leaderboard/{leaderboardId}/leagues/{leagueId}</code></pre><pre><code>get_leaderboard_league(self, leaderboard_id: int, league_id: int, *, limit: int | None = None, after: str | None = None, before: str | None = None) -&gt; clashroyaleapi.models.Page[LeaderboardEntry]</code></pre><p>Get players on the board of one competitive League of a leaderboard</p></section><section class="section" id="get_global_tournaments"><h2>get_global_tournaments</h2><pre><code>GET /globaltournaments</code></pre><pre><code>get_global_tournaments(self) -&gt; list[clashroyaleapi.models.LadderTournament]</code></pre><p>Get list of global tournaments</p></section><section class="section" id="model-APIModel"><h2>APIModel</h2><pre><code></code></pre></section><section class="section" id="model-Arena"><h2>Arena</h2><pre><code>id: int | None
+name: str | None</code></pre></section><section class="section" id="model-Battle"><h2>Battle</h2><pre><code>type: str | None
+battle_time: datetime.datetime | None
+is_ladder_tournament: bool | None
+is_hosted_match: bool | None
+deck_selection: str | None
+league_number: int | None
+game_mode: ForwardRef(&#x27;GameMode | None&#x27;)
+arena: clashroyaleapi.models.Arena | None
+team: ForwardRef(&#x27;list[PlayerBattleData] | None&#x27;)
+opponent: ForwardRef(&#x27;list[PlayerBattleData] | None&#x27;)</code></pre></section><section class="section" id="model-Chest"><h2>Chest</h2><pre><code>index: int | None
+name: str | None</code></pre></section><section class="section" id="model-Clan"><h2>Clan</h2><pre><code>badge_id: int | None
+member_list: ForwardRef(&#x27;list[ClanMember] | None&#x27;)
+clan_chest_status: str | None
+clan_chest_level: int | None
+clan_chest_max_level: int | None
+clan_score: int | None
+clan_war_trophies: int | None
+required_trophies: int | None
+donations_per_week: int | None
+members: int | None
+name: str | None
+location: ForwardRef(&#x27;Location | None&#x27;)
+type: str | None
+tag: str | None
+description: str | None
+clan_chest_points: int | None
+badge_urls: typing.Any | None</code></pre></section><section class="section" id="model-ClanMember"><h2>ClanMember</h2><pre><code>tag: str | None
+name: str | None
+role: str | None
+last_seen: datetime.datetime | None
+exp_level: int | None
+trophies: int | None
+clan_rank: int | None
+previous_clan_rank: int | None
+donations: int | None
+donations_received: int | None
+arena: clashroyaleapi.models.Arena | None</code></pre></section><section class="section" id="model-ClanRanking"><h2>ClanRanking</h2><pre><code>tag: str | None
+name: str | None
+rank: int | None
+previous_rank: int | None
+clan_score: int | None
+members: int | None
+location: ForwardRef(&#x27;Location | None&#x27;)</code></pre></section><section class="section" id="model-ClanWarClan"><h2>ClanWarClan</h2><pre><code>tag: str | None
+name: str | None
+badge_id: int | None
+clan_score: int | None</code></pre></section><section class="section" id="model-ClanWarLogEntry"><h2>ClanWarLogEntry</h2><pre><code>created_date: datetime.datetime | None
+standings: ForwardRef(&#x27;list[ClanWarStanding] | None&#x27;)
+participants: ForwardRef(&#x27;list[ClanWarParticipant] | None&#x27;)</code></pre></section><section class="section" id="model-ClanWarParticipant"><h2>ClanWarParticipant</h2><pre><code>tag: str | None
+name: str | None
+wins: int | None
+battles_played: int | None</code></pre></section><section class="section" id="model-ClanWarStanding"><h2>ClanWarStanding</h2><pre><code>rank: int | None
+trophy_change: int | None
+clan: clashroyaleapi.models.ClanWarClan | None</code></pre></section><section class="section" id="model-CurrentClanWar"><h2>CurrentClanWar</h2><pre><code>state: str | None
+clan: clashroyaleapi.models.ClanWarClan | None
+participants: list[clashroyaleapi.models.ClanWarParticipant] | None
+clans: list[clashroyaleapi.models.ClanWarClan] | None
+collection_end_time: datetime.datetime | None
+war_end_time: datetime.datetime | None</code></pre></section><section class="section" id="model-CurrentRiverRace"><h2>CurrentRiverRace</h2><pre><code>state: str | None
+clan: ForwardRef(&#x27;RiverRaceClan | None&#x27;)
+clans: ForwardRef(&#x27;list[RiverRaceClan] | None&#x27;)
+collection_end_time: datetime.datetime | None
+war_end_time: datetime.datetime | None
+section_index: int | None
+period_index: int | None
+period_type: str | None
+period_logs: ForwardRef(&#x27;list[PeriodLog] | None&#x27;)</code></pre></section><section class="section" id="model-Cursors"><h2>Cursors</h2><pre><code>before: str | None
+after: str | None</code></pre></section><section class="section" id="model-GameMode"><h2>GameMode</h2><pre><code>id: int | None
+name: str | None</code></pre></section><section class="section" id="model-Item"><h2>Item</h2><pre><code>id: int | None
+name: str | None
+max_level: int | None
+max_evolution_level: int | None
+rarity: str | None
+elixir_cost: int | None
+icon_urls: typing.Any | None</code></pre></section><section class="section" id="model-Items"><h2>Items</h2><pre><code>items: list[clashroyaleapi.models.Item] | None
+support_items: list[clashroyaleapi.models.Item] | None</code></pre></section><section class="section" id="model-LadderTournament"><h2>LadderTournament</h2><pre><code>id: int | None
+title: str | None
+game_mode: clashroyaleapi.models.GameMode | None
+start_time: datetime.datetime | None
+end_time: datetime.datetime | None</code></pre></section><section class="section" id="model-LadderTournamentRanking"><h2>LadderTournamentRanking</h2><pre><code>tag: str | None
+name: str | None
+rank: int | None
+score: int | None
+clan: ForwardRef(&#x27;PlayerRankingClan | None&#x27;)</code></pre></section><section class="section" id="model-Leaderboard"><h2>Leaderboard</h2><pre><code>id: int | None
+name: typing.Any | None
+leagues: typing.Any | None</code></pre></section><section class="section" id="model-LeaderboardEntry"><h2>LeaderboardEntry</h2><pre><code>tag: str | None
+name: str | None
+rank: int | None
+score: int | None</code></pre></section><section class="section" id="model-LeagueSeason"><h2>LeagueSeason</h2><pre><code>id: str | None</code></pre></section><section class="section" id="model-LeagueSeasonResult"><h2>LeagueSeasonResult</h2><pre><code>id: str | None
+trophies: int | None
+best_trophies: int | None
+rank: int | None</code></pre></section><section class="section" id="model-Location"><h2>Location</h2><pre><code>localized_name: str | None
+id: int | None
+name: str | None
+is_country: bool | None
+country_code: str | None</code></pre></section><section class="section" id="model-Page"><h2>Page</h2><pre><code>items: list[~T]
+paging: &lt;class &#x27;clashroyaleapi.models.Paging&#x27;&gt;</code></pre></section><section class="section" id="model-Paging"><h2>Paging</h2><pre><code>cursors: &lt;class &#x27;clashroyaleapi.models.Cursors&#x27;&gt;</code></pre></section><section class="section" id="model-PathOfLegendSeasonResult"><h2>PathOfLegendSeasonResult</h2><pre><code>league_number: int | None
+trophies: int | None
+rank: int | None</code></pre></section><section class="section" id="model-PeriodLog"><h2>PeriodLog</h2><pre><code>period_index: int | None
+items: ForwardRef(&#x27;list[PeriodLogEntry] | None&#x27;)</code></pre></section><section class="section" id="model-PeriodLogEntry"><h2>PeriodLogEntry</h2><pre><code>clan: ForwardRef(&#x27;PeriodLogEntryClan | None&#x27;)
+points_earned: int | None</code></pre></section><section class="section" id="model-PeriodLogEntryClan"><h2>PeriodLogEntryClan</h2><pre><code>tag: str | None
+name: str | None</code></pre></section><section class="section" id="model-Player"><h2>Player</h2><pre><code>clan: ForwardRef(&#x27;PlayerClan | None&#x27;)
+legacy_trophy_road_high_score: int | None
+current_deck: ForwardRef(&#x27;list[PlayerItemLevel] | None&#x27;)
+current_deck_support_cards: ForwardRef(&#x27;list[PlayerItemLevel] | None&#x27;)
+arena: clashroyaleapi.models.Arena | None
+role: str | None
+wins: int | None
+losses: int | None
+total_donations: int | None
+league_statistics: ForwardRef(&#x27;PlayerLeagueStatistics | None&#x27;)
+cards: ForwardRef(&#x27;list[PlayerItemLevel] | None&#x27;)
+support_cards: ForwardRef(&#x27;list[PlayerItemLevel] | None&#x27;)
+current_favourite_card: clashroyaleapi.models.Item | None
+badges: ForwardRef(&#x27;list[PlayerAchievementBadge] | None&#x27;)
+tag: str | None
+name: str | None
+collection_level: int | None
+king_tower_level: int | None
+exp_level: int | None
+trophies: int | None
+best_trophies: int | None
+donations: int | None
+donations_received: int | None
+achievements: ForwardRef(&#x27;list[PlayerAchievementProgress] | None&#x27;)
+battle_count: int | None
+three_crown_wins: int | None
+challenge_cards_won: int | None
+challenge_max_wins: int | None
+tournament_cards_won: int | None
+tournament_battle_count: int | None
+current_win_lose_streak: int | None
+war_day_wins: int | None
+clan_cards_collected: int | None
+star_points: int | None
+exp_points: int | None
+total_exp_points: int | None
+current_path_of_legend_season_result: clashroyaleapi.models.PathOfLegendSeasonResult | None
+last_path_of_legend_season_result: clashroyaleapi.models.PathOfLegendSeasonResult | None
+best_path_of_legend_season_result: clashroyaleapi.models.PathOfLegendSeasonResult | None
+progress: typing.Any | None</code></pre></section><section class="section" id="model-PlayerAchievementBadge"><h2>PlayerAchievementBadge</h2><pre><code>name: str | None
+level: int | None
+max_level: int | None
+progress: int | None
+target: int | None
+icon_urls: typing.Any | None</code></pre></section><section class="section" id="model-PlayerAchievementProgress"><h2>PlayerAchievementProgress</h2><pre><code>name: str | None
+stars: int | None
+value: int | None
+target: int | None
+info: str | None
+completion_info: str | None</code></pre></section><section class="section" id="model-PlayerBattleData"><h2>PlayerBattleData</h2><pre><code>tag: str | None
+name: str | None
+crowns: int | None
+king_tower_hit_points: int | None
+princess_towers_hit_points: typing.Any | None
+clan: ForwardRef(&#x27;PlayerClan | None&#x27;)
+cards: ForwardRef(&#x27;list[PlayerItemLevel] | None&#x27;)
+trophy_change: int | None
+elixir_leaked: float | None</code></pre></section><section class="section" id="model-PlayerClan"><h2>PlayerClan</h2><pre><code>tag: str | None
+name: str | None
+badge_id: int | None</code></pre></section><section class="section" id="model-PlayerItemLevel"><h2>PlayerItemLevel</h2><pre><code>id: int | None
+name: str | None
+level: int | None
+max_level: int | None
+count: int | None
+star_level: int | None
+evolution_level: int | None
+rarity: str | None
+elixir_cost: int | None
+icon_urls: typing.Any | None</code></pre></section><section class="section" id="model-PlayerLeagueStatistics"><h2>PlayerLeagueStatistics</h2><pre><code>current_season: clashroyaleapi.models.LeagueSeasonResult | None
+previous_season: clashroyaleapi.models.LeagueSeasonResult | None
+best_season: clashroyaleapi.models.LeagueSeasonResult | None</code></pre></section><section class="section" id="model-PlayerPathOfLegendRanking"><h2>PlayerPathOfLegendRanking</h2><pre><code>tag: str | None
+name: str | None
+rank: int | None
+trophies: int | None
+clan: ForwardRef(&#x27;PlayerRankingClan | None&#x27;)</code></pre></section><section class="section" id="model-PlayerRanking"><h2>PlayerRanking</h2><pre><code>tag: str | None
+name: str | None
+rank: int | None
+previous_rank: int | None
+trophies: int | None
+clan: ForwardRef(&#x27;PlayerRankingClan | None&#x27;)</code></pre></section><section class="section" id="model-PlayerRankingClan"><h2>PlayerRankingClan</h2><pre><code>tag: str | None
+name: str | None
+badge_id: int | None</code></pre></section><section class="section" id="model-RiverRaceClan"><h2>RiverRaceClan</h2><pre><code>tag: str | None
+name: str | None
+badge_id: int | None
+fame: int | None
+repair_points: int | None
+clan_score: int | None
+participants: ForwardRef(&#x27;list[RiverRaceParticipant] | None&#x27;)</code></pre></section><section class="section" id="model-RiverRaceLogEntry"><h2>RiverRaceLogEntry</h2><pre><code>season_id: int | None
+section_index: int | None
+created_date: datetime.datetime | None
+standings: ForwardRef(&#x27;list[RiverRaceStanding] | None&#x27;)</code></pre></section><section class="section" id="model-RiverRaceParticipant"><h2>RiverRaceParticipant</h2><pre><code>tag: str | None
+name: str | None
+fame: int | None
+repair_points: int | None
+decks_used: int | None
+decks_used_today: int | None</code></pre></section><section class="section" id="model-RiverRaceStanding"><h2>RiverRaceStanding</h2><pre><code>rank: int | None
+trophy_change: int | None
+clan: clashroyaleapi.models.RiverRaceClan | None</code></pre></section><section class="section" id="model-Tournament"><h2>Tournament</h2><pre><code>game_mode: clashroyaleapi.models.GameMode | None
+status: str | None
+preparation_duration: int | None
+members_list: ForwardRef(&#x27;list[TournamentMember] | None&#x27;)
+created_time: datetime.datetime | None
+started_time: datetime.datetime | None
+ended_time: datetime.datetime | None
+first_place_card_prize: int | None
+type: str | None
+duration: int | None
+tag: str | None
+creator_tag: str | None
+name: str | None
+description: str | None
+capacity: int | None
+max_capacity: int | None
+level_cap: int | None</code></pre></section><section class="section" id="model-TournamentHeader"><h2>TournamentHeader</h2><pre><code>tag: str | None
+name: str | None
+status: str | None
+capacity: int | None
+max_capacity: int | None</code></pre></section><section class="section" id="model-TournamentMember"><h2>TournamentMember</h2><pre><code>tag: str | None
+name: str | None
+rank: int | None
+score: int | None</code></pre></section><section class="section" id="model-TrailEvent"><h2>TrailEvent</h2><pre><code>id: int | None
+title: typing.Any | None
+description: typing.Any | None</code></pre></section><section class="section" id="model-UpcomingChests"><h2>UpcomingChests</h2><pre><code>items: list[clashroyaleapi.models.Chest] | None</code></pre></section>
+<!-- END:MAIN_CONTENT -->
