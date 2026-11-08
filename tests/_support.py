@@ -14,6 +14,7 @@ os.environ["PF_SERVER_DB"] = os.path.join(TEST_RUNTIME.name, "server.db")
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["NOWPAYMENTS_IPN_SECRET"] = "nowpayments-test-secret"
 os.environ["NOWPAYMENTS_SANDBOX"] = "true"
+os.environ["PAYMENT_TESTING_NOTICE_ENABLED"] = "false"
 os.environ["NOWPAYMENTS_LOCAL_SIMULATION_ENABLED"] = "true"
 os.environ["SEO_INDEXING_ENABLED"] = "true"
 os.environ["APP_DOMAIN"] = "https://echteralsfake.me"

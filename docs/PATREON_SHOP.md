@@ -1,5 +1,29 @@
 # Patreon Shop operations
 
+The configured purchase URL is `https://www.patreon.com/EchterAlsFake/posts/porn-fetch-174679355?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link`.
+Live configuration accepts specific Patreon purchase posts as well as specific Shop products; a generic Shop homepage is rejected.
+
+During the temporary real-payment rollout, keep `PAYMENT_TESTING_NOTICE_ENABLED=true`.
+Every new browser session must acknowledge the no-purchase warning, including on direct checkout entry.
+Purchases remain real: this acknowledgment does not simulate payments or schedule refunds or license revocations.
+Set `NOWPAYMENTS_SANDBOX=false` and `NOWPAYMENTS_LOCAL_SIMULATION_ENABLED=false` with production API/IPN credentials.
+Disable the temporary warning explicitly only after the payment rollout is finished.
+
+Required rollout flags in the deployed web/worker environment:
+
+```dotenv
+PAYMENT_TESTING_NOTICE_ENABLED=true
+NOWPAYMENTS_SANDBOX=false
+NOWPAYMENTS_LOCAL_SIMULATION_ENABLED=false
+PATREON_SHOP_ENABLED=true
+```
+
+Set `PATREON_SHOP_PRODUCT_URL` to the exact purchase URL above, replacing any existing
+Shop-homepage override. Keep the verified product variant ID and the existing encrypted
+delivery, Redis, Keygen and SMTP settings. Production API/IPN credentials and the provider's
+webhook configuration are configured separately by the owner. Updating source or the
+example environment files alone does not change the deployed environment.
+
 The `/activate` page supports email delivery and browser retrieval. Browser retrieval
 requires both the purchase email and the receipt’s public Patreon order ID. The
 worker verifies an eligible sale before returning its signed license to that browser.

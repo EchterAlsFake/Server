@@ -135,6 +135,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `APP_DOMAIN` | Canonical product origin used for links and payment redirects | `https://pornfetch.to` |
 | `API_DOMAIN` | Public origin dedicated to payment webhooks | `https://api.echteralsfake.me` |
 | `NOWPAYMENTS_SANDBOX` | Uses the sandbox API and enables local payment simulation | `true` |
+| `PAYMENT_TESTING_NOTICE_ENABLED` | Requires the real-payment testing warning and explicit no-purchase agreement once per browser session | `true` |
 | `NOWPAYMENTS_API_KEY` | Creates NOWPayments invoices/payments | Unset |
 | `NOWPAYMENTS_IPN_SECRET` | Verifies NOWPayments callbacks | Unset |
 | `LICENSE_SMTP_*` | SMTP host, port, credentials, sender, TLS, and SSL settings | See `.env.example` |

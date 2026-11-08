@@ -1,4 +1,19 @@
 /* UX hierarchy: reuse the existing dark palette, type and pink accent. */
+.site-menu { margin-left:auto; }
+.header-premium-cta { flex-shrink:0; white-space:nowrap; gap:0; padding:11px 18px; font-size:var(--text-secondary); }
+.header-premium-cta .header-premium-price { opacity:1; }
+@media(max-width:800px) {
+ .header-premium-price { display:none; }
+ .header-inner { gap:14px; }
+}
+@media(max-width:600px) {
+ .site-header .header-inner { gap:8px; padding:12px 16px; }
+ .site-header .brand-mark { display:none; }
+ .site-header .brand-name { font-size:20px; }
+ .site-header .site-menu summary { padding:10px 0; font-size:14px; }
+ .site-header .site-menu summary span { margin-left:6px; }
+ .header-premium-cta { padding:10px 12px; min-height:44px; font-size:14px; }
+}
 .legal-utility { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px 22px; padding:8px 25px; border-top:1px solid var(--line); font-size:var(--text-caption); }
 .legal-utility > span { color:var(--color-text-muted); }
 .legal-utility a { color:var(--color-text-muted); text-underline-offset:3px; }

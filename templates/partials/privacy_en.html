@@ -1,7 +1,7 @@
 <div class="card" style="margin-top: 40px;">
     <p class="legal-section-title">Privacy Policy</p>
     <p style="color: var(--color-text-muted);">Last Updated: November 2026</p>
-    <p><strong>Payment availability:</strong> Crypto payments are simulated while the sandbox notice is displayed. Enabled Banxa checkout charges real money for a lifetime Premium license. Historical beta purchases keep the terms accepted at purchase. The sections below describe the data handled by these services.</p>
+    <p><strong>Payment availability:</strong> {% if config.NOWPAYMENTS_SANDBOX %}Crypto payments are simulated while the sandbox notice is displayed.{% else %}NOWPayments cryptocurrency checkout and enabled Patreon purchases process real payments.{% endif %} Enabled Banxa checkout charges real money for a lifetime Premium license. Historical beta purchases keep the terms accepted at purchase. The sections below describe the data handled by these services.</p>
 
     <div style="margin-top: 25px; line-height: 1.8;">
 

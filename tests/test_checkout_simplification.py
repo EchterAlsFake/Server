@@ -1,5 +1,6 @@
 """Patreon Shop instructions and the two-option payment picker."""
 from unittest.mock import patch
+from html import unescape
 from _support import ServerTestCase, main
 
 class CheckoutSimplificationTests(ServerTestCase):
@@ -22,7 +23,7 @@ class CheckoutSimplificationTests(ServerTestCase):
         self.assertEqual(self.client.post('/payment-preview/patreon', data={}).status_code, 400)
         accepted = self.client.post('/payment-preview/patreon', data={'confirm_no_payment':'yes'})
         self.assertEqual(accepted.status_code, 200)
-        self.assertIn(b'https://www.patreon.com/c/echteralsfake/shop', accepted.data)
+        self.assertIn(main.app.config['PATREON_SHOP_PRODUCT_URL'], unescape(accepted.text))
 
     def test_homepage_links_to_enabled_shop_claim_form(self):
         with patch.dict(main.app.config, PATREON_SHOP_ENABLED=True):

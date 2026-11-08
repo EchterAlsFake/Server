@@ -3,6 +3,7 @@
 from urllib.parse import urlsplit
 
 from flask import abort, current_app, render_template, request
+from flask.sessions import SecureCookieSessionInterface
 
 DEFAULT_ONION_ORIGIN = "http://pornfetchc5ct7s7uiervf4ziymmus5gy33gyqc6vkdtqyr5pbxrxmid.onion"
 PURCHASE_PATHS = {"/porn_fetch", "/buy_license", "/buy_card", "/donation"}
@@ -14,6 +15,8 @@ def is_onion():
 
 def before_onion_request():
     if not is_onion():
+        return None
+    if request.method == "POST" and request.path == "/payment-testing/acknowledge":
         return None
     if request.method not in {"GET", "HEAD"}:
         abort(404)
@@ -43,3 +46,11 @@ def init_onion(app):
     app.before_request(before_onion_request)
     app.after_request(onion_headers)
     app.context_processor(lambda: {"is_onion": is_onion()})
+    app.session_interface = OnionSessionInterface()
+
+
+class OnionSessionInterface(SecureCookieSessionInterface):
+    """The authenticated onion origin uses HTTP inside Tor, rather than HTTPS."""
+
+    def get_cookie_secure(self, app):
+        return False if is_onion() else super().get_cookie_secure(app)

@@ -1,6 +1,7 @@
 """Behavioral regressions for marketing, age sessions and release selection."""
 
 from unittest.mock import patch
+from html import unescape
 
 
 from _support import ServerTestCase, main
@@ -98,7 +99,8 @@ class MarketingTests(ServerTestCase):
         self.assertIn(b'Test preview', options)
         self.assertNotIn(b'deleted at release', options)
         self.assertNotIn(b'service fee: 1%', options)
-        self.assertNotRegex(options, rb'type="radio"[^>]*checked')
+        self.assertRegex(options, rb'id="method-patreon"[^>]*checked')
+        self.assertNotRegex(options, rb'id="method-crypto"[^>]*checked')
 
     def test_every_payment_method_can_be_selected_without_repeated_detail_panels(self):
         page = self.client.get('/porn_fetch').data
@@ -119,7 +121,7 @@ class MarketingTests(ServerTestCase):
         self.assertEqual(self.client.post('/payment-preview/patreon', data={}).status_code, 400)
         accepted = self.client.post('/payment-preview/patreon', data={'confirm_no_payment': 'yes'})
         self.assertEqual(accepted.status_code, 200)
-        self.assertIn(b'https://www.patreon.com/c/echteralsfake/shop', accepted.data)
+        self.assertIn(main.app.config['PATREON_SHOP_PRODUCT_URL'], unescape(accepted.text))
         card = self.client.post('/payment-preview/card', data={'confirm_no_payment': 'yes'})
         self.assertEqual(card.headers['Location'], '/buy_card')
         self.assertEqual(self.client.get('/payment-preview/unknown').status_code, 404)

@@ -665,14 +665,14 @@ class OnrampTests(ServerTestCase):
         page = self.client.get(response.json["status_url"], base_url=BASE).data
         self.assertNotIn(b"Open Banxa payment in a new tab", page)
 
-    def test_generated_provider_link_requires_test_confirmation_and_cannot_reopen_paid_orders(self):
+    def test_live_provider_link_uses_real_payment_notice_and_cannot_reopen_paid_orders(self):
         response, session_id, _ = self.create()
         path = '/payment-preview/banxa?session_id=' + session_id
         before = len(self.requests)
-        self.assertEqual(self.client.get(path, base_url=BASE).status_code, 200)
-        self.assertEqual(self.client.post(path, data={}, base_url=BASE).status_code, 400)
-        accepted = self.client.post(path, data={'confirm_no_payment': 'yes'}, base_url=BASE)
+        accepted = self.client.get(path, base_url=BASE)
         self.assertEqual(accepted.status_code, 200)
+        self.assertIn(b'Real payment checkout', accepted.data)
+        self.assertNotIn(b'Test preview', accepted.data)
         self.assertIn(b'checkout.onramp-pay.com/process-payment.php', accepted.data)
         self.assertIn(b'provider=banxa', accepted.data)
         self.assertEqual(len(self.requests), before)

@@ -50,7 +50,7 @@ def buy_card():
 def acknowledgment():
     if not service.available():
         return jsonify(
-            error="Test preview: external payment-link creation is not configured. No payment has been created."
+            error="Card and wallet payments are currently unavailable. No payment has been created."
         ), 503
     browser = session.setdefault("onramp_browser", secrets.token_urlsafe(32))
     checkout = OnrampCheckout(
@@ -70,7 +70,7 @@ def acknowledgment():
 def create_payment():
     if not service.available():
         return jsonify(
-            error="Test preview: external payment-link creation is not configured. No payment has been created."
+            error="Card and wallet payments are currently unavailable. No payment has been created."
         ), 503
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or any(

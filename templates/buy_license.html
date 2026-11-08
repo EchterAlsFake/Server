@@ -6,6 +6,8 @@
 {% block checkout_notice %}
 {% if config.NOWPAYMENTS_SANDBOX %}
 <aside class="sandbox-note checkout-notice" role="note"><strong>Test environment — do not send money.</strong><p>Provider sandbox or local simulation only. This is not a live purchase.</p></aside>
+{% else %}
+<aside class="checkout-notice" role="note"><strong>Real cryptocurrency payment.</strong><p>Sending funds pays for your license. Review the currency, network, amount and provider fees before paying. Your license is issued after payment verification.</p></aside>
 {% endif %}
 {% endblock %}
 {% block checkout_method %}
@@ -45,9 +47,11 @@
 {% endcall %}
 {% endblock %}
 {% block checkout_simulation %}
+{% if config.NOWPAYMENTS_SANDBOX and config.NOWPAYMENTS_LOCAL_SIMULATION_ENABLED %}
 <div class="tx-screen" id="tx-screen-container" hidden>
     <div id="simulation-progress" class="purchase-progress" hidden role="status"><div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label">Verifying simulated payment and preparing license…</span></div><p>The server is processing this test purchase. Your license screen will open automatically.</p></div>
     <p class="eyebrow">No payment required</p><h2 tabindex="-1" id="simulation-heading">Local payment simulation</h2><p>The provider sandbox is unavailable. This local simulation does not send funds.</p><p class="nowpayments-label">Simulated session ID</p><code id="sim-session-id"></code><p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p><button type="button" id="simulate-success-btn" class="nowpayments-btn">Simulate successful payment</button>
 </div>
+{% endif %}
 {% endblock %}
 {% block checkout_scripts %}<script src="/static/crypto-checkout.js" defer></script>{% endblock %}

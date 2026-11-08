@@ -16,6 +16,7 @@ from .http import normalized_hostname
 from .product_catalog import WEBSITES
 from .guide_content import GUIDES, guide_path
 from .download_pages import render_download_page
+from .payment_testing_notice import acknowledgment_required, NOTICE_VERSION, SESSION_KEY, PURCHASE_POST_PATHS
 
 pages_bp = Blueprint("pages", __name__)
 AGE_GATED_PATHS = {"/porn_fetch", "/donation", "/buy_license", "/buy_card", "/buy_success", "/buy_cancel", "/payment-preview/patreon", "/payment-preview/card", "/payment-preview/banxa"}
@@ -26,13 +27,40 @@ def public_page_context():
     from .onion import is_onion
     from .contracts import IMMEDIATE_EN, REFUND_EN, offer_digest
     from .offer import PREMIUM_PRICE_TEXT
-    return {"premium_price": PREMIUM_PRICE_TEXT, "immediate_en": IMMEDIATE_EN, "refund_en": REFUND_EN, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
+    return {"premium_price": PREMIUM_PRICE_TEXT, "immediate_en": IMMEDIATE_EN, "refund_en": REFUND_EN, "offer_digest": offer_digest, "payment_testing_notice_required": acknowledgment_required(), "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
+
+
+@pages_bp.before_app_request
+def require_payment_testing_acknowledgment():
+    if request.method == "POST" and request.path in PURCHASE_POST_PATHS and acknowledgment_required():
+        return jsonify(error="Read and explicitly acknowledge the real-payment testing warning before continuing."), 423
+    if request.method == "GET" and request.path.startswith("/payment-preview/") and acknowledgment_required():
+        return render_template("payment_testing_notice.html")
+
+
+@pages_bp.post("/payment-testing/acknowledge")
+def acknowledge_payment_testing():
+    target = request.form.get("next", "/")
+    try:
+        parsed = urlsplit(target)
+        if (not target.startswith("/") or target.startswith("//") or "\\" in target
+                or parsed.scheme or parsed.netloc or any(ord(c) < 32 for c in target)):
+            target = "/"
+    except ValueError:
+        target = "/"
+    if request.form.get("payment_testing_acknowledged") != "yes":
+        return render_template("payment_testing_notice.html", notice_next=target,
+                               payment_testing_error="Tick the agreement before continuing."), 400
+    session[SESSION_KEY] = NOTICE_VERSION
+    return redirect(target, code=303)
 
 
 @pages_bp.after_app_request
 def private_age_state(response):
     if normalized_hostname(request.host).startswith("docs."):
         return response
+    if current_app.config["PAYMENT_TESTING_NOTICE_ENABLED"] and response.mimetype == "text/html":
+        response.headers["Cache-Control"] = "private, no-store"
     if request.path in AGE_GATED_PATHS or request.path in {"/leave", "/checkout/start", "/checkout/crypto-confirm"}:
         if "no-store" not in response.headers.get("Cache-Control", ""):
             response.headers["Cache-Control"] = "private, no-store"
@@ -69,6 +97,7 @@ def landing_page():
 @pages_bp.route("/leave", methods=["GET"])
 def leave():
     session.pop("adult_confirmed", None)
+    session.pop(SESSION_KEY, None)
     response = make_response(render_template("leave.html"))
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
@@ -248,6 +277,8 @@ def payment_preview(method):
         response = make_response(render_template("patreon_checkout.html", target=target))
         response.headers["Cache-Control"] = "private, no-store"
         return response
+    if method == "card" and not current_app.config["NOWPAYMENTS_SANDBOX"]:
+        return redirect(target, code=303)
     if method == "banxa":
         from .checkout_recovery import resolve_session_id
         session_id = resolve_session_id()
@@ -269,6 +300,8 @@ def payment_preview(method):
             or parsed.path != "/process-payment.php"
             or parse_qs(parsed.query).get("provider") != ["banxa"]):
             abort(404)
+    if method == "banxa" and not current_app.config["NOWPAYMENTS_SANDBOX"]:
+        return render_template("payment_preview_launch.html", target=target, provider=provider)
     error = None
     if request.method == "POST":
         if request.form.get("confirm_no_payment") == "yes":

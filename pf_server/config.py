@@ -188,14 +188,16 @@ def load_environment_config(
         if not app_domain.startswith("https://") or not api_domain.startswith("https://"):
             raise ValueError("ONRAMP_ENABLED requires HTTPS public origins")
     shop_enabled = _boolean(source, "PATREON_SHOP_ENABLED", False)
-    shop_url = source.get("PATREON_SHOP_PRODUCT_URL", "https://www.patreon.com/c/echteralsfake/shop").strip()
+    shop_url = source.get("PATREON_SHOP_PRODUCT_URL", "https://www.patreon.com/EchterAlsFake/posts/porn-fetch-174679355?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link").strip()
     parsed_shop = urlsplit(shop_url)
     if (parsed_shop.scheme != "https" or parsed_shop.hostname not in {"www.patreon.com", "patreon.com"}
         or parsed_shop.username or parsed_shop.password or parsed_shop.port not in {None, 443}
         or parsed_shop.fragment):
         raise ValueError("PATREON_SHOP_PRODUCT_URL must be an HTTPS Patreon URL")
-    if shop_enabled and not nowpayments_sandbox and ("/shop/" not in parsed_shop.path or not parsed_shop.path.split("/shop/", 1)[1].strip("/")):
-        raise ValueError("Live Patreon purchases require PATREON_SHOP_PRODUCT_URL pointing to the specific Shop product")
+    specific_shop = re.fullmatch(r"/c/[^/]+/shop/[^/]+/?", parsed_shop.path)
+    specific_post = re.fullmatch(r"/[^/]+/posts/[^/]+-[0-9]+/?", parsed_shop.path)
+    if shop_enabled and not nowpayments_sandbox and not (specific_shop or specific_post):
+        raise ValueError("Live Patreon purchases require PATREON_SHOP_PRODUCT_URL pointing to a specific Shop product or purchase post")
     if shop_enabled:
         if not source.get("RATELIMIT_STORAGE_URI", "").startswith(("redis://", "rediss://")):
             raise ValueError("PATREON_SHOP_ENABLED requires shared Redis RATELIMIT_STORAGE_URI")
@@ -248,6 +250,7 @@ def load_environment_config(
         "WEBSITE_MAX_ARTIFACT_BYTES": artifact_limit,
         "APP_DOMAIN": app_domain,
         "SEO_INDEXING_ENABLED": _boolean(source, "SEO_INDEXING_ENABLED", True),
+        "PAYMENT_TESTING_NOTICE_ENABLED": _boolean(source, "PAYMENT_TESTING_NOTICE_ENABLED", True),
         "ONION_ORIGIN": onion_origin,
         "API_DOMAIN": api_domain,
         "API_PUBLIC_HOST": api_public_host,

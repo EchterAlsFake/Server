@@ -55,7 +55,7 @@
     if (!form.reportValidity()) return;
     createPayment();
   });
-  document.querySelector('#simulate-success-btn').addEventListener('click', async event => {
+  document.querySelector('#simulate-success-btn')?.addEventListener('click', async event => {
     const button = event.currentTarget;
     button.disabled = true;
     document.querySelector('#simulation-progress').hidden = false;
