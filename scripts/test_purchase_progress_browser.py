@@ -70,6 +70,7 @@ def run(browser_name):
             page.goto(origin + '/porn_fetch')
             page.locator('#adult-confirmed').check()
             page.locator('#age-form button[type="submit"]').click()
+            expect(page.locator('#age-overlay')).to_have_count(0)
 
             with main.app.app_context():
                 main.db.session.add(Transaction(session_id='NP-progress', provider_payment_id='mock-progress',
@@ -117,7 +118,7 @@ def run(browser_name):
             page.locator('#activation-email').fill('email-progress@example.com')
             page.get_by_role('button', name='Email my license').click()
             panel = page.locator('#patreon-email-progress')
-            expect(panel).to_contain_text('Waiting for the purchase worker')
+            expect(panel).to_contain_text('Starting purchase verification')
             sales = [('email-order', 'email-progress@example.com', time.time() - 60, True, 'EMAIL-RECEIPT')]
             fetch, fetching, fetched = paused(sales)
             send, sending, sent = paused(None)
@@ -149,7 +150,7 @@ def run(browser_name):
             page.locator('#lookup-order').fill('RECEIPT-PROGRESS')
             page.get_by_role('button', name='View my license').click()
             panel = page.locator('#patreon-lookup-progress')
-            expect(panel).to_contain_text('Waiting for the purchase worker')
+            expect(panel).to_contain_text('Starting purchase verification')
             build, building, built = paused(shop.build_license_file)
             sales = [('receipt-order', 'receipt-progress@example.com', time.time()-60, True, 'RECEIPT-PROGRESS')]
             with patch.object(shop, 'snapshot', return_value=sales), patch.object(shop, 'build_license_file', side_effect=build):
@@ -181,6 +182,44 @@ def run(browser_name):
             expect(panel).to_have_attribute('aria-busy', 'false')
             page.get_by_role('button', name='Enter purchase details again').click()
             expect(page.locator('#lookup-email')).to_be_visible()
+
+            # Enable the real intake wakeup. No timer, CLI call or manual
+            # refresh participates in either of these end-to-end purchases.
+            fixture.patreon_wakeup.stop()
+            for email_only in (False, True):
+                buyer = f'immediate-{email_only}@example.com'
+                sales = [(f'immediate-{email_only}', buyer, time.time()-60, True, 'IMMEDIATE-RECEIPT')]
+                fetch, fetching, fetched = paused(sales)
+                with patch.object(shop, 'fetch_sales', side_effect=fetch), patch.object(shop, 'send_license_email'):
+                    page.goto(origin + '/activate')
+                    if email_only:
+                        # A fresh browser session has no earlier delivery panel.
+                        context.clear_cookies()
+                        page.goto(origin + '/activate')
+                        page.locator('#activation-email').fill(buyer)
+                        submit = page.get_by_role('button', name='Email my license')
+                    else:
+                        page.locator('#lookup-email').fill(buyer)
+                        page.locator('#lookup-order').fill('IMMEDIATE-RECEIPT')
+                        submit = page.get_by_role('button', name='View my license')
+                    started_at = time.monotonic()
+                    with page.expect_navigation(wait_until='load'):
+                        submit.click()
+                    assert fetching.wait(2), 'Intake did not start scraping immediately'
+                    state = main.app.extensions['patreon_shop_worker']
+                    if state.thread:
+                        jobs.append(state.thread)
+                    active_panel = '#patreon-email-progress' if email_only else '#patreon-lookup-progress'
+                    expect(page.locator(active_panel + ' [data-progress-title]')).to_contain_text('Reading Patreon purchase data', timeout=3000)
+                    fetched.set()
+                    if email_only:
+                        expect(page.locator('#patreon-email-progress')).to_contain_text('Request processed. Check your email.', timeout=4000)
+                    else:
+                        expect(page.locator('#patreon-license-key')).to_be_visible(timeout=4000)
+                        expect(page.locator('#patreon-license-heading')).to_be_focused()
+                    elapsed = time.monotonic() - started_at
+                    assert elapsed < 8, f'Unexpected wait after immediate wakeup: {elapsed:.2f}s'
+                    print(f'{browser_name}: {"email" if email_only else "browser"} intake started immediately; result appeared in {elapsed:.2f}s', flush=True)
             assert not errors, errors
             browser.close()
             print(f'{browser_name}: real worker stages, animations, reduced motion, connection recovery, focused licenses and mobile layout passed')

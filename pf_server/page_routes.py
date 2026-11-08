@@ -296,6 +296,7 @@ def activate():
     from flask import current_app
     from .licensing import normalize_recipient_email
     from .patreon_shop import enqueue, enqueue_lookup, normalize_order_id, digest_email
+    from .patreon_worker import wake
     from .extensions import db
     from sqlalchemy.exc import SQLAlchemyError
     if not current_app.config.get('PATREON_SHOP_ENABLED'):
@@ -313,11 +314,13 @@ def activate():
             try:
                 if action == 'lookup':
                     session['patreon_lookup'] = enqueue_lookup(email, order_id)
+                    wake()
                     return redirect(url_for('pages.activate'), code=303)
                 else:
                     enqueue(email)
                     import time
                     session['patreon_delivery'] = {'digest': digest_email(email), 'created_at': time.time()}
+                    wake()
                     accepted = True
                     status = 202
             except SQLAlchemyError:
@@ -367,7 +370,7 @@ def patreon_delivery_result():
 
 
 @pages_bp.get('/activate/status')
-@limiter.limit('60 per minute', key_func=browser_limit_key)
+@limiter.limit('180 per minute', key_func=browser_limit_key)
 def patreon_license_status():
     if not current_app.config.get('PATREON_SHOP_ENABLED'):
         abort(404)

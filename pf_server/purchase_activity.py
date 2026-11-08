@@ -14,7 +14,7 @@ def record_activity(rows, stage):
 
 def patreon_progress(row, *, email_only=False):
     stages = [
-        ('queued', 'Request saved'),
+        ('queued', 'Start purchase verification'),
         ('fetching', 'Read Patreon purchase data'),
         ('verifying', 'Verify purchase details'),
         ('license', 'Prepare signed license'),
@@ -23,8 +23,8 @@ def patreon_progress(row, *, email_only=False):
     stage = row.progress_stage or 'queued'
     complete = not row.pending if email_only else row.status != 'pending'
     titles = {
-        'queued': ('Request saved. Waiting for the purchase worker.',
-                   'The worker checks the queue every minute. Your request is saved; this page will update automatically.'),
+        'queued': ('Starting purchase verification…',
+                   'Your request is saved and the purchase worker has been notified. Verification starts immediately when the worker is available; this page updates automatically.'),
         'fetching': ('Reading Patreon purchase data…',
                      'The worker is fetching and validating the Patreon sales pages before checking purchases. This can take a few minutes.'),
         'verifying': ('Checking purchase details…',
@@ -60,4 +60,4 @@ def patreon_progress(row, *, email_only=False):
                 activity='attention' if attention else 'complete' if complete else 'waiting' if stage in {'retry', 'queued'} else 'active',
                 steps=[] if attention else [dict(id=key, label=label, state='done' if i < index else 'current' if i == index else 'upcoming') for i, (key, label) in enumerate(stages)],
                 updated_at=datetime.fromtimestamp(updated, timezone.utc).isoformat(),
-                poll_after_ms=5000)
+                poll_after_ms=15000 if stage == 'retry' else 1000)

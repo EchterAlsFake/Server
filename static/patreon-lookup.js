@@ -1,5 +1,7 @@
 (() => {
   const submitting = document.querySelector('#patreon-submit-progress');
+  const result = document.querySelector('#patreon-license-result');
+  if (result) history.scrollRestoration = 'manual';
   document.querySelectorAll('[data-patreon-form]').forEach(form => {
     form.addEventListener('submit', event => {
       if (form.dataset.submitting) { event.preventDefault(); return; }
@@ -18,9 +20,8 @@
       form.removeAttribute('aria-busy');
       form.querySelector('button[type="submit"]').disabled = false;
     });
+    if (result) window.PurchaseProgress.reveal(result, {animate: false});
   });
-  const result = document.querySelector('#patreon-license-result');
-  if (result) window.PurchaseProgress.reveal(result);
   document.querySelectorAll('[data-patreon-activity]').forEach(panel => {
     if (panel.dataset.pending !== 'true') return;
     const action = panel.dataset.patreonActivity;
@@ -29,6 +30,7 @@
     const checked = panel.querySelector('[data-progress-checked]');
     const announcement = document.getElementById(`${panel.id}-announcement`);
     const started = Date.now();
+    let delay = 1000;
     let title = panel.querySelector('[data-progress-title]').textContent;
     let timer, busy = false, stopped = false;
     refresh.hidden = false;
@@ -49,11 +51,13 @@
           stopped = true;
         } else if (action === 'lookup' && data.status === 'ready') {
           stopped = true;
+          history.scrollRestoration = 'manual';
           location.reload();
           return;
         } else {
           if (!data.progress) throw new Error('Missing progress');
           window.PurchaseProgress.render(panel, data.progress);
+          delay = data.progress.poll_after_ms || 1000;
           stopped = data.status !== 'pending';
         }
         const nextTitle = panel.querySelector('[data-progress-title]').textContent;
@@ -65,7 +69,7 @@
         checked.textContent = `Last connection attempt: ${new Date().toLocaleTimeString()}.`;
       } finally {
         busy = false; refresh.disabled = false;
-        if (!stopped && !document.hidden) timer = setTimeout(poll, 5000);
+        if (!stopped && !document.hidden) timer = setTimeout(poll, delay);
       }
     }
     refresh.addEventListener('click', () => {

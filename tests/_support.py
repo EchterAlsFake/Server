@@ -56,6 +56,9 @@ class ServerTestCase(unittest.TestCase):
             WTF_CSRF_ENABLED=False,
         )
         self.client = main.app.test_client()
+        self.patreon_wakeup = patch('pf_server.patreon_worker.wake')
+        self.mock_patreon_wakeup = self.patreon_wakeup.start()
+        self.addCleanup(self.patreon_wakeup.stop)
         self.tor_lookup = patch.object(main.app.extensions['tor_resolver'], 'lookup', return_value='clear')
         self.mock_tor_lookup = self.tor_lookup.start()
         self.addCleanup(self.tor_lookup.stop)

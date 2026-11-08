@@ -354,7 +354,7 @@ keeps the encrypted address as a later purchase/support reference, separate from
 short-lived delivery queues. Successful delivery and the existing seven-day outbox
 cleanup do not erase this order reference. The address is never included in signed
 license files, Keygen requests, public status responses or NOWPayments requests.
-Patreon Shop buyers submit their purchase email at `/activate`; the worker verifies Shop sales and sends the license. Membership webhooks are not supported.
+Patreon Shop buyers submit their purchase email at `/activate`; submissions wake a background worker immediately to verify Shop sales and send the license. The minute timer retries unfinished work. Membership webhooks are not supported.
 
 Run the database migration before starting the updated application:
 `uv run flask --app main db upgrade` (latest revision `c482e16d09a2`, including `ae902bd71c40` and `bf371c20a913`). Existing orders
@@ -501,5 +501,5 @@ See [the release review and rollout instructions](docs/V39_RELEASE_REVIEW.md).
 New cryptocurrency purchases require a fresh local Tor exit list as well as country
 evidence and the saved checkout declarations. Run `flask --app main update-tor-exits`
 and install the hourly refresh timer before enabling payments. Missing/stale Tor data
-blocks new crypto checkout. Patreon browser retrieval uses the existing minute worker
+blocks new crypto checkout. Patreon browser retrieval starts a background worker immediately
 and migration `e8b42f930d16`; email alone never reveals a key in the browser.

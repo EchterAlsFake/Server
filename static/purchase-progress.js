@@ -20,11 +20,11 @@
       return li;
     }));
   }
-  function reveal(element) {
+  function reveal(element, {animate = true} = {}) {
     element.hidden = false;
     const heading = element.querySelector('[data-result-heading]');
     heading?.focus({preventScroll: true});
-    element.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start'});
+    element.scrollIntoView({behavior: !animate || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start'});
   }
   document.querySelectorAll('[data-copy-license]').forEach(button => button.addEventListener('click', async () => {
     const key = document.getElementById(button.dataset.copyLicense);

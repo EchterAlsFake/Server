@@ -3,7 +3,9 @@
 The `/activate` page supports email delivery and browser retrieval. Browser retrieval
 requires both the purchase email and the receipt’s public Patreon order ID. The
 worker verifies an eligible sale before returning its signed license to that browser.
-The unofficial sales connection remains isolated to the worker.
+New submissions wake a background worker immediately. Scraping runs outside the
+HTTP request; the browser can show progress while verification continues. The
+scheduled worker remains a fallback for interrupted jobs and delayed retries.
 Patreon membership webhooks, tier checks and subscription delivery have been removed. Only Shop sales are verified.
 
 There is no separate security-period agreement or mailbox challenge before purchase.
@@ -24,20 +26,20 @@ handles its own fees and taxes. Update `PATREON_SHOP_PRODUCT_VARIANT_ID` if need
 4. Export only Patreon cookies in Netscape cookies.txt format to a protected file
    outside Git and the public/static directories, for example
    `/srv/server/data/secrets/patreon-cookies.txt`. Set `PATREON_SHOP_COOKIE_FILE`
-   in the worker environment. The file must be owned by the worker account and
+   in both the web and scheduled worker environments. The file must be owned by the worker account and
    have mode 0600; its directory should have mode 0700. Symlinks are rejected.
-   Do not copy the Brave profile or grant access to its cookie database. The web
-   service does not need the cookie path; use a worker-only environment override
-   when deploying separate credentials. The supplied service uses the same Unix
-   user as the existing server; separate Unix accounts are needed if access to
-   the export must also be isolated from a compromised web process.
+   Do not copy the Brave profile or grant access to its cookie database. Immediate
+   processing runs in a background thread in the web process, so that process
+   needs the same cookie-file access and Keygen/SMTP configuration as the scheduled
+   worker. The supplied services use the same Unix user as the existing server.
 5. Run `flask --app main verify-patreon-shop` with the worker environment. This is
    read-only and prints only aggregate counts. Confirm eligibility for a controlled
    purchase before enabling issuance. Cookie expiration does not guarantee session
    validity; login, security challenges or server-side invalidation can end it early.
 6. Set `PATREON_SHOP_ENABLED=true` for the web and worker processes. Install and
    enable `deploy/eaf-patreon-shop.service` and `.timer`, adapting paths/accounts
-   for other deployments. The worker runs every minute. Restart web workers after
+   for other deployments. The timer retries unfinished work every minute; new
+   requests start processing immediately. Restart web workers after
    configuration changes. Keep cookies, keys and export contents out of logs/chat.
 
 The unofficial `/api/sales` endpoint is not documented in the public API reference.
@@ -87,10 +89,16 @@ Read the worker journal for aggregate processed/fallback/pending counts, oldest
 pending age, verification health and fixed-category failures. Alert on pending age
 above ten minutes or repeated verification/fulfillment failures.
 `patreon_shop_health.last_success_at` and `retry_at` record verification health.
-The lookup worker must run on one machine with a shared DATA_DIR and SQLite DB;
-a nonblocking file lock serializes timer and manual invocations. This is not a
-multi-host worker design. Redis provides shared throttles (five requests per minute and twenty per hour per
+The lookup workers must run on one machine with a shared DATA_DIR and SQLite DB.
+One background thread per web process coalesces wakeups. A file lock serializes
+those threads with timer and manual invocations; immediate workers wait for an
+active batch to finish and then drain new intake without waiting for the timer.
+They skip completed/cooldown requests and preserve provider and delivery backoff.
+Pending database jobs survive a web-process restart and are picked up by the timer.
+Redis provides shared throttles (five requests per minute and twenty per hour per
 signed browser session, plus sixty submissions per minute for the endpoint).
+Status polling is limited to 180 checks per minute per browser session, allowing
+both active panels to update once per second; delayed retries poll less often.
 The application strips visitor IPs; these limits do not claim to be per-IP.
 
 Replace cookie exports atomically using a fresh 0600 file owned by the worker.
@@ -148,7 +156,7 @@ with CSRF protection; they never appear in a URL. The table holds HMAC email and
 public-order-ID values, a random request ID, time, status and license association.
 Only the random request ID is put into the signed, secure session cookie.
 
-The existing minute worker fetches a complete snapshot and compares both values
+The background worker fetches a complete snapshot and compares both values
 against `buyer_email` and `public_order_id`, also checking product, fulfilled status
 and refund state. Internal order IDs cannot substitute for receipt IDs. The same
 purchase/license mapping is used for email delivery and browser requests.

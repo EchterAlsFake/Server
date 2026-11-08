@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 from flask import current_app
+from sqlalchemy import case
 from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
@@ -306,12 +307,20 @@ def reconcile_fallbacks(sales):
     db.session.commit()
 
 
+def pending_lookups():
+    # Finish the active batch first, then fresh intake, then deferred retries.
+    # Otherwise a full batch of failing old lookups can starve new requests.
+    priority = case((Lookup.progress_stage.in_(('fetching', 'verifying', 'license')), 0),
+                    (Lookup.progress_stage == 'queued', 1), else_=2)
+    return Lookup.query.filter_by(status='pending').order_by(priority, Lookup.created_at).limit(100).all()
+
+
 def process_lookups(sales):
     """Both receipt fields and current eligibility must match before disclosure."""
     if sales is None:
         return 0
     count = 0
-    for lookup in Lookup.query.filter_by(status='pending').order_by(Lookup.created_at).limit(100).all():
+    for lookup in pending_lookups():
         if time.time() - lookup.created_at >= LOOKUP_LIFETIME:
             continue
         record_activity([lookup], 'verifying')
@@ -359,22 +368,35 @@ def process_lookups(sales):
     return count
 
 
-def process_claims():
+def queued_claims_pending():
+    """New intake only; failed jobs retain their existing retry backoff."""
+    now = time.time()
+    return (
+        Customer.query.filter_by(pending=True, progress_stage='queued')
+        .filter(Customer.next_attempt_at <= now).with_entities(Customer.email_digest).first() is not None
+        or Lookup.query.filter_by(status='pending', progress_stage='queued')
+        .filter(Lookup.created_at > now - LOOKUP_LIFETIME).with_entities(Lookup.id).first() is not None
+    )
+
+
+def process_claims(*, wait=False, queued_only=False):
     """Single local worker matches the deployment's SQLite and shared DATA_DIR."""
     if not current_app.config.get('PATREON_SHOP_ENABLED'):
         return 0
     lock_path = Path(current_app.config['DATA_DIR']) / 'patreon-shop.lock'
     with open(lock_path, 'a') as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(lock, fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
         except BlockingIOError:
+            return 0
+        if queued_only and not queued_claims_pending():
             return 0
         db.session.execute(db.update(Customer).where(Customer.pending.is_(False), Customer.completed_at < time.time() - 30 * 86400).values(reason=None, completed_at=None))
         db.session.execute(db.delete(Lookup).where(Lookup.created_at <= time.time() - LOOKUP_LIFETIME))
         db.session.commit()
         rows = Customer.query.filter(Customer.pending.is_(True), Customer.next_attempt_at <= time.time()).order_by(Customer.requested_at).limit(100).all()
         unbound = Customer.query.filter(Customer.fallback_key.is_not(None)).first() is not None
-        lookups = Lookup.query.filter_by(status='pending').order_by(Lookup.created_at).limit(100).all()
+        lookups = pending_lookups()
         if not rows and not unbound and not lookups:
             return 0
         needs_sales = lookups or unbound or any(not row.delivery_key for row in rows)
