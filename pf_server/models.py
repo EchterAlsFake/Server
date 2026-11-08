@@ -114,6 +114,8 @@ class PaymentProgress(db.Model):
     poll_lease_until = db.Column(db.String(40), nullable=True)
     poll_token = db.Column(db.String(64), nullable=True)
     refresh_unavailable = db.Column(db.Boolean, nullable=False, default=False)
+    fulfillment_stage = db.Column(db.String(32), nullable=True)
+    fulfillment_updated_at = db.Column(db.Float, nullable=True)
 
 
 class LicenseRenewal(db.Model):
@@ -194,6 +196,8 @@ class PatreonShopCustomer(db.Model):
     fallback_key = db.Column(db.String, db.ForeignKey('license.license_key'))
     fallback_created_at = db.Column(db.Float)
     reason = db.Column(db.String(32))
+    progress_stage = db.Column(db.String(32), nullable=True)
+    progress_updated_at = db.Column(db.Float, nullable=True)
 
 
 class PatreonShopPurchase(db.Model):
@@ -223,3 +227,5 @@ class PatreonShopLookup(db.Model):
     created_at = db.Column(db.Float, nullable=False, index=True)
     status = db.Column(db.String(16), nullable=False, default='pending')
     license_key = db.Column(db.String, db.ForeignKey('license.license_key'))
+    progress_stage = db.Column(db.String(32), nullable=True)
+    progress_updated_at = db.Column(db.Float, nullable=True)

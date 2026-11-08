@@ -9,7 +9,7 @@ import httpx
 from cryptography.fernet import Fernet
 
 from _support import ServerTestCase, main, drain_payment_receipts
-from pf_server import payment_progress as service
+from pf_server import payment_progress as service, nowpayments_service as payments, licensing
 from pf_server.onramp_service import encrypt
 from pf_server.models import License, OnrampCheckout, PaymentProgress, Transaction
 
@@ -402,3 +402,41 @@ class PaymentProgressTests(ServerTestCase):
                     main.db.session.execute(main.db.delete(PaymentProgress))
                     main.db.session.execute(main.db.delete(Transaction))
                     main.db.session.commit()
+
+    def test_fulfillment_publishes_generation_and_invoice_before_slow_calls(self):
+        self.add()
+        self.now_state = 'finished'
+        original_license = licensing.fulfill_transaction_license
+        original_invoice = payments.build_invoice
+
+        def generate(transaction):
+            progress = self.status().json['progress']
+            self.assertEqual(progress['stage'], 'license')
+            self.assertIn('Generating your license', progress['title'])
+            self.assertEqual(progress['activity'], 'active')
+            return original_license(transaction)
+
+        def invoice(**kwargs):
+            progress = self.status().json['progress']
+            self.assertEqual(progress['stage'], 'invoice')
+            self.assertIn('Preparing your invoice', progress['title'])
+            return original_invoice(**kwargs)
+
+        with patch('pf_server.licensing.fulfill_transaction_license', side_effect=generate), patch.object(payments, 'build_invoice', side_effect=invoice):
+            self.assertEqual(self.ipn(self.event(state='finished')).status_code, 200)
+        self.assertEqual(self.status().json['progress']['activity'], 'complete')
+
+    def test_finished_payment_with_unavailable_signed_key_stays_in_loading_state(self):
+        from pf_server.keygen_service import KeygenUnavailable
+        from pf_server.models import Transaction
+        self.add()
+        with main.app.app_context():
+            main.db.session.get(Transaction, 'NP-test').status = 'finished'
+            main.db.session.commit()
+        with patch('pf_server.licensing.ensure_license', side_effect=KeygenUnavailable('test outage')):
+            result = self.status()
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.json['status'], 'pending')
+        self.assertEqual(result.json['progress']['activity'], 'waiting')
+        self.assertNotIn('license_key', result.json)
+        self.assertEqual(self.status().json['status'], 'finished')

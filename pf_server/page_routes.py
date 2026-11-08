@@ -295,7 +295,7 @@ def payment_preview(method):
 def activate():
     from flask import current_app
     from .licensing import normalize_recipient_email
-    from .patreon_shop import enqueue, enqueue_lookup, normalize_order_id
+    from .patreon_shop import enqueue, enqueue_lookup, normalize_order_id, digest_email
     from .extensions import db
     from sqlalchemy.exc import SQLAlchemyError
     if not current_app.config.get('PATREON_SHOP_ENABLED'):
@@ -316,18 +316,22 @@ def activate():
                     return redirect(url_for('pages.activate'), code=303)
                 else:
                     enqueue(email)
+                    import time
+                    session['patreon_delivery'] = {'digest': digest_email(email), 'created_at': time.time()}
                     accepted = True
                     status = 202
             except SQLAlchemyError:
                 db.session.rollback()
                 status, error = 503, 'Your request could not be saved. Please try again shortly.'
-    response = make_response(render_template('activate.html', error=error, accepted=accepted, lookup=patreon_lookup_result()), status)
+    delivery = patreon_delivery_result()
+    response = make_response(render_template('activate.html', error=error, accepted=accepted or bool(delivery),
+                                            lookup=patreon_lookup_result(include_progress=True), delivery=delivery), status)
     response.headers['Cache-Control'] = 'private, no-store'
     response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     return response
 
 
-def patreon_lookup_result():
+def patreon_lookup_result(*, include_progress=False):
     from .patreon_shop import browser_lookup
     from .extensions import db
     from .models import License
@@ -341,7 +345,25 @@ def patreon_lookup_result():
             result['license_key'] = record.signed_key
         else:
             result['status'] = 'pending'
+    if include_progress:
+        from .purchase_activity import patreon_progress
+        result['progress'] = patreon_progress(lookup)
     return result
+
+
+def patreon_delivery_result():
+    import time
+    from .extensions import db
+    from .models import PatreonShopCustomer
+    from .patreon_shop import LOOKUP_LIFETIME
+    from .purchase_activity import patreon_progress
+    proof = session.get('patreon_delivery')
+    if not isinstance(proof, dict) or not 0 <= time.time() - proof.get('created_at', 0) < LOOKUP_LIFETIME:
+        return None
+    row = db.session.get(PatreonShopCustomer, proof.get('digest'))
+    if row is None:
+        return None
+    return {'status': 'pending' if row.pending else 'complete', 'progress': patreon_progress(row, email_only=True)}
 
 
 @pages_bp.get('/activate/status')
@@ -349,7 +371,9 @@ def patreon_lookup_result():
 def patreon_license_status():
     if not current_app.config.get('PATREON_SHOP_ENABLED'):
         abort(404)
-    return jsonify(patreon_lookup_result() or {'status': 'expired'})
+    if request.args.get('action') == 'email':
+        return jsonify(patreon_delivery_result() or {'status': 'expired'})
+    return jsonify(patreon_lookup_result(include_progress=request.args.get('progress') == '1') or {'status': 'expired'})
 
 
 @pages_bp.post('/activate/download')

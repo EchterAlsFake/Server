@@ -18,6 +18,7 @@ from .extensions import db
 from .crypto_delivery import cipher
 from .licensing import normalize_recipient_email, get_or_create_license, build_license_file, send_license_email
 from .models import PatreonShopCustomer as Customer, PatreonShopPurchase as Purchase, PatreonShopHealth as Health, PatreonShopLookup as Lookup, License
+from .purchase_activity import record_activity
 
 API_URL = 'https://www.patreon.com/api/sales'
 LOOKUP_LIFETIME = 15 * 60
@@ -58,7 +59,8 @@ def digest_order(order_id):
 def enqueue_lookup(email, order_id):
     """Store no raw receipt credentials; the random ID stays in the session."""
     row = Lookup(id=secrets.token_urlsafe(32), email_digest=digest_email(email),
-        order_digest=digest_order(order_id), created_at=time.time(), status='pending')
+        order_digest=digest_order(order_id), created_at=time.time(), status='pending',
+        progress_stage='queued', progress_updated_at=time.time())
     db.session.add(row)
     db.session.commit()
     return row.id
@@ -75,7 +77,8 @@ def enqueue(email):
     now = time.time()
     row = db.session.get(Customer, digest)
     if row is None:
-        db.session.add(Customer(email_digest=digest, recipient_encrypted=cipher().encrypt(email.encode()).decode(), requested_at=now, pending=True))
+        db.session.add(Customer(email_digest=digest, recipient_encrypted=cipher().encrypt(email.encode()).decode(), requested_at=now, pending=True,
+                                progress_stage='queued', progress_updated_at=now))
         try:
             db.session.commit()
         except IntegrityError:
@@ -84,7 +87,7 @@ def enqueue(email):
     db.session.execute(db.update(Customer).where(
         Customer.email_digest == digest, Customer.pending.is_(False),
         Customer.requested_at <= now - 900,
-    ).values(pending=True, requested_at=now, next_attempt_at=0))
+    ).values(pending=True, requested_at=now, next_attempt_at=0, progress_stage='queued', progress_updated_at=now))
     db.session.commit()
 
 
@@ -311,6 +314,7 @@ def process_lookups(sales):
     for lookup in Lookup.query.filter_by(status='pending').order_by(Lookup.created_at).limit(100).all():
         if time.time() - lookup.created_at >= LOOKUP_LIFETIME:
             continue
+        record_activity([lookup], 'verifying')
         matches = [sale for sale in sales if len(sale) > 4 and sale[4]
             and hmac.compare_digest(digest_email(sale[1]), lookup.email_digest)
             and hmac.compare_digest(digest_order(sale[4]), lookup.order_digest)]
@@ -320,6 +324,7 @@ def process_lookups(sales):
             continue
         order_id, email, purchased, _ = matches[0][:4]
         try:
+            record_activity([lookup], 'license')
             customer = db.session.get(Customer, lookup.email_digest)
             if customer is None:
                 customer = Customer(email_digest=lookup.email_digest,
@@ -344,10 +349,12 @@ def process_lookups(sales):
             record = db.session.get(License, purchase.license_key)
             build_license_file(record.license_key, record.issuance_reference, record.created_at)
             lookup.license_key, lookup.status = record.license_key, 'ready'
+            lookup.progress_stage, lookup.progress_updated_at = 'delivery', time.time()
             db.session.commit()
             count += 1
         except Exception:
             db.session.rollback()
+            record_activity([lookup], 'retry')
             current_app.logger.warning('Patreon Shop browser fulfillment deferred')
     return count
 
@@ -367,34 +374,42 @@ def process_claims():
         db.session.commit()
         rows = Customer.query.filter(Customer.pending.is_(True), Customer.next_attempt_at <= time.time()).order_by(Customer.requested_at).limit(100).all()
         unbound = Customer.query.filter(Customer.fallback_key.is_not(None)).first() is not None
-        lookups = Lookup.query.filter_by(status='pending').first() is not None
+        lookups = Lookup.query.filter_by(status='pending').order_by(Lookup.created_at).limit(100).all()
         if not rows and not unbound and not lookups:
             return 0
-        sales = snapshot() if lookups or unbound or any(not row.delivery_key for row in rows) else None
+        needs_sales = lookups or unbound or any(not row.delivery_key for row in rows)
+        if needs_sales:
+            record_activity([*rows, *lookups], 'fetching')
+        sales = snapshot() if needs_sales else None
+        record_activity(lookups, 'verifying' if sales is not None else 'retry')
         reconcile_fallbacks(sales)
         for row in rows:
             try:
+                record_activity([row], 'license')
                 key = choose_license(row, sales)
                 if not key and row.reason == 'unavailable':
                     row.next_attempt_at = time.time() + 60
-                    db.session.commit()
+                    record_activity([row], 'retry')
                     continue
                 if key:
                     record = db.session.get(License, key)
                     content = build_license_file(key, record.issuance_reference, record.created_at)
                     recipient = cipher().decrypt(row.recipient_encrypted.encode()).decode()
                     purchase = Purchase.query.filter_by(license_key=key).first()
+                    record_activity([row], 'delivery')
                     send_license_email(recipient, content)
                     if purchase and purchase.license_sent_at is None:
                         purchase.license_sent_at = time.time()
                     row.last_key = key
+                else:
+                    record_activity([row], 'delivery')
                 row.pending, row.delivery_key = False, None
                 row.completed_at = time.time()
                 db.session.commit()
             except Exception:
                 db.session.rollback()
                 row.next_attempt_at = time.time() + 60
-                db.session.commit()
+                record_activity([row], 'retry')
                 current_app.logger.warning('Patreon Shop fulfillment deferred')
         health = db.session.get(Health, 1)
         oldest = Customer.query.filter_by(pending=True).order_by(Customer.requested_at).first()
