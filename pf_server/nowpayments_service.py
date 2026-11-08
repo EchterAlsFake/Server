@@ -20,6 +20,7 @@ from .extensions import db
 from .invoice_service import build_invoice, load_invoice, save_invoice
 from .models import CryptoLicenseDelivery, OnrampCheckout, PaymentProgress, Transaction
 from .webhook_models import NowPaymentsWebhook
+from .keygen_service import verify_lifetime_policy
 
 
 class PaymentProviderError(RuntimeError):
@@ -122,6 +123,7 @@ def create_crypto_invoice(
     contract_snapshot: str | None = None,
     delivery_recipient_encrypted: str | None = None,
 ) -> dict[str, str]:
+    verify_lifetime_policy()
     session_id, created_at = _new_session()
     payload = {
         "price_amount": PREMIUM_PRICE_AMOUNT,

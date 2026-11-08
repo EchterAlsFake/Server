@@ -17,7 +17,7 @@ Production addresses:
 - Payment webhooks: <https://api.echteralsfake.me>
 - Onion service: <http://i3vtbgg6dufszjzbccyzd3wk4v2on3k6ljzjpg2ppzapgqmjmsxlvkid.onion/>
 
-For payment creation only, middleware temporarily uses the client address supplied by the trusted, local TLS-terminating reverse proxy for a local country check. It then removes that address, `REMOTE_ADDR`, and common forwarding headers before Flask and its extensions see the request. Other requests are stripped without a lookup. Keep VPS, reverse-proxy, and process-manager access logs disabled if the deployment must retain this no-IP-log property.
+Middleware temporarily uses the client address supplied by the trusted local reverse proxy for country checks on payment creation and local Tor-exit checks on payment pages and requests. It then removes that address, `REMOTE_ADDR`, and common forwarding headers before Flask and its extensions see the request. Other requests are stripped without a lookup. Keep VPS, reverse-proxy, and process-manager access logs disabled if the deployment must retain this no-IP-log property.
 
 ## Quick start
 
@@ -65,7 +65,7 @@ pf_server/update_routes.py  Release metadata and Sparkle update Blueprint
 pf_server/operations_routes.py Health, statistics, and administration Blueprint
 pf_server/payment_routes.py Purchase, license, invoice, and webhook Blueprint
 pf_server/licensing.py      License signing, email validation, and SMTP service
-pf_server/patreon_shop.py    Email-only Shop order verification and license delivery
+pf_server/patreon_shop.py    Shop order verification and license delivery
 pf_server/nowpayments_service.py Payment-provider and completion service
 pf_server/invoice_service.py Atomic invoice storage and PDF rendering service
 pf_server/time_utils.py     Shared RFC 3339 timestamp formatting
@@ -159,7 +159,7 @@ The commercial host returns a plain 403 page when the request's `Referer` has th
 The main API groups are:
 
 - Releases: `GET /update` and `GET /appcast.xml`
-- Licenses and payments: `GET /buy_license`, `POST /create-crypto-payment`, `GET /check-payment-status`, `GET /download_license`, `GET /download_invoice`, and `POST /check_license`. Patreon Shop buyers request delivery by email at `/activate`. Sandbox crypto checkout requires `test_acknowledged: true` in addition to terms acceptance.
+- Licenses and payments: `GET /buy_license`, `POST /create-crypto-payment`, `GET /check-payment-status`, `GET /download_license`, `GET /download_invoice`, and `POST /check_license`. Patreon Shop buyers request delivery by email or retrieve a license using their purchase email and receipt order ID at `/activate`. Sandbox crypto checkout requires `test_acknowledged: true` in addition to terms acceptance.
 - Webhooks: `POST /nowpayments-ipn`
 - CI: `POST /ci/<test_name>`, `GET /ci/<test_name>`, `GET /ci/<test_name>.json`, and `GET /ci/<test_name>/badge.svg`
 - Checklist: `/checklist`, `/checklist/login`, `/checklist/api/*`, and `/checklist/progress.svg`
@@ -494,3 +494,12 @@ Production requires Redis through `RATELIMIT_STORAGE_URI`. Aggregate statistics 
 Host validation allows the documented public hosts, configured origins, and loopback. Set `ADDITIONAL_TRUSTED_HOSTS` (comma-separated exact hostnames) for staging domains. The application trusts one proxy hop for scheme, ignores forwarded host/prefix, and must remain bound behind the local proxy. Keep proxy and server access logs disabled.
 
 Retired membership delivery records remain in `patreon_license_deliveries` for historical recovery. The application no longer maps or processes this table; Alembic autogeneration excludes it to avoid accidental data loss. Historical migrations remain intact. Remove obsolete Patreon webhook secrets from deployment configuration and disable any old webhook subscriptions in the Patreon dashboard.
+
+## v3.9 commercial release review
+
+See [the release review and rollout instructions](docs/V39_RELEASE_REVIEW.md).
+New cryptocurrency purchases require a fresh local Tor exit list as well as country
+evidence and the saved checkout declarations. Run `flask --app main update-tor-exits`
+and install the hourly refresh timer before enabling payments. Missing/stale Tor data
+blocks new crypto checkout. Patreon browser retrieval uses the existing minute worker
+and migration `e8b42f930d16`; email alone never reveals a key in the browser.

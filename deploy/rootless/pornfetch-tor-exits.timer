@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep the cryptocurrency Tor blocklist current
+
+[Timer]
+OnBootSec=15s
+OnCalendar=hourly
+Persistent=true
+Unit=pornfetch-tor-exits.service
+
+[Install]
+WantedBy=timers.target

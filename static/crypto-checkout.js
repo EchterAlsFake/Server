@@ -36,7 +36,7 @@
         document.querySelector('#simulation-heading').focus();
       } else location.assign(data.status_url);
     } catch (e) { showError(error, e.message); }
-    finally { busy = false; pay.disabled = false; pay.textContent = 'Continue to NOWPayments →'; }
+    finally { busy = false; pay.disabled = false; pay.textContent = `${pay.dataset.label} →`; }
   }
   form.addEventListener('submit', event => {
     event.preventDefault();

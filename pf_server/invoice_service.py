@@ -80,7 +80,7 @@ def build_invoice(
         "Environment": environment,
         "Full Name": "Johannes Habel",
         "Address": "Bahnstr. 21 06886 Lutherstadt Wittenberg",
-        "Tax Number": "46208375790",
+        "VAT ID": "DE463457168",
         "Invoice Date": invoice_date,
         "Delivery Date": invoice_date,
         "Invoice Number": invoice_number,
@@ -138,7 +138,8 @@ def render_invoice_pdf(invoice: dict) -> bytes:
     for value in (
         _pdf_text(invoice, "Full Name"),
         _pdf_text(invoice, "Address"),
-        f"Tax Number: {_pdf_text(invoice, 'Tax Number')}",
+        (f"VAT ID: {_pdf_text(invoice, 'VAT ID')}" if invoice.get('VAT ID')
+            else f"Tax Number: {_pdf_text(invoice, 'Tax Number')}"),
     ):
         pdf.cell(0, 8, value, new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)

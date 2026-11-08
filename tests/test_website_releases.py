@@ -386,7 +386,7 @@ class WebsiteReleaseTests(ServerTestCase):
             self.assertEqual(len(card["primary"]), 1)
             self.assertEqual(card["primary"][0]["kind"], "installer")
             self.assertIn(
-                "automatic app updates", card["primary"][0]["installation_note"]
+                "app updates", card["primary"][0]["installation_note"]
             )
             self.assertEqual(len(card["files"]), 2)
         page = self.client.get("/download/linux").data

@@ -149,6 +149,7 @@ def run(browser_name="chromium"):
             expect(page.locator("#age-overlay")).to_have_count(0)
             expect(page.locator(".platform-selector a")).to_have_count(5)
             expect(page.locator(".platform-panel:visible")).to_have_count(1)
+            page.locator(".device-switcher > summary").click()
             page.locator('[data-platform="windows"]').click()
             expect(page.locator("#windows")).to_be_visible()
             expect(page.locator("#windows .advanced-downloads")).not_to_have_attribute(
@@ -186,7 +187,7 @@ def run(browser_name="chromium"):
             expect(page.locator(".primary-cta:visible")).to_have_count(1)
             page.locator('[data-platform="ios"]').click()
             expect(page.locator("#ios .ios-warning")).to_contain_text(
-                "xz-kitty Python build"
+                "Official native GUI"
             )
             expect(page.locator(".primary-cta:visible")).to_have_count(0)
             detected = context.new_page()
@@ -200,7 +201,7 @@ def run(browser_name="chromium"):
                 "href", "/downloads/3.9.66/PornFetch_windows_GUI_x64_Setup.exe"
             )
             expect(detected.locator("#windows .primary-installation")).to_contain_text(
-                "automatic app updates"
+                "app updates"
             )
             expect(detected.locator("#windows")).not_to_contain_text("Experimental")
             expect(detected.locator("#windows .package-choice")).to_be_hidden()
@@ -211,6 +212,7 @@ def run(browser_name="chromium"):
             expect(detected.locator("#windows .primary-cta")).to_have_attribute(
                 "href", "/downloads/3.9.66/PornFetch_windows_GUI_arm64.zip"
             )
+            detected.locator(".device-switcher > summary").click()
             detected.locator('[data-platform="macos"]').click()
             expect(detected.locator("#macos .primary-cta")).to_be_hidden()
             expect(detected.locator("#macos .package-choice")).to_be_visible()
@@ -218,12 +220,14 @@ def run(browser_name="chromium"):
             expect(detected.locator(".download-channels a").last).to_have_attribute(
                 "href", "/download/macos?channel=beta"
             )
+            detected.get_by_text("Choose a release channel", exact=True).click()
             expect(detected.locator(".download-channels")).to_be_visible()
             detected.locator(".download-channels a").nth(1).click()
             expect(detected.locator(".download-channels a[aria-current]")).to_have_text(
                 "Stable"
             )
             expect(detected.locator("#macos .package-row")).to_have_count(0)
+            detected.get_by_text("Choose a release channel", exact=True).click()
             detected.locator(".download-channels a").last.click()
             expect(detected.locator(".download-channels a[aria-current]")).to_have_text(
                 "Beta"
@@ -291,9 +295,8 @@ def run(browser_name="chromium"):
             )
             fallback = no_js.new_page()
             fallback.goto(origin + "/download")
-            fallback.locator(".site-menu > summary").click()
+            fallback.locator(".device-switcher > summary").click()
             fallback.locator('[data-platform="android"]').click()
-            fallback.locator(".site-menu > summary").click()
             expect(fallback.locator("#android .primary-cta")).to_be_visible()
             fallback.locator("#android .advanced-downloads > summary").click()
             expect(fallback.locator("#android .package-download")).to_have_count(5)

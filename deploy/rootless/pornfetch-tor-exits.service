@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh the Tor exit list used to block cryptocurrency payments
+After=pornfetch-web.service
+Requisite=pornfetch-web.service
+PartOf=pornfetch-web.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 1000 python3 -m flask --app main:app update-tor-exits
+TimeoutStartSec=90s
+NoNewPrivileges=true

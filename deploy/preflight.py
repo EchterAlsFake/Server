@@ -33,4 +33,13 @@ for language in ("de", "en"):
 import maxminddb
 with maxminddb.open_database(config["GEOIP_DATABASE_PATH"]) as reader:
     reader.metadata()
-print("Production configuration and local GeoIP database validated.")
+from pf_server.tor_checkout import TorExitResolver
+resolver = TorExitResolver(config['TOR_EXIT_LIST_PATH'])
+# A public address is needed to distinguish missing/stale data from a valid list.
+if resolver.lookup('1.1.1.1') == 'unavailable':
+    raise SystemExit('Refresh the local Tor exit list with flask --app main update-tor-exits')
+if not config['LICENSE_DELIVERY_ENCRYPTION_KEY'] and not config['ONRAMP_ENCRYPTION_KEY']:
+    raise SystemExit('Configure the stable LICENSE_DELIVERY_ENCRYPTION_KEY before enabling purchases')
+if not config['APP_DOMAIN'].startswith('https://') or not config['API_DOMAIN'].startswith('https://'):
+    raise SystemExit('Live payment origins require HTTPS')
+print("Production configuration, local GeoIP database and Tor payment blocklist validated.")

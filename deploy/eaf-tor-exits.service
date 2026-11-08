@@ -1,0 +1,20 @@
+[Unit]
+Description=Refresh the Tor exit list used to block cryptocurrency payments
+After=network-online.target
+ConditionPathExists=/srv/server/.env
+
+[Service]
+Type=oneshot
+User=eaf-server
+Group=eaf-server
+WorkingDirectory=/srv/server
+Environment=PF_SERVER_DATA_DIR=/srv/server/data
+Environment=PF_SERVER_DB=/srv/server/data/server.db
+ExecStart=/srv/server/.venv/bin/python -m flask --app main update-tor-exits
+TimeoutStartSec=90s
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/server/data
+PrivateTmp=true

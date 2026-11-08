@@ -38,10 +38,10 @@ The account scene clicks only provider tabs. The centered overlay reads:
 
 Privacy clicks and captions share one timing source in `src/tourContent.ts`:
 
-- 22.4–26.5s, Anonymous Mode: “Hide the app from people looking over your shoulder, or friends and family using your device”.
-- 26.5–29s, Tor Integration: “Download videos using Tor in restricted countries”.
-- 29–33.5s, SNI Obfuscation: “Bypass firewalls and hide Porn Fetch from your ISP*”.
-  The smaller note below reads: “* Not a proof for privacy, best effort to hide the SNI name. Destination IP may still be visible”.
+- 22.4–26.5s, Anonymous Mode: “Conceal sensitive details on your screen when other people are nearby”.
+- 26.5–29s, Tor Integration: “Route supported connections through Tor”.
+- 29–33.5s, SNI Obfuscation: “Configure SNI fragmentation for supported connections*”.
+  The smaller note below reads: “* Support depends on your platform and network. Destination IP addresses may remain visible.”.
 
 Video URLs and titles are fictional. The filename template uses supported tokens:
 `$author - ${publish_dt:%Y-%m-%d} - $title`. All interaction is simulated locally.

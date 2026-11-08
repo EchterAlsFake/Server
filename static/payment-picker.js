@@ -24,12 +24,12 @@
       const response = await fetch(form.action, {method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(form))), headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.elements.csrf_token.value}});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not continue. Please try again.');
-      if (data.method === 'crypto') location.assign(data.next);
+      if (data.method === 'crypto' || data.live) location.assign(data.next);
       else document.dispatchEvent(new CustomEvent('payment-preview', {detail: {url: data.next, method: data.method, trigger: button}}));
     } catch (e) { error.textContent = e.message; error.focus(); }
     finally { button.disabled = false; }
   });
   const preferred = new URLSearchParams(location.search).get("method");
-  if (["crypto", "patreon"].includes(preferred)) form.querySelector(`#method-${preferred}`).checked = true;
+  if (["crypto", "patreon"].includes(preferred) && !form.querySelector(`#method-${preferred}`).disabled) form.querySelector(`#method-${preferred}`).checked = true;
   update();
 })();

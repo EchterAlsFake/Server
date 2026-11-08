@@ -188,6 +188,14 @@ def load_environment_config(
         if not app_domain.startswith("https://") or not api_domain.startswith("https://"):
             raise ValueError("ONRAMP_ENABLED requires HTTPS public origins")
     shop_enabled = _boolean(source, "PATREON_SHOP_ENABLED", False)
+    shop_url = source.get("PATREON_SHOP_PRODUCT_URL", "https://www.patreon.com/c/echteralsfake/shop").strip()
+    parsed_shop = urlsplit(shop_url)
+    if (parsed_shop.scheme != "https" or parsed_shop.hostname not in {"www.patreon.com", "patreon.com"}
+        or parsed_shop.username or parsed_shop.password or parsed_shop.port not in {None, 443}
+        or parsed_shop.fragment):
+        raise ValueError("PATREON_SHOP_PRODUCT_URL must be an HTTPS Patreon URL")
+    if shop_enabled and not nowpayments_sandbox and ("/shop/" not in parsed_shop.path or not parsed_shop.path.split("/shop/", 1)[1].strip("/")):
+        raise ValueError("Live Patreon purchases require PATREON_SHOP_PRODUCT_URL pointing to the specific Shop product")
     if shop_enabled:
         if not source.get("RATELIMIT_STORAGE_URI", "").startswith(("redis://", "rediss://")):
             raise ValueError("PATREON_SHOP_ENABLED requires shared Redis RATELIMIT_STORAGE_URI")
@@ -250,7 +258,7 @@ def load_environment_config(
         "PATREON_SHOP_COOKIE_FILE": source.get("PATREON_SHOP_COOKIE_FILE", ""),
         "PATREON_SHOP_LOOKUP_KEY": source.get("PATREON_SHOP_LOOKUP_KEY", ""),
         "PATREON_SHOP_PRODUCT_VARIANT_ID": source.get("PATREON_SHOP_PRODUCT_VARIANT_ID", ""),
-        "PATREON_SHOP_PRODUCT_URL": source.get("PATREON_SHOP_PRODUCT_URL", "https://www.patreon.com/c/echteralsfake/shop"),
+        "PATREON_SHOP_PRODUCT_URL": shop_url,
         "KEYGEN_INTERNAL_URL": keygen_url,
         "KEYGEN_PRODUCT_TOKEN": source.get("KEYGEN_PRODUCT_TOKEN", ""),
         "KEYGEN_POLICY_ID": source.get("KEYGEN_POLICY_ID", ""),
@@ -279,5 +287,6 @@ def load_environment_config(
         "LOG_LEVEL": log_level,
         "CHECKOUT_IP_HEADER": checkout_ip_header,
         "GEOIP_DATABASE_PATH": geoip_database_path,
+        "TOR_EXIT_LIST_PATH": os.path.abspath(source.get("TOR_EXIT_LIST_PATH", os.path.join(data_directory, "tor-exits.json"))),
         "GEOIP_DATABASE_LABEL": source.get("GEOIP_DATABASE_LABEL", "").strip()[:100],
     }

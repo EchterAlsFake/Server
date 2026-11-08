@@ -12,7 +12,7 @@ from sqlalchemy import update
 from .extensions import db
 from .models import CheckoutAgreement, Transaction
 
-VERSION = "contract-2026-11-07-lifetime-v2"
+VERSION = "contract-2026-11-08-lifetime-v3"
 IMMEDIATE_EN = "I expressly consent to immediate digital supply before the 14-day withdrawal period ends. I understand that I lose my withdrawal right when supply starts, provided I receive the required contract confirmation."
 REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
 
@@ -77,13 +77,18 @@ def record_agreement(method, country, accepted_at):
 def checkout_snapshot(method, country):
     from .checkout_consent import current_consent
     consent = current_consent()
-    if not consent or consent.get("payment_method") != method or consent.get("country") != country:
+    if not consent or consent.get("payment_method") != method or consent.get("country") != country or consent.get("offer_digest") != offer_digest():
         response = jsonify(error="Review and accept the checkout information again before paying.")
         response.status_code = 409
         abort(response)
     row = db.session.get(CheckoutAgreement, consent.get("agreement_id"))
     if row is None:
         response = jsonify(error="Checkout agreement is missing. Start checkout again.")
+        response.status_code = 409
+        abort(response)
+    saved = json.loads(row.snapshot)
+    if any(saved.get(key) != value for key, value in terms_snapshot().items()):
+        response = jsonify(error="The contract information has changed. Review and accept it again before paying.")
         response.status_code = 409
         abort(response)
     return row.snapshot

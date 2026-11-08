@@ -152,12 +152,12 @@ class ApplicationTests(ServerTestCase):
         self.assertEqual(german.status_code, 200)
         self.assertIn(b"Patreon Shop and License Delivery", english.data)
         self.assertIn(b"Privex VPS &amp; WireGuard Transport", english.data)
-        self.assertIn(b"Google Pixel 7 Pro", english.data)
+        self.assertIn(b"my server in Germany", english.data)
         self.assertIn(
             "Patreon Shop und Lizenzzustellung".encode(), german.data
         )
         self.assertIn("Privex-VPS &amp; WireGuard-Transport".encode(), german.data)
-        self.assertIn("Acer Swift 3".encode(), german.data)
+        self.assertIn("meinen Server in Deutschland".encode(), german.data)
         self.assertIn(b"Proton Mail", english.data)
         self.assertIn(b"Electronic withdrawal function", english.data)
         self.assertIn(b"Proton Mail", german.data)

@@ -212,3 +212,14 @@ class PatreonShopHealth(db.Model):
     retry_at = db.Column(db.Float, nullable=False, default=0)
     last_success_at = db.Column(db.Float)
     reason = db.Column(db.String(32))
+
+
+class PatreonShopLookup(db.Model):
+    """Short-lived browser proof, matched only against a verified Shop sale."""
+    __tablename__ = 'patreon_shop_lookups'
+    id = db.Column(db.String(64), primary_key=True)
+    email_digest = db.Column(db.String(64), nullable=False)
+    order_digest = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.Float, nullable=False, index=True)
+    status = db.Column(db.String(16), nullable=False, default='pending')
+    license_key = db.Column(db.String, db.ForeignKey('license.license_key'))

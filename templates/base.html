@@ -2,7 +2,7 @@
 <html lang="{% block html_lang %}en{% endblock %}"{% if age_required %} class="age-pending"{% endif %}>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="dark">
     <title>{% if page_meta %}{{ page_meta.title }}{% else %}{% block title %}Porn Fetch — Your videos, on your device{% endblock %}{% endif %}</title>
     <meta name="robots" content="{{ robots_directive }}">
@@ -30,7 +30,7 @@
                     <span class="brand-mark"><img src="{{ url_for('static', filename='media/web/logo.webp') }}" alt="" width="384" height="216"></span>
                     <span class="brand-name">Porn Fetch</span>
                 </a>
-                <details class="site-menu"{% if request.blueprint != "withdrawal" %} open{% endif %}>
+                <details class="site-menu">
                     <summary>Menu <span aria-hidden="true">+</span></summary>
                     <nav aria-label="Main navigation">
                         <a href="/download"{% if request.path.startswith('/download') %} aria-current="page"{% endif %}>Download</a>
@@ -61,7 +61,7 @@
             <div class="footer-bottom"><span>© 2023–2026 Johannes Habel</span><span>Source available under the published license. Earlier GPL copies retain their rights.</span><span>For adults 18+.</span></div>
         </footer>
     </div>
-    {% include "partials/payment_test_dialog.html" %}
+    {% if config.NOWPAYMENTS_SANDBOX %}{% include "partials/payment_test_dialog.html" %}{% endif %}
     {% if age_required %}{% include "age_gate.html" %}{% endif %}
     <script src="{{ url_for('static', filename='payment-preview.js') }}" defer></script>
     {% if not is_onion %}<script src="/__eaf/visit.js" defer></script>{% endif %}

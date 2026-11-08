@@ -15,7 +15,7 @@ class OnionTests(ServerTestCase):
             self.assertEqual(self.client.post(path, base_url=origin, json={}).status_code, 404)
         self.assertEqual(self.client.get("/checklist", base_url=origin).status_code, 404)
         purchase = self.client.get("/porn_fetch", base_url=origin)
-        self.assertIn(b"Continue on the regular website", purchase.data)
+        self.assertIn(b"Cryptocurrency payments are unavailable over Tor.", purchase.data)
         self.assertNotIn(b'id="age-overlay"', purchase.data)
 
     def test_https_discovery_does_not_advertise_checkout_queries(self):

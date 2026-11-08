@@ -13,7 +13,7 @@ PLATFORMS = {
         "kinds": {"gui", "installer"},
         "steps": [
             "Choose x64 for an Intel or AMD PC, or ARM64 for a Windows on ARM device. Check System → About → System type if you are unsure.",
-            "Download and run the Qt installer. Choose the components you need; QMaintenanceTool handles component changes and automatic app updates.",
+            "Download and run the Qt installer. Choose the components you need; QMaintenanceTool handles component changes and app updates.",
             "Alternatively, extract the complete portable archive and launch the application. Keep its bundled files together. Portable packages require manual updates.",
         ],
     },
@@ -24,7 +24,7 @@ PLATFORMS = {
         "kinds": {"gui", "installer"},
         "steps": [
             "Choose x64 for an Intel or AMD system, or ARM64 for an AArch64 system. Run uname -m in a terminal to check.",
-            "Download the Qt installer, allow the .run file to execute, and run it. Choose your components during setup; QMaintenanceTool manages components and automatic app updates.",
+            "Download the Qt installer, allow the .run file to execute, and run it. Choose your components during setup; QMaintenanceTool manages components and app updates.",
             "For a portable installation, extract the complete archive and allow the application file to execute. Keep its bundled libraries and helper executables together. Portable packages require manual updates.",
         ],
     },
@@ -35,7 +35,7 @@ PLATFORMS = {
         "kinds": {"gui", "installer"},
         "steps": [
             "Choose ARM64 for Apple Silicon or x64 for Intel. A Universal package, when listed, contains both architectures. Check Apple menu → About This Mac.",
-            "Open the Qt installer and choose your components. QMaintenanceTool manages components and automatic app updates. Portable archives are also available, but require manual updates.",
+            "Open the Qt installer and choose your components. QMaintenanceTool manages components and app updates. Portable archives are also available, but require manual updates.",
             "Builds may be ad-hoc signed. If macOS blocks a verified download, review the developer information and use the system’s Open or Privacy & Security controls. Follow the included installation instructions.",
         ],
     },
@@ -145,7 +145,7 @@ def download_context(selected_platform=None):
             if file["experimental"] and file["kind"] != "installer":
                 continue
             file["installation_note"] = (
-                "Qt installer · Choose components and get automatic app updates with QMaintenanceTool."
+                "Qt installer · Choose components and get app updates with QMaintenanceTool."
                 if file["kind"] == "installer"
                 else "Portable app · Updates must be downloaded and installed manually."
                 if file["kind"] == "gui"

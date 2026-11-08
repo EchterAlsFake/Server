@@ -1,12 +1,12 @@
-"""Editorial guide content for published 3.8.82 beta, checked against 7ec6ddb.
+"""Website guides checked against the local Porn Fetch 3.9 source.
 
 See docs/SEO.md for the source checklist. Dates change only with editorial updates.
 The ordering is editorial priority, not a measured market-share claim.
 """
 
 GUIDE_PUBLISHED = "2026-10-25"
-GUIDE_DATE = "2026-11-05"
-GUIDE_VERSION = "3.8.82 beta"
+GUIDE_DATE = "2026-11-08"
+GUIDE_VERSION = "3.9"
 
 # Each section contains a heading followed by independently authored paragraphs.
 GUIDES = {

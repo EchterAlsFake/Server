@@ -132,6 +132,9 @@ def buy_success():
         progress = db.session.get(PaymentProgress, transaction.session_id) if transaction else None
         if transaction and transaction.status == "pending" and progress and progress.nowpayments_state == "waiting":
             payment_url = hosted_checkout_url(progress.checkout_url)
+    from .tor_checkout import checkout_network_status
+    if checkout_network_status() != 'clear':
+        payment_url = None
     return render_template(
         "buy_success.html", session_id=session_id, **view_context(session_id), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
         has_contract=bool(transaction and transaction.contract_snapshot), payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
@@ -181,7 +184,7 @@ def download_license():
         BytesIO(license_file),
         as_attachment=True,
         download_name="porn_fetch.license",
-        mimetype="application/json",
+        mimetype="application/octet-stream",
     )
 
 

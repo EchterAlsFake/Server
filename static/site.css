@@ -26,10 +26,10 @@
 }
 html { font-size: 125%; scroll-behavior: smooth; scroll-padding-top: 100px; background: var(--color-bg); }
 body { font-family: var(--font-base); background: var(--color-bg); color: var(--color-text); letter-spacing: -.015em; }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { text-underline-offset: 4px; }
-:where(a, button, input, select, summary, [tabindex]):focus-visible { outline: 2px solid #6ee3df; outline-offset: 5px; }
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid #6ee3df; outline-offset: 5px; }
 [hidden] { display: none !important; }
 ::selection { background: #f18bb045; color: #fff; }
 h1,h2,h3,p { margin-top: 0; }
@@ -235,7 +235,7 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .neutral-page main { min-width: 0; max-width: 500px; overflow-wrap: anywhere; }
 .neutral-page h1 { font-size: 47px; font-weight: 550; letter-spacing: -.04em; }
 .neutral-page p { color: #b9a8c6; line-height: 1.8; }
-@media (min-width:1250px) { .site-menu summary { display: none; } .site-menu:not([open]) > nav { display: flex; } }
+@media (min-width:1250px) { .site-menu summary { display: none; } .site-menu:not([open]) > nav { display: flex; } .site-menu::details-content { content-visibility: visible; } }
 @media (max-width:1249px) {
   .header-inner { min-height: 80px; }
   .site-menu[open] nav { position: absolute; top: 100%; left: 0; right: 0; max-height: 60dvh; overflow-y: auto; overscroll-behavior: contain; padding: 20px 40px; background: #18171d; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 0 30px; }
@@ -601,3 +601,6 @@ html.age-pending { overflow: hidden; scroll-behavior: auto; }
 .hero-lifetime { max-width: 680px; margin: 20px auto; color: var(--color-text-muted); line-height: 1.7; }
 .hero-lifetime strong { color: var(--color-text); }
 .hero-lifetime a { white-space: nowrap; }
+
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); padding-bottom: env(safe-area-inset-bottom); }
+a, button, input, select, textarea, summary { touch-action: manipulation; }

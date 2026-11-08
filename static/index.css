@@ -150,7 +150,7 @@ body {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all var(--transition);
+  transition: transform var(--transition), opacity var(--transition), background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
   box-shadow: var(--shadow-sm);
   display: inline-block;
   cursor: pointer;
@@ -245,7 +245,7 @@ body {
   font-weight: 700;
   font-size: 1.05rem;
   text-decoration: none;
-  transition: all var(--transition);
+  transition: transform var(--transition), opacity var(--transition), background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
   cursor: pointer;
   border: none;
 }
@@ -315,7 +315,7 @@ body {
   padding: 28px;
   box-shadow: var(--shadow-sm);
   border: 1px solid #1f2937;
-  transition: all var(--transition);
+  transition: transform var(--transition), opacity var(--transition), background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
 .feature-card:hover {
@@ -505,7 +505,7 @@ body {
   border: none;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: transform var(--transition), opacity var(--transition), background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
@@ -607,7 +607,7 @@ body {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.75rem;
-  transition: all var(--transition);
+  transition: transform var(--transition), opacity var(--transition), background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
   flex-shrink: 0;
 }
 

@@ -40,6 +40,7 @@ from pf_server.update_routes import updates_bp
 from pf_server.website_releases import releases_bp
 from pf_server.download_pages import downloads_bp
 from pf_server.onion import init_onion
+from pf_server.tor_checkout import init_tor_checkout
 from pf_server.android_updates import android_updates_bp
 
 load_dotenv()
@@ -65,6 +66,7 @@ def create_app(
         application.config.update(test_config)
     application.extensions["request_statistics"] = RequestStatistics(application)
     init_onion(application)
+    init_tor_checkout(application)
     configure_logging(application)
     application.extensions["vplan_referral_key"] = secrets.token_bytes(32)
     application.before_request(block_vplan_referrals)
@@ -86,6 +88,7 @@ def create_app(
         application.wsgi_app,
         country_resolver,
         application.config["CHECKOUT_IP_HEADER"],
+        application.extensions["tor_resolver"],
     )
 
     init_direct_downloads(application)
@@ -143,7 +146,7 @@ def create_app(
     @application.after_request
     def private_payment_response(response):
         from flask import request
-        if request.path in {
+        if request.path.startswith('/activate') or request.path in {
             "/activate", "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
             "/onramp-callback", "/download-recovery", "/create-crypto-payment",
@@ -209,7 +212,18 @@ def create_app(
             sales = fetch_sales()
         except VerificationUnavailable as error:
             raise click.ClickException('Verification unavailable: ' + error.reason) from None
-        click.echo(f"Complete scan: {len(sales)} orders; {sum(row[3] for row in sales)} eligible.")
+        receipts = sum(bool(row[3] and len(row) > 4 and row[4]) for row in sales)
+        click.echo(f"Complete scan: {len(sales)} orders; {sum(row[3] for row in sales)} eligible; {receipts} eligible with receipt IDs for browser retrieval.")
+
+    @application.cli.command("update-tor-exits")
+    def update_tor_exits_command():
+        """Refresh the local payment blocklist from the Tor Project."""
+        from pf_server.tor_checkout import update_exit_list
+        try:
+            count = update_exit_list(application.config["TOR_EXIT_LIST_PATH"])
+        except Exception:
+            raise click.ClickException("Tor exit refresh failed; the previous list was preserved") from None
+        click.echo(f"Updated Tor payment blocklist: {count} addresses.")
 
     @application.cli.command("process-patreon-shop")
     def process_patreon_shop_command():

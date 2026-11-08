@@ -24,7 +24,7 @@ PUBLIC_PAGES = {
     ),
     "/help": (
         "Porn Fetch Help — Installation & License Activation",
-        "Get help installing Porn Fetch, choosing a download, activating a license, and resolving common setup issues. Contact the developer directly.",
+        "Get help installing Porn Fetch, choosing a download, activating a license, and resolving common setup issues. Contact me directly.",
     ),
     "/releases": (
         "Porn Fetch Releases — Changelog & Previous Downloads",
@@ -48,7 +48,7 @@ PUBLIC_PAGES = {
     ),
     "/refund_policy": (
         "Refund Policy — Porn Fetch",
-        "Read the refund and cancellation policy for Porn Fetch licenses, including how to contact the developer about a purchase.",
+        "Read the refund and cancellation policy for Porn Fetch licenses, including how to contact me about a purchase.",
     ),
     "/legal-statement": (
         "Legal Statement & Responsible Use — Porn Fetch",

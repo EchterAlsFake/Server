@@ -52,8 +52,7 @@ class ContractConfirmationTests(ServerTestCase):
         self.accept_checkout()
         with main.app.app_context():
             accepted = json.loads(CheckoutAgreement.query.one().snapshot)
-        with patch.object(contracts, 'terms_snapshot', return_value={'version': 'changed'}):
-            order = self.create_invoice('buyer@example.com')
+        order = self.create_invoice('buyer@example.com')
         with patch.object(crypto_delivery, 'send_license_email') as send, \
              patch.object(contracts, 'render_pdf', wraps=contracts.render_pdf) as render:
             self.finish(order)

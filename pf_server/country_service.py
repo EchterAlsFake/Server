@@ -99,23 +99,26 @@ class LocalCountryResolver:
 class CheckoutCountryMiddleware:
     """Resolve checkout IP once, retain only geography, then strip IP headers."""
 
-    def __init__(self, application, resolver: LocalCountryResolver, ip_header: str):
+    def __init__(self, application, resolver: LocalCountryResolver, ip_header: str, tor_resolver=None):
         self.application = application
         self.resolver = resolver
+        self.tor_resolver = tor_resolver
         self.ip_environment_key = (
             "HTTP_" + ip_header.upper().replace("-", "_") if ip_header else None
         )
 
     def __call__(self, environ, start_response):
+        from .tor_checkout import TOR_PATHS
+        raw_address = (
+            environ.get(self.ip_environment_key)
+            if self.ip_environment_key else environ.get("REMOTE_ADDR")
+        )
+        if self.tor_resolver is not None and environ.get("PATH_INFO") in TOR_PATHS:
+            environ["PF_TOR_STATUS"] = self.tor_resolver.lookup(raw_address)
         if (
             environ.get("REQUEST_METHOD") == "POST"
             and environ.get("PATH_INFO") in CHECKOUT_PATHS
         ):
-            raw_address = (
-                environ.get(self.ip_environment_key)
-                if self.ip_environment_key
-                else environ.get("REMOTE_ADDR")
-            )
             try:
                 evidence = self.resolver.lookup(raw_address)
             except Exception:

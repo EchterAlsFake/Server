@@ -3,7 +3,6 @@
 import hashlib
 import json
 from datetime import timedelta
-from cryptography.fernet import Fernet
 from unittest.mock import patch
 
 import httpx
@@ -20,7 +19,6 @@ HTTP_CLIENT = httpx.Client
 class PaymentProgressTests(ServerTestCase):
     def setUp(self):
         super().setUp()
-        self.accept_checkout()
         mail_config = patch.dict(main.app.config, LICENSE_SMTP_HOST="localhost",
             LICENSE_EMAIL_FROM="test@example.com", LICENSE_DELIVERY_ENCRYPTION_KEY=Fernet.generate_key().decode())
         mail_config.start()
@@ -36,6 +34,7 @@ class PaymentProgressTests(ServerTestCase):
             },
         )
         self.config.start()
+        self.accept_checkout()
         self.addCleanup(self.config.stop)
         self.requests = []
         self.now_state = "waiting"

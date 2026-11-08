@@ -1,15 +1,17 @@
 """Short-lived shared checkout confirmations stored in the signed browser session."""
 
 import time
-from flask import session
+from flask import current_app, session
 from .countries import COUNTRY_OPTIONS
 
-CONSENT_VERSION = "checkout-lifetime-v1"
+CONSENT_VERSION = "checkout-lifetime-v2"
 FIELDS = ("age_confirmed", "terms_accepted", "withdrawal_accepted", "refund_method_accepted", "test_acknowledged")
 
 
 def required_fields(method):
-    return tuple(field for field in FIELDS if method != 'patreon' or field != 'withdrawal_accepted')
+    return tuple(field for field in FIELDS
+        if (method != 'patreon' or field != 'withdrawal_accepted')
+        and (field != 'test_acknowledged' or current_app.config['NOWPAYMENTS_SANDBOX']))
 
 
 def current_consent():
@@ -38,6 +40,6 @@ def current_selection():
     accepted_at = value.get("accepted_at")
     if not isinstance(accepted_at, (int, float)) or not 0 <= time.time() - accepted_at < 3600:
         return None
-    if value.get("payment_method") != "crypto" or not all(value.get(field) is True for field in FIELDS if field != "withdrawal_accepted"):
+    if value.get("payment_method") != "crypto" or not all(value.get(field) is True for field in required_fields('crypto') if field != "withdrawal_accepted"):
         return None
     return value

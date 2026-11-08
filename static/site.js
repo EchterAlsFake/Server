@@ -2,6 +2,9 @@
 (() => {
   const root = document.documentElement;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reducedData = window.matchMedia('(prefers-reduced-data: reduce)');
+  const phoneScreen = window.matchMedia('(max-width: 600px)');
+  const touchScreen = window.matchMedia('(pointer: coarse)');
   const content = document.querySelector('#site-content');
   const overlay = document.querySelector('#age-overlay');
   const ageForm = document.querySelector('#age-form');
@@ -21,8 +24,9 @@
   }
   function syncVideo() {
     if (!video || root.classList.contains('age-pending')) return;
-    if (videoVisible) loadVideo();
-    if (videoVisible && !document.hidden && !reducedMotion.matches && !userPaused) {
+    const autoplay = !reducedMotion.matches && !reducedData.matches && !phoneScreen.matches && !touchScreen.matches && !navigator.connection?.saveData;
+    if (videoVisible && autoplay) loadVideo();
+    if (videoVisible && !document.hidden && autoplay && !userPaused) {
       video.play().catch(() => { /* Native Play control remains available. */ });
     } else if ((!videoVisible || document.hidden || reducedMotion.matches) && !video.paused) {
       automaticPause = true;
@@ -67,6 +71,8 @@
     video.addEventListener('focus', loadVideo);
     document.addEventListener('visibilitychange', syncVideo);
     reducedMotion.addEventListener('change', syncVideo);
+    reducedData.addEventListener('change', syncVideo);
+    phoneScreen.addEventListener('change', syncVideo);
   }
 
   if (overlay && ageForm) {

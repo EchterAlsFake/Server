@@ -23,7 +23,7 @@
     {{ email_field() }}
     <p class="checkout-disclosure">NOWPayments shows the amount to send before payment. Review it, including any provider, exchange and network fees.</p>
     <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
-    <button type="submit" id="pay-btn" class="nowpayments-btn" disabled>Continue to NOWPayments <span aria-hidden="true">→</span></button>
+    <button type="submit" id="pay-btn" class="nowpayments-btn" disabled data-label="{{ 'Continue to NOWPayments' if config.NOWPAYMENTS_SANDBOX else 'Buy lifetime Premium for €' ~ premium_price }}">{{ 'Continue to NOWPayments' if config.NOWPAYMENTS_SANDBOX else 'Buy lifetime Premium for €' ~ premium_price }} <span aria-hidden="true">→</span></button>
     <p id="checkout-js-help" class="checkout-caption">Enable JavaScript to create a cryptocurrency payment.</p>
 </form>
 {% endblock %}

@@ -181,7 +181,7 @@ class SEOTests(ServerTestCase):
         for provider in GUIDES:
             response = self.get(guide_path(provider))
             page = Page(response.text)
-            self.assertIn("3.8.82 beta", response.text)
+            self.assertIn("3.9", response.text)
             self.assertNotIn("?channel=beta", response.text)
             for platform in ("windows", "macos", "linux", "android", "ios", "cli"):
                 self.assertIn("/download/" + platform, page.links)
@@ -203,7 +203,7 @@ class SEOTests(ServerTestCase):
         screenshot = "/static/media/android-account.jpg"
         for provider in GUIDES:
             response = self.get(guide_path(provider))
-            self.assertIn("3.8.82 beta", response.text)
+            self.assertIn("3.9", response.text)
             self.assertIn("saved to your selected folder automatically", response.text)
             self.assertNotIn("A completed card also has", response.text)
             self.assertEqual(screenshot in response.text, provider in {"pornhub", "xhamster", "xvideos"})

@@ -26,7 +26,7 @@ import main  # noqa: E402
 from pf_server.country_service import CountryEvidence  # noqa: E402
 from pf_server.extensions import limiter  # noqa: E402
 from pf_server.models import (  # noqa: E402
-    PatreonShopCustomer, PatreonShopPurchase, PatreonShopHealth,
+    PatreonShopCustomer, PatreonShopPurchase, PatreonShopHealth, PatreonShopLookup,
     WithdrawalRequest,
     WithdrawalDelivery,
     CheckoutAgreement,
@@ -56,10 +56,16 @@ class ServerTestCase(unittest.TestCase):
             WTF_CSRF_ENABLED=False,
         )
         self.client = main.app.test_client()
+        self.tor_lookup = patch.object(main.app.extensions['tor_resolver'], 'lookup', return_value='clear')
+        self.mock_tor_lookup = self.tor_lookup.start()
+        self.addCleanup(self.tor_lookup.stop)
         from license_fixtures import issuance
         self.keygen_mock = patch("pf_server.licensing.ensure_license", side_effect=issuance)
         self.keygen_mock.start()
         self.addCleanup(self.keygen_mock.stop)
+        self.policy_mock = patch('pf_server.nowpayments_service.verify_lifetime_policy', return_value={})
+        self.policy_mock.start()
+        self.addCleanup(self.policy_mock.stop)
         self.country_lookup = patch.object(
             main.app.extensions["country_resolver"],
             "lookup",
@@ -73,7 +79,7 @@ class ServerTestCase(unittest.TestCase):
         self.mock_country_lookup = self.country_lookup.start()
         with main.app.app_context():
             for model in (
-                PatreonShopPurchase, PatreonShopCustomer, PatreonShopHealth,
+                PatreonShopLookup, PatreonShopPurchase, PatreonShopCustomer, PatreonShopHealth,
                 WithdrawalDelivery,
                 WithdrawalRequest,
                 CheckoutAgreement,

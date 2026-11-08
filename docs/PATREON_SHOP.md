@@ -1,7 +1,9 @@
 # Patreon Shop operations
 
-The email-only `/activate` queue uses the verified lifetime Keygen policy and SMTP
-transport. It never accepts an order ID or returns license data to the browser.
+The `/activate` page supports email delivery and browser retrieval. Browser retrieval
+requires both the purchase email and the receipt’s public Patreon order ID. The
+worker verifies an eligible sale before returning its signed license to that browser.
+The unofficial sales connection remains isolated to the worker.
 Patreon membership webhooks, tier checks and subscription delivery have been removed. Only Shop sales are verified.
 
 There is no separate security-period agreement or mailbox challenge before purchase.
@@ -63,8 +65,9 @@ new lifetime Premium license, not an extension of the previous key.
 Timeouts, redirects, authentication failures, blocks, 429s, invalid JSON/schema,
 and incomplete scans open a durable circuit breaker. 429 retry delays are honored;
 other failures back off five to fifteen minutes. Existing known licenses are reused.
-An unknown mailbox receives one fallback grant. A mailbox already known only for
-ineligible orders does not get a new fallback during an outage. Invalid input,
+Unknown purchases remain pending until verification recovers. No new license is
+granted solely because verification is unavailable. Browser requests also remain
+pending and never disclose a license from an unverified email/order pair. Invalid input,
 CSRF errors and throttling do not grant licenses.
 
 On recovery, an unbound fallback is associated with the newest qualifying unissued
@@ -82,12 +85,13 @@ that SMTP has delivered a message. Customer support handles persistent bounces.
 
 Read the worker journal for aggregate processed/fallback/pending counts, oldest
 pending age, verification health and fixed-category failures. Alert on pending age
-above ten minutes, repeated fulfillment failures or a sudden rise in fallback grants.
+above ten minutes or repeated verification/fulfillment failures.
 `patreon_shop_health.last_success_at` and `retry_at` record verification health.
 The lookup worker must run on one machine with a shared DATA_DIR and SQLite DB;
 a nonblocking file lock serializes timer and manual invocations. This is not a
-multi-host worker design. Redis provides shared web throttles (five requests per
-minute and twenty per hour per IP); only trust a proxy that sanitizes client IPs.
+multi-host worker design. Redis provides shared throttles (five requests per minute and twenty per hour per
+signed browser session, plus sixty submissions per minute for the endpoint).
+The application strips visitor IPs; these limits do not claim to be per-IP.
 
 Replace cookie exports atomically using a fresh 0600 file owned by the worker.
 Never inspect/export secrets through application logs. The next circuit-breaker
@@ -136,3 +140,35 @@ successful complete scan, enable the flag, reload the user manager, restart web,
 and enable the minute timer. Check the public activation page, CSRF rejection,
 Keygen policy and worker status without creating a customer claim or sending a
 test email. Preserve the existing lookup key on future deployments.
+
+## Browser recovery
+
+The migration `e8b42f930d16` adds `patreon_shop_lookups`. The form posts credentials
+with CSRF protection; they never appear in a URL. The table holds HMAC email and
+public-order-ID values, a random request ID, time, status and license association.
+Only the random request ID is put into the signed, secure session cookie.
+
+The existing minute worker fetches a complete snapshot and compares both values
+against `buyer_email` and `public_order_id`, also checking product, fulfilled status
+and refund state. Internal order IDs cannot substitute for receipt IDs. The same
+purchase/license mapping is used for email delivery and browser requests.
+Issuance failures retry using that mapping. Browser requests never use outage
+fallbacks without a verified matching purchase. Historical fallback mappings are
+retained and may be reconciled with an earlier verified sale.
+
+The result is readable at `/activate`, polled at `/activate/status`, and downloadable
+through the CSRF-protected `POST /activate/download`. All responses, including errors,
+use `no-store` and `no-referrer`. Requests expire after fifteen minutes; the worker
+deletes expired rows. Without JavaScript, refresh the result page manually.
+
+## Commercial handoff
+
+With `NOWPAYMENTS_SANDBOX=false`, the picker omits test acknowledgments and the
+Patreon handoff presents the configured Shop product with purchase instructions.
+It still requires the website declarations and a current offer digest. Set the
+actual product URL and variant ID before enabling live Patreon purchases. A Shop
+homepage is rejected as the live product URL.
+
+The private sales endpoint remains an external policy and availability dependency.
+Patreon’s security policy requires checking with Patreon before this kind of
+automated access; technical success does not establish authorization.
