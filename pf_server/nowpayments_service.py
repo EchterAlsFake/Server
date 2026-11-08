@@ -317,7 +317,10 @@ def complete_payment(webhook: NowPaymentsWebhook) -> CompletionResult:
 
     try:
         from .licensing import fulfill_transaction_license
+        from .payment_progress import record_fulfillment
+        record_fulfillment(transaction, 'license')
         fulfill_transaction_license(transaction)
+        record_fulfillment(transaction, 'invoice')
         invoice = load_invoice(webhook.order_id)
         if invoice is None:
             crypto_amount = webhook.actually_paid or webhook.pay_amount or Decimal(0)
@@ -358,6 +361,8 @@ def complete_payment(webhook: NowPaymentsWebhook) -> CompletionResult:
                 .values(status="pending", processing_started_at=None)
             )
             db.session.commit()
+            from .payment_progress import record_fulfillment
+            record_fulfillment(transaction, 'retry')
         except SQLAlchemyError:
             db.session.rollback()
         raise

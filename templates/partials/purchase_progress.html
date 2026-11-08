@@ -1,0 +1,12 @@
+{% macro activity_panel(id, progress, action) %}
+<section id="{{ id }}" class="purchase-progress" data-patreon-activity="{{ action }}" data-pending="{{ 'true' if progress.activity in ['active', 'waiting'] else 'false' }}" data-activity="{{ progress.activity }}" aria-labelledby="{{ id }}-title" aria-busy="{{ 'true' if progress.activity in ['active', 'waiting'] else 'false' }}">
+    <div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label" data-progress-label>{{ 'Complete' if progress.activity == 'complete' else 'Needs attention' if progress.activity == 'attention' else 'Request saved · Automatic updates on' if progress.activity == 'waiting' else 'Working · Automatic updates on' }}</span></div>
+    <h2 id="{{ id }}-title" data-progress-title tabindex="-1">{{ progress.title }}</h2>
+    <p data-progress-message>{{ progress.message }}</p>
+    <ol class="payment-timeline" data-progress-steps aria-label="Purchase processing steps">{% for step in progress.steps %}<li class="timeline-{{ step.state }}"{% if step.state == 'current' %} aria-current="step"{% endif %}><span class="timeline-marker" aria-hidden="true">{{ '✓' if step.state == 'done' else '' }}</span><span>{{ step.label }}</span></li>{% endfor %}</ol>
+    <p class="purchase-connection" data-progress-connection role="status"></p>
+    <div class="purchase-progress-tools"><p data-progress-checked>{% if progress.activity in ['active', 'waiting'] %}Live updates appear here automatically. Processing can take up to 10 minutes.{% else %}Processing finished. See the result above.{% endif %}</p><button type="button" class="inline-help" data-progress-refresh hidden>Refresh status</button></div>
+    <noscript><p>JavaScript is off. <a href="/activate">Refresh purchase status</a> to see the latest step.</p></noscript>
+</section>
+<p id="{{ id }}-announcement" class="visually-hidden" role="status" aria-live="polite"></p>
+{% endmacro %}

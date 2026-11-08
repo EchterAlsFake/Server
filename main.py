@@ -143,7 +143,7 @@ def create_app(
     @application.after_request
     def private_payment_response(response):
         from flask import request
-        if request.path in {
+        if request.path.startswith('/activate') or request.path in {
             "/activate", "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
             "/onramp-callback", "/download-recovery", "/create-crypto-payment",

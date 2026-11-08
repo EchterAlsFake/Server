@@ -63,7 +63,7 @@
   .checkout-price .nowpayments-amount { font-size: 48px; }
 }
 
-/* Email-only purchase recovery, using the shared checkout surfaces and fields. */
+/* Purchase email and browser recovery, using the shared checkout surfaces and fields. */
 .activation-page { max-width: 560px; margin-block: 48px 80px; }
 .activation-card { padding: 36px; }
 .activation-heading .eyebrow { margin-bottom: 18px; font-size: var(--text-caption); color: var(--color-accent); }
@@ -91,3 +91,9 @@
 .activation-delivery-notice p:last-child { margin-bottom: 0; }
 .activation-delivery-notice strong { color: #ffe3ad; font-weight: 650; }
 .activation-delivery-notice a { color: #ffda94; }
+.browser-license { margin-block: 2rem; padding-block: 1.5rem; border-block: 1px solid var(--line); }
+.browser-license textarea { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; margin-block: .75rem; padding: .75rem; color: var(--color-text); background: var(--color-bg); border: 1px solid var(--line); border-radius: .5rem; font: inherit; overflow-wrap: anywhere; resize: vertical; }
+
+.browser-license h2 { font-size: var(--text-prominent); }
+.browser-license .checkout-email { margin-bottom: 1.25rem; }
+.activation-form .checkout-email input { display: block; box-sizing: border-box; width: 100%; min-height: 49px; padding: 12px 14px; border: 1px solid #ffffff35; border-radius: 7px; color: var(--color-text); font-size: 1rem; }

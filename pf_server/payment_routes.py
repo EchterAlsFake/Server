@@ -36,7 +36,7 @@ from .licensing import (
     normalize_recipient_email,
 )
 from .logging_config import safe_log_reference
-from .models import CryptoLicenseDelivery, License, OnrampCheckout, PaymentProgress, Transaction
+from .models import CryptoLicenseDelivery, OnrampCheckout, PaymentProgress, Transaction
 from .payment_progress import hosted_checkout_url, public_progress, record_nowpayments, refresh_providers
 from .crypto_delivery import deliver_crypto_license, encrypt_recipient
 from .keygen_service import KeygenUnavailable
@@ -224,16 +224,17 @@ def check_payment_status():
     result = {"status": "finished", "invoice_num": invoice_number, "recovery_expires_at": view_context(session_id)["recovery_expires_at"]}
     checkout = db.session.get(OnrampCheckout, session_id)
     if checkout:
-        license_record = License.query.filter_by(issuance_reference=transaction.provider_payment_id).first()
-        result.update(payment_method="banxa", beta=checkout.beta, license_key=license_record.signed_key if license_record else None, delivery_status=checkout.delivery_status)
-    if not checkout:
-        try:
-            license_record = get_or_create_license(transaction.provider_payment_id)
-            build_license_file(license_record.license_key, license_record.issuance_reference, license_record.created_at)
-            result["license_key"] = license_record.signed_key
-        except KeygenUnavailable:
-            db.session.rollback()
-            return jsonify(error="Payment confirmed. License issuance is temporarily unavailable; please retry."), 503
+        result.update(payment_method="banxa", beta=checkout.beta, delivery_status=checkout.delivery_status)
+    try:
+        license_record = get_or_create_license(transaction.provider_payment_id)
+        build_license_file(license_record.license_key, license_record.issuance_reference, license_record.created_at)
+        result["license_key"] = license_record.signed_key
+    except KeygenUnavailable:
+        db.session.rollback()
+        from .payment_progress import record_fulfillment
+        record_fulfillment(transaction, 'retry')
+        return jsonify(status='pending', progress=public_progress(transaction, checkout, license_pending=True),
+                       recovery_expires_at=result['recovery_expires_at']), 200
     delivery = db.session.get(CryptoLicenseDelivery, session_id)
     if delivery:
         result["delivery_status"] = delivery.delivery_status

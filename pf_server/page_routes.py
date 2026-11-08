@@ -9,7 +9,7 @@ from flask import (
     request, session, url_for,
 )
 
-from .extensions import limiter
+from .extensions import limiter, browser_limit_key
 from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent, current_selection, required_fields
 from .countries import COUNTRY_OPTIONS
 from .http import normalized_hostname
@@ -277,11 +277,12 @@ def payment_preview(method):
 
 
 @pages_bp.route('/activate', methods=['GET', 'POST'])
-@limiter.limit('5 per minute;20 per hour', methods=['POST'])
+@limiter.limit('5 per minute;20 per hour', methods=['POST'], key_func=browser_limit_key)
+@limiter.limit('60 per minute', methods=['POST'])
 def activate():
     from flask import current_app
     from .licensing import normalize_recipient_email
-    from .patreon_shop import enqueue
+    from .patreon_shop import enqueue, enqueue_lookup, normalize_order_id, digest_email
     from .extensions import db
     from sqlalchemy.exc import SQLAlchemyError
     if not current_app.config.get('PATREON_SHOP_ENABLED'):
@@ -289,17 +290,90 @@ def activate():
     status, error, accepted = 200, None, False
     if request.method == 'POST':
         email = normalize_recipient_email(request.form.get('email'))
+        action = request.form.get('action', 'email')
+        order_id = normalize_order_id(request.form.get('order_id'))
         if not email:
             status, error = 400, 'Please enter a valid email address.'
+        elif action not in {'email', 'lookup'} or (action == 'lookup' and order_id is None):
+            status, error = 400, 'Enter the order ID from your Patreon purchase receipt.'
         else:
             try:
-                enqueue(email)
-                accepted = True
-                status = 202
+                if action == 'lookup':
+                    session['patreon_lookup'] = enqueue_lookup(email, order_id)
+                    return redirect(url_for('pages.activate'), code=303)
+                else:
+                    enqueue(email)
+                    import time
+                    session['patreon_delivery'] = {'digest': digest_email(email), 'created_at': time.time()}
+                    accepted = True
+                    status = 202
             except SQLAlchemyError:
                 db.session.rollback()
                 status, error = 503, 'Your request could not be saved. Please try again shortly.'
-    response = make_response(render_template('activate.html', error=error, accepted=accepted), status)
+    delivery = patreon_delivery_result()
+    response = make_response(render_template('activate.html', error=error, accepted=accepted or bool(delivery),
+                                            lookup=patreon_lookup_result(include_progress=True), delivery=delivery), status)
     response.headers['Cache-Control'] = 'private, no-store'
     response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     return response
+
+
+def patreon_lookup_result(*, include_progress=False):
+    from .patreon_shop import browser_lookup
+    from .extensions import db
+    from .models import License
+    lookup = browser_lookup(session.get('patreon_lookup'))
+    if lookup is None:
+        return None
+    result = {'status': lookup.status}
+    if lookup.status == 'ready':
+        record = db.session.get(License, lookup.license_key)
+        if record and record.signed_key:
+            result['license_key'] = record.signed_key
+        else:
+            result['status'] = 'pending'
+    if include_progress:
+        from .purchase_activity import patreon_progress
+        result['progress'] = patreon_progress(lookup)
+    return result
+
+
+def patreon_delivery_result():
+    import time
+    from .extensions import db
+    from .models import PatreonShopCustomer
+    from .patreon_shop import LOOKUP_LIFETIME
+    from .purchase_activity import patreon_progress
+    proof = session.get('patreon_delivery')
+    if not isinstance(proof, dict) or not 0 <= time.time() - proof.get('created_at', 0) < LOOKUP_LIFETIME:
+        return None
+    row = db.session.get(PatreonShopCustomer, proof.get('digest'))
+    if row is None:
+        return None
+    return {'status': 'pending' if row.pending else 'complete', 'progress': patreon_progress(row, email_only=True)}
+
+
+@pages_bp.get('/activate/status')
+@limiter.limit('60 per minute', key_func=browser_limit_key)
+def patreon_license_status():
+    if not current_app.config.get('PATREON_SHOP_ENABLED'):
+        abort(404)
+    if request.args.get('action') == 'email':
+        return jsonify(patreon_delivery_result() or {'status': 'expired'})
+    return jsonify(patreon_lookup_result(include_progress=request.args.get('progress') == '1') or {'status': 'expired'})
+
+
+@pages_bp.post('/activate/download')
+@limiter.limit('20 per minute', key_func=browser_limit_key)
+def download_patreon_license():
+    import json
+    from io import BytesIO
+    from flask import send_file
+    if not current_app.config.get('PATREON_SHOP_ENABLED'):
+        abort(404)
+    result = patreon_lookup_result()
+    if not result or not result.get('license_key'):
+        abort(404)
+    content = json.dumps({'schema': 2, 'product': 'porn-fetch', 'license_key': result['license_key']}, indent=2) + '\n'
+    return send_file(BytesIO(content.encode()), as_attachment=True,
+        download_name='porn_fetch.license', mimetype='application/octet-stream')

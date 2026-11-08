@@ -1,0 +1,36 @@
+.purchase-progress { margin-block: 24px; padding: 24px; border: 1px solid #f18bb04a; border-radius: 12px; background: #f18bb008; scroll-margin-top: 100px; }
+.purchase-progress-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.purchase-progress-label { color: #f5b7d0; font-size: var(--text-small); font-weight: 600; }
+.purchase-spinner { display: inline-block; box-sizing: border-box; width: 34px; height: 34px; flex: 0 0 34px; border: 3px solid #f18bb029; border-top-color: #f18bb0; border-right-color: #f18bb0; border-radius: 50%; animation: purchase-spin 1s linear infinite; }
+.purchase-progress h2 { margin: 0 0 12px; font-size: clamp(23px, 4vw, 28px); line-height: 1.25; letter-spacing: -.025em; }
+.purchase-progress p { line-height: 1.7; overflow-wrap: anywhere; }
+.purchase-progress .payment-timeline { margin: 22px 0 0; }
+.purchase-progress .payment-timeline li { font-size: var(--text-secondary); padding-bottom: 14px; }
+.purchase-progress .timeline-current .timeline-marker { border: 2px solid #f18bb0; background: #f18bb033; animation: purchase-pulse 1.6s ease-in-out infinite; }
+.purchase-progress[data-activity="complete"] { border-color: #87e9aa55; background: #87e9aa08; }
+.purchase-progress[data-activity="complete"] .purchase-spinner { animation: none; border-color: #87e9aa; background: #87e9aa26; }
+.purchase-progress[data-activity="complete"] .purchase-spinner::after { content: '✓'; display: grid; place-items: center; height: 100%; color: #87e9aa; font-size: 22px; }
+.purchase-progress[data-activity="complete"] .purchase-progress-label { color: #87e9aa; }
+.purchase-progress[data-activity="attention"] .purchase-spinner { animation: none; border-color: #ffcf71; }
+.purchase-progress[data-activity="attention"] .purchase-progress-label { color: #ffcf71; }
+.purchase-progress[data-activity="attention"] .timeline-marker { animation: none; }
+.purchase-progress[data-activity="waiting"] .purchase-spinner { animation-duration: 2.5s; }
+.purchase-progress-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
+.purchase-progress-tools p { flex: 1 1 180px; margin: 0; font-size: var(--text-small); color: var(--color-text-muted); }
+.purchase-progress .purchase-connection:empty { display: none; }
+.purchase-progress .purchase-connection { color: #ffda94; font-size: var(--text-small); }
+.license-ready-card { scroll-margin-top: 100px; border: 1px solid #87e9aa66; background: linear-gradient(135deg, #87e9aa0c, #19171c 65%); }
+.license-ready-card #payment-success-heading { margin: 0 0 16px; font-size: clamp(28px, 4vw, 36px); line-height: 1.2; letter-spacing: -.035em; }
+.license-ready-card textarea { display: block; box-sizing: border-box; width: 100%; min-width: 0; margin-block: 12px; padding: 16px; border: 1px solid #87e9aa66; border-radius: 8px; background: #131116; color: #f2eee7; font: 16px/1.6 monospace; resize: vertical; overflow-wrap: anywhere; }
+.license-ready-card .eyebrow { color: #87e9aa; }
+.license-copy { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.license-copy p { margin: 0; font-size: var(--text-small); }
+.purchase-resubmit { margin-block: 24px; }
+.purchase-resubmit summary { cursor: pointer; }
+.purchase-submit-progress { margin-block: 16px; }
+.payment-tracking-page[data-stage="finished"] .crypto-heading { display: none; }
+.payment-tracking-page[data-stage="finished"] .license-ready-card { margin-top: 16px; }
+@keyframes purchase-spin { to { transform: rotate(360deg); } }
+@keyframes purchase-pulse { 50% { box-shadow: 0 0 0 5px #f18bb020; } }
+@media (max-width: 540px) { .purchase-progress { padding: 20px; } .license-ready-card .checkout-actions { display: grid; } }
+@media (prefers-reduced-motion: reduce) { .purchase-spinner, .purchase-progress .timeline-current .timeline-marker { animation: none; } }

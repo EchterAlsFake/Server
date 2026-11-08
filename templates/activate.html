@@ -1,39 +1,65 @@
 {% extends "base.html" %}
+{% from "partials/purchase_progress.html" import activity_panel %}
 {% block title %}Activate your Patreon purchase — Porn Fetch{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='checkout.css') }}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='checkout.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='purchase-progress.css') }}">{% endblock %}
 {% block content %}
 <div class="checkout-page activation-page">
     <a class="checkout-back" href="/porn_fetch">← Back to Porn Fetch</a>
     <section class="checkout-card activation-card" aria-labelledby="activation-heading">
         <header class="activation-heading">
-            <p class="eyebrow">Patreon Shop · License delivery</p>
-            <h1 id="activation-heading">Your purchase.<br>Your license.</h1>
-            <p>Enter the email address used for your Porn Fetch purchase to receive your license.</p>
+            <p class="eyebrow">Patreon Shop · License recovery</p>
+            <h1 id="activation-heading">{% if lookup and lookup.license_key %}Your Premium license{% else %}Your purchase.<br>Your license.{% endif %}</h1>
+            <p>View your license here using your purchase email and Patreon order ID, or request delivery by email.</p>
         </header>
+        <section id="patreon-submit-progress" class="purchase-progress purchase-submit-progress" hidden aria-labelledby="patreon-submit-title" aria-busy="true">
+            <div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label">Sending request…</span></div>
+            <h2 id="patreon-submit-title" tabindex="-1">Saving your request…</h2><p>Your purchase details are being sent securely to the server. Purchase verification will begin after your request is saved.</p>
+        </section>
+        {% if delivery and not lookup %}{{ activity_panel('patreon-email-progress', delivery.progress, 'email') }}{% endif %}
+        <section class="browser-license" aria-labelledby="browser-license-heading"{% if lookup and lookup.status == 'pending' %} data-patreon-pending{% endif %}>
+            <h2 id="browser-license-heading">View your license in this browser</h2>
+            {% if lookup %}
+            {% if lookup.license_key %}
+            <section class="license-ready-card purchase-progress" id="patreon-license-result" aria-labelledby="patreon-license-heading">
+            <p class="eyebrow">Purchase verified</p><h2 id="patreon-license-heading" data-result-heading tabindex="-1">Your license is ready.</h2>
+            <p>Keep the key and file private. Save your license now.</p>
+            <form method="post" action="{{ url_for('pages.download_patreon_license') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary" type="submit">Download license file</button></form>
+            <label for="patreon-license-key">Your Premium license key</label>
+            <textarea id="patreon-license-key" readonly rows="4" spellcheck="false" autocomplete="off">{{ lookup.license_key }}</textarea>
+            <div class="license-copy"><button type="button" class="btn btn-secondary" data-copy-license="patreon-license-key">Copy license key</button><p data-copy-status role="status"></p></div>
+            <p>Paste this key into the app’s license settings, or choose Import License File. Browser access expires after 15 minutes; your license does not expire.</p>
+            </section>
+            {% else %}{{ activity_panel('patreon-lookup-progress', lookup.progress, 'lookup') }}{% endif %}
+            {% endif %}
+            {% if lookup %}<details class="purchase-resubmit"><summary>Check another purchase</summary>{% endif %}
+            <form method="post" action="{{ url_for('pages.activate') }}" class="activation-form" data-patreon-form>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="lookup">
+                <div class="checkout-email"><label for="lookup-email">Purchase email</label><input type="email" id="lookup-email" name="email" autocomplete="email" autocapitalize="none" inputmode="email" spellcheck="false" maxlength="254" required></div>
+                <div class="checkout-email"><label for="lookup-order">Patreon order ID</label><input type="text" id="lookup-order" name="order_id" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="128" aria-describedby="lookup-order-help" required><p id="lookup-order-help">Find the order ID on your Patreon Shop purchase receipt. Keep it private along with your email.</p></div>
+                <button type="submit" class="btn btn-primary">View my license <span aria-hidden="true">→</span></button>
+            </form>
+            {% if lookup %}</details>{% endif %}
+        </section>
+        {% if delivery and lookup %}{{ activity_panel('patreon-email-progress', delivery.progress, 'email') }}{% endif %}
+        <h2>Email delivery</h2>
         <aside class="activation-delivery-notice" role="note" aria-labelledby="delivery-notice-heading">
             <h2 id="delivery-notice-heading">Gmail users: check your Spam folder</h2>
             <p>Gmail can place your license email in <strong>Spam</strong>. Check there even if your inbox is empty.</p>
             <p>Delivery can take <strong>up to 10 minutes</strong>. If nothing arrives after 10 minutes, check Spam again, then <a href="mailto:support@echteralsfake.me">contact me</a>.</p>
         </aside>
         {% if accepted %}
-        <div class="activation-status" role="status">
-            <span class="activation-status-mark" aria-hidden="true">✓</span>
-            <div>
-                <h2>Request received</h2>
-                <p>If eligible, your license will arrive by email. Please allow up to 10 minutes and check your Spam folder, especially if you use Gmail.</p>
-            </div>
-        </div>
+        <p>Your email request is saved. Follow the processing steps above, and check your inbox and Spam folder for delivery.</p>
         {% else %}
-        <form method="post" action="{{ url_for('pages.activate') }}" class="activation-form">
+        <form method="post" action="{{ url_for('pages.activate') }}" class="activation-form" data-patreon-form>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="checkout-email delivery-email-block">
                 <label for="activation-email">Purchase email</label>
-                <input type="email" id="activation-email" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" aria-describedby="activation-email-help{% if error %} activation-error{% endif %}"{% if error %} aria-invalid="true"{% endif %} required>
+                <input type="email" id="activation-email" name="email" autocomplete="email" autocapitalize="none" inputmode="email" maxlength="254" placeholder="you@example.com" aria-describedby="activation-email-help{% if error %} activation-error{% endif %}"{% if error %} aria-invalid="true"{% endif %} required>
                 <p id="activation-email-help">Use the same address as your Patreon Shop purchase.</p>
             </div>
             {% if error %}<p id="activation-error" class="checkout-error" role="alert">{{ error }}</p>{% endif %}
             <button type="submit" class="btn btn-primary">Email my license <span aria-hidden="true">→</span></button>
-            <p class="checkout-reassurance">Delivered by email. Never displayed in your browser.</p>
+            <p class="checkout-reassurance">An email-only request sends the license to your purchase address.</p>
         </form>
         {% endif %}
         <div class="activation-details">
@@ -44,3 +70,4 @@
     <p class="activation-support">{% if accepted %}Nothing arrived?{% else %}Need a hand?{% endif %} <a href="mailto:support@echteralsfake.me">Contact me</a></p>
 </div>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='purchase-progress.js') }}" defer></script><script src="{{ url_for('static', filename='patreon-lookup.js') }}" defer></script>{% endblock %}

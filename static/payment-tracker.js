@@ -25,9 +25,7 @@
   });
   const refresh = document.querySelector('#refresh-progress');
   const note = document.querySelector('#provider-status-note');
-  const heading = document.querySelector('#payment-progress-title');
-  const message = document.querySelector('#payment-progress-message');
-  const steps = document.querySelector('#payment-progress-steps');
+  const activity = document.querySelector('#loading-container');
   let timer = null;
   let busy = false;
   let stop = false;
@@ -36,22 +34,10 @@
   let delay = 5000;
   function renderProgress(progress) {
     if (!progress) return;
-    heading.textContent = progress.title;
-    message.textContent = progress.message;
-    steps.replaceChildren(...progress.steps.map(step => {
-      const li = document.createElement('li');
-      li.className = `timeline-${step.state}`;
-      if (step.state === 'current') li.setAttribute('aria-current', 'step');
-      const marker = document.createElement('span');
-      marker.className = 'timeline-marker'; marker.setAttribute('aria-hidden', 'true');
-      marker.textContent = step.state === 'done' ? '✓' : '';
-      const label = document.createElement('span'); label.textContent = step.label;
-      li.append(marker, label);
-      return li;
-    }));
+    window.PurchaseProgress.render(activity, progress);
     note.textContent = progress.refresh_unavailable ? 'Live provider updates are temporarily unavailable. Last known progress is shown. Do not pay again; I’ll keep checking.' : '';
     const timestamp = progress.updated_at ? new Date(progress.updated_at) : null;
-    document.querySelector('#progress-updated').textContent = timestamp && !Number.isNaN(timestamp.getTime()) ? `Last checked: ${timestamp.toLocaleTimeString()}. Live updates continue automatically.` : 'Waiting for the provider’s first update. Checking automatically.';
+    document.querySelector('#progress-updated').textContent = `Connected · Checked at ${new Date().toLocaleTimeString()}. ` + (timestamp && !Number.isNaN(timestamp.getTime()) ? `Latest backend update: ${timestamp.toLocaleTimeString()}.` : 'Waiting for the provider’s first update.');
     if (announced !== progress.title) {
       document.querySelector('#payment-status-announcement').textContent = progress.title;
       announced = progress.title;
@@ -73,7 +59,7 @@
       : data.delivery_status ? 'Your license is ready here. Email delivery is pending; failed deliveries are retried for up to seven days.'
       : 'No email delivery requested. Please save your license and invoice.';
     document.querySelector(isCard ? '#card-delivery-status' : '#crypto-delivery-status').textContent = delivery + (data.beta ? ' This historical beta license will be deleted at product release.' : '');
-    if (firstFinished) { document.querySelector('#payment-success-heading').focus(); firstFinished = false; }
+    if (firstFinished) { window.PurchaseProgress.reveal(document.querySelector('#success-container')); firstFinished = false; }
     if (!data.delivery_status || ['sent', 'expired'].includes(data.delivery_status)) stop = true;
     else delay = 15000;
   }
@@ -82,10 +68,13 @@
     clearTimeout(timer);
     busy = true; refresh.disabled = true;
     try {
-      const response = await fetch(`/check-payment-status?${accessQuery}`, {cache: 'no-store'});
+      const response = await fetch(`/check-payment-status?${accessQuery}`, {cache: 'no-store', signal: AbortSignal.timeout(20000)});
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        if ([400, 404, 410].includes(response.status)) { heading.textContent = response.status === 410 ? 'Recovery link expired or unavailable' : 'Payment session not found'; message.textContent = 'If you paid, contact support with your payment transaction hash or invoice reference. Do not pay again.'; stop = true; }
+        if ([400, 404, 410].includes(response.status)) {
+          window.PurchaseProgress.render(activity, {title: response.status === 410 ? 'Recovery link expired or unavailable' : 'Payment session not found', message: 'If you paid, contact support with your payment transaction hash or invoice reference. Do not pay again.', activity: 'attention', steps: []});
+          stop = true;
+        }
         else throw new Error(data.error || 'Payment status is temporarily unavailable.');
       } else {
         renderProgress(data.progress);
@@ -94,6 +83,7 @@
       }
     } catch (e) {
       note.textContent = 'I couldn’t refresh payment progress. Your payment may still be processing. Do not pay again; I’ll retry automatically.';
+      document.querySelector('#progress-updated').textContent = `Connection interrupted. Last attempt: ${new Date().toLocaleTimeString()}. Retrying automatically.`;
     } finally {
       busy = false; refresh.disabled = false;
       if (!stop && !document.hidden) timer = setTimeout(check, delay);

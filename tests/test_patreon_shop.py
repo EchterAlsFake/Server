@@ -41,20 +41,18 @@ class ShopTests(ServerTestCase):
             self.assertEqual(License.query.count(), 2)
             self.assertEqual(Purchase.query.count(), 2)
 
-    def test_fallback_deduplicates_reconciles_and_preserves_future_purchase(self):
+    def test_verification_outage_waits_without_granting_a_license(self):
         with main.app.app_context():
             self.queue()
-            fallback = self.run_worker(None)
-            self.queue()
-            self.assertEqual(fallback, self.run_worker(None))
-            prior = time.time() - 100
-            self.queue()
-            self.assertEqual(fallback, self.run_worker([('A', self.email, prior, True)]))
+            self.assertIsNone(self.run_worker(None))
+            self.assertTrue(Customer.query.first().pending)
             self.assertIsNone(Customer.query.first().fallback_key)
-            self.queue()
-            later = [('A', self.email, prior, True), ('B', self.email, time.time() + 1, True)]
-            self.assertNotEqual(fallback, self.run_worker(later))
-            self.assertEqual(License.query.count(), 2)
+            self.assertEqual(License.query.count(), 0)
+            Customer.query.first().next_attempt_at = 0
+            main.db.session.commit()
+            self.assertIsNotNone(self.run_worker([('A', self.email, time.time(), True)]))
+            self.assertEqual(License.query.count(), 1)
+            self.assertFalse(Customer.query.first().pending)
 
     def test_negative_results_do_not_issue(self):
         with main.app.app_context():

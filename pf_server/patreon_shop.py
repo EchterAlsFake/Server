@@ -1,9 +1,11 @@
-"""Email-only Shop activation; unofficial sales access is isolated to the worker."""
+"""Shop activation and browser recovery; sales access stays in the worker."""
 import fcntl
 import hashlib
 import hmac
 import http.cookiejar
 import os
+import re
+import secrets
 import stat
 import time
 from datetime import datetime
@@ -15,9 +17,11 @@ from sqlalchemy.exc import IntegrityError
 from .extensions import db
 from .crypto_delivery import cipher
 from .licensing import normalize_recipient_email, get_or_create_license, build_license_file, send_license_email
-from .models import PatreonShopCustomer as Customer, PatreonShopPurchase as Purchase, PatreonShopHealth as Health, License
+from .models import PatreonShopCustomer as Customer, PatreonShopPurchase as Purchase, PatreonShopHealth as Health, PatreonShopLookup as Lookup, License
+from .purchase_activity import record_activity
 
 API_URL = 'https://www.patreon.com/api/sales'
+LOOKUP_LIFETIME = 15 * 60
 PARAMS = {
     'include': 'order,order_items.null,order_items.product_variant',
     'fields[order]': 'buyer_email,public_order_id,status,date_purchased,charge_amount_cents,currency_code',
@@ -40,13 +44,41 @@ def digest_email(email):
     return hmac.new(key.encode(), email.encode(), hashlib.sha256).hexdigest()
 
 
+def normalize_order_id(value):
+    if not isinstance(value, str):
+        return None
+    value = value.strip().removeprefix('#')
+    return value if re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,127}', value) else None
+
+
+def digest_order(order_id):
+    key = current_app.config['PATREON_SHOP_LOOKUP_KEY']
+    return hmac.new(key.encode(), ('order\0' + order_id).encode(), hashlib.sha256).hexdigest()
+
+
+def enqueue_lookup(email, order_id):
+    """Store no raw receipt credentials; the random ID stays in the session."""
+    row = Lookup(id=secrets.token_urlsafe(32), email_digest=digest_email(email),
+        order_digest=digest_order(order_id), created_at=time.time(), status='pending',
+        progress_stage='queued', progress_updated_at=time.time())
+    db.session.add(row)
+    db.session.commit()
+    return row.id
+
+
+def browser_lookup(lookup_id):
+    row = db.session.get(Lookup, lookup_id) if isinstance(lookup_id, str) else None
+    return row if row and 0 <= time.time() - row.created_at < LOOKUP_LIFETIME else None
+
+
 def enqueue(email):
     """One outstanding job per email; cooldown also applies to negative results."""
     digest = digest_email(email)
     now = time.time()
     row = db.session.get(Customer, digest)
     if row is None:
-        db.session.add(Customer(email_digest=digest, recipient_encrypted=cipher().encrypt(email.encode()).decode(), requested_at=now, pending=True))
+        db.session.add(Customer(email_digest=digest, recipient_encrypted=cipher().encrypt(email.encode()).decode(), requested_at=now, pending=True,
+                                progress_stage='queued', progress_updated_at=now))
         try:
             db.session.commit()
         except IntegrityError:
@@ -55,7 +87,7 @@ def enqueue(email):
     db.session.execute(db.update(Customer).where(
         Customer.email_digest == digest, Customer.pending.is_(False),
         Customer.requested_at <= now - 900,
-    ).values(pending=True, requested_at=now, next_attempt_at=0))
+    ).values(pending=True, requested_at=now, next_attempt_at=0, progress_stage='queued', progress_updated_at=now))
     db.session.commit()
 
 
@@ -106,7 +138,10 @@ def parse_page(payload, variant_id):
             status = attrs['status']
             if not isinstance(status, str) or not status:
                 raise ValueError()
-            result.append((order_id, email, purchased, status == 'fulfilled' and matching and not refunded))
+            public_id = attrs.get('public_order_id')
+            if public_id is not None and normalize_order_id(public_id) is None:
+                raise ValueError()
+            result.append((order_id, email, purchased, status == 'fulfilled' and matching and not refunded, public_id))
         return result
     except (KeyError, TypeError, ValueError, AttributeError, OverflowError):
         raise VerificationUnavailable('schema') from None
@@ -209,7 +244,8 @@ def choose_license(customer, sales):
     purchases = []
     if sales is not None:
         email = cipher().decrypt(customer.recipient_encrypted.encode()).decode()
-        for order_id, buyer, purchased, eligible in sales:
+        for sale in sales:
+            order_id, buyer, purchased, eligible = sale[:4]
             if buyer != email:
                 continue
             row = db.session.get(Purchase, order_id)
@@ -242,10 +278,8 @@ def choose_license(customer, sales):
         eligible = sorted((p for p in known if p.eligible and p.license_key), key=lambda p: p.purchased_at, reverse=True)
         key = eligible[0].license_key if eligible else customer.fallback_key
         reason = 'recovery'
-        if not key and not known:
-            record = get_or_create_license('patreon-shop-fallback:' + customer.email_digest)
-            key, reason = record.license_key, 'fallback'
-            customer.fallback_key, customer.fallback_created_at = key, time.time()
+        if not key:
+            reason = 'unavailable'
     customer.reason, customer.delivery_key = reason, key
     db.session.commit()
     return key
@@ -258,7 +292,8 @@ def reconcile_fallbacks(sales):
     for customer in Customer.query.filter(Customer.fallback_key.is_not(None)).yield_per(100):
         email = cipher().decrypt(customer.recipient_encrypted.encode()).decode()
         matches = sorted((sale for sale in sales if sale[1] == email and sale[3] and sale[2] <= customer.fallback_created_at), key=lambda sale: (sale[2], sale[0]), reverse=True)
-        for order_id, _, purchased, _ in matches:
+        for sale in matches:
+            order_id, _, purchased, _ = sale[:4]
             row = db.session.get(Purchase, order_id)
             if row is not None and (row.license_key or row.email_digest != customer.email_digest):
                 continue
@@ -269,6 +304,59 @@ def reconcile_fallbacks(sales):
             customer.fallback_key = None
             break
     db.session.commit()
+
+
+def process_lookups(sales):
+    """Both receipt fields and current eligibility must match before disclosure."""
+    if sales is None:
+        return 0
+    count = 0
+    for lookup in Lookup.query.filter_by(status='pending').order_by(Lookup.created_at).limit(100).all():
+        if time.time() - lookup.created_at >= LOOKUP_LIFETIME:
+            continue
+        record_activity([lookup], 'verifying')
+        matches = [sale for sale in sales if len(sale) > 4 and sale[4]
+            and hmac.compare_digest(digest_email(sale[1]), lookup.email_digest)
+            and hmac.compare_digest(digest_order(sale[4]), lookup.order_digest)]
+        if len(matches) != 1 or not matches[0][3]:
+            lookup.status = 'not_found'
+            db.session.commit()
+            continue
+        order_id, email, purchased, _ = matches[0][:4]
+        try:
+            record_activity([lookup], 'license')
+            customer = db.session.get(Customer, lookup.email_digest)
+            if customer is None:
+                customer = Customer(email_digest=lookup.email_digest,
+                    recipient_encrypted=cipher().encrypt(email.encode()).decode(),
+                    requested_at=time.time(), pending=False)
+                db.session.add(customer)
+            purchase = db.session.get(Purchase, order_id)
+            if purchase is None:
+                purchase = Purchase(order_id=order_id, email_digest=lookup.email_digest,
+                    purchased_at=purchased, eligible=True)
+                db.session.add(purchase)
+            if purchase.email_digest != lookup.email_digest:
+                raise ValueError('Purchase identity changed')
+            purchase.eligible = True
+            if not purchase.license_key:
+                # Reuse a historical outage grant only for an earlier purchase.
+                if customer.fallback_key and purchased <= customer.fallback_created_at:
+                    purchase.license_key, customer.fallback_key = customer.fallback_key, None
+                else:
+                    purchase.license_key = get_or_create_license('patreon-shop:' + order_id).license_key
+            db.session.commit()  # Stable identity survives an issuance failure.
+            record = db.session.get(License, purchase.license_key)
+            build_license_file(record.license_key, record.issuance_reference, record.created_at)
+            lookup.license_key, lookup.status = record.license_key, 'ready'
+            lookup.progress_stage, lookup.progress_updated_at = 'delivery', time.time()
+            db.session.commit()
+            count += 1
+        except Exception:
+            db.session.rollback()
+            record_activity([lookup], 'retry')
+            current_app.logger.warning('Patreon Shop browser fulfillment deferred')
+    return count
 
 
 def process_claims():
@@ -282,34 +370,48 @@ def process_claims():
         except BlockingIOError:
             return 0
         db.session.execute(db.update(Customer).where(Customer.pending.is_(False), Customer.completed_at < time.time() - 30 * 86400).values(reason=None, completed_at=None))
+        db.session.execute(db.delete(Lookup).where(Lookup.created_at <= time.time() - LOOKUP_LIFETIME))
         db.session.commit()
         rows = Customer.query.filter(Customer.pending.is_(True), Customer.next_attempt_at <= time.time()).order_by(Customer.requested_at).limit(100).all()
         unbound = Customer.query.filter(Customer.fallback_key.is_not(None)).first() is not None
-        if not rows and not unbound:
+        lookups = Lookup.query.filter_by(status='pending').order_by(Lookup.created_at).limit(100).all()
+        if not rows and not unbound and not lookups:
             return 0
-        sales = snapshot() if unbound or any(not row.delivery_key for row in rows) else None
+        needs_sales = lookups or unbound or any(not row.delivery_key for row in rows)
+        if needs_sales:
+            record_activity([*rows, *lookups], 'fetching')
+        sales = snapshot() if needs_sales else None
+        record_activity(lookups, 'verifying' if sales is not None else 'retry')
         reconcile_fallbacks(sales)
         for row in rows:
             try:
+                record_activity([row], 'license')
                 key = choose_license(row, sales)
+                if not key and row.reason == 'unavailable':
+                    row.next_attempt_at = time.time() + 60
+                    record_activity([row], 'retry')
+                    continue
                 if key:
                     record = db.session.get(License, key)
                     content = build_license_file(key, record.issuance_reference, record.created_at)
                     recipient = cipher().decrypt(row.recipient_encrypted.encode()).decode()
                     purchase = Purchase.query.filter_by(license_key=key).first()
+                    record_activity([row], 'delivery')
                     send_license_email(recipient, content)
                     if purchase and purchase.license_sent_at is None:
                         purchase.license_sent_at = time.time()
                     row.last_key = key
+                else:
+                    record_activity([row], 'delivery')
                 row.pending, row.delivery_key = False, None
                 row.completed_at = time.time()
                 db.session.commit()
             except Exception:
                 db.session.rollback()
                 row.next_attempt_at = time.time() + 60
-                db.session.commit()
+                record_activity([row], 'retry')
                 current_app.logger.warning('Patreon Shop fulfillment deferred')
         health = db.session.get(Health, 1)
         oldest = Customer.query.filter_by(pending=True).order_by(Customer.requested_at).first()
         current_app.logger.info('Patreon Shop batch: processed=%d fallback=%d pending=%d oldest_seconds=%d verification_healthy=%s', len(rows), sum(r.reason == 'fallback' for r in rows), Customer.query.filter_by(pending=True).count(), int(time.time() - oldest.requested_at) if oldest else 0, bool(health and not health.reason))
-        return len(rows)
+        return len(rows) + process_lookups(sales)

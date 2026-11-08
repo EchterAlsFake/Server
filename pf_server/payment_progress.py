@@ -6,6 +6,7 @@ Neither unsigned callbacks nor any API observation changes Transaction.status.
 
 import re
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from urllib.parse import urlsplit
@@ -145,7 +146,7 @@ def _api_observation(payload):
 def refresh_providers(transaction):
     """At most once per minute per order, with a shared DB lease and finite timeouts."""
     record = progress_record(transaction)
-    if transaction.status == "finished" or transaction.provider_payment_id.startswith(
+    if transaction.status in {"finished", "processing"} or transaction.provider_payment_id.startswith(
         "mock-"
     ):
         return record
@@ -278,7 +279,15 @@ def refresh_providers(transaction):
     return db.session.get(PaymentProgress, transaction.session_id)
 
 
-def public_progress(transaction, checkout=None):
+def record_fulfillment(transaction, stage):
+    """Publish a committed milestone before potentially slow fulfillment work."""
+    record = progress_record(transaction)
+    record.fulfillment_stage = stage
+    record.fulfillment_updated_at = time.time()
+    db.session.commit()
+
+
+def public_progress(transaction, checkout=None, *, license_pending=False):
     record = db.session.get(PaymentProgress, transaction.session_id)
     state = record.nowpayments_state if record else "waiting"
     if checkout and checkout.payment_state in PROBLEMS:
@@ -291,14 +300,18 @@ def public_progress(transaction, checkout=None):
             ("forwarding", "Crypto forwarded to NOWPayments"),
             ("blockchain", "Blockchain confirmations"),
             ("settlement", "NOWPayments settlement"),
-            ("license", "License and invoice ready"),
+            ("license", "Generate your signed license"),
+            ("invoice", "Prepare your invoice"),
+            ("ready", "License ready to save"),
         ]
         if card
         else [
             ("payment", "Send cryptocurrency"),
             ("blockchain", "Blockchain confirmations"),
             ("settlement", "NOWPayments settlement"),
-            ("license", "License and invoice ready"),
+            ("license", "Generate your signed license"),
+            ("invoice", "Prepare your invoice"),
+            ("ready", "License ready to save"),
         ]
     )
     index = 0
@@ -331,7 +344,7 @@ def public_progress(transaction, checkout=None):
         title = "Blockchain confirmed. Completing settlement."
         message = "NOWPayments is settling the payment. Your license will be issued after the final receipt is verified."
     if state == "finished" or transaction.status == "processing":
-        index = len(steps) - 1
+        index = len(steps) - 3
         title, message = (
             "Payment reported complete. Preparing your license.",
             "Waiting for the verified final receipt and license generation. No further payment is needed.",
@@ -346,7 +359,18 @@ def public_progress(transaction, checkout=None):
             "wrong_asset_confirmed": "Payment asset needs review",
         }[problem]
         message = "A license has not been issued. If you sent money, contact support with your session ID. Do not pay again while the transfer is being reviewed."
-    finished = transaction.status == "finished"
+    fulfillment = record.fulfillment_stage if record else None
+    if transaction.status == "processing" or license_pending or fulfillment == "retry":
+        index = len(steps) - (2 if fulfillment == "invoice" else 3)
+        title, message = {
+            "invoice": ("License generated. Preparing your invoice.",
+                        "The server is saving your payment invoice and purchase documents. Your license will appear here automatically."),
+            "retry": ("Payment verified. License preparation delayed.",
+                      "License preparation is temporarily unavailable. Your verified payment is saved and preparation will be retried. No further payment is needed."),
+        }.get(fulfillment, ("Payment verified. Generating your license.",
+                            "The server is creating and signing your Premium license. Keep this page open; your key and download will appear here automatically."))
+        problem = None
+    finished = transaction.status == "finished" and not license_pending
     if finished:
         index = len(steps)
         problem = None
@@ -357,6 +381,7 @@ def public_progress(transaction, checkout=None):
     return dict(
         title=title,
         message=message,
+        activity="complete" if finished else "attention" if problem else "waiting" if fulfillment == "retry" else "active",
         stage="finished"
         if finished
         else problem or steps[min(index, len(steps) - 1)][0],
@@ -375,6 +400,7 @@ def public_progress(transaction, checkout=None):
                     record.checked_at,
                     record.nowpayments_updated_at,
                     record.onramp_updated_at,
+                    datetime.fromtimestamp(record.fulfillment_updated_at, timezone.utc).isoformat() if record.fulfillment_updated_at else None,
                 ),
             ),
             default=None,
