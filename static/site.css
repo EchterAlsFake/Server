@@ -210,9 +210,9 @@ input[type=checkbox] { accent-color: var(--color-primary); }
 .legal-language li { margin-bottom: 10px; }
 /* Keep the gated page unpainted from first render, including without JavaScript.
    Hiding and pausing the background avoids costly blur passes and repaints. */
-html.age-pending, html.payment-testing-pending { overflow: hidden; scroll-behavior: auto; }
-:is(.age-pending, .payment-testing-pending) #site-content { visibility: hidden; pointer-events: none; user-select: none; }
-:is(.age-pending, .payment-testing-pending) #site-content *, :is(.age-pending, .payment-testing-pending) #site-content *::before, :is(.age-pending, .payment-testing-pending) #site-content *::after { animation-play-state: paused; }
+html.age-pending { overflow: hidden; scroll-behavior: auto; }
+.age-pending #site-content { visibility: hidden; pointer-events: none; user-select: none; }
+.age-pending #site-content *, .age-pending #site-content *::before, .age-pending #site-content *::after { animation-play-state: paused; }
 .age-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow-y: auto; padding: 30px 18px; background: #0d0b11; }
 .age-dialog { width: min(100%, 510px); padding: 38px; margin: auto; background: #19171df5; border: 1px solid #ffffff25; border-radius: 13px; box-shadow: 0 35px 120px #0009; outline: none; }
 .age-symbol { display: inline-grid; place-items: center; width: 45px; height: 45px; border: 1px solid #ecabc854; border-radius: 50%; font-size: var(--text-body); font-weight: 600; color: #f3b7cf; margin-bottom: 24px; }

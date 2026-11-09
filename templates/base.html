@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{% block html_lang %}en{% endblock %}"{% if payment_testing_notice_required %} class="payment-testing-pending"{% elif age_required %} class="age-pending"{% endif %}>
+<html lang="{% block html_lang %}en{% endblock %}"{% if age_required %} class="age-pending"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -17,7 +17,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div id="site-content"{% if age_required or payment_testing_notice_required %} inert aria-hidden="true"{% endif %}>
+    <div id="site-content"{% if age_required %} inert aria-hidden="true"{% endif %}>
         <a class="skip-link" href="#main-content">Skip to main content</a>
         {% if config.NOWPAYMENTS_SANDBOX %}
         <div class="test-site-banner" role="note" aria-label="Test site notice" lang="en">
@@ -63,8 +63,7 @@
         </footer>
     </div>
     {% if config.NOWPAYMENTS_SANDBOX %}{% include "partials/payment_test_dialog.html" %}{% endif %}
-    {% if payment_testing_notice_required %}{% include "partials/payment_testing_notice.html" %}{% elif age_required %}{% include "age_gate.html" %}{% endif %}
-    <script src="{{ url_for('static', filename='payment-testing-notice.js') }}" defer></script>
+    {% if age_required %}{% include "age_gate.html" %}{% endif %}
     <script src="{{ url_for('static', filename='payment-preview.js') }}" defer></script>
     {% if not is_onion %}<script src="/__eaf/visit.js" defer></script>{% endif %}
     {% block scripts %}{% endblock %}

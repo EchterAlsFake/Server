@@ -15,7 +15,7 @@
   const video = document.querySelector('#product-video');
 
   function loadVideo() {
-    if (!video || videoReady || root.matches('.age-pending, .payment-testing-pending')) return;
+    if (!video || videoReady || root.matches('.age-pending')) return;
     video.querySelectorAll('source[data-src]').forEach(source => {
       source.src = source.dataset.src;
     });
@@ -23,7 +23,7 @@
     videoReady = true;
   }
   function syncVideo() {
-    if (!video || root.matches('.age-pending, .payment-testing-pending')) return;
+    if (!video || root.matches('.age-pending')) return;
     const autoplay = !reducedMotion.matches && !reducedData.matches && !phoneScreen.matches && !touchScreen.matches && !navigator.connection?.saveData;
     if (videoVisible && autoplay) loadVideo();
     if (videoVisible && !document.hidden && autoplay && !userPaused) {

@@ -16,8 +16,6 @@ def is_onion():
 def before_onion_request():
     if not is_onion():
         return None
-    if request.method == "POST" and request.path == "/payment-testing/acknowledge":
-        return None
     if request.method not in {"GET", "HEAD"}:
         abort(404)
     if request.path in PURCHASE_PATHS:

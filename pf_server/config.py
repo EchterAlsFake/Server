@@ -250,7 +250,6 @@ def load_environment_config(
         "WEBSITE_MAX_ARTIFACT_BYTES": artifact_limit,
         "APP_DOMAIN": app_domain,
         "SEO_INDEXING_ENABLED": _boolean(source, "SEO_INDEXING_ENABLED", True),
-        "PAYMENT_TESTING_NOTICE_ENABLED": _boolean(source, "PAYMENT_TESTING_NOTICE_ENABLED", True),
         "ONION_ORIGIN": onion_origin,
         "API_DOMAIN": api_domain,
         "API_PUBLIC_HOST": api_public_host,

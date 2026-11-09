@@ -3,16 +3,11 @@
 The configured purchase URL is `https://www.patreon.com/EchterAlsFake/posts/porn-fetch-174679355?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link`.
 Live configuration accepts specific Patreon purchase posts as well as specific Shop products; a generic Shop homepage is rejected.
 
-During the temporary real-payment rollout, keep `PAYMENT_TESTING_NOTICE_ENABLED=true`.
-Every new browser session must acknowledge the no-purchase warning, including on direct checkout entry.
-Purchases remain real: this acknowledgment does not simulate payments or schedule refunds or license revocations.
 Set `NOWPAYMENTS_SANDBOX=false` and `NOWPAYMENTS_LOCAL_SIMULATION_ENABLED=false` with production API/IPN credentials.
-Disable the temporary warning explicitly only after the payment rollout is finished.
 
 Required rollout flags in the deployed web/worker environment:
 
 ```dotenv
-PAYMENT_TESTING_NOTICE_ENABLED=true
 NOWPAYMENTS_SANDBOX=false
 NOWPAYMENTS_LOCAL_SIMULATION_ENABLED=false
 PATREON_SHOP_ENABLED=true

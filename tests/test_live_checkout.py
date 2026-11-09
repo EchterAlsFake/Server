@@ -1,4 +1,4 @@
-"""Temporary live-payment notice: browser gate, consent and production wording."""
+"""Live checkout availability, production wording and Patreon configuration."""
 
 from html import unescape
 import re
@@ -7,72 +7,43 @@ from unittest.mock import patch
 
 from _support import ServerTestCase, main
 from pf_server.config import load_environment_config
-from pf_server.payment_testing_notice import PURCHASE_POST_PATHS
 
 PRODUCT_URL = "https://www.patreon.com/EchterAlsFake/posts/porn-fetch-174679355?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link"
 
 
-class PaymentTestingNoticeTests(ServerTestCase):
+class LiveCheckoutTests(ServerTestCase):
     def setUp(self):
         super().setUp()
-        settings = patch.dict(main.app.config, PAYMENT_TESTING_NOTICE_ENABLED=True,
-                              NOWPAYMENTS_SANDBOX=False, PATREON_SHOP_ENABLED=True,
+        settings = patch.dict(main.app.config, NOWPAYMENTS_SANDBOX=False, PATREON_SHOP_ENABLED=True,
                               PATREON_SHOP_PRODUCT_URL=PRODUCT_URL)
         settings.start()
         self.addCleanup(settings.stop)
 
-    def acknowledge(self, target="/"):
-        return self.client.post("/payment-testing/acknowledge", data={
-            "payment_testing_acknowledged": "yes", "next": target,
-        })
-
-    def test_every_fresh_browser_sees_warning_on_public_and_checkout_pages(self):
+    def test_fresh_browser_sees_public_and_checkout_pages_without_testing_warning(self):
         for path in ("/", "/download", "/download/android", "/guides/download-xvideos-videos",
-                     "/privacy_policy", "/porn_fetch", "/buy_license", "/payment-preview/patreon"):
+                     "/privacy_policy", "/porn_fetch", "/buy_license"):
             page = self.client.get(path)
             self.assertEqual(page.status_code, 200, path)
-            self.assertIn('id="payment-testing-overlay"', page.text, path)
-            self.assertIn('inert aria-hidden="true"', page.text)
-            self.assertIn('Please do not buy anything!', page.text)
-            self.assertIn('I explicitly agree not to buy any product, as I will be refunded and loose my license', page.text)
-            self.assertNotIn('id="age-overlay"', page.text)
-            self.assertIn('no-store', page.headers['Cache-Control'])
+            self.assertNotIn('payment-testing-overlay', page.text, path)
+            self.assertNotIn('payment-testing-pending', page.text, path)
+            self.assertNotIn('Please do not buy anything!', page.text, path)
 
-    def test_explicit_checkbox_is_required_then_age_gate_remains_independent(self):
-        denied = self.client.post('/payment-testing/acknowledge', data={})
-        self.assertEqual(denied.status_code, 400)
-        self.assertIn('Tick the agreement', denied.text)
-        accepted = self.acknowledge('/porn_fetch')
-        self.assertEqual(accepted.status_code, 303)
-        self.assertEqual(accepted.location, '/porn_fetch')
-        self.assertIn('HttpOnly', accepted.headers['Set-Cookie'])
+    def test_age_confirmation_remains_required_for_checkout(self):
         page = self.client.get('/porn_fetch')
-        self.assertNotIn('id="payment-testing-overlay"', page.text)
         self.assertIn('id="age-overlay"', page.text)
-        self.assertIn('id="payment-testing-overlay"', main.app.test_client().get('/').text)
+        self.assertIn('inert aria-hidden="true"', page.text)
+        self.assertIn('no-store', page.headers['Cache-Control'])
+        self.client.post('/', data={'adult_confirmed': 'yes'})
+        self.assertNotIn('id="age-overlay"', self.client.get('/porn_fetch').text)
         self.client.get('/leave')
-        self.assertIn('id="payment-testing-overlay"', self.client.get('/').text)
+        self.assertIn('id="age-overlay"', self.client.get('/porn_fetch').text)
 
-    def test_purchase_posts_cannot_skip_the_warning(self):
+    def test_checkout_reaches_validation_without_warning_acknowledgment(self):
         with patch('pf_server.nowpayments_service.httpx.post') as provider:
-            for path in PURCHASE_POST_PATHS:
-                self.assertEqual(self.client.post(path, json={}).status_code, 423, path)
+            self.assertEqual(self.client.post('/checkout/start', json={}).status_code, 400)
             provider.assert_not_called()
-        self.acknowledge()
-        self.assertEqual(self.client.post('/checkout/start', json={}).status_code, 400)
-
-    def test_notice_form_preserves_local_destination_and_rejects_external_redirects(self):
-        for target, expected in (("/download/android?channel=beta", "/download/android?channel=beta"),
-                                 ("https://example.com", "/"), ("//example.com/", "/"),
-                                 ("/\\example.com", "/")):
-            self.assertEqual(self.acknowledge(target).location, expected)
-
-    def test_notice_post_requires_csrf_when_protection_is_enabled(self):
-        with patch.dict(main.app.config, WTF_CSRF_ENABLED=True):
-            self.assertEqual(self.acknowledge().status_code, 400)
 
     def test_live_checkout_has_actual_payment_notices_and_exact_patreon_url(self):
-        self.acknowledge()
         for path in ('/', '/porn_fetch', '/buy_license', '/buy_card', '/privacy_policy'):
             page = unescape(re.sub(r'<[^>]+>', ' ', self.client.get(path).text)).lower()
             for stale in ('test site', 'test preview', 'sandbox', 'no real purchases'):
@@ -85,7 +56,6 @@ class PaymentTestingNoticeTests(ServerTestCase):
         self.assertIn('Real payment:', page.text)
 
     def test_patreon_is_first_recommended_and_selected_but_preferences_are_kept(self):
-        self.acknowledge()
         page = self.client.get('/porn_fetch').text
         self.assertLess(page.index('for="method-patreon"'), page.index('for="method-crypto"'))
         self.assertRegex(page, r'id="method-patreon"[^>]*checked')
@@ -101,15 +71,12 @@ class PaymentTestingNoticeTests(ServerTestCase):
         self.assertEqual(self.client.get('/ping').text, 'Success')
         self.assertNotIn('payment-testing-overlay', self.client.get('/robots.txt').text)
 
-    def test_onion_can_acknowledge_without_enabling_purchase_posts(self):
+    def test_onion_is_accessible_without_warning_and_keeps_purchase_posts_disabled(self):
         origin = main.app.config['ONION_ORIGIN']
-        self.assertIn('id="payment-testing-overlay"', self.client.get('/', base_url=origin).text)
-        accepted = self.client.post('/payment-testing/acknowledge', base_url=origin,
-                                    data={'payment_testing_acknowledged': 'yes', 'next': '/download'})
-        self.assertEqual(accepted.status_code, 303)
-        self.assertIn('HttpOnly', accepted.headers['Set-Cookie'])
-        self.assertNotIn('Secure;', accepted.headers['Set-Cookie'])
-        self.assertNotIn('id="payment-testing-overlay"', self.client.get('/download', base_url=origin).text)
+        for path in ('/', '/download'):
+            page = self.client.get(path, base_url=origin)
+            self.assertEqual(page.status_code, 200)
+            self.assertNotIn('payment-testing-overlay', page.text)
         self.assertEqual(self.client.post('/create-crypto-payment', base_url=origin, json={}).status_code, 404)
 
 
