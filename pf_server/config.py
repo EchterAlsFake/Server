@@ -256,6 +256,8 @@ def load_environment_config(
         "GITHUB_TOKEN": source.get("GITHUB_TOKEN", ""),
         "CI_TOKEN": source.get("CI_TOKEN"),
         "CHECKLIST_AUTH": source.get("CHECKLIST_AUTH"),
+        "CHECKLIST_PROGRESS_LABEL": source.get("CHECKLIST_PROGRESS_LABEL", "").strip()
+        or "Version 3.9 Development Progress",
         "PATREON_SHOP_ENABLED": shop_enabled,
         "PATREON_SHOP_COOKIE_FILE": source.get("PATREON_SHOP_COOKIE_FILE", ""),
         "PATREON_SHOP_LOOKUP_KEY": source.get("PATREON_SHOP_LOOKUP_KEY", ""),
