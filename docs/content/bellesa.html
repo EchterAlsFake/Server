@@ -1,0 +1,1116 @@
+<!-- SLOT:TITLE = Bellesa API -->
+<!-- SLOT:HERO_TITLE = Bellesa API -->
+<!-- SLOT:HERO_SUBTITLE = An asynchronous Python API for Bellesa videos, performers, channels, categories, typed search, lazy API/HTML metadata, and HLS/MP4 downloads. Powered by eaf_base_api. -->
+<!-- SLOT:VERSION = 1.0.0 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-bellesa -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-bellesa -->
+<!-- SLOT:LICENSE_LABEL = AGPL-3.0-only -->
+
+<!-- BEGIN:SIDEBAR_NAV -->
+<a href="#getting-started" class="nav-link">Bellesa API getting started</a>
+<a href="#reference-client" class="nav-link">Client</a>
+<a href="#reference-video" class="nav-link">Video</a>
+<a href="#reference-performer" class="nav-link">Performer</a>
+<a href="#reference-channel" class="nav-link">Channel</a>
+<a href="#reference-category" class="nav-link">Category</a>
+<a href="#reference-sorting-enums" class="nav-link">Sort</a>
+<a href="#reference-cli" class="nav-link">CLI</a>
+<a href="#guides-source-loading" class="nav-link">Source loading</a>
+<a href="#guides-searching-and-filtering" class="nav-link">Searching and filtering</a>
+<a href="#guides-iteration-and-results" class="nav-link">Pagination, iteration, and ScrapeResult</a>
+<a href="#guides-downloading" class="nav-link">Downloading</a>
+<a href="#guides-live-validation" class="nav-link">Live validation</a>
+<a href="#troubleshooting-errors" class="nav-link">Errors and troubleshooting</a>
+<a href="#supported-platforms" class="nav-link">Supported platforms and hosts</a>
+<a href="#changelog" class="nav-link">Changelog</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- BEGIN:MAIN_CONTENT -->
+<section class="section" id="getting-started">
+<h2>Bellesa API getting started</h2>
+<p>Version <strong>1.0.0</strong>. Distribution: <code>unofficial-api-for-bellesa</code>; import: <code>bellesa_api</code>.
+Requires Python 3.12+, <code>eaf-base-api[hls]&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
+<pre><code class="language-sh">pip install unofficial-api-for-bellesa
+</code></pre>
+<p>From a local checkout, use <code>pip install .</code>. When developing against the shared backend
+checkout from the workspace root:</p>
+<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-bellesa
+</code></pre>
+<p>FFmpeg is needed to remux HLS output to MP4. Direct MP4 transfers use the shared RAW
+downloader. No account credentials are required for the public catalog.</p>
+<pre><code class="language-python">import asyncio
+from bellesa_api import Client
+
+async def main():
+    async with Client() as client:
+        video = await client.get_video(&quot;https://www.bellesa.co/videos/7054&quot;)
+        print(video.title, video.duration, video.pornstars)
+        await video.load_sources(&quot;media&quot;)
+        print(video.available_qualities)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<p><code>Client()</code> owns its core and closes it on context exit or <code>await client.close()</code>.
+<code>Client(core)</code> leaves the injected core caller-owned. Keep the core open until all
+objects, iterators and downloads using it have finished. Requests, caching, retries,
+source loading, iteration and downloads use <code>eaf-base-api</code>; session headers and the
+caller's download configuration are not mutated by this provider.</p>
+<pre><code class="language-python">from base_api import BaseCore
+from base_api.modules.config import RuntimeConfig
+from bellesa_api import Client
+
+async def inspect_video():
+    runtime = RuntimeConfig()
+    runtime.request_delay = 1
+    runtime.pages_concurrency = 1
+    runtime.videos_concurrency = 2
+    async with BaseCore(runtime) as core, Client(core) as client:
+        video = await client.get_video(&quot;https://bellesa.co/videos/1094&quot;)
+        print(video.title)
+</code></pre>
+<p>See <a href="#reference-client">Client</a>, <a href="#guides-source-loading">source loading</a>,
+<a href="#guides-downloading">downloads</a>, and
+<a href="https://docs.echteralsfake.me/eaf_base_api/">shared runtime configuration</a>.</p>
+</section>
+
+<section class="section" id="reference-client">
+<h2>Client — Bellesa API</h2>
+<p><code>Client(core: BaseCore | None = None)</code> constructs objects sharing a configurable backend.
+An internally created core is closed by <code>close()</code> or the async context manager. An
+injected core remains caller-owned. The client has no login or account state.</p>
+<h3>Object getters</h3>
+<pre><code class="language-python">async def get_video(url: str, load_html: bool = False, load_api: bool = True) -&gt; Video: ...
+async def get_performer(url: str, load_html: bool = False, load_api: bool = True) -&gt; Performer: ...
+async def get_channel(url: str, load_api: bool = True) -&gt; Channel: ...
+async def get_category(url: str, load_api: bool = True) -&gt; Category: ...
+async def get_categories() -&gt; list[Category]: ...
+</code></pre>
+<p>Getters require complete supported URLs, not bare IDs/handles. Video paths are
+<code>/videos/{numeric-id}</code> or <code>/videos/{numeric-id}/{title-slug}</code>; performer, channel and
+category routes are <code>/performers/{handle}</code>, <code>/channels/{handle}</code> and
+<code>/videos/categories/{handle}</code>. Accepted hosts are <code>bellesa.co</code> and <code>www.bellesa.co</code>.
+Only individual resources are accepted by object getters.</p>
+<p>Setting all available source flags false constructs a deferred object. Video and
+Performer have independent API/HTML loaders. Channel and Category have API-only
+metadata. <code>get_categories()</code> is an awaited list of loaded categories, not a stream.</p>
+<h3>get_videos</h3>
+<pre><code class="language-python">def get_videos(*, sort=Sort.RECENT, categories=(), channels=(), performers=(), tags=(),
+               min_duration: int | None = None, max_duration: int | None = None,
+               pages=1, start_page=1, iterator_config=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p>Filters are sequences of handles/tags, for example <code>channels=["zero-to-hero"]</code>, not
+individual strings or profile URLs. Duration bounds are nonnegative integer <strong>seconds</strong>;
+when both are given, <code>min_duration &lt;= max_duration</code> is required. Provider/performer
+multiselects use the site's OR filter. Category/tag combinations retain site semantics.
+Use recent, popular or longest ordering. See <a href="#guides-searching-and-filtering">filters</a>.</p>
+<h3>get_performers</h3>
+<pre><code class="language-python">def get_performers(*, gender=&quot;female&quot;, pages=1, start_page=1,
+                   iterator_config=None) -&gt; ScrapeStream[Performer]: ...
+</code></pre>
+<p><code>gender</code> is <code>"female"</code>, <code>"male"</code> or <code>"all"</code>. The directory orders by the site's video
+count descending and has 12 items per page. Profile metadata is loaded through API by
+default. It is distinct from <code>Performer.videos()</code>, which lists videos at 9 per page.</p>
+<h3>search</h3>
+<pre><code class="language-python">def search(query: str, *, kind=&quot;video&quot;, sort=Sort.RELEVANCE,
+           pages=1, start_page=1, iterator_config=None) -&gt; ScrapeStream[Video | Performer | Channel]: ...
+</code></pre>
+<p>The trimmed query must have at least three characters. <code>kind</code> selects <code>"video"</code>,
+<code>"performer"</code>, or <code>"channel"</code>; results are the corresponding typed objects. Searches use
+the site's search endpoint, not local substring matching. Supports relevance, recent,
+longest and popular ordering; exact ranking and matching belong to the site. Search
+pages contain up to 24 items. There is no separate <code>search_channels()</code> method.</p>
+<h3>Stream defaults</h3>
+<p>All listing methods return <code>ScrapeStream</code> and accept a positive page count or
+<code>pages="all"</code>, positive one-based <code>start_page</code>, and optional <code>IteratorConfig</code>. Defaults
+load the <code>api</code> source, preserve original ordering, and raise terminal page/item errors.
+An explicitly provided configuration replaces those defaults. The initial pagination
+request occurs outside the Helper scheduler, so its failure propagates directly even
+when a custom item/page error policy is configured.</p>
+<p>See <a href="#guides-iteration-and-results">iteration and results</a>,
+<a href="#reference-video">Video</a>, <a href="#reference-performer">Performer</a>, <a href="#reference-channel">Channel</a>, and <a href="#reference-category">Category</a>.</p>
+</section>
+
+<section class="section" id="reference-video">
+<h2>Video — Bellesa API</h2>
+<p><code>Video(url=..., core=..., video_id=None)</code> is a keyword-only <code>BaseMedia</code> dataclass.
+Prefer <code>await client.get_video(url)</code>. Construction validates the URL, preserves its
+accepted host, strips query/fragment, and derives a string numeric <code>video_id</code>. An
+explicit <code>video_id</code> must agree with the URL. No network request occurs in construction.</p>
+<h3>Metadata fields</h3>
+<p>Fields may be known absent (<code>None</code> or an empty list) or unresolved. Reading an unresolved
+field raises <code>DataNotLoadedError</code>; inspect <code>is_field_loaded()</code> or load it explicitly.
+Common fields prefer API over HTML regardless of load order.</p>
+<table>
+<thead>
+<tr>
+<th>Fields</th>
+<th>Type / units</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code>, <code>video_id</code>, <code>core</code></td>
+<td><code>str</code>, <code>str</code>, <code>BaseCore</code></td>
+<td>Identity</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str</code> or <code>None</code>, response transport metadata</td>
+<td>Shared backend</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>title_tag</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>description</code>, <code>description_html</code></td>
+<td>Plain text and original HTML; <code>str</code> or <code>None</code></td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code>, <code>preview_video_url</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>duration</code>, <code>length</code></td>
+<td>Integer seconds; <code>minutes:seconds</code> display string</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>posted_on</code>, <code>publish_date</code></td>
+<td>Unix seconds; UTC ISO 8601 string</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>views</code>, <code>likes</code></td>
+<td><code>int</code> or <code>None</code>; mutable site statistics</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>tags</code>, <code>categories</code></td>
+<td>Lists of names</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>primary_category</code></td>
+<td>Category name or <code>None</code></td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>category_urls</code></td>
+<td>Category URL list</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>pornstars</code>, <code>pornstars_urls</code></td>
+<td>Performer names and URLs</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>channel_urls</code></td>
+<td>Provider/channel URL list</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>author</code>, <code>author_link</code></td>
+<td>First provider's name and channel URL</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>advertised_qualities</code></td>
+<td>Integer labels supplied in metadata; possibly empty</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>source_id</code>, <code>preview_source_id</code>, <code>trailer_source_id</code></td>
+<td>Player identifiers or <code>None</code></td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>m3u8_base_url</code></td>
+<td>Public HLS master URL or <code>None</code></td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>access</code>, <code>highlights</code></td>
+<td>Site-supplied access mapping and editorial list</td>
+<td>api, html</td>
+</tr>
+<tr>
+<td><code>canonical_url</code>, <code>og_title</code></td>
+<td>Open Graph values or <code>None</code></td>
+<td>html only</td>
+</tr>
+<tr>
+<td><code>available_qualities</code></td>
+<td>Sorted actual shorter-dimension values, <code>list[int]</code></td>
+<td>media</td>
+</tr>
+<tr>
+<td><code>direct_sources</code></td>
+<td>Actual quality → direct MP4 URL, <code>dict[int, str]</code></td>
+<td>media</td>
+</tr>
+<tr>
+<td><code>renditions</code></td>
+<td>List of rendition mappings described below</td>
+<td>media</td>
+</tr>
+<tr>
+<td><code>content_url</code></td>
+<td>Highest actual rendition's direct URL</td>
+<td>media</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>media</code> loader first resolves <code>m3u8_base_url</code> if needed, then reads the live HLS
+master. It does not download the video file. A deferred object's prerequisite fields
+normally select API; loading HTML first allows the media loader to reuse that data.
+This dependency does not load HTML automatically.</p>
+<p>Each rendition maps <code>quality</code>, <code>source_quality</code>, <code>width</code>, <code>height</code>, <code>bandwidth</code>, <code>fps</code>,
+<code>codecs</code>, <code>hls_url</code>, and <code>direct_url</code>. <code>quality</code> is the actual shorter dimension;
+<code>source_quality</code> retains the site's file label. Label 480 commonly measures 800×450.
+Video 1094 has labels 360/480/720 but actual qualities 480/600/960. See
+<a href="#guides-downloading">downloads</a> before selecting numeric quality.</p>
+<h3>Relationships</h3>
+<pre><code class="language-python">async def get_author(load_api: bool = True) -&gt; Channel | None: ...
+async def get_performers(load_api: bool = True) -&gt; list[Performer]: ...
+def related_videos(*, pages=1, start_page=1, iterator_config=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p>Relationship methods load the required video fields and return usable profile objects.
+With <code>load_api=False</code>, returned profiles are deferred. Author is the first channel,
+not an individual performer. Related videos use the same channel, exclude the current
+video, and use pages of 6. This stream is separate from the site's randomized autoplay
+rail. If no author exists, it is empty.</p>
+<h3>Download and refresh</h3>
+<pre><code class="language-python">async def download(configuration: DownloadConfigHLS | DownloadConfigRAW): ...
+async def refresh_media() -&gt; Video: ...
+</code></pre>
+<p><code>download()</code> requires <code>access.public == 1</code>, loads media, copies configuration and applies
+the shared filename rule. HLS returns the shared report/boolean; RAW returns a boolean.
+It does not invent media authorization. Availability and cancellation errors retain
+the shared behavior described in <a href="#troubleshooting-errors">errors</a>.</p>
+<p><code>refresh_media()</code> invalidates this video's API text cache entry and returns a <strong>new</strong>
+Video with fresh API and media sources. It leaves the original object's metadata and
+the core's session headers unchanged. HTML-only fields remain deferred on the new object.
+Shared <code>to_dict()</code> omits unresolved fields and the core by default, without fetching.</p>
+</section>
+
+<section class="section" id="reference-performer">
+<h2>Performer — Bellesa API</h2>
+<p><code>Performer(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass for
+<code>https://www.bellesa.co/performers/{handle}</code>. Use <code>await client.get_performer(url)</code>.
+Both <code>api</code> and <code>html</code> sources are available, with API precedence; API loads by default.
+Setting both source flags false creates a deferred profile.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code>, <code>core</code></td>
+<td><code>str</code>, <code>BaseCore</code></td>
+<td>Identity/backend</td>
+</tr>
+<tr>
+<td><code>profile_id</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Stable numeric performer ID as text</td>
+</tr>
+<tr>
+<td><code>name</code>, <code>description</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Display name and plain biography</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code>, <code>hero_url</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Images when supplied</td>
+</tr>
+<tr>
+<td><code>logo_url</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Usually absent on performers</td>
+</tr>
+<tr>
+<td><code>gender</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Site-supplied gender</td>
+</tr>
+<tr>
+<td><code>video_count</code></td>
+<td><code>int</code> or <code>None</code></td>
+<td>Profile count; may span more than the free listing</td>
+</tr>
+</tbody>
+</table>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, sort=Sort.RECENT, pages=1, start_page=1,
+           iterator_config=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> is an alias of <code>videos</code>. The free catalog listing uses 9 items per page;
+recent, longest and popular ordering are supported. The profile can be deferred because
+the listing filter uses its handle. Use <code>pages="all"</code> to follow the listing's actual
+pagination total, not <code>video_count</code>.</p>
+<p>Lily Starfire's profile reported 7 videos while the free listing exposed 3; Kenna James's
+free listing exposed 57 over seven pages. The library preserves these distinct count
+semantics instead of including recommendations or premium-only entries.</p>
+<pre><code class="language-python">from bellesa_api import Client
+
+async def list_performer():
+    async with Client() as client:
+        performer = await client.get_performer(
+            &quot;https://www.bellesa.co/performers/kenna-james&quot;
+        )
+        async with performer.videos(pages=&quot;all&quot;) as stream:
+            async for result in stream:
+                video = result.unwrap()
+                print(video.video_id, video.title)
+</code></pre>
+<p>The directory is <code>Client.get_performers(...)</code>; performer search is
+<code>Client.search(query, kind="performer")</code>. There is no separate Model/Pornstar subtype.
+See <a href="#reference-client">Client</a> and <a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="reference-channel">
+<h2>Channel — Bellesa API</h2>
+<p><code>Channel(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass for
+<code>https://www.bellesa.co/channels/{handle}</code>. Use <code>await client.get_channel(url, load_api=True)</code>.
+Only the <code>api</code> source exists for channel metadata; <code>load_api=False</code> defers it.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code>, <code>core</code></td>
+<td><code>str</code>, <code>BaseCore</code></td>
+<td>Channel identity/backend</td>
+</tr>
+<tr>
+<td><code>profile_id</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Provider ID as text</td>
+</tr>
+<tr>
+<td><code>name</code>, <code>description</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Channel name and plain description</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code>, <code>logo_url</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Channel image/logo</td>
+</tr>
+<tr>
+<td><code>website_url</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Optional external website</td>
+</tr>
+</tbody>
+</table>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, sort=Sort.RECENT, pages=1, start_page=1,
+           iterator_config=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> aliases <code>videos</code>. Streams use the actual provider-filtered public video
+endpoint with 24 items per page. <code>pages="all"</code> uses listing totals and handles partial
+and exact full-page boundaries. Recent, popular and longest sorts are supported.</p>
+<p>The website redirects <code>/channels/{handle}</code> to <code>/videos?providers={handle}</code> and can drop
+a channel URL's page query. The API paginates the actual listing directly, preserving
+the provider filter. Channel profiles have no invented video count or HTML loader.</p>
+<pre><code class="language-python">from bellesa_api import Client
+
+async def list_channel():
+    async with Client() as client:
+        channel = await client.get_channel(&quot;https://www.bellesa.co/channels/zero-to-hero&quot;)
+        print(channel.name)
+        async with channel.videos(pages=&quot;all&quot;) as stream:
+            async for result in stream:
+                print(result.unwrap().video_id)
+</code></pre>
+<p>Use <code>Video.get_author()</code> to follow the first provider relationship,
+<code>Client.search(query, kind="channel")</code> for channel search, or
+<code>Client.get_videos(channels=["zero-to-hero"])</code> for filters.
+See <a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="reference-category">
+<h2>Category — Bellesa API</h2>
+<p><code>Category(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass for
+<code>https://www.bellesa.co/videos/categories/{handle}</code>. Use <code>await client.get_category(url)</code>.
+Metadata uses <code>api</code> only; <code>load_api=False</code> creates a deferred category.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code>, <code>core</code></td>
+<td><code>str</code>, <code>BaseCore</code></td>
+<td>Identity/backend</td>
+</tr>
+<tr>
+<td><code>category_id</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Category ID as text</td>
+</tr>
+<tr>
+<td><code>name</code>, <code>description</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td>Name and plain description</td>
+</tr>
+</tbody>
+</table>
+<p>The loader finds the exact handle in the public category directory. Unknown handles
+raise <code>NotFound</code> through the shared media loader error wrapper. The observed directory
+contained 19 categories; catalog contents may change.</p>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, sort=Sort.RECENT, pages=1, start_page=1,
+           iterator_config=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> aliases <code>videos</code>; it delegates to <code>Client.get_videos(categories=[handle])</code>.
+Pages contain up to 24 items and support recent, popular and longest ordering.</p>
+<pre><code class="language-python">from bellesa_api import Client
+
+async def list_categories():
+    async with Client() as client:
+        categories = await client.get_categories()  # list[Category], not ScrapeResult
+        for category in categories:
+            print(category.category_id, category.name)
+        sensual = await client.get_category(
+            &quot;https://www.bellesa.co/videos/categories/sensual&quot;
+        )
+        async with sensual.videos() as stream:
+            async for result in stream:
+                print(result.unwrap().title)
+</code></pre>
+<p>See <a href="#reference-client">Client</a> and <a href="#guides-searching-and-filtering">searching and filtering</a>.</p>
+</section>
+
+<section class="section" id="reference-sorting-enums">
+<h2>Sort — Bellesa API</h2>
+<p>Import <code>Sort</code> from <code>bellesa_api</code> or <code>bellesa_api.modules.sorting</code>.
+It is a <code>StrEnum</code>; string values are accepted by the same public methods.</p>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+<th>Site order field</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort.RECENT</code></td>
+<td><code>recent</code></td>
+<td><code>posted_on</code>, descending</td>
+</tr>
+<tr>
+<td><code>Sort.POPULAR</code></td>
+<td><code>popular</code></td>
+<td><code>views</code>, descending</td>
+</tr>
+<tr>
+<td><code>Sort.LONGEST</code></td>
+<td><code>longest</code></td>
+<td><code>duration</code>, descending</td>
+</tr>
+<tr>
+<td><code>Sort.RELEVANCE</code></td>
+<td><code>relevance</code></td>
+<td><code>relevance</code>, descending</td>
+</tr>
+</tbody>
+</table>
+<p>Video/profile/category listings default to RECENT. Search defaults to RELEVANCE.
+Use RELEVANCE for search; relevance ordering without a query is not a verified listing
+capability. Unknown values raise <code>ValueError</code> when converted to <code>Sort</code>. These values
+are ordering choices, not download quality labels or upload-date filters.</p>
+<p>See <a href="#guides-searching-and-filtering">search and filters</a>.</p>
+</section>
+
+<section class="section" id="reference-cli">
+<h2>CLI — Bellesa API</h2>
+<p>Run <code>bellesa_api -h</code> or <code>python -m bellesa_api -h</code>.</p>
+<pre><code class="language-sh">bellesa_api URL [--quality QUALITY] [--output OUTPUT] [--format {hls,mp4}]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>URL</code></td>
+<td>Required</td>
+<td>Supported public Bellesa video URL</td>
+</tr>
+<tr>
+<td><code>--quality</code></td>
+<td><code>best</code></td>
+<td><code>best</code>, <code>half</code>, <code>worst</code>, or an actual numeric resolution such as 720</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td><code>.</code></td>
+<td>Output directory; the sanitized title supplies the filename</td>
+</tr>
+<tr>
+<td><code>--format</code></td>
+<td><code>hls</code></td>
+<td><code>hls</code> uses shared HLS download with MP4 remux; <code>mp4</code> uses direct RAW</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-sh">python -m bellesa_api https://www.bellesa.co/videos/7054 --quality worst --format hls --output ./
+bellesa_api https://www.bellesa.co/videos/7054 --quality 720 --format mp4 --output ./
+</code></pre>
+<p>The CLI owns and closes its client. It has no search, credential, browser-cookie,
+proxy or JSON-export arguments. Configure a custom <code>BaseCore</code> through the Python API
+when runtime customization is needed. See <a href="#guides-downloading">downloading</a>.</p>
+</section>
+
+<section class="section" id="guides-source-loading">
+<h2>Source loading — Bellesa API</h2>
+<p>Video and Performer each declare independent <code>api</code> and <code>html</code> sources. Their getters
+load API by default and leave HTML deferred. API is an anonymous JSON request; HTML
+reads the requested object from server-rendered <code>window.__INITIAL_DATA__</code>. Embedded
+JSON is part of the HTML request, not a separate network API.</p>
+<pre><code class="language-python">from bellesa_api import Client
+
+async def inspect_sources():
+    url = &quot;https://www.bellesa.co/videos/1094&quot;
+    async with Client() as client:
+        api = await client.get_video(url, load_api=True, load_html=False)
+        html = await client.get_video(url, load_api=False, load_html=True)
+        both = await client.get_video(url, load_api=True, load_html=True)
+        deferred = await client.get_video(url, load_api=False, load_html=False)
+        print(deferred.to_dict())
+        await deferred.load_fields(&quot;title&quot;)
+        await deferred.load_sources(&quot;html&quot;)
+        print(deferred.title, deferred.canonical_url)
+        await deferred.load_sources(&quot;media&quot;)
+        print(deferred.renditions)
+</code></pre>
+<p>A common field uses API precedence regardless of completion or loading order.
+HTML-only <code>canonical_url</code> and <code>og_title</code> remain available after API loads. Description
+is taken from the target video; a generic website description does not replace a known
+absent one. The shared loader applies mappings atomically and records source failures.</p>
+<p>Access is synchronous: reading an unresolved field raises <code>DataNotLoadedError</code> and
+does not initiate network I/O. <code>None</code> means a loaded source knows a value is absent.
+Use <code>loaded_sources</code>, <code>source_state(source)</code>, <code>source_errors</code>, <code>is_field_loaded(name)</code>,
+<code>unloaded_fields()</code>, <code>load_fields(...)</code>, and <code>load_sources(...)</code> for inspection/loading.
+<code>to_dict()</code> omits unresolved fields and <code>core</code> by default without fetching. The shared
+<code>include_unloaded</code> and <code>include_core</code> options control serialization explicitly.</p>
+<p><code>Video</code> also has a lazy <code>media</code> source. It obtains prerequisite player metadata if
+needed, then reads the HLS master to populate measured renditions and direct-source
+mappings. To keep metadata HTML-only, load HTML before requesting media. It reuses
+already-loaded fields instead of fetching API when that is sufficient.</p>
+<p>Channel and Category have <code>api</code> metadata only; passing an unsupported source name raises
+a shared loader configuration error. <code>refresh_media()</code> returns a new API/media-loaded
+Video and does not automatically load HTML-only fields.</p>
+<p>See <a href="#reference-video">Video fields</a>, <a href="#troubleshooting-errors">errors</a>, and
+<a href="https://docs.echteralsfake.me/eaf_base_api/">shared BaseMedia</a>.</p>
+</section>
+
+<section class="section" id="guides-searching-and-filtering">
+<h2>Searching and filtering — Bellesa API</h2>
+<p><code>Client.search(query, kind="video", sort=Sort.RELEVANCE, ...)</code> uses the site's search
+endpoint. A trimmed query must have at least three characters; an empty query is not
+a general catalog listing. Select <code>kind="performer"</code> or <code>kind="channel"</code> for typed profile
+results. Search supports relevance, recent, longest and popular ordering. Matching and
+ranking are site-defined; a query containing one meaningful term can return results
+even when its other tokens appear unusual.</p>
+<pre><code class="language-python">from bellesa_api import Client, Sort
+
+async def search_catalog():
+    async with Client() as client:
+        async with client.search(&quot;romance&quot;, sort=Sort.POPULAR) as stream:
+            async for result in stream:
+                print(result.unwrap().title)
+        async with client.search(&quot;lacy lennon&quot;, kind=&quot;performer&quot;) as stream:
+            async for result in stream:
+                print(result.unwrap().name)
+        async with client.search(&quot;zero&quot;, kind=&quot;channel&quot;) as stream:
+            async for result in stream:
+                print(result.unwrap().name)
+</code></pre>
+<p>Use <code>get_videos()</code> for a general or filtered listing:</p>
+<pre><code class="language-python">from bellesa_api import Client
+
+async def filter_catalog():
+    async with Client() as client:
+        async with client.get_videos(
+            categories=[&quot;sensual&quot;], channels=[&quot;zero-to-hero&quot;, &quot;belle-says&quot;],
+            performers=[], tags=[], min_duration=60, max_duration=1200,
+            sort=&quot;recent&quot;, pages=2, start_page=1,
+        ) as stream:
+            async for result in stream:
+                print(result.unwrap().video_id)
+</code></pre>
+<p>Each filter accepts a sequence of handles/tags, not a scalar string or object URL.
+Channel/performer multiselects use the site's OR filter. Duration bounds are seconds,
+nonnegative integers, and ordered when both are supplied; the website's UI may express
+these in minutes, which does not change this API's units. Empty valid listings yield
+nothing. Empty results are not substituted with promoted or recommended videos.</p>
+<p>Filters are available on <code>get_videos()</code>, not as arbitrary keyword arguments to <code>search()</code>.
+Profile <code>.videos()</code> methods accept sort/pagination/iterator controls. The performer
+directory supports <code>gender="female"</code>, <code>"male"</code>, or <code>"all"</code> through <code>get_performers()</code>.
+See <a href="#reference-client">Client</a>, <a href="#reference-sorting-enums">Sort</a>, and
+<a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="guides-iteration-and-results">
+<h2>Pagination, iteration, and ScrapeResult — Bellesa API</h2>
+<p>Listings return <code>ScrapeStream</code> objects yielding <code>ScrapeResult[T]</code>. Stream methods are
+synchronous factories: use <code>async with client.search(...) as stream</code>, not
+<code>await client.search(...)</code>. Object getters such as <code>get_video()</code> are awaited.</p>
+<pre><code class="language-python">from bellesa_api import Client
+
+async def iterate():
+    async with Client() as client:
+        async with client.get_videos(pages=2, start_page=1) as stream:
+            async for result in stream:
+                video = result.unwrap()
+                print(video.video_id, video.title)
+</code></pre>
+<h3>Pages and boundaries</h3>
+<p><code>start_page</code> is one-based and positive. <code>pages</code> is a positive page count from that start,
+or <code>"all"</code>. Actual endpoint <code>x-pagination-*</code> headers bound the requested range. Beyond-last
+and known empty listings yield nothing. The initial request validates the returned page
+number; it raises if Bellesa returns a different page. There is no guessed page total.</p>
+<table>
+<thead>
+<tr>
+<th>Listing</th>
+<th style="text-align: right;">Items per page</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>General videos, channels, categories, search</td>
+<td style="text-align: right;">24</td>
+</tr>
+<tr>
+<td>Performer profile videos</td>
+<td style="text-align: right;">9</td>
+</tr>
+<tr>
+<td>Performer directory</td>
+<td style="text-align: right;">12</td>
+</tr>
+<tr>
+<td>Related videos</td>
+<td style="text-align: right;">6</td>
+</tr>
+</tbody>
+</table>
+<p>The range includes partial final pages and exact full-page boundaries. Performer
+<code>video_count</code> is not used to invent a free listing total. Channel pagination uses the
+actual provider filter because the website's <code>/channels/...</code> redirect loses page queries.
+Recommendations, campaigns and autoplay rails are separate from these listings.</p>
+<h3>Defaults and IteratorConfig</h3>
+<p>Provider defaults load API metadata, use <code>ResultOrder.ORIGINAL</code>, and raise terminal page
+and item errors. A supplied <code>IteratorConfig</code> is honored instead. A bare shared config
+has no requested metadata sources/fields and uses completion ordering and yielded errors.
+Set ordering explicitly when comparing complete ID sequences.</p>
+<pre><code class="language-python">from base_api import ErrorMode, IteratorConfig, ResultOrder
+from bellesa_api import Client
+
+async def deferred_items():
+    options = IteratorConfig(
+        order=ResultOrder.ORIGINAL,
+        load_specific_sources=(),
+        load_specific_fields=(),
+        max_page_concurrency=1,
+        max_item_concurrency=2,
+        page_error_mode=ErrorMode.YIELD,
+        item_error_mode=ErrorMode.YIELD,
+    )
+    async with Client() as client:
+        async with client.get_videos(iterator_config=options) as stream:
+            async for result in stream:
+                if result.succeeded:
+                    print(result.unwrap().video_id)  # Metadata remains deferred.
+                else:
+                    print(result.stage, result.url, result.error)
+</code></pre>
+<p>Use <code>load_specific_sources=("html",)</code> for HTML-loaded video results, or
+<code>load_specific_fields=("title",)</code> to load just the required source. Requesting a field
+loads its source mapping, not an invented field-only network endpoint. Profiles without
+an HTML source must use API/field loading. Concurrency, bounded retries and error handlers
+are shared backend contracts; the initial pagination request precedes Helper scheduling
+and propagates its own transport errors directly.</p>
+<h3>ScrapeResult and cleanup</h3>
+<p>Results expose <code>stage</code>, <code>url</code>, <code>page_index</code>, <code>item_index</code>, <code>attempts</code>, <code>item</code>, <code>error</code>,
+and <code>succeeded</code>. <code>unwrap()</code> returns the item or raises its typed terminal scrape error.
+Stage indexes describe the scheduler's source range; they are not website page numbers.</p>
+<p>Always use <code>async with</code> when breaking early. Exhaustion cleans up naturally; explicit
+stream contexts cancel pending work on partial consumption. Keep the owning core open
+while consuming the stream.</p>
+<p>See <a href="https://docs.echteralsfake.me/eaf_base_api/">shared IteratorConfig</a> and
+<a href="https://docs.echteralsfake.me/eaf_base_api/">shared ScrapeStream/Result</a>.</p>
+</section>
+
+<section class="section" id="guides-downloading">
+<h2>Downloading — Bellesa API</h2>
+<p><code>Video.download(configuration)</code> uses the supplied <code>BaseCore</code> and accepts
+<code>DownloadConfigHLS</code> or <code>DownloadConfigRAW</code>. Only publicly accessible video records are
+eligible. Metadata and media are loaded lazily; missing/unavailable sources raise errors.</p>
+<pre><code class="language-python">import asyncio
+from bellesa_api import Client, DownloadConfigHLS, DownloadConfigRAW
+
+async def main():
+    async with Client() as client:
+        video = await client.get_video(&quot;https://www.bellesa.co/videos/7054&quot;)
+        await video.load_sources(&quot;media&quot;)
+        print(video.available_qualities)
+        hls = DownloadConfigHLS(
+            quality=&quot;worst&quot;, path=&quot;./hls/&quot;, remux=True, return_report=True,
+        )
+        report = await video.download(hls)
+        print(report[&quot;status&quot;])
+        direct = DownloadConfigRAW(quality=&quot;worst&quot;, path=&quot;./mp4/&quot;)
+        print(await video.download(direct))
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<p>HLS uses the master and shared quality selection; <code>remux=True</code> produces MP4 and requires
+FFmpeg. <code>return_report=True</code> requests the shared report, which includes status and
+metadata-writing results. Inspect completion status. RAW uses the measured direct-source
+map and returns a boolean. Transfer callbacks, cancellation, supported resume configuration
+and HLS export metadata pass through the shared backend.</p>
+<p>Configuration is copied before applying filenames and stream URLs; callback and stop-event
+objects remain shared with the caller. By default <code>path</code> is a directory and a sanitized
+title plus <code>.mp4</code> is appended. For an exact output file, use <code>no_title=True</code> and pass the
+full filename as <code>path</code>. The input config's path and HLS URL are not overwritten.</p>
+<h3>Actual qualities versus source labels</h3>
+<p>Quality keys use the <strong>shorter actual dimension</strong>, matching the backend. Metadata's
+<code>advertised_qualities</code> and each rendition's <code>source_quality</code> retain Bellesa's original
+file labels. They can differ from actual dimensions:</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Site labels</th>
+<th>Actual qualities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video 7054</td>
+<td>360, 480, 720, 1080, 1440, 2160</td>
+<td>360, 450, 720, 1080, 1440, 2160</td>
+</tr>
+<tr>
+<td>Video 1189</td>
+<td>360, 480, 720</td>
+<td>360, 450, 720</td>
+</tr>
+<tr>
+<td>Video 4651</td>
+<td>360, 480, 720, 1080</td>
+<td>360, 450, 720, 1080</td>
+</tr>
+<tr>
+<td>Video 1094 (4:3)</td>
+<td>360, 480, 720</td>
+<td>480, 600, 960</td>
+</tr>
+</tbody>
+</table>
+<p>The media source reads actual master renditions. If metadata lacks resolution labels,
+the public player's observed 360/480/720 default requests a master, and only returned
+renditions are exposed. A marketing label does not prove a measured quality.</p>
+<p><code>best</code> chooses the highest actual quality; <code>worst</code> the lowest; <code>half</code> the middle of the
+sorted list (upper middle for an even-length list). Numeric selections use nearest
+available quality, preferring the higher tier on equal distances. On 7054, requesting
+480 selects actual 450. On 1094, requesting 720 selects actual 600. Inspect <code>renditions</code>
+for exact dimensions, FPS, codecs, bitrate and URLs.</p>
+<h3>Refresh, context and errors</h3>
+<p><code>fresh = await video.refresh_media()</code> returns a new API/media-loaded object with refreshed
+source data. Perform subsequent operations on <code>fresh</code>; the existing Video is unchanged.
+Media queries/signatures are not stripped and session headers are not changed per video.
+Observed public requests work without extra Referer/Origin headers. No authorization or
+protected stream is fabricated.</p>
+<p><code>VideoUnavailable</code> and cancellation retain shared availability/cancellation behavior;
+other preparation/transfer failures are wrapped in <code>DownloadFailed</code> with causes.
+See <a href="#troubleshooting-errors">errors</a>, <a href="#guides-live-validation">live validation</a>, and
+<a href="https://docs.echteralsfake.me/eaf_base_api/">shared download options</a>.</p>
+</section>
+
+<section class="section" id="guides-live-validation">
+<h2>Live validation — Bellesa API</h2>
+<p>The implementation validation on <strong>2026-11-10</strong> covered <strong>107 distinct final live test
+cases across runs</strong>, with no unresolved final-case failures or skips, and <strong>49 finished
+media files</strong>. This is recorded implementation evidence, not a claim that the entire
+changing catalog or a new connection has just been retested by reading this document.</p>
+<p>The initial 103-case full run had <strong>100 passed / 3 failed / 0 skipped</strong> in about 28 minutes.
+Three test expectations were corrected: two expected bare <code>NotFound</code> instead of shared
+<code>MediaLoadError</code> preserving <code>NotFound</code>; one assumed an unmatched search query even though
+the site matched one of its terms. A corrected <strong>57-case</strong> metadata/profile/listing/search
+run passed; the corrected three regressions also passed after the original process ended.
+An added HLS metadata-export test and a missing-resolution-label test each passed.
+The final union covers 107 distinct cases, rather than 107 passing in a single run.</p>
+<p>The connection was mobile while travelling. Slow/transient requests were treated as
+environmental uncertainty; a timeout was not evidence of a site outage. Shared Tenacity
+deprecation warnings were observed. Python 3.15/Linux and FFmpeg/ffprobe were used.</p>
+<h3>Complete files and quality matrix</h3>
+<p>Both HLS (remuxed MP4) and direct MP4 were fully downloaded for every actual quality in
+four samples: 7054 (six renditions), 1189 (three), 4651 (four), and 1094 (three unusual
+4:3 renditions). This accounts for 32 per-quality files. Additional complete files
+covered best/half/worst/numeric fallback in both formats, two different videos concurrently
+on one core, refreshed repeats, two CLI formats, and HLS title/artist metadata export.</p>
+<p><code>ffprobe</code> checked dimensions, audio, plausible duration and a valid container. Callbacks
+reached completion and caller configuration stayed unchanged. A HEAD request or one HLS
+segment was not counted as a complete download. Temporary media was removed after checks.
+See <a href="#guides-downloading">the measured quality matrix</a>.</p>
+<h3>Complete profile reconciliation</h3>
+<p>Independent extraction from the exact rendered listing state was compared page-by-page
+and as a complete ordered sequence with API output. Recommendations and campaigns were
+excluded. No missing, unexpected or duplicate IDs remained.</p>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th>Listing pages</th>
+<th style="text-align: right;">Expected free IDs</th>
+<th style="text-align: right;">API IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lily Starfire, performer</td>
+<td>3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td>Kenna James, performer</td>
+<td>9+9+9+9+9+9+3</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">57</td>
+</tr>
+<tr>
+<td>Belle Says, channel</td>
+<td>4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>Zero To Hero, channel</td>
+<td>24+6</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr>
+<td>Erika Lust, channel</td>
+<td>24</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">24</td>
+</tr>
+</tbody>
+</table>
+<p>Lily Starfire's profile count of 7 spans more than the free listing's 3; no unrelated
+videos were added to match it. Exact full-page, partial final-page, per-page, middle,
+last, beyond-last and pages="all" behavior were checked where applicable. Profile sorts
+matched the rendered free listing. Channel pagination uses <code>/videos?providers=...</code> to
+avoid the page-dropping channel redirect.</p>
+<h3>Running the live suite</h3>
+<p>From the provider checkout with local backend dependencies installed:</p>
+<pre><code class="language-sh">.venv/bin/python -m pytest -q --junitxml=/tmp/bellesa-live-results.xml
+.venv/bin/ruff check bellesa_api
+uv build
+</code></pre>
+<p>Every provider test uses real requests. The full suite downloads complete files and may
+transfer substantial media. The documentation build/link/catalog checks do not perform
+these transfers. Historical XML artifacts were stored outside the checkout under <code>/tmp</code>;
+keeping those artifacts elsewhere is the caller's responsibility.</p>
+<p>Source-loading coverage includes API-only, HTML-only, both orders, combined/deferred
+loading, field serialization, custom iterator source/field loading, missing resources,
+and a real video (2013) with absent resolution labels. Both accepted page hosts preserved
+identity and usable media. Representative routes include <code>/videos/7054</code>, <code>/videos/1094</code>,
+<code>/videos/11157</code>, <code>/videos/2773</code>, <code>/performers/kenna-james</code>, and <code>/channels/zero-to-hero</code>.</p>
+<p>Authenticated/premium-only playback, encrypted/DRM media, regional access bypass,
+non-English hosts, proxies, non-video story/article APIs and unobserved layouts remain
+outside the verified scope. See <a href="#supported-platforms">supported hosts</a>.</p>
+</section>
+
+<section class="section" id="troubleshooting-errors">
+<h2>Errors and troubleshooting — Bellesa API</h2>
+<p>Bellesa re-exports shared provider errors through <code>bellesa_api.modules.errors</code>; use
+shared <code>base_api</code> imports for media-loading and iterator contracts.</p>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Meaning / handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code> / <code>TypeError</code></td>
+<td>Unsupported URL, inconsistent video ID, invalid filter types, bounds, sort or page arguments</td>
+</tr>
+<tr>
+<td><code>DataNotLoadedError</code></td>
+<td>A lazy field has not been loaded; await <code>load_fields()</code>/<code>load_sources()</code></td>
+</tr>
+<tr>
+<td><code>LoaderConfigurationError</code></td>
+<td>A source does not exist for the model, such as HTML for Channel</td>
+</tr>
+<tr>
+<td><code>MediaLoadError</code></td>
+<td>One source failed; inspect <code>original_error</code> and the cause chain</td>
+</tr>
+<tr>
+<td><code>MediaLoadErrors</code></td>
+<td>Multiple source failures; inspect <code>errors</code></td>
+</tr>
+<tr>
+<td><code>NotFound</code></td>
+<td>HTTP 404 or target identity/application data missing; often wrapped by <code>MediaLoadError</code></td>
+</tr>
+<tr>
+<td><code>NetworkError</code></td>
+<td>Translated request/HTTP transport failure; inspect original causes</td>
+</tr>
+<tr>
+<td><code>BotDetection</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code></td>
+<td>Shared translated transport conditions</td>
+</tr>
+<tr>
+<td><code>PageFetchError</code> / <code>ItemFetchError</code></td>
+<td>Terminal scheduler failure, yielded or raised according to iterator policy</td>
+</tr>
+<tr>
+<td><code>VideoUnavailable</code></td>
+<td>No eligible public video/source or availability failure</td>
+</tr>
+<tr>
+<td><code>DownloadFailed</code></td>
+<td>Download preparation/transfer failed; <code>__cause__</code> retains the underlying failure</td>
+</tr>
+<tr>
+<td><code>DownloadCancelled</code> / <code>asyncio.CancelledError</code></td>
+<td>Cancellation propagates without conversion to DownloadFailed</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">from base_api import MediaLoadError, is_resource_gone
+from bellesa_api import Client
+
+async def inspect_missing():
+    async with Client() as client:
+        try:
+            await client.get_video(&quot;https://www.bellesa.co/videos/999999999&quot;)
+        except MediaLoadError as error:
+            if is_resource_gone(error):
+                print(&quot;Resource unavailable&quot;, error.original_error)
+            else:
+                raise
+</code></pre>
+<p>Do not catch only bare <code>NotFound</code> around a source-loading getter: the shared media
+contract wraps ordinary loader exceptions. Translation retains causes, URL and context.
+The initial pagination request is outside Helper scheduling and can raise a core request
+exception directly. Under default iterator policy terminal stage errors raise; under
+YIELD policy, inspect every result or call <code>unwrap()</code> so failures are not silently ignored.</p>
+<p>If a title exists but measured qualities are unresolved, load <code>media</code>. Missing HTML-only
+canonical metadata requires loading HTML, not another download attempt. A loaded <code>None</code>
+description is valid on sparse pages. Use rendition dimensions to diagnose source label
+mismatches; do not assume Bellesa's 480 label guarantees 480 actual pixels.</p>
+<p>Timeouts while travelling, using mobile data, or changing a VPN can originate in the
+connection. Preserve the cause/status and use bounded shared retries and configurable
+pacing; do not classify a transport timeout as a deleted resource or claim a site outage.
+A VPN does not establish that a previous transfer completed. Recheck only unresolved
+checks, and avoid repeating already validated media transfers for documentation changes.</p>
+<p>No login-cookie, account, or protection-bypass workaround is part of this provider.
+See <a href="https://docs.echteralsfake.me/eaf_base_api/">shared errors</a> and
+<a href="#guides-source-loading">source loading</a>.</p>
+</section>
+
+<section class="section" id="supported-platforms">
+<h2>Supported platforms and hosts — Bellesa API</h2>
+<p>The implementation was validated on Linux x86_64 with Python 3.15 and FFmpeg/ffprobe.
+Python 3.12+ is required. Other operating systems were not verified in that run.</p>
+<p>Accepted page hosts are exactly <code>bellesa.co</code> and <code>www.bellesa.co</code>, using HTTP/HTTPS input
+and normalized HTTPS model URLs. Bare-host HTML redirects to www; model URLs retain the
+supplied accepted host. Video IDs and handle identity are checked before loaded data
+is accepted. Arbitrary lookalike hosts, unrelated subdomains, and nonstandard ports are
+not accepted. Public media uses <code>s.bellesa.co</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Accepted path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video</td>
+<td><code>/videos/{positive-numeric-id}</code> or <code>/videos/{id}/{title-slug}</code></td>
+</tr>
+<tr>
+<td>Performer</td>
+<td><code>/performers/{handle}</code></td>
+</tr>
+<tr>
+<td>Channel</td>
+<td><code>/channels/{handle}</code></td>
+</tr>
+<tr>
+<td>Category</td>
+<td><code>/videos/categories/{handle}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Object getters require complete URLs. Query/fragment data is removed from object
+identity. There is no <code>base_url</code> argument, bare-ID convenience getter, arbitrary CDN URL
+input, locale selector or mirror-host pattern.</p>
+<p>Observed locale: <strong>English</strong>. No language subdomain or alternate/proxy host was verified.
+Bellesa Plus, BBoutique, BellesaCams and non-video story/article resources are separate
+services outside these public provider objects. No authenticated account, saved playlist,
+Model/Pornstar subtype separate from Performer, or user-upload profile was verified.</p>
+<p>See <a href="#getting-started">getting started</a> and <a href="#guides-live-validation">validation</a>.</p>
+</section>
+
+<section class="section" id="changelog">
+<h2>Changelog — Bellesa API</h2>
+<h3>1.0.0 — current source</h3>
+<p>The current checkout declares version 1.0.0. This entry describes its interface; it does
+not assert a package publication date or remote CI status.</p>
+<ul>
+<li>Typed Client, Video, Performer, Channel and Category objects using <code>eaf-base-api</code>.</li>
+<li>Independent API/HTML video and performer metadata with deferred source/field loading.</li>
+<li>Lazy live-master media inspection and actual-quality direct-source mappings.</li>
+<li>Public video, performer and channel search; category, performer and filtered video listings.</li>
+<li>Header-bounded pagination, explicit iterator configuration and complete profile reconciliation.</li>
+<li>HLS/MP4 downloads, CLI, refreshed media objects, shared reports/callbacks and resource cleanup.</li>
+<li>Measured quality handling for labels that differ from actual dimensions, including 4:3 encodes.</li>
+<li>Documentation for both public HTML and the MCP Markdown catalog.</li>
+</ul>
+<p>See <a href="#guides-live-validation">live validation</a> for the recorded test history and limits.</p>
+</section>
+<!-- END:MAIN_CONTENT -->

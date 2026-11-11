@@ -1,0 +1,1342 @@
+<!-- SLOT:TITLE = Pornhat API -->
+<!-- SLOT:HERO_TITLE = Pornhat API -->
+<!-- SLOT:HERO_SUBTITLE = An asynchronous Python API for Pornhat videos, model and channel profiles, tags, paysite collections, lazy metadata, search and HLS downloads. Powered by eaf_base_api. -->
+<!-- SLOT:VERSION = 0.1.0 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-pornhat -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-pornhat -->
+
+<!-- BEGIN:SIDEBAR_NAV -->
+<a href="#getting-started" class="nav-link">Pornhat API getting started</a>
+<a href="#reference-client" class="nav-link">Client</a>
+<a href="#reference-video" class="nav-link">Video</a>
+<a href="#reference-model" class="nav-link">Model</a>
+<a href="#reference-channel" class="nav-link">Channel</a>
+<a href="#reference-category" class="nav-link">Category</a>
+<a href="#reference-site" class="nav-link">Site</a>
+<a href="#reference-sorting-enums" class="nav-link">Sorting enums</a>
+<a href="#guides-source-loading" class="nav-link">Source loading</a>
+<a href="#guides-searching-and-filtering" class="nav-link">Searching and filtering</a>
+<a href="#guides-iteration-and-results" class="nav-link">Iteration and results</a>
+<a href="#guides-downloading" class="nav-link">Downloading</a>
+<a href="#troubleshooting-errors" class="nav-link">Errors and troubleshooting</a>
+<a href="#reference-cli" class="nav-link">CLI</a>
+<a href="#supported-platforms" class="nav-link">Supported platforms and hosts</a>
+<a href="#changelog" class="nav-link">Changelog</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- BEGIN:MAIN_CONTENT -->
+<section class="section" id="getting-started">
+<h2>Pornhat API getting started</h2>
+<p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-pornhat</code>. Import: <code>pornhat_api</code>.
+Requires Python 3.12+ and <code>eaf-base-api&gt;=4.2.6</code>, <code>selectolax</code>, and <code>m3u8</code>.</p>
+<p>Install the local checkout before publication:</p>
+<pre><code class="language-sh">pip install ./unofficial-api-for-pornhat
+</code></pre>
+<p>When working with the current neighboring backend checkout, install both editable packages:</p>
+<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-pornhat
+</code></pre>
+<p>Once published, use <code>pip install unofficial-api-for-pornhat</code>.
+FFmpeg is needed for MP4 remuxing and metadata tags; ffprobe is used by the live tests.</p>
+<pre><code class="language-python">import asyncio
+from base_api import BaseCore
+from base_api.modules.config import RuntimeConfig
+from pornhat_api import Client, DownloadConfigHLS
+
+async def main():
+    runtime = RuntimeConfig()
+    runtime.max_workers_download = 4
+    runtime.videos_concurrency = 2
+    runtime.pages_concurrency = 2
+    async with BaseCore(runtime) as core, Client(core) as client:
+        video = await client.get_video(&quot;https://www.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/&quot;)
+        print(video.title, video.duration, video.views)
+        print(await video.get_available_qualities())
+        await video.download(DownloadConfigHLS(quality=&quot;best&quot;, path=&quot;./&quot;, remux=True))
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<p>Every runtime request and download uses the shared <code>BaseCore</code>. <code>Client()</code> owns and closes
+its own core; <code>Client(core)</code> leaves the supplied core open. Use both context managers as above
+when injecting a core. Retain the client/core until you finish using returned media objects.</p>
+<p>The API exposes videos, model profiles, grouped channels, paysite/brand collections, tags,
+search, new/popular/trending video listings, and sortable model/channel directories.
+Favorites and history are browser-local. There is no account, playlist or related-player API.</p>
+<p><code>html</code> combines matching JSON-LD and scoped page/player data from one HTML request.
+<code>media</code> resolves public player redirects and depends on HTML. No separate public metadata
+API was found; no <code>api</code> source or <code>load_api</code> argument is exposed.</p>
+<p>See <a href="#reference-client">Client</a>, <a href="#reference-video">Video</a>,
+<a href="#guides-source-loading">source loading</a>, <a href="#guides-downloading">downloads</a>,
+and <a href="../eaf_base_api/">shared configuration</a>.</p>
+</section>
+
+<section class="section" id="reference-client">
+<h2>Client — Pornhat API</h2>
+<p><code>Client(core: BaseCore | None = None, *, base_url: str = "https://www.pornhat.com")</code>
+creates typed objects sharing one configured backend. <code>base_url</code> must be a verified origin,
+with no resource path; it controls search, catalog, tag directory and profile-directory requests.
+Individual getters retain the host in their supplied URL.</p>
+<p>Use <code>async with Client() as client</code> or <code>await client.close()</code>. Only an internally created core
+is closed. An injected core remains caller-owned.</p>
+<h3>get_video</h3>
+<pre><code class="language-python">async def get_video(url: str, *, load_html: bool=True, load_media: bool=False) -&gt; Video: ...
+</code></pre>
+<p>Return <code>Video</code>. HTML loads by default. <code>load_html=False</code> creates a deferred object; <code>load_media=True</code> resolves media (loading HTML first even if <code>load_html=False</code>). Requires an absolute <code>/video/&lt;slug&gt;/</code> URL.</p>
+<h3>get_model</h3>
+<pre><code class="language-python">async def get_model(url: str, *, load_html: bool=True) -&gt; Model: ...
+</code></pre>
+<p>Return <code>Model</code> from an absolute <code>/models/&lt;slug&gt;/</code> URL. <code>load_html=False</code> defers profile metadata.</p>
+<h3>get_channel</h3>
+<pre><code class="language-python">async def get_channel(url: str, *, load_html: bool=True) -&gt; Channel: ...
+</code></pre>
+<p>Return a grouped <code>Channel</code> from an absolute <code>/sites/&lt;slug&gt;/</code> URL. This is distinct from the paysite/brand collection.</p>
+<h3>get_category</h3>
+<pre><code class="language-python">async def get_category(url: str, *, load_html: bool=True) -&gt; Category: ...
+</code></pre>
+<p>Return a tag <code>Category</code> from an absolute <code>/tags/&lt;slug&gt;/</code> URL.</p>
+<h3>get_site</h3>
+<pre><code class="language-python">async def get_site(url: str, *, load_html: bool=True) -&gt; Site: ...
+</code></pre>
+<p>Return a paysite/brand <code>Site</code> from an absolute <code>/paysite/&lt;slug&gt;/</code> URL.</p>
+<h3>search</h3>
+<pre><code class="language-python">def search(query: str, *, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p>Return a lazy <code>ScrapeStream[Video]</code>. Whitespace in the stripped query becomes hyphens before URL encoding, matching the site form. A blank query raises <code>ValueError</code>. No duration, date, quality or search-sort arguments exist.</p>
+<h3>get_videos</h3>
+<pre><code class="language-python">def get_videos(*, sort: Sort=Sort.NEW, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p>Return new, popular or trending <code>Video</code> results. <code>sort</code> is <code>sorting.Sort.NEW</code>, <code>POPULAR</code> or <code>TRENDING</code>. This method takes no arbitrary listing URL.</p>
+<h3>get_models</h3>
+<pre><code class="language-python">def get_models(*, sort: ProfileSort=ProfileSort.RANK, letter: str | None=None, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Model]: ...
+</code></pre>
+<p>Return model-directory <code>ScrapeResult[Model]</code> objects. Supports <code>ProfileSort.RANK</code>, <code>VIDEOS</code>, <code>UPDATED</code> and <code>ABC</code>. Alphabet <code>letter</code> accepts A–Z or <code>None</code> for All. The model directory has no <code>other</code> group.</p>
+<h3>get_channels</h3>
+<pre><code class="language-python">def get_channels(*, sort: ProfileSort=ProfileSort.RANK, letter: str | None=None, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Channel]: ...
+</code></pre>
+<p>Return channel-directory <code>ScrapeResult[Channel]</code> objects. Uses the same sorting enum as models, with the additional alphabet group <code>letter="other"</code>.</p>
+<h3>get_categories</h3>
+<pre><code class="language-python">async def get_categories(*, load_html: bool=False) -&gt; list[Category]: ...
+</code></pre>
+<p>Await a list of all tag <code>Category</code> objects. These are deferred by default (<code>load_html=False</code>), with only URL/core identity loaded. <code>load_html=True</code> loads each category sequentially and can issue many requests; prefer loading selected categories.</p>
+<h3>Listing options</h3>
+<p><code>pages</code> is a positive count or <code>"all"</code>. <code>start_page</code> is a positive, one-based index.
+The first listing page is fetched lazily at iteration time to discover pagination for every
+range. The requested range is clamped to the live last page. Beyond-last ranges yield nothing;
+invalid page options raise <code>ValueError</code>. <code>pages="all"</code> follows all remaining numbered pages.</p>
+<p>Listings return <code>ScrapeResult</code> values: call <code>result.unwrap()</code> to surface failures. Defaults
+load <code>html</code> for each result, preserve original page/card order, and yield terminal page/item
+failures. An explicitly supplied <code>IteratorConfig</code> is honored. Initial pagination-discovery
+failures propagate directly. See <a href="#guides-iteration-and-results">iteration</a>.</p>
+<p>See <a href="#supported-platforms">hosts</a> and <a href="#reference-sorting-enums">sorting</a>.</p>
+</section>
+
+<section class="section" id="reference-video">
+<h2>Video — Pornhat API</h2>
+<p><code>Video(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass. Prefer
+<code>await client.get_video(url)</code>. Deferred construction makes no requests until a source or
+field is explicitly loaded. Loaders atomically commit field mappings through <code>BaseMedia</code>.</p>
+<h3>Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Source</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Absolute resource URL; normalized to HTTPS while preserving the verified host. Query and fragment are removed.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>identity</td>
+<td>Shared networking and download backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>identity</td>
+<td>Final page response URL recorded by the shared helper, when available.</td>
+</tr>
+<tr>
+<td><code>video_id</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Stable numeric ID as a string; listing objects can already contain it.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Matching VideoObject name; the page h1 can be empty.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Matching VideoObject description.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>JSON-LD thumbnail URL.</td>
+</tr>
+<tr>
+<td><code>poster_url</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Public player poster URL.</td>
+</tr>
+<tr>
+<td><code>preview_video_url</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Public preview clip URL from target video setup.</td>
+</tr>
+<tr>
+<td><code>publish_date</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Site ISO upload timestamp, preserving the supplied UTC offset.</td>
+</tr>
+<tr>
+<td><code>length</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Displayed duration, typically MM:SS or HH:MM:SS.</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td><code>int \| None</code></td>
+<td>html</td>
+<td>Exact duration in integer seconds from the target player.</td>
+</tr>
+<tr>
+<td><code>views</code></td>
+<td><code>int \| None</code></td>
+<td>html</td>
+<td>Exact JSON-LD userInteractionCount, normalized to an integer.</td>
+</tr>
+<tr>
+<td><code>author_name</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Producing channel name.</td>
+</tr>
+<tr>
+<td><code>author_link</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Grouped channel URL under /sites/.</td>
+</tr>
+<tr>
+<td><code>site_url</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Separate paysite/brand URL under /paysite/.</td>
+</tr>
+<tr>
+<td><code>pornstars</code></td>
+<td><code>list[str] \| None</code></td>
+<td>html</td>
+<td>Performer names in page order.</td>
+</tr>
+<tr>
+<td><code>pornstars_urls</code></td>
+<td><code>list[str] \| None</code></td>
+<td>html</td>
+<td>Corresponding model profile URLs in page order.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>list[str] \| None</code></td>
+<td>html</td>
+<td>Tag names in page order.</td>
+</tr>
+<tr>
+<td><code>tags_urls</code></td>
+<td><code>list[str] \| None</code></td>
+<td>html</td>
+<td>Corresponding tag collection URLs.</td>
+</tr>
+<tr>
+<td><code>embed_url</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Public numeric embed URL matching the target player.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Response html language, such as en or de.</td>
+</tr>
+<tr>
+<td><code>is_hd</code></td>
+<td><code>bool \| None</code></td>
+<td>html</td>
+<td>True if the labeled player sources reach at least 720p; not a substitute for master inspection.</td>
+</tr>
+<tr>
+<td><code>player_sources</code></td>
+<td><code>list[dict] \| None</code></td>
+<td>html</td>
+<td>Labeled endpoints containing quality (integer height), url, and type. MP4-looking endpoints may redirect to HLS.</td>
+</tr>
+<tr>
+<td><code>media_sources</code></td>
+<td><code>list[dict] \| None</code></td>
+<td>media</td>
+<td>Resolved sources: format, url, and quality. HLS master entries use quality=None; inspect the actual master for its renditions.</td>
+</tr>
+<tr>
+<td><code>m3u8_base_url</code></td>
+<td><code>str \| None</code></td>
+<td>media</td>
+<td>Resolved real HLS master URL, including its required query string.</td>
+</tr>
+<tr>
+<td><code>content_url</code></td>
+<td><code>str \| None</code></td>
+<td>media</td>
+<td>First resolved direct MP4 if supplied; None for all verified HLS-only samples.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>id</code> property returns the loaded <code>video_id</code>, or an ID from a loaded embed URL, otherwise
+<code>None</code>; it does not fetch. Unknown fields remain unloaded and raise <code>DataNotLoadedError</code> on
+synchronous access. Known missing values are <code>None</code> or empty relationship lists. No
+likes/dislikes, ratings, comment counts or invented defaults are exposed.</p>
+<p><code>to_dict()</code> includes only loaded fields by default and never triggers requests. It omits the
+core unless requested; use it for metadata inspection/export. See <a href="#guides-source-loading">source loading</a>.</p>
+<h3>get_available_qualities</h3>
+<pre><code class="language-python">async def get_available_qualities() -&gt; list[int]: ...
+</code></pre>
+<p>Load resolved media, inspect the real HLS master and return sorted unique integer heights. The verified samples expose <code>[360, 480, 720]</code>.</p>
+<h3>get_channel</h3>
+<pre><code class="language-python">async def get_channel(*, load_html: bool=True) -&gt; Channel | None: ...
+</code></pre>
+<p>Load <code>author_link</code> if necessary and return the related <code>Channel</code>, or <code>None</code> when absent.</p>
+<h3>get_models</h3>
+<pre><code class="language-python">async def get_models(*, load_html: bool=True) -&gt; list[Model]: ...
+</code></pre>
+<p>Load <code>pornstars_urls</code> if necessary and return related <code>Model</code> objects in page order. There is no separate <code>Pornstar</code> class.</p>
+<h3>get_site</h3>
+<pre><code class="language-python">async def get_site(*, load_html: bool=True) -&gt; Site | None: ...
+</code></pre>
+<p>Load <code>site_url</code> if necessary and return the separate paysite/brand <code>Site</code>, or <code>None</code>.</p>
+<h3>download</h3>
+<pre><code class="language-python">async def download(configuration: DownloadConfigHLS, *, refresh: bool=False): ...
+</code></pre>
+<p>Load title and media, copy the download configuration, and delegate to <code>core.download</code>. Returns <code>bool</code> or shared <code>DownloadReport</code> according to <code>return_report</code>. <code>refresh=True</code> invalidates cached page data and loads fresh sources on a separate object, leaving the original metadata state intact.</p>
+<p>Relationship getters are awaited methods and support <code>load_html=False</code> for deferred
+related objects. They share the parent core; keep that core open. Example:</p>
+<pre><code class="language-python">async def inspect_relationships(video):
+    channel = await video.get_channel(load_html=False)
+    models = await video.get_models()
+    site = await video.get_site(load_html=False)
+    return channel, models, site
+</code></pre>
+<p>See <a href="#guides-downloading">downloads</a> for quality selection, remuxing, reports, callbacks,
+refresh, and the observed transport limitation.</p>
+</section>
+
+<section class="section" id="reference-model">
+<h2>Model — Pornhat API</h2>
+<p><code>Model</code> inherits the keyword-only <code>Collection(BaseMedia)</code> dataclass.
+Use <code>await client.get_model("https://www.pornhat.com/models/armani-black/")</code>;
+pass <code>load_html=False</code> to defer all metadata. Absolute <code>/models/&lt;slug&gt;/</code> URLs are required.</p>
+<p>The JSON setup supplies <code>model_id</code>. The model directory uses <code>get_models</code>; there is no separate <code>Pornstar</code> class or user/account profile getter.</p>
+<h3>Fields</h3>
+<p>All metadata fields below load from <code>html</code>. URL/core/resolved URL are transport identity.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Normalized absolute collection URL on a verified host.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared backend; keep it open for iteration and field loading.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final HTML response URL, when recorded.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile/tag title from setup; paysite collections use the h1 text.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Page meta description; not an invented profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Setup screenshot when supplied; None for observed paysite collections.</td>
+</tr>
+<tr>
+<td><code>object_id</code></td>
+<td><code>str \| None</code></td>
+<td>Model, grouped-channel, or tag numeric ID as a string; None for paysite collections.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Exact setup count when supplied; can be zero or None.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Live last page; 1 for single-page or observed empty collections.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str \| None</code></td>
+<td>Response html language.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
+Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
+loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
+ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
+<pre><code class="language-python">from base_api import make_iterator_config
+
+async def list_collection(client):
+    collection = await client.get_model(&quot;https://www.pornhat.com/models/armani-black/&quot;)
+    config = make_iterator_config(load_specific_sources=())
+    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
+        async for result in results:
+            video = result.unwrap()
+            print(video.video_id, video.url)
+</code></pre>
+<p>Iteration uses the collection's intended listing region, excluding navigation, ads and other
+page regions. There are 59 real cards on observed full profile pages; the library follows
+actual numbered pagination rather than calculating offsets from an assumed capacity.
+Beyond-last ranges return an empty stream. Known zero-video channels remain valid profiles.
+The library does not apply global deduplication across rendered pages.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a>,
+<a href="#reference-client">Client</a>, and <a href="#guides-source-loading">source loading</a>.</p>
+</section>
+
+<section class="section" id="reference-channel">
+<h2>Channel — Pornhat API</h2>
+<p><code>Channel</code> inherits the keyword-only <code>Collection(BaseMedia)</code> dataclass.
+Use <code>await client.get_channel("https://www.pornhat.com/sites/60-plus-milfs/")</code>;
+pass <code>load_html=False</code> to defer all metadata. Absolute <code>/sites/&lt;slug&gt;/</code> URLs are required.</p>
+<p>This object represents the grouped channel (<code>dvd_group_id</code>). A <code>/paysite/</code> brand collection is a distinct <code>Site</code>; use <code>video.get_channel()</code> and <code>video.get_site()</code> for the two relationships.</p>
+<h3>Fields</h3>
+<p>All metadata fields below load from <code>html</code>. URL/core/resolved URL are transport identity.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Normalized absolute collection URL on a verified host.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared backend; keep it open for iteration and field loading.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final HTML response URL, when recorded.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile/tag title from setup; paysite collections use the h1 text.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Page meta description; not an invented profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Setup screenshot when supplied; None for observed paysite collections.</td>
+</tr>
+<tr>
+<td><code>object_id</code></td>
+<td><code>str \| None</code></td>
+<td>Model, grouped-channel, or tag numeric ID as a string; None for paysite collections.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Exact setup count when supplied; can be zero or None.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Live last page; 1 for single-page or observed empty collections.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str \| None</code></td>
+<td>Response html language.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
+Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
+loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
+ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
+<pre><code class="language-python">from base_api import make_iterator_config
+
+async def list_collection(client):
+    collection = await client.get_channel(&quot;https://www.pornhat.com/sites/60-plus-milfs/&quot;)
+    config = make_iterator_config(load_specific_sources=())
+    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
+        async for result in results:
+            video = result.unwrap()
+            print(video.video_id, video.url)
+</code></pre>
+<p>Iteration uses the collection's intended listing region, excluding navigation, ads and other
+page regions. There are 59 real cards on observed full profile pages; the library follows
+actual numbered pagination rather than calculating offsets from an assumed capacity.
+Beyond-last ranges return an empty stream. Known zero-video channels remain valid profiles.
+The library does not apply global deduplication across rendered pages.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a>,
+<a href="#reference-client">Client</a>, and <a href="#guides-source-loading">source loading</a>.</p>
+</section>
+
+<section class="section" id="reference-category">
+<h2>Category — Pornhat API</h2>
+<p><code>Category</code> inherits the keyword-only <code>Collection(BaseMedia)</code> dataclass.
+Use <code>await client.get_category("https://www.pornhat.com/tags/blowjob/")</code>;
+pass <code>load_html=False</code> to defer all metadata. Absolute <code>/tags/&lt;slug&gt;/</code> URLs are required.</p>
+<p>Tags are exposed as <code>Category</code> objects using <code>tag_id</code>. <code>await client.get_categories()</code> returns deferred objects by default; load selected categories instead of fetching every tag detail page.</p>
+<h3>Fields</h3>
+<p>All metadata fields below load from <code>html</code>. URL/core/resolved URL are transport identity.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Normalized absolute collection URL on a verified host.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared backend; keep it open for iteration and field loading.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final HTML response URL, when recorded.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile/tag title from setup; paysite collections use the h1 text.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Page meta description; not an invented profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Setup screenshot when supplied; None for observed paysite collections.</td>
+</tr>
+<tr>
+<td><code>object_id</code></td>
+<td><code>str \| None</code></td>
+<td>Model, grouped-channel, or tag numeric ID as a string; None for paysite collections.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Exact setup count when supplied; can be zero or None.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Live last page; 1 for single-page or observed empty collections.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str \| None</code></td>
+<td>Response html language.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
+Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
+loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
+ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
+<pre><code class="language-python">from base_api import make_iterator_config
+
+async def list_collection(client):
+    collection = await client.get_category(&quot;https://www.pornhat.com/tags/blowjob/&quot;)
+    config = make_iterator_config(load_specific_sources=())
+    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
+        async for result in results:
+            video = result.unwrap()
+            print(video.video_id, video.url)
+</code></pre>
+<p>Iteration uses the collection's intended listing region, excluding navigation, ads and other
+page regions. There are 59 real cards on observed full profile pages; the library follows
+actual numbered pagination rather than calculating offsets from an assumed capacity.
+Beyond-last ranges return an empty stream. Known zero-video channels remain valid profiles.
+The library does not apply global deduplication across rendered pages.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a>,
+<a href="#reference-client">Client</a>, and <a href="#guides-source-loading">source loading</a>.</p>
+</section>
+
+<section class="section" id="reference-site">
+<h2>Site — Pornhat API</h2>
+<p><code>Site</code> inherits the keyword-only <code>Collection(BaseMedia)</code> dataclass.
+Use <code>await client.get_site("https://www.pornhat.com/paysite/naughty-america/")</code>;
+pass <code>load_html=False</code> to defer all metadata. Absolute <code>/paysite/&lt;slug&gt;/</code> URLs are required.</p>
+<p>A paysite/brand collection is separate from a grouped <code>Channel</code>. Its page lacks the profile setup payload, so <code>object_id</code>, <code>thumbnail_url</code> and <code>total_videos</code> can be <code>None</code>. <code>name</code> is the complete h1 text, including its site-supplied suffix.</p>
+<h3>Fields</h3>
+<p>All metadata fields below load from <code>html</code>. URL/core/resolved URL are transport identity.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Normalized absolute collection URL on a verified host.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared backend; keep it open for iteration and field loading.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final HTML response URL, when recorded.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile/tag title from setup; paysite collections use the h1 text.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Page meta description; not an invented profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Setup screenshot when supplied; None for observed paysite collections.</td>
+</tr>
+<tr>
+<td><code>object_id</code></td>
+<td><code>str \| None</code></td>
+<td>Model, grouped-channel, or tag numeric ID as a string; None for paysite collections.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Exact setup count when supplied; can be zero or None.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Live last page; 1 for single-page or observed empty collections.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str \| None</code></td>
+<td>Response html language.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos / get_videos</h3>
+<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+</code></pre>
+<p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
+Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
+loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
+ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
+<pre><code class="language-python">from base_api import make_iterator_config
+
+async def list_collection(client):
+    collection = await client.get_site(&quot;https://www.pornhat.com/paysite/naughty-america/&quot;)
+    config = make_iterator_config(load_specific_sources=())
+    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
+        async for result in results:
+            video = result.unwrap()
+            print(video.video_id, video.url)
+</code></pre>
+<p>Iteration uses the collection's intended listing region, excluding navigation, ads and other
+page regions. There are 59 real cards on observed full profile pages; the library follows
+actual numbered pagination rather than calculating offsets from an assumed capacity.
+Beyond-last ranges return an empty stream. Known zero-video channels remain valid profiles.
+The library does not apply global deduplication across rendered pages.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a>,
+<a href="#reference-client">Client</a>, and <a href="#guides-source-loading">source loading</a>.</p>
+</section>
+
+<section class="section" id="reference-sorting-enums">
+<h2>Sorting enums — Pornhat API</h2>
+<p>Import from <code>pornhat_api.modules.sorting</code>, or use <code>from pornhat_api import sorting</code>.</p>
+<h3>Sort</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+<th>Video catalog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort.NEW</code></td>
+<td><code>""</code></td>
+<td>Root latest-video listing</td>
+</tr>
+<tr>
+<td><code>Sort.POPULAR</code></td>
+<td><code>"popular"</code></td>
+<td>Popular videos</td>
+</tr>
+<tr>
+<td><code>Sort.TRENDING</code></td>
+<td><code>"trending"</code></td>
+<td>Trending videos</td>
+</tr>
+</tbody>
+</table>
+<p>Used by <code>Client.get_videos(sort=...)</code>. Its default is <code>Sort.NEW</code>.</p>
+<h3>ProfileSort</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+<th>Directory behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ProfileSort.RANK</code></td>
+<td><code>""</code></td>
+<td>Default ranked model/channel directory</td>
+</tr>
+<tr>
+<td><code>ProfileSort.VIDEOS</code></td>
+<td><code>"videos"</code></td>
+<td>Video-count order</td>
+</tr>
+<tr>
+<td><code>ProfileSort.UPDATED</code></td>
+<td><code>"updated"</code></td>
+<td>Recently updated</td>
+</tr>
+<tr>
+<td><code>ProfileSort.ABC</code></td>
+<td><code>"abc"</code></td>
+<td>Alphabet groups</td>
+</tr>
+</tbody>
+</table>
+<p>Used by <code>Client.get_models</code> and <code>Client.get_channels</code>. Their default is <code>ProfileSort.RANK</code>.
+For <code>ABC</code>, <code>letter</code> is <code>"A"</code>–<code>"Z"</code> or <code>None</code> for All. Channels also accept <code>"other"</code>.
+Models have no <code>other</code> group. A letter with another sort raises <code>ValueError</code>.
+No duration, quality, upload-date, tag-sort, or search-sort enums are provided.</p>
+<p>See <a href="#guides-searching-and-filtering">searching and filtering</a>.</p>
+</section>
+
+<section class="section" id="guides-source-loading">
+<h2>Source loading — Pornhat API</h2>
+<p>Pornhat exposes <code>html</code> metadata and <code>media</code> redirect resolution. Embedded JSON-LD and
+<code>data-setup</code> JSON belong to the HTML request, not an independent public JSON API.
+Collections only declare <code>html</code>. Videos declare both sources.</p>
+<table>
+<thead>
+<tr>
+<th>Request</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>await client.get_video(url)</code></td>
+<td>Load HTML metadata only</td>
+</tr>
+<tr>
+<td><code>await client.get_video(url, load_html=False)</code></td>
+<td>Construct without requests</td>
+</tr>
+<tr>
+<td><code>await client.get_video(url, load_html=False, load_media=True)</code></td>
+<td>Media loader first ensures HTML, then resolves sources</td>
+</tr>
+<tr>
+<td><code>await video.load_sources("html", "media")</code></td>
+<td>Load both, respecting the media dependency</td>
+</tr>
+<tr>
+<td><code>await video.load_fields("title")</code></td>
+<td>Load HTML if needed</td>
+</tr>
+<tr>
+<td><code>await video.load_fields("m3u8_base_url")</code></td>
+<td>Load HTML plus media if needed</td>
+</tr>
+<tr>
+<td><code>video.to_dict()</code></td>
+<td>Serialize loaded fields without requests</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">async def inspect_lazily(client, url):
+    video = await client.get_video(url, load_html=False)
+    assert not video.loaded_sources
+    snapshot = video.to_dict()
+    await video.load_fields(&quot;title&quot;, &quot;duration&quot;)
+    assert video.loaded_sources == {&quot;html&quot;}
+    await video.load_sources(&quot;media&quot;)
+    assert video.loaded_sources == {&quot;html&quot;, &quot;media&quot;}
+    return snapshot, video.to_dict()
+</code></pre>
+<p>Field access is synchronous and cannot fetch: unresolved fields raise <code>DataNotLoadedError</code>.
+Known missing fields are <code>None</code>, while relationships can be empty lists. Inspect
+<code>is_field_loaded(name)</code>, <code>unloaded_fields()</code>, <code>loaded_sources</code>, <code>source_state(source)</code> and
+<code>source_errors</code> before consuming partial objects. <code>to_dict(include_unloaded=True)</code> represents
+unloaded fields as <code>None</code>; use the default to preserve loaded-versus-unloaded distinction.</p>
+<p>Listings can construct <code>Video</code> objects with URL and stable <code>video_id</code> already present,
+without claiming their HTML source is loaded. Default listing configuration then loads HTML;
+<code>make_iterator_config(load_specific_sources=())</code> keeps those objects deferred.</p>
+<p>HTML data is committed atomically by the shared model. It is never overwritten by lower
+information media resolution; each loader owns separate fields. Failed loaders raise shared
+<code>MediaLoadError</code> or <code>MediaLoadErrors</code> with original causes and leave source errors inspectable.</p>
+<p>See <a href="#reference-video">Video</a>, <a href="#troubleshooting-errors">errors</a>, and
+<a href="../eaf_base_api/">shared media models</a>.</p>
+</section>
+
+<section class="section" id="guides-searching-and-filtering">
+<h2>Searching and filtering — Pornhat API</h2>
+<p><code>Client.search(query, *, pages=1, start_page=1, iterator_config=None)</code> returns a lazy video
+stream. Whitespace becomes hyphens before percent encoding, matching the site's form.
+Do not manually construct <code>%20</code> search routes: the observed site rejects those paths.
+Only a nonblank query and page/iterator options are accepted; there are no search sort,
+upload date, duration, quality, country, gender or language filter arguments.
+Select a verified locale origin with <code>Client(base_url="https://de.pornhat.com")</code>.</p>
+<pre><code class="language-python">from base_api import make_iterator_config
+from pornhat_api.modules.sorting import ProfileSort, Sort
+
+async def browse(client):
+    lazy = make_iterator_config(load_specific_sources=())
+    async with client.search(&quot;Armani Black&quot;, pages=2, iterator_config=lazy) as results:
+        async for result in results:
+            print(result.unwrap().video_id)
+    async with client.get_videos(sort=Sort.TRENDING, iterator_config=lazy) as results:
+        first = (await anext(results)).unwrap()
+        print(first.url)
+    async with client.get_models(sort=ProfileSort.ABC, letter=&quot;A&quot;, iterator_config=lazy) as results:
+        first_model = (await anext(results)).unwrap()
+        print(first_model.url)
+</code></pre>
+<p>Profile directory sorting supports rank, video count, updated and alphabet groups. Models
+accept A–Z or All; channels also accept <code>other</code>. The <a href="#reference-sorting-enums">sorting reference</a>
+contains exact enum members and values.</p>
+<pre><code class="language-python">async def browse_tag(client):
+    categories = await client.get_categories()
+    tag = next(category for category in categories if category.url.endswith(&quot;/tags/blowjob/&quot;))
+    await tag.load_sources(&quot;html&quot;)
+    async with tag.videos(pages=1) as results:
+        async for result in results:
+            print(result.unwrap().title)
+</code></pre>
+<p>Categories are deferred by default. <code>get_categories(load_html=True)</code> loads every tag detail
+sequentially, so load selected categories when possible. Use <code>get_category</code> for a known tag URL.
+A <code>Site</code> collection uses <code>/paysite/&lt;slug&gt;/</code>; grouped channels use <code>/sites/&lt;slug&gt;/</code>.</p>
+<p>The tested <code>lesbian</code> search repeats four cards across its first/second page boundary.
+Streams preserve the site's rendered sequences, including genuine repeated entries.
+Profile reconciliation found no such duplicates. See <a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="guides-iteration-and-results">
+<h2>Iteration and results — Pornhat API</h2>
+<p>Video catalogs, search, model/channel directories, and collection <code>.videos()</code> return
+<code>ScrapeStream</code> objects. Construction is lazy; iteration fetches the first listing page to
+inspect actual pagination, then requests the bounded selected range through the shared helper.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pages=1</code></td>
+<td>One page (default)</td>
+</tr>
+<tr>
+<td><code>pages=N</code></td>
+<td>Positive count of pages from start_page, clamped to the last page</td>
+</tr>
+<tr>
+<td><code>pages="all"</code></td>
+<td>All remaining pages</td>
+</tr>
+<tr>
+<td><code>start_page=1</code></td>
+<td>Positive one-based first requested page</td>
+</tr>
+<tr>
+<td><code>iterator_config=None</code></td>
+<td>HTML-loaded items, original ordering, yielded terminal item/page errors</td>
+</tr>
+</tbody>
+</table>
+<p>Beyond-last ranges return an empty stream. Invalid counts, booleans or nonpositive indices
+raise <code>ValueError</code>. Initial navigation-discovery errors propagate directly; later page/item
+failures follow <code>IteratorConfig</code>. Call <code>result.unwrap()</code> so failures are not silently ignored.</p>
+<pre><code class="language-python">from base_api import make_iterator_config
+
+async def list_all(client):
+    model = await client.get_model(&quot;https://www.pornhat.com/models/armani-black/&quot;)
+    config = make_iterator_config(
+        load_specific_sources=(),
+        order=&quot;original&quot;,
+        page_error_mode=&quot;raise&quot;,
+        item_error_mode=&quot;raise&quot;,
+        max_page_concurrency=2,
+        max_item_concurrency=2,
+    )
+    async with model.videos(pages=&quot;all&quot;, iterator_config=config) as results:
+        async for result in results:
+            video = result.unwrap()
+            print(video.video_id, video.url)
+</code></pre>
+<p>Without a caller configuration, the provider requests <code>html</code> for each item. To request only
+certain fields, use <code>make_iterator_config(load_specific_sources=(), load_specific_fields=("title",))</code>.
+Because all video metadata shares one HTML loader, requesting title also loads that page's
+other HTML fields. Requesting media fields additionally resolves player redirects.
+An explicit <code>IteratorConfig</code> is honored without replacing its source/error/order settings.
+<code>order="completion"</code> permits completion order; the default is original page/card order.</p>
+<p>Use <code>async with</code> or <code>await stream.aclose()</code> when stopping early so pending work is closed.
+Do not close the injected core until all streams and returned object operations finish.</p>
+<h3>Observed page boundaries</h3>
+<p>Full profile pages contain 59 real videos; ad cards are excluded. The following complete
+listings were reconciled independently against live HTML on 2026-11-09:</p>
+<table>
+<thead>
+<tr>
+<th>Type / route</th>
+<th>Expected / actual IDs</th>
+<th>Cards per page</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model <code>/models/armani-black/</code></td>
+<td>200 / 200</td>
+<td>59, 59, 59, 23</td>
+</tr>
+<tr>
+<td>Model <code>/models/venus-valencia/</code></td>
+<td>53 / 53</td>
+<td>53</td>
+</tr>
+<tr>
+<td>Channel <code>/sites/60-plus-milfs/</code></td>
+<td>471 / 471</td>
+<td>59, 59, 59, 59, 59, 59, 59, 58</td>
+</tr>
+<tr>
+<td>Channel <code>/sites/deep-throat-sirens/</code></td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Channel <code>/sites/cannon-productions/</code></td>
+<td>0 / 0</td>
+<td>Explicit empty-state block</td>
+</tr>
+</tbody>
+</table>
+<p>These profiles had no duplicates or missing/unexpected IDs. Search pages may repeat cards;
+no global deduplication is imposed. A changing catalog is not a transactional snapshot.
+Exact page-capacity multiples were not observed. Empty search results and zero-video channels
+are recognized through explicit empty-state markers; missing containers otherwise raise errors.</p>
+<p>See <a href="../eaf_base_api/">shared iterator configuration</a>.</p>
+</section>
+
+<section class="section" id="guides-downloading">
+<h2>Downloading — Pornhat API</h2>
+<p>The verified player endpoints look like MP4 URLs but redirect to real HLS masters.
+Use <code>DownloadConfigHLS</code>; the provider exposes no direct-MP4 downloader. Preserve signed
+query strings and use <code>Video.download</code> rather than guessing CDN routes.</p>
+<pre><code class="language-python">from pornhat_api import DownloadConfigHLS
+
+async def download_video(video):
+    qualities = await video.get_available_qualities()
+    config = DownloadConfigHLS(
+        quality=&quot;best&quot;,
+        path=&quot;./downloads/&quot;,
+        remux=True,
+        return_report=True,
+        metadata={&quot;title&quot;: video.title, &quot;artist&quot;: video.author_name},
+        callback=lambda current, total: print(current, total),
+    )
+    report = await video.download(config, refresh=True)
+    assert report.status == &quot;completed&quot; and not report.missing
+    return qualities, report
+</code></pre>
+<p>Create the output directory first. Without <code>no_title=True</code>, the shared provider helper
+joins the configured directory with the sanitized video title and <code>.mp4</code> extension.
+For an exact output filename, set <code>path="./video.mp4", no_title=True</code>.
+Configurations are copied before the path/master is assigned. Callbacks, stop events,
+metadata and caller options are preserved; the caller's path and master setting are unchanged.
+Inspect the returned report for metadata success instead of relying on mutation of the original
+configuration's <code>metadata_written</code> field.</p>
+<h3>Quality selection</h3>
+<p><code>await video.get_available_qualities()</code> returns sorted integer heights from actual resolved
+sources and HLS master inspection. All representative samples expose <code>[360, 480, 720]</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Selector</th>
+<th>Verified output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>360</code> / <code>"360p"</code></td>
+<td>640×360</td>
+</tr>
+<tr>
+<td><code>480</code> / <code>"480p"</code></td>
+<td>854×480</td>
+</tr>
+<tr>
+<td><code>720</code> / <code>"720p"</code></td>
+<td>1280×720</td>
+</tr>
+<tr>
+<td><code>"best"</code></td>
+<td>720p</td>
+</tr>
+<tr>
+<td><code>"half"</code></td>
+<td>480p (middle available tier)</td>
+</tr>
+<tr>
+<td><code>"worst"</code></td>
+<td>360p</td>
+</tr>
+<tr>
+<td><code>1080</code> when absent</td>
+<td>720p, using shared nearest-tier fallback</td>
+</tr>
+</tbody>
+</table>
+<p>An explicit unavailable tier uses the shared nearest available resolution, preferring the
+higher tier on a tie. The master determines available qualities; no resolution is invented
+from labels, marketing flags, or URL suffixes. Additional quality sets were not observed.</p>
+<h3>Refresh, reports and cancellation</h3>
+<p><code>refresh=True</code> invalidates the page cache and resolves fresh sources on a new <code>Video</code> sharing
+the same core and stable ID. It does not overwrite the original object's loaded fields.
+This refreshes normally accessible expiring URLs without altering signatures.</p>
+<p>Downloads delegate to <code>core.download</code>. <code>return_report=True</code> returns the shared <code>DownloadReport</code>
+with <code>status</code>, <code>total</code>, <code>downloaded</code>, <code>missing</code>, and <code>metadata_written</code>; otherwise the backend
+returns a boolean or raises. A returned failed/cancelled report must be inspected and is not
+a successful transfer. Shared <code>stop_event</code>, segment resume options, progress callbacks and
+metadata handling are passed through. <code>remux=True</code> needs FFmpeg; optional <code>metadata</code> and
+<code>thumbnail</code> inputs follow shared download configuration contracts.</p>
+<h3>Verified output and concurrency</h3>
+<p>On 2026-11-09 the full live suite passed <strong>58 tests</strong>, including <strong>20 complete downloads</strong>.
+Three real videos (IDs 806155, 684951 and 138266) were downloaded at every exposed quality
+and ffprobe-validated for dimensions, audio and complete duration. Further transfers covered
+selectors, fallback, repeatability, refresh, concurrent different videos, German/<code>.one</code> hosts,
+CLI downloading and embedded metadata titles.</p>
+<p>Use <code>RuntimeConfig.max_workers_download = 4</code> for the configuration used by the final suite.
+An earlier 20-worker repeat stalled on an HTTP/2 connection despite previous successes;
+the bounded final suite completed in 94.99 seconds. The provider preserves injected core
+settings. See <a href="#getting-started">getting started</a> for the explicit runtime configuration.</p>
+<p>For a caller-level deadline, wrap the download in <code>async with asyncio.timeout(seconds):</code>.
+See <a href="../eaf_base_api/">shared downloads</a> and
+<a href="#troubleshooting-errors">errors</a>.</p>
+</section>
+
+<section class="section" id="troubleshooting-errors">
+<h2>Errors and troubleshooting — Pornhat API</h2>
+<p>Provider exception imports in <code>pornhat_api.modules.errors</code> re-export shared <code>BotDetection</code>,
+<code>DownloadFailed</code>, <code>NetworkError</code>, <code>NotFound</code>, <code>ProxyError</code>, <code>UnknownNetworkError</code> and
+<code>VideoUnavailable</code>. BaseMedia loading wraps ordinary loader failures in <code>MediaLoadError</code>,
+or <code>MediaLoadErrors</code> for multiple sources. Inspect the original cause; catching only the
+inner provider error around <code>get_video()</code> will miss the loading wrapper.</p>
+<pre><code class="language-python">from base_api import MediaLoadError, MediaLoadErrors, is_resource_gone
+
+async def fetch_video(client, url):
+    try:
+        return await client.get_video(url)
+    except (MediaLoadError, MediaLoadErrors) as error:
+        if is_resource_gone(error):
+            print(&quot;Resource no longer available:&quot;, url)
+        raise
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Meaning / action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code> on URL construction</td>
+<td>Use an absolute URL on a verified host and the correct resource route; arbitrary mirrors and directory URLs are rejected.</td>
+</tr>
+<tr>
+<td><code>ValueError</code> for pages/letter/sort</td>
+<td>Positive integer page options or pages="all" are required; letters require ABC; models have no other group.</td>
+</tr>
+<tr>
+<td><code>DataNotLoadedError</code> reading a field</td>
+<td>Await load_fields or load_sources first; synchronous access does not start requests.</td>
+</tr>
+<tr>
+<td>Missing video / HTTP 404</td>
+<td>Source loading retains a NotFound cause through shared error wrappers; no empty success object is fabricated.</td>
+</tr>
+<tr>
+<td>HTTP 403 or access denied</td>
+<td>Preserve the error. The library does not bypass protection; check the ordinary route and legitimate access.</td>
+</tr>
+<tr>
+<td>Missing player, identity mismatch, missing listing block</td>
+<td>VideoUnavailable; an unrelated page or incomplete response must not become a valid video/list.</td>
+</tr>
+<tr>
+<td>Empty search/channel</td>
+<td>Valid only when the expected listing block contains its explicit empty-state marker.</td>
+</tr>
+<tr>
+<td><code>ScrapeResult</code> failure</td>
+<td>Call unwrap, or set IteratorConfig error modes/handlers intentionally. Initial pagination discovery errors propagate directly.</td>
+</tr>
+<tr>
+<td>Expiring player/CDN URL</td>
+<td>Try download(config, refresh=True) through ordinary public access.</td>
+</tr>
+<tr>
+<td>Download stall with many workers</td>
+<td>The final suite used max_workers_download=4. An earlier 20-worker HTTP/2 repeat stalled. Configure a caller deadline as needed.</td>
+</tr>
+<tr>
+<td>TS output named .mp4</td>
+<td>Set remux=True for an MP4 container and install FFmpeg.</td>
+</tr>
+<tr>
+<td>Tenacity initial deprecation warning</td>
+<td>Emitted by the shared backend; the final live suite passed despite these warnings.</td>
+</tr>
+</tbody>
+</table>
+<p><code>asyncio</code> cancellation and the shared <code>DownloadCancelled</code> exception propagate; do not swallow
+them in broad retry loops. Keep streams and cores scoped with context managers.
+Protected, authenticated or unavailable capabilities remain explicit failures.</p>
+<p>See <a href="#guides-source-loading">source loading</a>, <a href="#guides-iteration-and-results">iteration</a>,
+and <a href="../eaf_base_api/">shared errors</a>.</p>
+</section>
+
+<section class="section" id="reference-cli">
+<h2>CLI — Pornhat API</h2>
+<p>Run <code>pornhat_api</code> or <code>python -m pornhat_api</code>. The URL is a positional argument;
+there are no <code>--download</code>, batch-file, account, or <code>--no-title</code> options.</p>
+<pre><code class="language-sh">pornhat_api -h
+python -m pornhat_api 'https://www.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/' --info
+pornhat_api 'https://www.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/' --quality 480 --output ./downloads/
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>Required</td>
+<td>Absolute public /video/ URL on a verified host</td>
+</tr>
+<tr>
+<td><code>-q</code>, <code>--quality</code></td>
+<td><code>best</code></td>
+<td>Shared quality selector or numeric tier string</td>
+</tr>
+<tr>
+<td><code>-o</code>, <code>--output</code></td>
+<td><code>./</code></td>
+<td>Existing output directory; filename is based on the title</td>
+</tr>
+<tr>
+<td><code>--info</code></td>
+<td>False</td>
+<td>Print loaded HTML metadata as JSON; do not download</td>
+</tr>
+<tr>
+<td><code>-h</code>, <code>--help</code></td>
+<td>—</td>
+<td>Show command help</td>
+</tr>
+</tbody>
+</table>
+<p>CLI downloads use <code>DownloadConfigHLS(..., remux=True)</code> and need FFmpeg. <code>--info</code> loads
+HTML only and omits unresolved media fields. The CLI creates and closes its client/core.
+The Python interface permits explicit core configuration, source refresh and caller deadlines;
+the CLI uses backend defaults. See <a href="#guides-downloading">downloading</a> for the observed
+high-concurrency HTTP/2 limitation and verified configuration.</p>
+</section>
+
+<section class="section" id="supported-platforms">
+<h2>Supported platforms and hosts — Pornhat API</h2>
+<p>Requires Python 3.12 or newer. Live validation was performed on Linux x86_64 with
+Python 3.15.2, local eaf-base-api 4.2.6, curl-cffi 0.17.0, selectolax 1.0.2, m3u8 6.0.0,
+FFmpeg and ffprobe. Other Python versions and platforms have not been live-verified here.</p>
+<h3>Accepted hosts</h3>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Response locale / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pornhat.com</code>, <code>www.pornhat.com</code></td>
+<td>English; bare host redirects to www</td>
+</tr>
+<tr>
+<td><code>pornhat.one</code>, <code>www.pornhat.one</code></td>
+<td>English alias linked in the site's alternate metadata; bare host redirects to www</td>
+</tr>
+<tr>
+<td><code>de.pornhat.com</code></td>
+<td>German</td>
+</tr>
+<tr>
+<td><code>fr.pornhat.com</code></td>
+<td>French</td>
+</tr>
+<tr>
+<td><code>it.pornhat.com</code></td>
+<td>Italian</td>
+</tr>
+<tr>
+<td><code>es.pornhat.com</code></td>
+<td>Spanish</td>
+</tr>
+<tr>
+<td><code>pt.pornhat.com</code></td>
+<td>Portuguese</td>
+</tr>
+<tr>
+<td><code>hi.pornhat.com</code></td>
+<td>Hindi</td>
+</tr>
+</tbody>
+</table>
+<p>Each host was checked for video ID 806155, duration 991 seconds, the expected response
+language, a working three-quality media master, and model ID 22070. Complete downloads
+additionally covered <code>.one</code> and German hosts. Arbitrary subdomains and mirror domains
+are rejected. No other host family has been verified or accepted.</p>
+<pre><code class="language-python">from pornhat_api import Client
+
+async def localized_video():
+    async with Client(base_url=&quot;https://de.pornhat.com&quot;) as client:
+        video = await client.get_video(
+            &quot;https://de.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/&quot;
+        )
+        print(video.language)
+</code></pre>
+<p><code>base_url</code> controls constructed listing URLs. Individual getters use the host supplied in
+the resource URL. URL normalization keeps that verified host and resource path, enforces
+HTTPS, and drops query/fragment; <code>resolved_url</code> records a final response URL when available.
+Signed media URL queries are separate and preserved during resolution/download.</p>
+<p>See <a href="#getting-started">getting started</a> and <a href="#guides-downloading">downloads</a>.</p>
+</section>
+
+<section class="section" id="changelog">
+<h2>Changelog — Pornhat API</h2>
+<h3>0.1.0 — initial local implementation</h3>
+<ul>
+<li>Async <code>Client</code>, <code>Video</code>, <code>Model</code>, <code>Channel</code>, <code>Category</code>, and paysite/brand <code>Site</code> objects.</li>
+<li>Explicit HTML metadata loading and dependent public media resolution through BaseCore.</li>
+<li>Video/relationship metadata, tag collections, search, new/popular/trending feeds and
+  sortable model/channel directories with original-order ScrapeResult streams.</li>
+<li>Numbered pagination, complete pages="all" profile listings, known empty collections
+  and one-based page ranges.</li>
+<li>Verified <code>.com</code>, <code>.one</code>, and de/fr/it/es/pt/hi host variants.</li>
+<li>Shared HLS downloads, source refresh, callbacks, reports, FFmpeg metadata/remuxing and CLI.</li>
+<li>Full live verification on 2026-11-09: 58 passed, 0 failed, 0 skipped in 94.99 seconds,
+  including 20 complete media downloads and complete model/channel reconciliation.</li>
+<li>The final run used four download workers. An earlier 20-worker HTTP/2 repeat stalled;
+  this remains documented rather than hidden by the successful bounded run.</li>
+<li>HTML documentation and searchable MCP reference pages following the existing API corpus.</li>
+</ul>
+<p>This version is a local checkout; package publication and remote CI badge status are not
+asserted. Exact-multiple profile totals, additional quality sets, other platforms, accounts,
+playlists and player-only recommendation controls remain unverified or unimplemented.</p>
+<p>See <a href="#getting-started">getting started</a> and <a href="#guides-downloading">download evidence</a>.</p>
+</section>
+
+<!-- END:MAIN_CONTENT -->

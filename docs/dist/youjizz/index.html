@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#09090b">
+    <title>YouJizz API — Documentation</title>
+    <meta name="description" content="Documentation for YouJizz API, an asynchronous Python API wrapper by EchterAlsFake.">
+    <link rel="stylesheet" href="../assets/docs.css">
+    <script src="../assets/docs.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="mobile-header">
+        <a class="mobile-brand" href="../">EAF Docs</a>
+        <button class="mobile-toggle" id="mobileToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </button>
+    </header>
+    <div class="mobile-overlay" id="mobileOverlay" hidden></div>
+
+    <div class="docs-shell">
+        <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+            <div class="sidebar-header">
+                <a href="../" class="sidebar-logo">
+                    <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
+                    <span class="sidebar-logo-text">YouJizz API</span>
+                </a>
+                <span class="sidebar-version">v0.1.0</span>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <a href="#getting-started" class="nav-link">YouJizz API getting started</a>
+<a href="#reference-client" class="nav-link">Client — YouJizz API</a>
+<a href="#reference-video" class="nav-link">Video — YouJizz API</a>
+<a href="#reference-collections" class="nav-link">Collections and User — YouJizz API</a>
+<a href="#reference-cli" class="nav-link">CLI — YouJizz API</a>
+<a href="#guides-source-loading" class="nav-link">Source loading — YouJizz API</a>
+<a href="#guides-iteration-and-results" class="nav-link">Iteration and results — YouJizz API</a>
+<a href="#guides-searching-and-filtering" class="nav-link">Searching and filtering — YouJizz API</a>
+<a href="#guides-downloading" class="nav-link">Downloading — YouJizz API</a>
+<a href="#guides-live-validation" class="nav-link">Live validation — YouJizz API</a>
+<a href="#supported-platforms" class="nav-link">Supported platforms and hosts — YouJizz API</a>
+<a href="#changelog" class="nav-link">Changelog — YouJizz API</a>
+<a href="#troubleshooting-errors" class="nav-link">Errors — YouJizz API</a>
+<a href="#reference-api-guide" class="nav-link">YouJizz API guide</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="../#mcp" class="sidebar-mcp-promo-link" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 7px 10px; border-radius: 4px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.25); color: var(--accent-strong); font-size: 13px; font-weight: 600; text-decoration: none;">
+                    <span style="font-size: 14px;">⚡</span>
+                    <span>Official MCP Server</span>
+                </a>
+                <a href="https://github.com/EchterAlsFake/unofficial-api-for-youjizz" target="_blank" rel="noopener noreferrer">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    <span>Source on GitHub</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="docs-stage">
+            <div class="docs-grid">
+                <main class="main-content" id="main-content" tabindex="-1">
+                    <header class="hero">
+                        <nav class="breadcrumbs" aria-label="Breadcrumb">
+                            <a href="../">Documentation</a>
+                            <span aria-hidden="true">/</span>
+                            <span>YouJizz API</span>
+                        </nav>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v0.1.0</div>
+                        <h1>YouJizz API</h1>
+                        <p>Asynchronous public video metadata, users, pornstar and tag directories, search, lazy sources and MP4/HLS downloads with eaf_base_api.</p>
+                        <div class="hero-actions">
+                            <button class="install-cmd" type="button" onclick="copyInstall(this)" title="Copy install command">
+                                <span class="prompt" aria-hidden="true">$</span>
+                                <code>pip install unofficial-api-for-youjizz</code>
+                                <span class="copy-icon" aria-hidden="true">Copy</span>
+                            </button>
+                            <a href="https://github.com/EchterAlsFake/unofficial-api-for-youjizz" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+                        </div>
+                    </header>
+
+                    <article class="content-area">
+                        <div class="mcp-banner" role="region" aria-label="Official MCP Server Notice">
+                            <div class="mcp-banner-header">
+                                <span class="mcp-banner-badge">⚡ Recommended AI Workflow</span>
+                                <span class="mcp-banner-title">Official MCP Server: <code>https://mcp.echteralsfake.me/mcp</code></span>
+                            </div>
+                            <p class="mcp-banner-desc">
+                                Supercharge your development by connecting your AI coding assistant (Cursor, VS Code / Copilot, Claude Desktop, Windsurf, Zed, Antigravity).
+                                <strong>No authentication required</strong> · <strong>No strict rate limits</strong> · <strong>Covers all 16 APIs</strong> · <strong>Always up to date</strong> · <strong>Completely anonymous (0 logs, no profiling)</strong>.
+                                Connecting this MCP server to your AI assistant is absolutely the recommended way to work on and build with these APIs.
+                            </p>
+                            <div class="mcp-banner-actions">
+                                <a href="../#mcp" class="mcp-banner-btn primary">Add to Your Editor (Setup Guides & Configs) →</a>
+                                <button class="mcp-banner-btn secondary" type="button" onclick="navigator.clipboard.writeText('https://mcp.echteralsfake.me/mcp');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Server URL',2000)">Copy Server URL</button>
+                            </div>
+                        </div>
+
+                        <section id="changelog" class="doc-section">
+<h1>Changelog — YouJizz API</h1>
+<h2>0.1.0 — current source</h2>
+<p>Typed Video, Collection, Pornstar, Category, User and Comment objects; lazy API,
+HTML and comments; search, listings and directories; MP4/HLS downloads; CLI;
+shared networking and iterator controls. This entry describes local source
+capabilities and does not assert a PyPI publication date or remote CI status.</p>
+</section>
+<section id="getting-started" class="doc-section">
+<h1>YouJizz API getting started</h1>
+<p>Version <strong>0.1.0</strong>. Requires Python 3.12+, <code>eaf-base-api[hls]&gt;=4.2.6</code> and <code>selectolax</code>.</p>
+<pre><code class="language-sh">pip install unofficial-api-for-youjizz
+youjizz_api -h
+</code></pre>
+<pre><code class="language-python">import asyncio
+from youjizz_api import Client, DownloadConfigRAW
+
+async def main():
+    async with Client() as client:
+        video = await client.get_video(&quot;48914471&quot;, load_api=True, load_html=True)
+        print(video.title, video.duration, video.available_qualities)
+        await video.download(DownloadConfigRAW(quality=&quot;worst&quot;, path=&quot;./downloads&quot;))
+
+asyncio.run(main())
+</code></pre>
+<p>FFmpeg is required for HLS remuxing; ffprobe is used by live download checks.
+Client closes its own core, while injected BaseCore instances remain caller-owned.
+See <a href="#reference-client">Client</a>, <a href="#guides-source-loading">source loading</a> and
+<a href="#guides-downloading">downloading</a>.</p>
+</section>
+<section id="guides-downloading" class="doc-section">
+<h1>Downloading — YouJizz API</h1>
+<pre><code class="language-python">from youjizz_api import DownloadConfigRAW, DownloadConfigHLS
+await video.download(DownloadConfigRAW(quality=&quot;worst&quot;, path=&quot;./downloads&quot;))
+await video.download(DownloadConfigHLS(quality=&quot;best&quot;, path=&quot;./downloads&quot;, remux=True))
+</code></pre>
+<p>HTML loading supplies direct_urls and hls_urls by numeric encoding label.
+available_qualities is their sorted union, including labels such as 288 or 368.
+Downloads use per-quality masters because Auto may omit older renditions.
+Presets best/half/worst select the highest/middle/lowest sorted label. Missing
+numeric quality selects the nearest, preferring the higher label on a tie.
+Signed queries are preserved. Refresh expired URLs with refresh_sources().
+For explicit filenames set no_title=True and a complete path. Shared download
+reports, callbacks and cancellation remain available. Actual dimensions can differ
+from encoding labels, especially portrait media.</p>
+</section>
+<section id="guides-iteration-and-results" class="doc-section">
+<h1>Iteration and results — YouJizz API</h1>
+<p><code>pages</code> is a positive page count or <code>&quot;all&quot;</code>; <code>start_page</code> is one based.
+HTML pagination follows actual Next links, retains filters and detects repeated
+pages. Public user uploads use the same 24-ID slices as the website UI.
+IteratorConfig controls item concurrency, loading, errors and original/completion
+order. HTML discovery is sequential; page concurrency does not prefetch unknown links.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from youjizz_api import Client, IteratorConfig
+
+async with Client() as client:
+    async with aclosing(client.videos(pages=2, iterator_config=IteratorConfig(order=&quot;original&quot;))) as stream:
+        async for result in stream:
+            video = result.unwrap()
+            await video.load_fields(&quot;title&quot;)
+            print(video.video_id, video.title)
+</code></pre>
+<p>Close partially consumed generators with contextlib.aclosing.</p>
+</section>
+<section id="guides-live-validation" class="doc-section">
+<h1>Live validation — YouJizz API</h1>
+<p>The following is preserved implementation evidence from 2026-11-10; these live
+checks were not rerun during the documentation maintenance.</p>
+<h1>Live validation</h1>
+<p>Date: 2026-11-10. Target: public <code>https://www.youjizz.com</code> from this Linux environment.</p>
+<h2>Environment and commands</h2>
+<pre><code class="language-bash">uv venv .venv --python 3.13
+uv pip install --python .venv/bin/python -e ../eaf_base_api -e '.[test]'
+.venv/bin/python -m pytest -q -n 4 --junitxml=/tmp/youjizz-final-parallel.xml
+uvx ruff check youjizz_api --select F
+uv build --out-dir dist
+</code></pre>
+<p>The authoritative local backend is <code>eaf-base-api</code> 4.2.6. Runtime dependencies include <code>selectolax</code> and the backend's <code>m3u8</code> extra. FFmpeg/ffprobe validate finished media. There are no offline fixtures, synthetic parser tests, mocks, skipped network gates, or browser cookie reads.</p>
+<p>Final full-suite result: <strong>63 passed, 0 failed, 0 errors, 0 skipped</strong>, in <strong>198.64 seconds</strong> with four test workers. The suite emitted 899 deprecation warnings from the shared backend's existing Tenacity <code>initial</code> parameter; these do not represent failed requests or skipped checks.</p>
+<p>Recorded pytest summary:</p>
+<pre><code class="language-text">63 passed, 899 warnings in 198.64s (0:03:18)
+</code></pre>
+<p>This successful full run completed before the VPN connection changed. Temporary logs were no longer present after the interruption; the recorded tool result and the per-quality matrix below preserve the validation evidence. The commands above reproduce the checks on the current connection.</p>
+<p>The final run followed fixes identified during earlier live checks: incomplete Auto HLS quality coverage, an empty legacy API thumbnail, and newly uploaded videos with an empty slug and no VideoObject JSON-LD. The complete metadata/listing/profile rerun passed 50 tests before the final 63-test run. The final full run revalidated every implemented capability and the complete download matrix. No required checks remained blocked.</p>
+<h2>Observed capabilities and routes</h2>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Live route / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video</td>
+<td><code>/videos/{slug}-{id}.html</code>; stable IDs, embed aliases <code>/videos/embed/{id}</code></td>
+</tr>
+<tr>
+<td>Structured video metadata</td>
+<td>Matching VideoObject JSON-LD, Open Graph, hidden statistics inputs, <code>dataEncodings</code> public JSON array</td>
+</tr>
+<tr>
+<td>Independent video API</td>
+<td><code>/api/thumbs?ids={id}</code>; a JSON list matched by <code>record_num</code>, also used by public profile UI</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td><code>/most-popular/{page}.html</code>, <code>/newest-clips/{page}.html</code>, <code>/top-rated/{page}.html</code>, <code>/top-rated-week/{page}.html</code>, <code>/top-rated-month/{page}.html</code>, <code>/trending/{page}.html</code>, <code>/highdefinition/{page}.html</code></td>
+</tr>
+<tr>
+<td>Random</td>
+<td><code>/random</code> returns a listing, not a single-video redirect</td>
+</tr>
+<tr>
+<td>Search</td>
+<td><code>/search/{optional_order_}{query}-{page}.html</code>; actual Next links use normalized query spelling and retain query filters</td>
+</tr>
+<tr>
+<td>Search orders</td>
+<td>Empty/relevance, <code>recent</code>, <code>views</code>, <code>rating</code>, <code>length</code></td>
+</tr>
+<tr>
+<td>Search filters</td>
+<td>Duration boundaries 60–180, 180–600, 600–1200, 1200+ seconds; all/any/exact phrase; title-only; explicit date bounds</td>
+</tr>
+<tr>
+<td>Unsupported search-HD control</td>
+<td>Frontend says <code>searchHD: false</code>; <code>/search/solo-1.html?hd=1</code> still includes videos whose thumbnail API says <code>hd=0</code>. Excluded from the provider's search interface, with a live regression check of the observed limitation</td>
+</tr>
+<tr>
+<td>Category/tag directory</td>
+<td><code>/tags</code>; 12,461 observed entries, linking <code>/tags/{query}-1.html</code>; navigation also links <code>/categories/{query}-1.html</code></td>
+</tr>
+<tr>
+<td>Pornstar directory</td>
+<td><code>/pornstars/name/{A..Z}</code>; A has 1,352 observed entries, linking keyword search rather than profiles</td>
+</tr>
+<tr>
+<td>Public users</td>
+<td><code>/profile/user/{id}</code> is an Angular shell; its controller fetches <code>/api/profile/{id}</code> and separately respects public profile/upload flags</td>
+</tr>
+<tr>
+<td>Public uploads</td>
+<td>`/api/socialVideos/{id}?order=recent</td>
+</tr>
+<tr>
+<td>Comments</td>
+<td><code>/api/comments/{video_id}</code> returns comments/replies and like/dislike action rows; the latter are excluded from typed comment results</td>
+</tr>
+<tr>
+<td>Unsupported private/account features</td>
+<td>No authentication actions implemented. The observed private favorites endpoint returned HTTP 500; no successful favorites capability is claimed</td>
+</tr>
+<tr>
+<td>Collections</td>
+<td>The site's <code>playlist</code> and <code>socialPlaylist</code> feature flags are false; no Playlist, Model, or Channel classes are advertised</td>
+</tr>
+</tbody>
+</table>
+<p>Accepted hosts are exactly <code>youjizz.com</code> and <code>www.youjizz.com</code>. The apex redirects to www and video identity/duration are verified across both. No mirror or language subdomain is confirmed. English and Chinese are client-side interface translations, not separate verified content routes. Country selectors personalize rankings rather than prove a language host.</p>
+<h2>Source behavior and metadata variants</h2>
+<p>The suite checks API-only, HTML-only, combined, both sequential orders, deferred fields, and serialization without incidental fetches. API precedes HTML for shared fields, except thumbnails: legacy video 48914471 returns an empty API thumbnail while HTML has a real image. Empty URLs stay absent rather than resolving to the site root. HTML retains description, calendar publication date, embed/canonical identity, tag names, exact rating/votes, author references, and signed media maps. Preview and sprite metadata come from the thumbnail API. Comments have a separate lazy source; their integer timestamps are Unix seconds.</p>
+<p>Representative metadata pages include IDs 30792291 (rich description and ratings), 83968481 (no rating/votes), 48914471 (legacy/288p and empty API thumbnail), and 75799072 (nonstandard 368p). The requested VideoObject and hidden video ID must agree. Sparse video 128889181 has an empty title slug and omits VideoObject JSON-LD; its Open Graph URL and hidden ID must both identify the requested video before ordinary Open Graph fields are accepted. The regression compares its exact duration, thumbnail, publication date, missing title, and stable identity against the live page. A real nonexistent ID 999999999999999 returns HTTP 404 and remains an error.</p>
+<p>Private user fields are filtered according to public flags. Contact/internal fields returned by the raw endpoint are not copied into domain objects. Public uploads are governed separately by the UI's public-video flag. Required age verification or access challenges fail explicitly.</p>
+<h2>Complete listing reconciliation</h2>
+<ul>
+<li>User 15100401: <strong>510 expected / 510 actual IDs</strong>, <strong>22 pages</strong>, <strong>6 IDs on the last page</strong>, no duplicates, omissions, or unexpected IDs. Every 24-ID slice was independently checked against the actual thumbnail response used by the Angular UI. First, next, middle, last, and beyond-last requests agree. A separate live check confirmed that thumbnail response ordering follows the requested upload ID ordering. The user's profile is private but its uploads are explicitly public; hidden profile identity is not exposed.</li>
+<li>Pornstar directory entry Abby Marie: directory snapshot <strong>1</strong>, actual keyword listing <strong>6 expected / 6 actual IDs</strong> on one page; next/beyond-last is empty. The six results are keyword-search matches, not a curated upload count, so the stale directory count is not treated as an exact profile total.</li>
+<li>Public user 52588351: actual upload endpoint is empty; the API yields zero IDs and terminates. Banned user 51843451 remains unavailable.</li>
+<li>Listing comparisons establish the public session first: the initial visit can set <code>yjNewestShuffle</code> and <code>yjRandomThumbs</code> cookies. Empty-title URLs (<code>/videos/-{id}.html</code>) are included rather than discarded. General search: deterministic views sorting is used to compare two full 24-video pages. Relevance can reorder equally ranked matches between live requests, and Next URLs normalize spelling; the test does not assume an invented route or truncate an unordered sample.</li>
+</ul>
+<h2>Download validation</h2>
+<p>Every tested download goes through <code>Video.download()</code> and the shared backend. Each full file is inspected with ffprobe for dimensions, duration, and audio availability. The matrix includes every source label in each representative sample, both MP4 and HLS, the presets best/half/worst, and absent numeric quality 999 with nearest-tier fallback. It also covers concurrent different-video downloads, refreshed sources, repeated selections, callbacks, HLS completion reports, remuxed MP4, original transport streams, and the CLI.</p>
+<p>The site's Auto HLS master omits 288p on video 48914471 and 368p on video 75799072. Their actual per-quality masters contain these renditions. The implementation uses those masters, preserving the real dimensions rather than silently accepting a lower Auto rendition. Video 51957501 has a portrait 404×720 stream with <strong>no audio in its source</strong> (master codec list is video-only); silence is retained and tested explicitly. Video 80517371 uses a portrait 1920 encoding label.</p>
+<table>
+<thead>
+<tr>
+<th>Video ID</th>
+<th style="text-align:right">Source label</th>
+<th>Validated dimensions</th>
+<th>MP4 seconds / bytes</th>
+<th>HLS seconds / bytes</th>
+<th>Audio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>48914471</td>
+<td style="text-align:right">240</td>
+<td>426×240</td>
+<td>44.920000 / 2,122,218</td>
+<td>45.000000 / 2,122,378</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>48914471</td>
+<td style="text-align:right">288</td>
+<td>512×288</td>
+<td>44.920000 / 1,995,530</td>
+<td>44.954059 / 1,996,903</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>48914471</td>
+<td style="text-align:right">360</td>
+<td>640×360</td>
+<td>44.920000 / 3,169,372</td>
+<td>45.000000 / 3,170,384</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>48914471</td>
+<td style="text-align:right">480</td>
+<td>852×480</td>
+<td>44.920000 / 4,627,406</td>
+<td>45.000000 / 4,627,102</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>48914471</td>
+<td style="text-align:right">720</td>
+<td>1280×720</td>
+<td>44.920000 / 7,884,806</td>
+<td>45.000000 / 7,887,010</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>75799072</td>
+<td style="text-align:right">240</td>
+<td>416×240</td>
+<td>18.600000 / 1,064,843</td>
+<td>18.666667 / 1,068,546</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>75799072</td>
+<td style="text-align:right">360</td>
+<td>626×360</td>
+<td>18.600000 / 1,368,272</td>
+<td>18.666667 / 1,372,490</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>75799072</td>
+<td style="text-align:right">368</td>
+<td>640×368</td>
+<td>18.603000 / 1,453,400</td>
+<td>18.666667 / 1,457,009</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>51957501</td>
+<td style="text-align:right">720</td>
+<td>404×720</td>
+<td>12.686781 / 879,842</td>
+<td>12.686778 / 889,003</td>
+<td>Absent in source</td>
+</tr>
+<tr>
+<td>80517371</td>
+<td style="text-align:right">240</td>
+<td>134×240</td>
+<td>18.922000 / 1,068,076</td>
+<td>18.985633 / 1,071,844</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>80517371</td>
+<td style="text-align:right">360</td>
+<td>202×360</td>
+<td>18.922000 / 644,267</td>
+<td>18.985633 / 648,530</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>80517371</td>
+<td style="text-align:right">480</td>
+<td>270×480</td>
+<td>18.922000 / 950,492</td>
+<td>18.985633 / 954,718</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>80517371</td>
+<td style="text-align:right">720</td>
+<td>404×720</td>
+<td>18.922000 / 4,416,412</td>
+<td>18.985633 / 4,420,194</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>80517371</td>
+<td style="text-align:right">1920</td>
+<td>1080×1920</td>
+<td>18.918900 / 23,629,680</td>
+<td>18.952267 / 23,633,682</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>55374481</td>
+<td style="text-align:right">240</td>
+<td>426×240</td>
+<td>9.080000 / 546,581</td>
+<td>9.100000 / 549,793</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>55374481</td>
+<td style="text-align:right">360</td>
+<td>640×360</td>
+<td>9.080000 / 965,448</td>
+<td>9.100000 / 968,494</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>55374481</td>
+<td style="text-align:right">480</td>
+<td>852×480</td>
+<td>9.080000 / 1,662,320</td>
+<td>9.100000 / 1,665,390</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>55374481</td>
+<td style="text-align:right">720</td>
+<td>1280×720</td>
+<td>9.080000 / 1,431,115</td>
+<td>9.100000 / 1,434,155</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>55374481</td>
+<td style="text-align:right">1080</td>
+<td>1920×1080</td>
+<td>9.080000 / 5,668,060</td>
+<td>9.100000 / 5,671,124</td>
+<td>Present</td>
+</tr>
+</tbody>
+</table>
+<p>All <strong>38 explicit quality/format downloads</strong> and <strong>40 preset/fallback selections</strong> passed. Another <strong>4 complete downloads</strong> cover two concurrent MP4 transfers, original HLS transport-stream output, and the CLI: <strong>82 complete files total</strong>. No download quality gate was skipped. All source labels and actual heights matched; durations were within two seconds of the site's integer duration. Audio was retained wherever supplied. The observed HLS and MP4 duration differences reflect container timing, not truncated downloads.</p>
+<h2>Packaging and limitations</h2>
+<p>The source archive and wheel were built successfully. Archive inspection confirms README, copied AGPL license, package exports, and <code>py.typed</code>; the wheel embeds README project metadata and the license. No publication or push was performed. Download outputs are temporary and outside the repository.</p>
+<p>Counts are live observations rather than permanent catalog guarantees. Other operating systems, mirror hosts, translated content routes, authenticated features, and qualities not present in the sampled videos are unverified. No backend or Porn Fetch application files were changed.</p>
+</section>
+<section id="guides-searching-and-filtering" class="doc-section">
+<h1>Searching and filtering — YouJizz API</h1>
+<p>Use <code>Client.videos(listing=Listing.POPULAR)</code> for popular/newest/top/week/month,
+trending and HD listings, and <code>Client.random_videos()</code> for the random page.
+Enums are in <code>youjizz_api.modules.sorting</code>.
+<code>Client.search_videos</code> supports relevance/newest/views/rating/length sorting,
+duration ranges, phrase mode, title_only and date_from/date_to calendar dates.
+Empty queries raise ValueError. The website disables HD keyword search; use the
+separate HD listing rather than assuming a search HD filter works.</p>
+<pre><code class="language-python">from youjizz_api.modules.sorting import Sort
+stream = client.search_videos(&quot;Leah Gotti&quot;, pages=2, sort=Sort.VIEWS)
+</code></pre>
+<p>Category/tag listings and the alphabetical pornstar directory are separate APIs;
+account management, uploads, favorites and playlists are unsupported.</p>
+</section>
+<section id="guides-source-loading" class="doc-section">
+<h1>Source loading — YouJizz API</h1>
+<pre><code class="language-python">async with Client() as client:
+    video = await client.get_video(&quot;30792291&quot;, load_api=False, load_html=False)
+    print(video.to_dict())
+    await video.load_sources(&quot;api&quot;)
+    await video.load_fields(&quot;tags&quot;)
+    await video.load_sources(&quot;comments&quot;)
+</code></pre>
+<p>The thumbnail API provides listing metadata; HTML supplies media encodings and
+richer fields. Comments are loaded only when explicitly requested. API-only,
+HTML-only, both and deferred modes are independent, with stable field precedence.
+Listing results initially contain identity only. IteratorConfig can load selected
+sources or fields. Networking, caches, retries and proxies use the supplied BaseCore.</p>
+</section>
+<section id="reference-api-guide" class="doc-section">
+<h1>YouJizz API guide</h1>
+<h1>YouJizz API Documentation</h1>
+<h1>Features</h1>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Public interface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video metadata</td>
+<td><code>Client.get_video()</code>, <code>Video(BaseMedia)</code>, independent API/HTML/deferred loading</td>
+</tr>
+<tr>
+<td>Video downloads</td>
+<td>MP4 with <code>DownloadConfigRAW</code>; HLS with <code>DownloadConfigHLS</code>, optional remux and reports</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Popular, newest, top/all/week/month, trending, HD and random via <code>Client.videos()</code> / <code>Client.random_videos()</code></td>
+</tr>
+<tr>
+<td>Search</td>
+<td>Relevance/newest/views/rating/length, duration, phrase mode, title filter, date bounds</td>
+</tr>
+<tr>
+<td>Tags/categories</td>
+<td><code>Client.categories()</code>, <code>Client.get_category(url)</code>, <code>Category.videos()</code></td>
+</tr>
+<tr>
+<td>Pornstar directory</td>
+<td>Alphabetical <code>Client.pornstars(letter)</code>, <code>Pornstar.videos()</code></td>
+</tr>
+<tr>
+<td>Public user uploads</td>
+<td><code>Client.get_user()</code>, <code>User.videos()</code> with complete numbered pagination</td>
+</tr>
+<tr>
+<td>Relationships</td>
+<td><code>Video.get_author()</code>, <code>Video.related_videos()</code></td>
+</tr>
+<tr>
+<td>Comments</td>
+<td>Read-only, separately lazy <code>comments</code> source; typed comments and reply/author references</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td>Metadata inspection and MP4/HLS downloads</td>
+</tr>
+</tbody>
+</table>
+<p>A pornstar is an entry in the site's alphabetical directory whose videos link to keyword search. There is no separate pornstar biography/profile endpoint. Directory counts are snapshots and can differ from current search matches. No Model or Channel classes are invented.</p>
+<p>Networking, caching, retries, transport settings, proxies, iterator controls, cancellation, and downloads use the current <code>eaf-base-api</code> backend. A client closes its own core; an injected core remains owned by the caller. Close partially consumed generators with <code>contextlib.aclosing</code>.</p>
+<h1>Supported Platforms</h1>
+<p>Live validation is performed on this Linux environment with Python 3.13 and FFmpeg/ffprobe. Other platforms are not yet verified.</p>
+<h1>Installation</h1>
+<p>Install the distribution (publication is managed separately):</p>
+<pre><code class="language-bash">pip install unofficial-api-for-youjizz
+</code></pre>
+<p>Python 3.12+ and <code>eaf-base-api[hls]&gt;=4.2.6</code> are required. FFmpeg is needed for HLS remuxing and ffprobe for live download tests. The local shared backend is authoritative; see <a href="#guides-live-validation">live validation</a> for the development environment setup.</p>
+<h1>Quickstart</h1>
+<pre><code class="language-python">import asyncio
+from contextlib import aclosing
+from youjizz_api import Client, DownloadConfigRAW, IteratorConfig
+from youjizz_api.modules.sorting import Sort
+
+async def main():
+    async with Client() as client:
+        video = await client.get_video(&quot;https://www.youjizz.com/videos/video-48914471.html&quot;,
+                                       load_api=True, load_html=True)
+        print(video.title, video.duration, video.available_qualities)
+        await video.download(DownloadConfigRAW(quality=&quot;worst&quot;, path=&quot;./downloads&quot;))
+        stream = client.search_videos(&quot;Leah Gotti&quot;, pages=2, sort=Sort.VIEWS,
+                                     iterator_config=IteratorConfig(order=&quot;original&quot;))
+        async with aclosing(stream):
+            async for result in stream:
+                item = result.unwrap()
+                await item.load_fields(&quot;title&quot;)
+                print(item.video_id, item.title)
+
+asyncio.run(main())
+</code></pre>
+<p><code>pages</code> is a positive page count or <code>&quot;all&quot;</code>; <code>start_page</code> is one based. HTML pagination follows the site's actual Next links, retains filters, and detects repeated pages. User uploads use the site's public ID list and the same 24-ID page slices as its Angular UI. <code>IteratorConfig</code> retains item concurrency, source/field loading, error modes, and original/completion ordering. HTML pages are discovered sequentially; page concurrency does not prefetch unknown Next links. Listing objects initially contain identity only; opt into detail loading with <code>load_specific_sources</code> or <code>load_specific_fields</code>.</p>
+<pre><code class="language-python">from youjizz_api import Client
+
+async def inspect_sources():
+    async with Client() as client:
+        video = await client.get_video(&quot;30792291&quot;, load_api=False, load_html=False)
+        print(video.to_dict())            # no network fetch, unloaded fields omitted
+        await video.load_sources(&quot;api&quot;)   # /api/thumbs?ids=30792291
+        await video.load_fields(&quot;tags&quot;)   # HTML only
+        await video.load_sources(&quot;comments&quot;)
+        print(video.comment_count)
+</code></pre>
+<p>Synchronous access to an unloaded field raises the shared <code>DataNotLoadedError</code>. <code>None</code> means the loaded source knows the field is absent. Empty-title uploads with an empty URL slug are accepted; pages without VideoObject JSON-LD use Open Graph only when both the hidden ID and the Open Graph URL identify the requested video. API-only, HTML-only, both, and deferred loading are independent; loading either order gives the same precedence.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Fields and semantics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API (<code>/api/thumbs</code>)</td>
+<td>Title, duration (integer seconds), length (display string), views (decimal string), thumbnail, preview URL, HD flag, thumbnail count, sprite URL</td>
+</tr>
+<tr>
+<td>HTML (matching VideoObject JSON-LD, identity-checked Open Graph fallback, DOM, public <code>dataEncodings</code>)</td>
+<td>Title/duration/length/views/thumbnail fallback; description; publish date (site calendar date, no invented timezone); canonical/embed URLs; tags; rating (nullable float out of 5); rating votes (integer); author ID and public author link/name when rendered; direct/HLS maps and available qualities</td>
+</tr>
+<tr>
+<td>Comments (<code>/api/comments/{id}</code>)</td>
+<td>Typed comments (Unix timestamps in seconds), including replies, excluding like/dislike action rows; count is the number of these returned records, not an inferred UI total</td>
+</tr>
+</tbody>
+</table>
+<p>API precedes HTML for shared fields except thumbnails: HTML takes precedence because the thumbnail API returns an empty string on some legacy videos. API-only loading reports that absence as <code>None</code>. Rating uses HTML precision; the thumbnail API's rounded score is not substituted. <code>available_qualities</code> is the sorted union of the site's numeric encoding labels; <code>direct_urls</code> and <code>hls_urls</code> give format-specific availability. Labels can include 288, 368, and portrait height 1920. Actual dimensions are checked against completed downloads in the live suite.</p>
+<p><code>m3u8_base_url</code> retains the site's Auto master when present, otherwise a real per-quality master. Downloads select the per-quality master: Auto can omit older renditions. Quality presets are <code>best</code>, <code>half</code> (middle sorted label), and <code>worst</code>; a missing numeric quality uses the nearest label, preferring the higher one on a tie. Signed query strings remain intact. Download configurations are copied without replacing callbacks or cancellation events. <code>await video.refresh_sources()</code> returns a new HTML-loaded Video after refreshing the core cache; use it when source URLs expire.</p>
+<p>User profile metadata respects the site's public flags, including hidden usernames. Public upload lists remain available when the site separately marks videos public. Raw profile responses, contact information, internal fields, and private favorites are not exposed. Account management, uploads, favorites, and playlists are outside the supported public interface; the site's playlist feature is disabled and the observed favorites request failed with HTTP 500.</p>
+<p>Only <code>youjizz.com</code> and <code>www.youjizz.com</code> are accepted. The apex redirects to www. Numeric video IDs and <code>/videos/embed/{id}</code> links are supported. No alternate mirror or language subdomain was confirmed. The site disables its search-HD feature and the rendered <code>hd=1</code> search control still returns SD videos; no HD search filter is advertised. Its separate HD listing remains available. The UI offers English and Chinese through client-side translation; this provider does not invent locale-specific routes. Access challenges and required age verification fail explicitly.</p>
+<h1>CLI</h1>
+<pre><code class="language-bash">python -m youjizz_api --download 48914471 --info
+python -m youjizz_api --download 48914471 --quality 288 --format hls --output ./downloads
+youjizz_api --download 48914471 --quality worst --format mp4 --output ./downloads
+</code></pre>
+<p><code>--info</code> omits expiring video source URLs. HLS downloads remux to MP4; RAW downloads already contain MP4. For explicit output filenames, use the Python API with <code>no_title=True</code> and a complete <code>path</code>.</p>
+<h1>Live Tests</h1>
+<pre><code class="language-bash">.venv/bin/python -m pytest -q
+</code></pre>
+<p>Latest validation: <strong>63 passed, 0 failed, 0 skipped</strong>; <strong>82 complete-file download checks</strong> across MP4 and HLS.</p>
+<p>These are real network tests, including complete downloads and ffprobe inspection; no offline fixtures or mock tests are included. See <a href="#guides-live-validation">live validation</a> for commands, counts, quality evidence, and pagination reconciliation. Tests do not require login cookies and never read browser cookies.</p>
+</section>
+<section id="reference-cli" class="doc-section">
+<h1>CLI — YouJizz API</h1>
+<pre><code class="language-sh">python -m youjizz_api --download 48914471 --info
+youjizz_api --download 48914471 --quality worst --format mp4 --output ./downloads
+youjizz_api --download 48914471 --quality 288 --format hls --output ./downloads
+</code></pre>
+<p><code>--download</code> is required. <code>--quality</code> defaults to best, <code>--format</code> to mp4 and
+<code>--output</code> to ./; supported formats are mp4 and hls. <code>--info</code> prints metadata
+without expiring media URLs. HLS downloads remux to MP4.</p>
+</section>
+<section id="reference-client" class="doc-section">
+<h1>Client — YouJizz API</h1>
+<p><code>Client(core: BaseCore | None = None)</code> supports <code>async with</code> and <code>await client.close()</code>.</p>
+<pre><code class="language-python">async def get_video(url: str, load_html=False, load_api=True) -&gt; Video: ...
+async def get_user(url: str, load_api=True) -&gt; User: ...
+def get_category(url: str) -&gt; Category: ...
+async def pornstars(letter=&quot;A&quot;) -&gt; list[Pornstar]: ...
+async def categories() -&gt; list[Category]: ...
+def videos(listing=Listing.POPULAR, pages=1, *, start_page=1, iterator_config=None): ...
+def random_videos(iterator_config=None): ...
+def search_videos(query, pages=1, *, start_page=1, sort=Sort.RELEVANCE,
+                  duration=Duration.ANY, phrase=Phrase.ALL, title_only=False,
+                  date_from=None, date_to=None, iterator_config=None): ...
+</code></pre>
+<p>Video getters accept numeric IDs, video URLs and embed links. <code>get_category</code> is
+synchronous and accepts a tag/category listing URL. <code>pornstars</code> requires A–Z.
+Listings and search return asynchronous streams of ScrapeResult objects; use
+<code>result.unwrap()</code> to obtain a Video. No account/login API is provided.</p>
+</section>
+<section id="reference-collections" class="doc-section">
+<h1>Collections and User — YouJizz API</h1>
+<p><code>Collection(url=..., core=..., name=..., video_count=None)</code> exposes
+<code>videos(pages=1, *, start_page=1, iterator_config=None)</code>.
+Pornstar and Category inherit Collection. Directory video counts are snapshots.
+Pornstar entries point to keyword search; there is no separate biography endpoint.
+No Model or Channel class is provided.</p>
+<p><code>await client.get_user(url, load_api=True)</code> accepts numeric user IDs or
+<code>/profile/user/&lt;id&gt;</code> URLs. User fields include name, description, title, avatar_url,
+date_joined, last_login, is_public, public_videos and banned.
+<code>user.videos(...)</code> follows numbered upload slices from the public video-ID list.
+Hidden usernames and public-upload flags are independent and respected.
+Private profile fields, contact information and favorites are not exposed.</p>
+</section>
+<section id="reference-video" class="doc-section">
+<h1>Video — YouJizz API</h1>
+<p><code>Video(BaseMedia)</code> has independent <code>api</code>, <code>html</code> and <code>comments</code> sources.
+API fields: title, duration (integer seconds), length, views (decimal string),
+thumbnail_url, preview_video_url, is_hd, thumbnail_count and sprite_url.
+HTML adds description, publish_date (site calendar date), canonical_url, embed_url,
+tags, rating (float out of 5), rating_votes, author_id, author_name, author_link,
+direct_urls, hls_urls, m3u8_base_url, available_qualities and content_url.
+API takes precedence for shared fields except thumbnail_url, which prefers HTML.</p>
+<p><code>await video.get_author(load_api=True)</code> returns User or None.
+<code>video.related_videos(...)</code> yields related result objects.
+<code>await video.load_sources(&quot;comments&quot;)</code> loads typed comments and comment_count.
+The count covers returned comment records, excluding action rows; reply references
+and Unix timestamps are preserved.
+<code>await video.refresh_sources()</code> returns a new HTML-loaded Video with refreshed cache.
+Unloaded fields raise DataNotLoadedError; loaded absent fields are None.</p>
+</section>
+<section id="supported-platforms" class="doc-section">
+<h1>Supported platforms and hosts — YouJizz API</h1>
+<p>Requires Python 3.12+. Prior live validation used Linux/Python 3.13 and FFmpeg/ffprobe;
+other platforms have not been verified for this provider.
+Only youjizz.com and www.youjizz.com are accepted. The apex redirects to www.
+Numeric IDs, <code>/videos/&lt;slug&gt;-&lt;id&gt;.html</code> and <code>/videos/embed/&lt;id&gt;</code> identify videos.
+No alternate mirror or language subdomain was confirmed. English/Chinese UI
+translation does not imply locale routes. Access challenges and required age
+verification fail explicitly.</p>
+</section>
+<section id="troubleshooting-errors" class="doc-section">
+<h1>Errors — YouJizz API</h1>
+<p>DataNotLoadedError means the required source has not been loaded; use load_fields
+or load_sources. A loaded None represents absent metadata. Shared MediaLoadError
+can wrap provider/network errors; inspect its cause. Invalid host/path/query/directory
+arguments raise validation errors. Refresh expired sources before retrying a download.
+An empty or unrecognized directory raises ValueError rather than claiming success.
+HTTP challenges and age verification are surfaced; do not bypass access controls.
+No browser cookies are read by the live tests.</p>
+</section>
+                    </article>
+
+                    <footer class="page-footer">
+                        <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · AGPL-3.0-only</span>
+                        <span>Built on <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
+                    </footer>
+                </main>
+
+                <aside class="page-toc" aria-label="On this page">
+                    <div class="page-toc-inner">
+                        <p class="page-toc-title">On this page</p>
+                        <nav id="pageTocList"></nav>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <a href="#main-content" class="back-to-top" id="backToTop" aria-label="Back to top">↑</a>
+</body>
+</html>

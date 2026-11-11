@@ -1,0 +1,1973 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#09090b">
+    <title>RedGIFs API — Documentation</title>
+    <meta name="description" content="Documentation for RedGIFs API, an asynchronous Python API wrapper by EchterAlsFake.">
+    <link rel="stylesheet" href="../assets/docs.css">
+    <script src="../assets/docs.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="mobile-header">
+        <a class="mobile-brand" href="../">EAF Docs</a>
+        <button class="mobile-toggle" id="mobileToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </button>
+    </header>
+    <div class="mobile-overlay" id="mobileOverlay" hidden></div>
+
+    <div class="docs-shell">
+        <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+            <div class="sidebar-header">
+                <a href="../" class="sidebar-logo">
+                    <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
+                    <span class="sidebar-logo-text">RedGIFs API</span>
+                </a>
+                <span class="sidebar-version">v0.1.0</span>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <a href="#getting-started" class="nav-link">RedGIFs API getting started</a>
+<a href="#reference-client" class="nav-link">Client</a>
+<a href="#reference-video" class="nav-link">Video</a>
+<a href="#reference-image" class="nav-link">Image</a>
+<a href="#reference-user" class="nav-link">User</a>
+<a href="#reference-niche" class="nav-link">Niche</a>
+<a href="#reference-collection" class="nav-link">Collection</a>
+<a href="#reference-tag" class="nav-link">Tag</a>
+<a href="#reference-sorting-enums" class="nav-link">Sorting enums</a>
+<a href="#guides-source-loading" class="nav-link">Source loading</a>
+<a href="#guides-searching-and-filtering" class="nav-link">Searching and filtering</a>
+<a href="#guides-iteration-and-results" class="nav-link">Iteration and results</a>
+<a href="#guides-downloading" class="nav-link">Downloading</a>
+<a href="#guides-live-validation" class="nav-link">Live validation</a>
+<a href="#troubleshooting-errors" class="nav-link">Errors and troubleshooting</a>
+<a href="#reference-cli" class="nav-link">CLI</a>
+<a href="#supported-platforms" class="nav-link">Supported platforms and hosts</a>
+<a href="#changelog" class="nav-link">Changelog</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="../#mcp" class="sidebar-mcp-promo-link" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 7px 10px; border-radius: 4px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.25); color: var(--accent-strong); font-size: 13px; font-weight: 600; text-decoration: none;">
+                    <span style="font-size: 14px;">⚡</span>
+                    <span>Official MCP Server</span>
+                </a>
+                <a href="https://github.com/EchterAlsFake/unofficial-api-for-redgifs" target="_blank" rel="noopener noreferrer">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    <span>Source on GitHub</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="docs-stage">
+            <div class="docs-grid">
+                <main class="main-content" id="main-content" tabindex="-1">
+                    <header class="hero">
+                        <nav class="breadcrumbs" aria-label="Breadcrumb">
+                            <a href="../">Documentation</a>
+                            <span aria-hidden="true">/</span>
+                            <span>RedGIFs API</span>
+                        </nav>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v0.1.0</div>
+                        <h1>RedGIFs API</h1>
+                        <p>An asynchronous Python API for RedGIFs videos, images, creator profiles, tags, niches, public collections, lazy API/HTML metadata and direct downloads. Powered by eaf_base_api.</p>
+                        <div class="hero-actions">
+                            <button class="install-cmd" type="button" onclick="copyInstall(this)" title="Copy install command">
+                                <span class="prompt" aria-hidden="true">$</span>
+                                <code>pip install unofficial-api-for-redgifs</code>
+                                <span class="copy-icon" aria-hidden="true">Copy</span>
+                            </button>
+                            <a href="https://github.com/EchterAlsFake/unofficial-api-for-redgifs" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+                        </div>
+                    </header>
+
+                    <article class="content-area">
+                        <div class="mcp-banner" role="region" aria-label="Official MCP Server Notice">
+                            <div class="mcp-banner-header">
+                                <span class="mcp-banner-badge">⚡ Recommended AI Workflow</span>
+                                <span class="mcp-banner-title">Official MCP Server: <code>https://mcp.echteralsfake.me/mcp</code></span>
+                            </div>
+                            <p class="mcp-banner-desc">
+                                Supercharge your development by connecting your AI coding assistant (Cursor, VS Code / Copilot, Claude Desktop, Windsurf, Zed, Antigravity).
+                                <strong>No authentication required</strong> · <strong>No strict rate limits</strong> · <strong>Covers all 16 APIs</strong> · <strong>Always up to date</strong> · <strong>Completely anonymous (0 logs, no profiling)</strong>.
+                                Connecting this MCP server to your AI assistant is absolutely the recommended way to work on and build with these APIs.
+                            </p>
+                            <div class="mcp-banner-actions">
+                                <a href="../#mcp" class="mcp-banner-btn primary">Add to Your Editor (Setup Guides & Configs) →</a>
+                                <button class="mcp-banner-btn secondary" type="button" onclick="navigator.clipboard.writeText('https://mcp.echteralsfake.me/mcp');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Server URL',2000)">Copy Server URL</button>
+                            </div>
+                        </div>
+
+                        <section class="section" id="getting-started">
+<h2>RedGIFs API getting started</h2>
+<p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-redgifs</code>. Import: <code>redgifs_api</code>.
+Requires Python 3.12+, <code>eaf-base-api&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
+<p>Install from the workspace containing both checkouts before publication:</p>
+<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-redgifs
+</code></pre>
+<p>From the provider directory alone, use <code>pip install .</code>. Package publication and remote
+CI status are not asserted. FFmpeg is not required for direct MP4/JPG transfers;
+<code>ffprobe</code> is used for live media validation.</p>
+<pre><code class="language-python">import asyncio
+from base_api import BaseCore
+from base_api.modules.config import RuntimeConfig
+from redgifs_api import Client, DownloadConfigRAW
+
+async def main():
+    runtime = RuntimeConfig()
+    runtime.request_delay = 2
+    runtime.pages_concurrency = 1
+    runtime.videos_concurrency = 2
+    async with BaseCore(runtime) as core, Client(core) as client:
+        video = await client.get_video(
+            &quot;https://www.redgifs.com/watch/hotpinkacrobatickitfox&quot;,
+            load_api=True, load_html=True,
+        )
+        print(video.title, video.duration, video.tags)
+        print(await video.get_qualities())
+        await video.download(DownloadConfigRAW(quality=&quot;best&quot;, path=&quot;./&quot;))
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<p><code>Client()</code> owns its core and closes it on context exit or <code>close()</code>.
+<code>Client(core)</code> leaves that core caller-owned; retain both contexts until all object
+operations and streams finish. Runtime requests and downloads use the supplied backend.
+An ordinary anonymous public session token is reused per client and refreshed once after
+HTTP 401. API authorization headers are not copied to CDN requests or global headers.</p>
+<p>Videos and images have independent <code>api</code> and <code>html</code> sources. API loading defaults on;
+HTML loading defaults off. Display <code>title</code> requires HTML. Users, niches and collections
+have an <code>api</code> source only. No account, separate Model/Channel, or Gallery class exists.</p>
+<p>Validation is incomplete: the final 2026-11-10 run had <strong>38 passed / 12 failed / 0 skipped</strong>,
+with all terminal failures caused by HTTP 429. Earlier runs also demonstrated upstream
+pagination omissions. Pacing is configurable, not a guarantee that quotas have reset.
+See <a href="#guides-live-validation">validation</a>, <a href="#reference-client">Client</a>,
+<a href="#guides-source-loading">source loading</a>, and
+<a href="../eaf_base_api/">shared configuration</a>.</p>
+</section>
+
+<section class="section" id="reference-client">
+<h2>Client — RedGIFs API</h2>
+<p><code>Client(core: BaseCore | None = None)</code> constructs typed objects sharing a configured
+backend. The internal <code>_api</code> argument is private. There is no <code>base_url</code>, account login,
+<code>get_model</code>, <code>get_channel</code>, <code>get_playlist</code>, or generic <code>get_videos</code> method.</p>
+<p>Use <code>async with Client() as client</code> or <code>await client.close()</code>. Only an internally created
+core is closed. Injected cores remain caller-owned.</p>
+<h3>Media and collection getters</h3>
+<pre><code class="language-python">async def get_video(url: str, load_html: bool = False, load_api: bool = True) -&gt; Video: ...
+async def get_image(url: str, *, load_api: bool = True, load_html: bool = False) -&gt; Image: ...
+async def get_user(url: str, *, load_api: bool = True) -&gt; User: ...
+async def get_niche(url: str, *, load_api: bool = True) -&gt; Niche: ...
+async def get_collection(username: str, collection_id: str, *, load_api: bool = True) -&gt; Collection: ...
+</code></pre>
+<p>Video/image getters accept a stable ID or supported watch/embed/CDN URL; getters validate
+the requested object type. User and niche getters accept an identifier or the corresponding
+<code>/users/&lt;username&gt;</code> or <code>/niches/&lt;id&gt;</code> URL. <code>get_collection()</code> takes an owner (username or
+user URL) <strong>and</strong> a separate folder ID, not one arbitrary collection URL.</p>
+<p>Setting all available source flags false creates a deferred object. Users, niches and
+collections accept <code>load_api</code> only. See <a href="#guides-source-loading">source loading</a>.</p>
+<h3>Video search</h3>
+<pre><code class="language-python">def search(query: str = &quot;&quot;, *, tags: list[str] | None = None,
+           sort: Sort | str = Sort.TRENDING, pages=1, start_page=1,
+           count=40, verified=False, iterator_config=None): ...
+</code></pre>
+<p>Returns <code>ScrapeStream[Video]</code>. Accepts <code>trending</code>, <code>latest</code>, or <code>top</code>. A blank query is
+allowed for a tag/general listing; no client-side substring matching is imposed.
+<code>verified=True</code> sends the site's verified filter. Verified-only trending may be empty
+even when latest/top returns verified items. Do not substitute sorts silently.</p>
+<h3>Image and creator search</h3>
+<pre><code class="language-python">def search_images(query=&quot;&quot;, *, tags=None, pages=1, start_page=1,
+                  count=40, iterator_config=None): ...
+def search_users(query=&quot;&quot;, *, pages=1, start_page=1, count=40,
+                 verified=False, iterator_config=None): ...
+</code></pre>
+<p><code>search_images()</code> returns <code>ScrapeStream[Image]</code> with latest ordering; it has no sort or
+verified argument. <code>search_users()</code> returns <code>ScrapeStream[User]</code>; it has no tag/sort
+argument. Creators, studios and models use the site's User resource and flags.</p>
+<h3>Directories</h3>
+<pre><code class="language-python">def get_niches(*, pages=1, start_page=1, count=40, iterator_config=None): ...
+async def get_tags(*, trending: bool = False) -&gt; list[Tag]: ...
+</code></pre>
+<p>Niches are streamed as typed objects. Their detail loader fetches description/cover
+because directory cards omit those values. Tags are an awaited in-memory list of typed
+<code>Tag(name, count)</code> records, not <code>ScrapeResult</code> values.</p>
+<h3>Listing defaults</h3>
+<p><code>pages</code> is a positive integer or <code>"all"</code>; <code>start_page</code> is a positive, one-based index;
+<code>count</code> is an integer from 1 to 100. Streams fetch page 1 for live page metadata before
+applying the requested range. Valid beyond-last ranges yield nothing; invalid resources
+still raise. Default results are API-loaded, in original page/card order, with terminal
+page/item errors raised. An explicit <code>IteratorConfig</code> is honored. Discovery/authentication
+failures propagate directly. See <a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="reference-video">
+<h2>Video — RedGIFs API</h2>
+<p><code>Video(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass. Prefer
+<code>await client.get_video(...)</code>. Construction normalizes identity without fetching;
+loaders return mappings committed atomically through the shared media contract.</p>
+<h3>Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Source</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Canonical www watch URL, or canonical profile/niche/collection URL.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>identity</td>
+<td>Shared caller-configurable backend; omitted from to_dict() by default.</td>
+</tr>
+<tr>
+<td><code>video_id</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Stable lowercase media ID; retained on Image for interface compatibility.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>HTML display title generated by the site; API-only access leaves this unloaded.</td>
+</tr>
+<tr>
+<td><code>page_description</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>HTML page description, kept even after API description takes precedence.</td>
+</tr>
+<tr>
+<td><code>html_content_url</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Content URL from the matching HTML structured object; video HTML may point to silent media.</td>
+</tr>
+<tr>
+<td><code>html_publish_date</code></td>
+<td><code>str \| None</code></td>
+<td>html</td>
+<td>Original HTML date string; currently malformed, not a normalized date.</td>
+</tr>
+<tr>
+<td><code>html_metadata</code></td>
+<td><code>dict \| None</code></td>
+<td>html</td>
+<td>Matching SocialMediaPosting JSON-LD, including the target VideoObject/ImageObject.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>api, html</td>
+<td>API description when API is loaded, even when null/empty; otherwise HTML description.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>api, html</td>
+<td>Thumbnail/profile image URL supplied by the selected source.</td>
+</tr>
+<tr>
+<td><code>embed_url</code></td>
+<td><code>str \| None</code></td>
+<td>api, html</td>
+<td>Embed URL from API, or HTML when API has not loaded.</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td><code>float \| None</code></td>
+<td>api</td>
+<td>Duration in seconds; null on images.</td>
+</tr>
+<tr>
+<td><code>length</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Duration seconds as text; null if absent.</td>
+</tr>
+<tr>
+<td><code>publish_date</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>UTC ISO 8601 string normalized from API Unix seconds.</td>
+</tr>
+<tr>
+<td><code>views</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Site-reported integer view count.</td>
+</tr>
+<tr>
+<td><code>likes</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Site-reported integer like count.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>list[str] \| None</code></td>
+<td>api</td>
+<td>Site tag names; preserve returned spelling.</td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>API-reported original width in pixels.</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>API-reported original height in pixels.</td>
+</tr>
+<tr>
+<td><code>has_audio</code></td>
+<td><code>bool \| None</code></td>
+<td>api</td>
+<td>Site-reported flag, not a container probe; known inaccurate legacy values are preserved.</td>
+</tr>
+<tr>
+<td><code>verified</code></td>
+<td><code>bool \| None</code></td>
+<td>api</td>
+<td>Site-reported uploader/profile verification flag.</td>
+</tr>
+<tr>
+<td><code>published</code></td>
+<td><code>bool \| None</code></td>
+<td>api</td>
+<td>Site-reported publication flag.</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Uploader username.</td>
+</tr>
+<tr>
+<td><code>author_link</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Canonical uploader /users/ URL; use get_author() for a typed User.</td>
+</tr>
+<tr>
+<td><code>poster_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Poster image URL.</td>
+</tr>
+<tr>
+<td><code>preview_video_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Optional vthumbnail clip; may appear only on listing cards.</td>
+</tr>
+<tr>
+<td><code>timeline_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Optional timeline image URL; may be absent from detail responses.</td>
+</tr>
+<tr>
+<td><code>content_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>HD direct media URL, falling back to SD if HD is absent.</td>
+</tr>
+<tr>
+<td><code>sources</code></td>
+<td><code>dict[str, str] \| None</code></td>
+<td>api</td>
+<td>Actual hd/sd/silent rendition labels mapped to exact URLs, including signed queries.</td>
+</tr>
+<tr>
+<td><code>available_qualities</code></td>
+<td><code>list[str] \| None</code></td>
+<td>api</td>
+<td>Available rendition labels; use get_qualities() for a copied list.</td>
+</tr>
+<tr>
+<td><code>niche_ids</code></td>
+<td><code>list[str] \| None</code></td>
+<td>api</td>
+<td>Related niche IDs; use get_niches() for typed details.</td>
+</tr>
+<tr>
+<td><code>sexuality</code></td>
+<td><code>list[str] \| None</code></td>
+<td>api</td>
+<td>Site classification strings.</td>
+</tr>
+<tr>
+<td><code>content_type</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site content classification, when supplied.</td>
+</tr>
+<tr>
+<td><code>average_color</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site-provided average color string.</td>
+</tr>
+<tr>
+<td><code>gallery_id</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Optional image gallery membership ID; enumeration is not implemented.</td>
+</tr>
+<tr>
+<td><code>media_type</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>1 for Video, 2 for Image.</td>
+</tr>
+<tr>
+<td><code>hls_urls</code></td>
+<td><code>dict[str, str] \| None</code></td>
+<td>api</td>
+<td>HD/SD byte-range HLS playlist URLs for inspection; not accepted by download().</td>
+</tr>
+<tr>
+<td><code>raw_metadata</code></td>
+<td><code>dict \| None</code></td>
+<td>api</td>
+<td>Original matched API record, preserving additional site fields.</td>
+</tr>
+</tbody>
+</table>
+<p>API values take precedence for <code>description</code>, <code>thumbnail_url</code>, and <code>embed_url</code>, including
+known <code>None</code> values. HTML-only <code>title</code>, <code>page_description</code>, and raw structured metadata
+remain available after both sources load. Zero counts remain zero; absent values are
+nullable and unloaded values raise <code>DataNotLoadedError</code>.</p>
+<p><code>has_audio</code> is a site flag, not a file probe. Legacy <code>happyfrenchindianspinyloach</code> reports
+false while its direct MP4 contains audible AAC. HTML publication dates are malformed;
+use API <code>publish_date</code> for normalized UTC dates. Optional card preview/timeline URLs may
+be absent from the detail endpoint. No FPS, codec, dislikes or comment count is fabricated.</p>
+<h3>Relationships and qualities</h3>
+<pre><code class="language-python">async def get_author(*, load_api: bool = True) -&gt; User | None: ...
+async def get_niches() -&gt; list[Niche]: ...
+async def get_qualities() -&gt; list[str]: ...
+async def get_download_url(quality=&quot;best&quot;, *, refresh: bool = False) -&gt; str: ...
+async def download(configuration: DownloadConfigRAW) -&gt; bool: ...
+</code></pre>
+<p><code>get_author()</code> loads <code>author_link</code> if necessary and returns a typed profile, or <code>None</code>
+when the source has no author. Missing/deleted profiles retain their loading error.
+<code>get_niches()</code> loads typed API details for all supplied niche IDs.</p>
+<p><code>get_qualities()</code> returns a copied list of <code>hd</code>, <code>sd</code> and optional <code>silent</code> labels.
+<code>get_download_url()</code> accepts those exact labels plus <code>best</code>, <code>half</code>, and <code>worst</code>.
+An absent exact rendition or numeric resolution raises <code>ValueError</code>. Refresh requests
+fresh public detail metadata for the selected URL without replacing the model's already
+committed source snapshot. Downloads always refresh and preserve signed URL queries.</p>
+<p><code>download()</code> requires <code>DownloadConfigRAW</code>, returns a boolean, and uses the shared raw
+downloader. It copies the caller configuration before filename changes. The default
+filename uses an already-loaded title, otherwise the stable ID; it does not fetch HTML
+just to name a file. With <code>no_title=True</code>, <code>path</code> is the exact filename. The decorated
+download entry point wraps ordinary selection/transport errors in <code>DownloadFailed</code> while
+preserving their causes and cancellation.</p>
+<p>See <a href="#guides-downloading">downloads</a>, <a href="#guides-source-loading">source loading</a>,
+and <a href="../eaf_base_api/">shared media</a>.</p>
+</section>
+
+<section class="section" id="reference-image">
+<h2>Image — RedGIFs API</h2>
+<p><code>Image</code> inherits <code>Video</code> and its field/source interface. Use
+<code>await client.get_image(id_or_url, load_api=True, load_html=False)</code>.
+The stable identity attribute remains <code>video_id</code>; <code>media_type</code> is 2, and <code>duration</code> and
+<code>length</code> are normally null. Width/height, tags, author, source URLs, poster, publication
+metadata and optional <code>gallery_id</code> remain available. See the <a href="#reference-video">field table</a>.</p>
+<p>HTML loading validates a matching <code>SocialMediaPosting</code> containing an <code>ImageObject</code>.
+Video HTML is rejected even in HTML-only mode. Conversely, <code>get_video()</code> rejects images.
+Use <code>load_api=False, load_html=True</code>, both flags true, or both false for independent,
+combined or deferred loading. Inherited <code>load_sources()</code> supports either load order.</p>
+<pre><code class="language-python">from redgifs_api import Client, DownloadConfigRAW
+
+async def save_image():
+    async with Client() as client:
+        image = await client.get_image(&quot;deliciousfrontelephant&quot;, load_html=True)
+        print(image.video_id, image.title, image.gallery_id)
+        await image.download(DownloadConfigRAW(quality=&quot;hd&quot;, path=&quot;./&quot;))
+</code></pre>
+<p>The default output extension comes from the supplied image rendition URL (observed JPG),
+not <code>.mp4</code>. With <code>no_title=True</code>, the caller supplies the complete filename. Use <code>hd</code>,
+<code>sd</code> or supported presets, according to <code>image.available_qualities</code>. There is no automatic
+video conversion, gallery expansion or animated-image conversion.</p>
+<p><code>client.search_images()</code> and <code>user.images()</code> return image result streams. Public
+collections may mix <code>Video</code> and <code>Image</code> instances while preserving listing order.</p>
+</section>
+
+<section class="section" id="reference-user">
+<h2>User — RedGIFs API</h2>
+<p>Use <code>await client.get_user(username_or_user_url, load_api=True)</code>.
+<code>User</code> is a keyword-only <code>BaseMedia</code> dataclass with an <code>api</code> loader. The public API
+uses one User domain for creators, models and studios; inspect flags instead of
+inventing separate resource types.</p>
+<h3>Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Source</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Canonical www watch URL, or canonical profile/niche/collection URL.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>identity</td>
+<td>Shared caller-configurable backend; omitted from to_dict() by default.</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Canonical lowercase profile owner username.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site display name.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site profile/niche/collection description, or null when absent.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Thumbnail/profile image URL supplied by the selected source.</td>
+</tr>
+<tr>
+<td><code>creation_date</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Profile creation time as UTC ISO 8601.</td>
+</tr>
+<tr>
+<td><code>followers</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Reported follower count.</td>
+</tr>
+<tr>
+<td><code>following</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Reported following count.</td>
+</tr>
+<tr>
+<td><code>video_count</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Raw gifs count; this site can include images in that counter.</td>
+</tr>
+<tr>
+<td><code>published_count</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Raw publishedGifs count; includes images and can exceed publicly listed records.</td>
+</tr>
+<tr>
+<td><code>collection_count</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Reported publishedCollections count.</td>
+</tr>
+<tr>
+<td><code>views</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Site-reported integer view count.</td>
+</tr>
+<tr>
+<td><code>likes</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Site-reported integer like count.</td>
+</tr>
+<tr>
+<td><code>verified</code></td>
+<td><code>bool \| None</code></td>
+<td>api</td>
+<td>Site-reported uploader/profile verification flag.</td>
+</tr>
+<tr>
+<td><code>studio</code></td>
+<td><code>bool \| None</code></td>
+<td>api</td>
+<td>Studio/profile classification flag.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site account status.</td>
+</tr>
+<tr>
+<td><code>profile_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site profileUrl value, which may be an external social/creator URL.</td>
+</tr>
+<tr>
+<td><code>links</code></td>
+<td><code>list[dict] \| None</code></td>
+<td>api</td>
+<td>Site-provided outbound-link metadata; not independently resolved.</td>
+</tr>
+<tr>
+<td><code>raw_metadata</code></td>
+<td><code>dict \| None</code></td>
+<td>api</td>
+<td>Original matched API record, preserving additional site fields.</td>
+</tr>
+</tbody>
+</table>
+<p><code>video_count</code> and <code>published_count</code> preserve the site's <code>gifs</code>/<code>publishedGifs</code> values;
+those counts can include images and records missing from public tabs. <code>profile_url</code>
+is the site's possibly external profile/social URL, while <code>url</code> is the canonical user
+page. Full API detail is retained in <code>raw_metadata</code>.</p>
+<h3>Streams</h3>
+<pre><code class="language-python">def videos(*, pages=1, start_page=1, count=40, sort=ProfileSort.NEW,
+           tags=None, iterator_config=None) -&gt; ScrapeStream[Video]: ...
+def images(*, pages=1, start_page=1, count=40,
+           iterator_config=None) -&gt; ScrapeStream[Image]: ...
+def collections(*, pages=1, start_page=1, count=40,
+                iterator_config=None) -&gt; ScrapeStream[Collection]: ...
+</code></pre>
+<p><code>videos()</code> selects the actual video tab (<code>type=g</code>), accepts <code>new</code>/<code>top</code> ordering and
+optional tag names. <code>images()</code> selects the image tab (<code>type=i</code>) with new ordering;
+it has no tag/sort argument. <code>collections()</code> selects published collections for this owner.
+All three are lazy shared result streams; unwrap every result and close partial streams.</p>
+<pre><code class="language-python">async def profile_videos(client):
+    user = await client.get_user(&quot;nickiipeach&quot;)
+    async with user.videos(pages=&quot;all&quot;, count=40) as results:
+        return [result.unwrap() async for result in results]
+</code></pre>
+<p>A missing/unavailable profile must not become an empty successful User. Upstream equal-time
+ordering can repeat/omit IDs across pages, and public counts can be stale. See
+<a href="#guides-iteration-and-results">iteration evidence</a> and
+<a href="#guides-live-validation">validation status</a>.</p>
+</section>
+
+<section class="section" id="reference-niche">
+<h2>Niche — RedGIFs API</h2>
+<p>Use <code>await client.get_niche(id_or_niche_url, load_api=True)</code> or stream
+<code>client.get_niches()</code>. <code>Niche</code> has an <code>api</code> source only. Directory cards omit some
+metadata, so API loading fetches the actual niche detail endpoint even for directory items.</p>
+<h3>Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Source</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Canonical www watch URL, or canonical profile/niche/collection URL.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>identity</td>
+<td>Shared caller-configurable backend; omitted from to_dict() by default.</td>
+</tr>
+<tr>
+<td><code>niche_id</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Stable niche slug.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site display name.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site profile/niche/collection description, or null when absent.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Thumbnail/profile image URL supplied by the selected source.</td>
+</tr>
+<tr>
+<td><code>cover_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Niche cover image URL.</td>
+</tr>
+<tr>
+<td><code>video_count</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Raw niche gifs counter; can include video and image records.</td>
+</tr>
+<tr>
+<td><code>subscribers</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Reported niche subscriber count.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>list[str] \| None</code></td>
+<td>api</td>
+<td>Site tag names; preserve returned spelling.</td>
+</tr>
+<tr>
+<td><code>preferences</code></td>
+<td><code>list[str] \| None</code></td>
+<td>api</td>
+<td>Niche preference/classification strings.</td>
+</tr>
+<tr>
+<td><code>raw_metadata</code></td>
+<td><code>dict \| None</code></td>
+<td>api</td>
+<td>Original matched API record, preserving additional site fields.</td>
+</tr>
+</tbody>
+</table>
+<p><code>url</code> is a canonical <code>/niches/&lt;id&gt;</code> route. Niche <code>video_count</code> retains the raw <code>gifs</code>
+counter and may include image records. The type exposes no owner getter or subscriber
+mutation operations.</p>
+<h3>videos</h3>
+<pre><code class="language-python">def videos(*, pages=1, start_page=1, count=40, sort=&quot;new&quot;, iterator_config=None): ...
+</code></pre>
+<p>Returns <code>ScrapeStream[Video]</code>. Ordering is <code>new</code> or <code>top</code>; it selects the niche video
+filter and has no tags, shuffle or image-tab argument. Use <a href="#guides-iteration-and-results">iteration options</a>.
+The small <code>duo-chastity</code> niche was reconciled at five expected/actual IDs across pages
+of 2/2/1, including beyond-last behavior.</p>
+</section>
+
+<section class="section" id="reference-collection">
+<h2>Collection — RedGIFs API</h2>
+<p>Use <code>await client.get_collection(username, collection_id, load_api=True)</code>.
+The getter takes two identity inputs. A user URL may be supplied as the owner, but a
+collection URL alone is not a supported getter signature. <code>user.collections()</code> streams
+this owner's published collections.</p>
+<h3>Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Source</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Canonical www watch URL, or canonical profile/niche/collection URL.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>identity</td>
+<td>Shared caller-configurable backend; omitted from to_dict() by default.</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Canonical lowercase profile owner username.</td>
+</tr>
+<tr>
+<td><code>collection_id</code></td>
+<td><code>str</code></td>
+<td>identity</td>
+<td>Stable folderId; supplied separately to Client.get_collection().</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site display name.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Site profile/niche/collection description, or null when absent.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>Thumbnail/profile image URL supplied by the selected source.</td>
+</tr>
+<tr>
+<td><code>content_count</code></td>
+<td><code>int \| None</code></td>
+<td>api</td>
+<td>Stored contentCount, which may differ from public listing total.</td>
+</tr>
+<tr>
+<td><code>publish_date</code></td>
+<td><code>str \| None</code></td>
+<td>api</td>
+<td>UTC ISO 8601 string normalized from API Unix seconds.</td>
+</tr>
+<tr>
+<td><code>published</code></td>
+<td><code>bool \| None</code></td>
+<td>api</td>
+<td>Site-reported publication flag.</td>
+</tr>
+<tr>
+<td><code>raw_metadata</code></td>
+<td><code>dict \| None</code></td>
+<td>api</td>
+<td>Original matched API record, preserving additional site fields.</td>
+</tr>
+</tbody>
+</table>
+<p>Collections have an <code>api</code> loader only. Stored <code>content_count</code> is not a promise that
+all those records appear in the public item listing; the latter has its own total.</p>
+<h3>items</h3>
+<pre><code class="language-python">def items(*, pages=1, start_page=1, count=40, iterator_config=None): ...
+</code></pre>
+<p>Returns a result stream containing actual typed <code>Video</code> and <code>Image</code> instances in the
+server's mixed-media order. There is no <code>.videos()</code> alias, sort, tag or media-type filter
+on Collection. Separate boosted/promoted arrays are excluded.</p>
+<pre><code class="language-python">from redgifs_api import Image
+
+async def collection_items(client):
+    collection = await client.get_collection(&quot;weirdjack&quot;, &quot;d7ddef5fb0&quot;)
+    async with collection.items(pages=&quot;all&quot;, count=100) as results:
+        async for result in results:
+            item = result.unwrap()
+            print(&quot;image&quot; if isinstance(item, Image) else &quot;video&quot;, item.video_id)
+</code></pre>
+<p>The final live run matched all 246 public records for this example in pages of
+100/100/46, including two images on the last page. Stored <code>content_count</code> was 258;
+the API does not disclose the 12 additional IDs or their absence reasons.</p>
+<p>The backend returns HTTP 404 beyond the last collection item page. The provider first
+reads page 1 metadata and clamps the range, so a valid beyond-last request yields
+nothing while an unavailable collection still raises.</p>
+</section>
+
+<section class="section" id="reference-tag">
+<h2>Tag — RedGIFs API</h2>
+<p><code>Tag</code> is a frozen, slotted dataclass, not a <code>BaseMedia</code> object.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>Site tag spelling</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td><code>int \| None</code></td>
+<td>Reported record count; nullable if absent</td>
+</tr>
+</tbody>
+</table>
+<p><code>await client.get_tags(trending=False)</code> returns <code>list[Tag]</code> from the full directory.
+<code>trending=True</code> selects the trending directory. Neither result is paginated or wrapped
+in <code>ScrapeResult</code>. Tags do not have a <code>.videos()</code> method or source loader.</p>
+<pre><code class="language-python">async def tagged_results(client):
+    tags = await client.get_tags()
+    selected = next(tag for tag in tags if tag.name == &quot;Amateur&quot;)
+    async with client.search(tags=[selected.name], count=5) as results:
+        return [result.unwrap() async for result in results]
+</code></pre>
+<p>Counts are reported by the site and do not guarantee exhaustive retrievability through
+ranked search; search caps and availability remain server-owned.</p>
+</section>
+
+<section class="section" id="reference-sorting-enums">
+<h2>Sorting enums — RedGIFs API</h2>
+<p>Import from <code>redgifs_api.modules.sorting</code> or <code>redgifs_api.sorting</code>.
+Both enums inherit <code>StrEnum</code>; supported literal values are accepted by their methods.</p>
+<h3>Sort</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort.TRENDING</code></td>
+<td><code>trending</code></td>
+<td><code>Client.search()</code> (default)</td>
+</tr>
+<tr>
+<td><code>Sort.LATEST</code></td>
+<td><code>latest</code></td>
+<td><code>Client.search()</code></td>
+</tr>
+<tr>
+<td><code>Sort.TOP</code></td>
+<td><code>top</code></td>
+<td><code>Client.search()</code></td>
+</tr>
+</tbody>
+</table>
+<h3>ProfileSort</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+<th>Methods</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ProfileSort.NEW</code></td>
+<td><code>new</code></td>
+<td><code>User.videos()</code>, <code>Niche.videos()</code> (default)</td>
+</tr>
+<tr>
+<td><code>ProfileSort.TOP</code></td>
+<td><code>top</code></td>
+<td><code>User.videos()</code>, <code>Niche.videos()</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>latest</code> and <code>new</code> are not interchangeable. Image search always uses <code>latest</code>;
+user image streams always use <code>new</code>. Creator/niche directories and collection items
+expose no sort argument. There are no duration, date, quality, alphabet, top7 or top28
+enums. Unknown enum values raise <code>ValueError</code> before stream work starts.</p>
+<p>Verified-only trending can be empty while latest/top return records; ordering is not
+silently changed to work around that site behavior.</p>
+</section>
+
+<section class="section" id="guides-source-loading">
+<h2>Source loading — RedGIFs API</h2>
+<p><code>Video</code> and <code>Image</code> declare independent <code>api</code> and <code>html</code> loaders through the shared
+<code>BaseMedia</code> interface. API loading defaults on, HTML off. Users, niches and collections
+have only <code>api</code>; requesting <code>html</code> on them is a loader configuration error.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Arguments / operation</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API only</td>
+<td><code>load_api=True, load_html=False</code></td>
+<td>API fields; title remains unloaded</td>
+</tr>
+<tr>
+<td>HTML only</td>
+<td><code>load_api=False, load_html=True</code></td>
+<td>HTML title/page fields; API-only fields remain unloaded</td>
+</tr>
+<tr>
+<td>Both</td>
+<td><code>load_api=True, load_html=True</code></td>
+<td>Combined fields with declared API precedence</td>
+</tr>
+<tr>
+<td>Deferred</td>
+<td>Both flags false</td>
+<td>Identity only, no metadata request</td>
+</tr>
+<tr>
+<td>API then HTML</td>
+<td><code>load_sources("api")</code>, then <code>load_sources("html")</code></td>
+<td>Same precedence as combined loading</td>
+</tr>
+<tr>
+<td>HTML then API</td>
+<td>Reverse load order</td>
+<td>Same final precedence</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">from redgifs_api import Client
+
+async def inspect_sources():
+    async with Client() as client:
+        video = await client.get_video(&quot;hotpinkacrobatickitfox&quot;, load_api=False)
+        print(video.to_dict())
+        await video.load_fields(&quot;duration&quot;)
+        assert video.loaded_sources == {&quot;api&quot;}
+        await video.load_sources(&quot;html&quot;)
+        print(video.title, video.page_description, video.duration)
+</code></pre>
+<p><code>load_fields()</code> selects enough sources to cover unloaded requested fields; it may load
+other fields from the same response. API-only fields include duration, publication date,
+counts, dimensions, flags and rendition URLs. HTML-only fields include display title,
+page description and raw HTML metadata. <code>description</code>, <code>thumbnail_url</code>, and <code>embed_url</code>
+prefer API even when an API value is explicitly null. HTML-only information is retained
+in its separate fields rather than overwritten.</p>
+<p>Synchronous attribute reads never fetch. Unloaded fields raise <code>DataNotLoadedError</code>;
+a loaded absent field is <code>None</code>. <code>to_dict()</code> omits unloaded fields by default and avoids
+network requests; <code>include_unloaded=True</code> includes them as null, and <code>include_core=True</code>
+includes the backend. Inspect <code>loaded_sources</code>, <code>source_state()</code>, <code>source_errors</code>,
+<code>is_field_loaded()</code> and <code>unloaded_fields()</code> separately for loading state.</p>
+<p>Successful sources stay committed. Failed loaders preserve their causes in shared
+<code>MediaLoadError</code>/<code>MediaLoadErrors</code>; no partial mapping is applied. Loading one source
+fails independently of a successful sibling. There is no provider <code>force=True</code> reload
+argument. <code>get_download_url(refresh=True)</code> and downloads refresh the selected direct URL;
+this does not overwrite an already committed metadata snapshot.</p>
+<p>HTML parsing matches the requested stable ID and expected <code>VideoObject</code>/<code>ImageObject</code>.
+Unrelated structured data or a challenge/directory page is not an empty successful media
+object. Malformed HTML dates remain raw; normalized UTC dates come from API Unix seconds.
+See <a href="#reference-video">Video fields</a> and
+<a href="../eaf_base_api/">shared media loading</a>.</p>
+</section>
+
+<section class="section" id="guides-searching-and-filtering">
+<h2>Searching and filtering — RedGIFs API</h2>
+<p>Video search supports query, tag names, <code>trending</code>/<code>latest</code>/<code>top</code>, verified-only filtering
+and the common page options. Free text is passed as the site's <code>query</code> parameter; no
+literal substring assertion or local filter is imposed. Multiple tags are comma-joined.
+Use exact returned tag names for classification filters.</p>
+<pre><code class="language-python">from redgifs_api import Client, sorting
+
+async def find_videos():
+    async with Client() as client:
+        async with client.search(
+            query=&quot;Amateur&quot;, tags=[&quot;Amateur&quot;], sort=sorting.Sort.TOP,
+            pages=2, start_page=1, count=20,
+        ) as results:
+            return [result.unwrap() async for result in results]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Entry point</th>
+<th>Filters and ordering</th>
+<th>Items</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Client.search()</code></td>
+<td>query, tags, sort, verified</td>
+<td>Video</td>
+</tr>
+<tr>
+<td><code>Client.search_images()</code></td>
+<td>query, tags; latest ordering</td>
+<td>Image</td>
+</tr>
+<tr>
+<td><code>Client.search_users()</code></td>
+<td>query, verified; no exposed sort/tags</td>
+<td>User</td>
+</tr>
+<tr>
+<td><code>User.videos()</code></td>
+<td>tags, new/top ordering</td>
+<td>Video</td>
+</tr>
+<tr>
+<td><code>User.images()</code></td>
+<td>new ordering; no exposed filters</td>
+<td>Image</td>
+</tr>
+<tr>
+<td><code>Niche.videos()</code></td>
+<td>new/top ordering</td>
+<td>Video</td>
+</tr>
+<tr>
+<td><code>Collection.items()</code></td>
+<td>Stored mixed-media order; no filters</td>
+<td>Video or Image</td>
+</tr>
+</tbody>
+</table>
+<p>No upload-date, duration, numeric-resolution, alphabet or account/search-history filters
+are exposed. Do not copy filter enums from another provider. Server ranking and caps
+can limit accessible results; <code>pages="all"</code> means all server-reported remaining pages,
+not an unrestricted full-site export. Latest rankings can change during pagination.</p>
+<p>Verified-only trending returned zero records in investigation while verified latest/top
+were nonempty. The provider preserves the requested sort and genuine empty responses.
+HTTP 429 is a failure, not an empty search. The final paced run's search gates remain
+blocked by those rate limits; see <a href="#guides-live-validation">validation</a>.</p>
+</section>
+
+<section class="section" id="guides-iteration-and-results">
+<h2>Iteration and results — RedGIFs API</h2>
+<p>Search, profile tabs, niche directories/videos and public collections return lazy
+<code>ScrapeStream</code> objects. Each item is a <code>ScrapeResult</code>; call <code>.unwrap()</code> to surface errors.
+Tag directory getters instead return an awaited plain list.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pages=1</code></td>
+<td>One page, the default</td>
+</tr>
+<tr>
+<td><code>pages=N</code></td>
+<td>Positive number of pages starting at start_page, clamped to the last page</td>
+</tr>
+<tr>
+<td><code>pages="all"</code></td>
+<td>All server-reported remaining pages</td>
+</tr>
+<tr>
+<td><code>start_page=1</code></td>
+<td>Positive one-based requested first page</td>
+</tr>
+<tr>
+<td><code>count=40</code></td>
+<td>Records requested per page; integer 1–100</td>
+</tr>
+<tr>
+<td><code>iterator_config=None</code></td>
+<td>API-loaded objects, original page/card order, raised terminal page/item failures</td>
+</tr>
+</tbody>
+</table>
+<p>The stream first reads page 1 to discover pagination, even for another start page.
+Valid beyond-last ranges end cleanly. Collection beyond-last endpoints return HTTP 404;
+page-1 discovery distinguishes exhaustion from an unavailable resource. No result-length
+heuristic drops a partial final page or invents another page for exact multiples.
+Invalid booleans/nonpositive page options and invalid counts raise <code>ValueError</code>.</p>
+<pre><code class="language-python">from redgifs_api import make_iterator_config
+
+async def deferred_items(client):
+    user = await client.get_user(&quot;nickiipeach&quot;, load_api=False)
+    config = make_iterator_config(
+        load_specific_sources=(), order=&quot;original&quot;,
+        page_error_mode=&quot;raise&quot;, item_error_mode=&quot;raise&quot;,
+        max_page_concurrency=1, max_item_concurrency=2,
+    )
+    async with user.videos(pages=&quot;all&quot;, count=40, iterator_config=config) as results:
+        async for result in results:
+            video = result.unwrap()
+            print(video.video_id, video.loaded_sources)
+</code></pre>
+<p>Listing video/image cards supply the API loader's seed data, avoiding a detail request
+per item. Deferred iteration does not commit those metadata fields until explicitly
+loaded. Niche detail loading makes its own API request for omitted directory fields.
+An explicit <code>IteratorConfig</code> controls sources/fields, ordering, concurrency and terminal
+failure policy. For example, <code>load_specific_sources=(), load_specific_fields=("title",)</code>
+loads HTML titles. The default is API rather than another provider's HTML source.</p>
+<p>The shared Helper handles item/page work. Discovery/authentication failures raise
+directly; subsequent failures follow iterator policy. Use <code>async with</code> or
+<code>await stream.aclose()</code> when breaking early to cancel pending work. Injected cores must
+remain open until all streams and object operations finish. Completion ordering may be
+requested explicitly; default ordering preserves the returned page/card sequence.</p>
+<p>Separate promoted/boosted arrays are excluded. There is no automatic deduplication,
+pinned-card insertion or missing-record manufacture. Server counts do not establish
+completeness by themselves.</p>
+<h3>Reconciled boundaries and upstream limits</h3>
+<table>
+<thead>
+<tr>
+<th>Example</th>
+<th>Expected / actual public IDs</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Collection weirdjack/d7ddef5fb0</td>
+<td>246 / 246</td>
+<td>Final run; 100/100/46, including two images</td>
+</tr>
+<tr>
+<td>Niche duo-chastity</td>
+<td>5 / 5</td>
+<td>Final run; 2/2/1</td>
+</tr>
+<tr>
+<td>User nickiipeach videos</td>
+<td>17 / 17</td>
+<td>Earlier run; six per page, partial final page; plus one image</td>
+</tr>
+<tr>
+<td>User rubycammilf videos</td>
+<td>4 / 4</td>
+<td>Earlier run; two per page, exact multiple; plus six images</td>
+</tr>
+<tr>
+<td>User naughtygardengirl videos</td>
+<td>76 / 76</td>
+<td>Earlier run; plus one image versus stored published count 78</td>
+</tr>
+<tr>
+<td>User dainty-blossomx2, count=40</td>
+<td>10 / 10</td>
+<td>Earlier single-page comparison</td>
+</tr>
+<tr>
+<td>Same user, count=5 or 6</td>
+<td>10 slots / 9 unique IDs</td>
+<td>Earlier failing completeness gates; omitted/repeated IDs</td>
+</tr>
+</tbody>
+</table>
+<p>All ten dainty-blossomx2 uploads share timestamp 1782281354. Equal-time ordering differs
+at page boundaries: count 6 repeated <code>activetiredaustralianfreshwatercrocodile</code> and omitted
+<code>icyhappyhamadryad</code>; count 5 did the reverse during diagnosis. These cases remain failing
+completeness assertions. A single page of 40 is an observed workaround for this small
+profile, not a general guarantee. Quotas block final profile revalidation; fixing rate
+limits does not resolve the independently observed unstable ordering.</p>
+<p>See <a href="#guides-live-validation">live validation</a> and
+<a href="../eaf_base_api/">shared iterator configuration</a>.</p>
+</section>
+
+<section class="section" id="guides-downloading">
+<h2>Downloading — RedGIFs API</h2>
+<p>Use <code>DownloadConfigRAW</code> with <code>Video.download()</code> or <code>Image.download()</code>.
+Every transfer uses the supplied <code>BaseCore.legacy_download()</code>; no second downloader is
+implemented. Direct MP4/JPG downloading does not need FFmpeg.</p>
+<pre><code class="language-python">from pathlib import Path
+from redgifs_api import Client, DownloadConfigRAW
+
+async def download_video():
+    output = Path(&quot;./downloads&quot;)
+    output.mkdir(parents=True, exist_ok=True)
+    async with Client() as client:
+        video = await client.get_video(&quot;hotpinkacrobatickitfox&quot;)
+        config = DownloadConfigRAW(
+            quality=&quot;sd&quot;, path=output / &quot;sample.mp4&quot;, no_title=True,
+            allow_multipart=True, max_workers=3,
+            callback=lambda done, total: print(done, total),
+        )
+        assert await video.download(config)
+</code></pre>
+<h3>Rendition labels</h3>
+<table>
+<thead>
+<tr>
+<th>Selector</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hd</code></td>
+<td>Exact HD rendition; missing label raises</td>
+</tr>
+<tr>
+<td><code>sd</code></td>
+<td>Exact SD rendition; missing label raises</td>
+</tr>
+<tr>
+<td><code>silent</code></td>
+<td>Exact silent rendition, when supplied; never a fallback from another selector</td>
+</tr>
+<tr>
+<td><code>best</code></td>
+<td>HD, falling back to SD</td>
+</tr>
+<tr>
+<td><code>worst</code></td>
+<td>SD, falling back to HD</td>
+</tr>
+<tr>
+<td><code>half</code></td>
+<td>Lower middle of the available SD/HD labels; SD when both exist</td>
+</tr>
+</tbody>
+</table>
+<p>The provider rejects numeric resolution requests and strings such as <code>1080p</code>; site
+labels do not guarantee one fixed resolution. Use <code>await video.get_qualities()</code> to
+inspect actual labels. Absent exact labels raise <code>ValueError</code> from <code>get_download_url()</code>;
+ordinary download failures, including selection failures, are wrapped in <code>DownloadFailed</code>.</p>
+<h3>Paths, refresh and configuration</h3>
+<p>Default <code>path</code> is an output directory. An already-loaded HTML title names the MP4;
+otherwise the stable ID does. No implicit HTML request is made for naming. Image
+extensions follow their actual source URL. <code>no_title=True</code> makes path the exact filename.
+The configuration is copied before path changes; callbacks and stop events retain their
+caller identity. Do not reuse the same output path for concurrent downloads.</p>
+<p>Downloads refresh public detail URLs on every call, retaining CDN casing and signed
+queries. <code>get_download_url(refresh=True)</code> refreshes a URL without replacing committed
+source metadata. RAW configuration supports multipart workers, retries, chunk size,
+read timeout, resume-state path and cancellation. RAW returns <code>bool</code>, not an HLS report.
+The provider does not implement remux, metadata-tag writing or thumbnail embedding.</p>
+<h3>Verified complete output</h3>
+<p>The final paced run completed 23 MP4 matrix downloads covering four videos and all
+exposed labels plus best/half/worst, two JPG renditions, concurrent different-video
+transfers and a byte-for-byte repeat, and two CLI downloads. ffprobe checked complete
+files, dimensions, duration and audio.</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>HD</th>
+<th>SD</th>
+<th>Silent</th>
+<th>Duration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hotpinkacrobatickitfox</td>
+<td>1080×1920, audio</td>
+<td>480×854, audio</td>
+<td>1080×1920, no audio</td>
+<td>6.467 s</td>
+</tr>
+<tr>
+<td>ivoryhauntingblackbird</td>
+<td>1080×1920, audio</td>
+<td>480×854, audio</td>
+<td>1080×1920, no audio</td>
+<td>7.767 s</td>
+</tr>
+<tr>
+<td>toughlongtermbanteng</td>
+<td>1080×1920, audio</td>
+<td>480×854, audio</td>
+<td>1080×1920, no audio</td>
+<td>31.400 s</td>
+</tr>
+<tr>
+<td>happyfrenchindianspinyloach</td>
+<td>1280×640, audio</td>
+<td>640×320, audio</td>
+<td>Unavailable</td>
+<td>15.000 s</td>
+</tr>
+<tr>
+<td>Image deliciousfrontelephant</td>
+<td>1200×1600 JPG</td>
+<td>800×1067 JPG</td>
+<td>Unavailable</td>
+<td>Still image</td>
+</tr>
+</tbody>
+</table>
+<p>The legacy video's API <code>hasAudio=false</code> disagrees with its audible AAC track;
+<code>has_audio</code> preserves that reported value and is not a container probe.</p>
+<h3>HLS boundary</h3>
+<p><code>video.hls_urls</code> exposes actual HD/SD playlist URLs when the site reports HLS.
+Observed playlists use <code>EXT-X-MAP</code> and byte ranges into fMP4 files. The shared HLS
+implementation drops those byte ranges; the provider does not claim a working HLS
+transfer and rejects <code>DownloadConfigHLS</code>. Direct MP4 renditions provide verified
+complete transfers. See <a href="#guides-live-validation">validation</a>.</p>
+</section>
+
+<section class="section" id="guides-live-validation">
+<h2>Live validation — RedGIFs API</h2>
+<p>Commands below run from the <code>unofficial-api-for-redgifs</code> checkout, not the Server repository.</p>
+<p>Run date: 2026-11-10. Linux; CPython 3.15.2; current local <code>eaf-base-api</code> 4.2.6.
+Live fixtures reuse independent production/reference sessions with a two-second
+request delay per core and a two-second initial bounded retry delay. All tests use real
+RedGIFs requests. No mocked transport, recorded responses, account
+cookies, skipped tests, or downloaded media are committed.</p>
+<h3>Status: incomplete because of rate limits and upstream pagination</h3>
+<p>Exact command (from the repository root):</p>
+<pre><code class="language-bash">.venv/bin/python -m pytest -q -s --tb=short
+</code></pre>
+<p><strong>12 failed, 38 passed, 104 warnings in 363.26s (0:06:03)</strong>. Exit status 1; zero skipped tests. All 12 terminal failures are
+<code>RequestRetriesExhausted</code> caused by HTTP 429 after four attempts. The final paced run
+completed all 50 tests. No further RedGIFs requests were made after this run.</p>
+<p>The failures cover image search, all three video-search sorts, query/user/tag checks,
+five complete-profile parameters, partial/profile-filter checks, and the single-page
+profile check. In compound tests, assertions after the failed request were not reached;
+those later assertions are not counted as verified in the final run.</p>
+<ul>
+<li><code>https://api.redgifs.com/v2/gifs/search?tags=Amateur&amp;order=latest&amp;count=3&amp;type=i&amp;page=1</code></li>
+<li><code>https://api.redgifs.com/v2/gifs/search?tags=Amateur&amp;order=trending&amp;count=5&amp;type=g&amp;page=1</code></li>
+<li><code>https://api.redgifs.com/v2/gifs/search?tags=Amateur&amp;order=latest&amp;count=5&amp;type=g&amp;page=1</code></li>
+<li><code>https://api.redgifs.com/v2/gifs/search?tags=Amateur&amp;order=top&amp;count=5&amp;type=g&amp;page=1</code></li>
+<li><code>https://api.redgifs.com/v2/gifs/search?query=Amateur&amp;order=trending&amp;count=3&amp;type=g&amp;page=1</code></li>
+<li><code>https://api.redgifs.com/v2/users/dainty-blossomx2/search?count=6&amp;page=1&amp;order=new&amp;type=g</code></li>
+<li><code>https://api.redgifs.com/v2/users/dainty-blossomx2/search?count=5&amp;page=1&amp;order=new&amp;type=g</code></li>
+<li><code>https://api.redgifs.com/v2/users/naughtygardengirl/search?count=40&amp;page=1&amp;order=new&amp;type=g</code></li>
+<li><code>https://api.redgifs.com/v2/users/nickiipeach/search?count=6&amp;page=1&amp;order=new&amp;type=g</code></li>
+<li><code>https://api.redgifs.com/v2/users/rubycammilf/search?count=2&amp;page=1&amp;order=new&amp;type=g</code></li>
+<li><code>https://api.redgifs.com/v2/users/naughtygardengirl/search?count=3&amp;order=new&amp;type=g&amp;page=1</code></li>
+<li><code>https://api.redgifs.com/v2/users/dainty-blossomx2/search?count=40&amp;page=1&amp;order=new&amp;type=g</code></li>
+</ul>
+<p>An earlier 43-test run returned <strong>41 passed / 2 failed</strong> before the suite was expanded
+to 50 cases. Its two failures were retained completeness assertions for
+<code>test_complete_profile[dainty-blossomx2-6]</code> and <code>[dainty-blossomx2-5]</code>: independent
+live pages and a single-page snapshot demonstrated ten slots but only nine unique IDs.
+No assertion was skipped or relaxed to count duplicate slots as complete. The final
+rate limits prevent reaching these completeness assertions again, not their removal.</p>
+<p>Outstanding conditions: the RedGIFs request quota must permit these public search and
+profile requests again, and equal-timestamp pagination needs stable upstream ordering
+or a stable cursor. No reset time was established during this run. No session rotation
+to evade quotas, protection bypasses, or retries until a lucky page order were used
+to conceal either blocker.</p>
+<p>An earlier full run before pacing returned 6 failed / 44 passed: two upstream profile
+completeness failures, three HTTP 429 failures, and one incorrect test assumption that
+the site's audio flag guaranteed absence of an audio track. The legacy file was measured
+with ffprobe and ffmpeg (audible AAC; mean -15.2 dB, maximum 0.0 dB). Its expected actual
+audio is now asserted explicitly while preserving the inaccurate site flag. Rate-limit
+failures were not skipped; the final paced suite was rerun after cooldown.</p>
+<p>The shared backend emits Tenacity's <code>initial</code>-parameter deprecation warning. This is
+reported as a dependency warning; the shared project was not altered.</p>
+<h3>Source and capability checks</h3>
+<p>The list below describes implemented coverage exercised across the recorded runs.
+Source, host, direct-download, CLI, collection and niche checks pass in the final run.
+Search and user-listing gates are blocked by the listed HTTP 429 responses in that run.
+The image test completes both rendition downloads before failing at image search.</p>
+<ul>
+<li>Video samples: <code>hotpinkacrobatickitfox</code>, <code>ivoryhauntingblackbird</code>, legacy
+  <code>happyfrenchindianspinyloach</code>; rich metadata/download sample <code>toughlongtermbanteng</code>.
+  Representative watch URL: <code>https://www.redgifs.com/watch/hotpinkacrobatickitfox</code>.</li>
+<li>Independent API, independent HTML, combined loading, both source load orders,
+  deferred fields, serialization without fetching, explicit type mismatches and
+  unavailable video responses are exercised. API dates/duration/tags/author/dimensions/
+  renditions are compared to the correct live detail object.</li>
+<li>HTML titles/page descriptions/raw dates remain available; normalized publication
+  dates, statistics, original dimensions and media URLs prefer API data. Empty and
+  missing descriptions remain distinct from unloaded fields.</li>
+<li>Image sample: <code>https://www.redgifs.com/watch/deliciousfrontelephant</code>, with API/HTML/
+  combined/deferred loading and complete HD/SD JPG downloads.</li>
+<li>Live page hosts: <code>redgifs.com</code>, <code>www.redgifs.com</code>; watch and embed routes.
+  Live CDN identity inputs: <code>media.redgifs.com</code> HD/SD/silent MP4 and HD/SD/thumbnail JPG.
+  No language variants or proxy hosts are accepted.</li>
+<li>Search: query, tag filter, trending/latest/top, verified videos with latest ordering,
+  verified creator search; image search, complete and trending tag directories.</li>
+<li>Users, image/video tabs, public collection directory/details/mixed item streams,
+  niche directory/details/video streams and video author/niche relationships.</li>
+<li>Partial stream closure, deferred iterator models, original ordering, profile tag/top
+  filters and caller-owned core/session preservation.</li>
+<li>Two CLI invocations download real files: direct URL argument and UTF-8 URL file.</li>
+</ul>
+<h3>Completed media downloads</h3>
+<p>Each reported file is a full download through <code>Video.download(DownloadConfigRAW(...))</code>
+or <code>Image.download(...)</code>, inspected with <code>ffprobe</code> for format, dimensions, duration and
+audio. Callbacks are exercised and caller configuration is preserved. Source URLs are
+refreshed before downloads. All samples also download <code>best</code>, <code>half</code>, and <code>worst</code>;
+SD is selected for the lower-middle/worst selectors and HD for best when both exist.
+Legacy <code>happyfrenchindianspinyloach</code> reports <code>hasAudio=false</code> but its real MP4 has
+audible AAC audio; actual audio is measured and asserted independently of that flag.
+Silent is explicit. Absent silent and unsupported numeric quality requests are rejected.</p>
+<table>
+<thead>
+<tr>
+<th>Video ID</th>
+<th>Rendition</th>
+<th style="text-align: right;">Bytes</th>
+<th>Dimensions</th>
+<th style="text-align: right;">Seconds</th>
+<th>Audio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hotpinkacrobatickitfox</td>
+<td>hd</td>
+<td style="text-align: right;">6145756</td>
+<td>1080x1920</td>
+<td style="text-align: right;">6.467</td>
+<td>True</td>
+</tr>
+<tr>
+<td>hotpinkacrobatickitfox</td>
+<td>sd</td>
+<td style="text-align: right;">1201410</td>
+<td>480x854</td>
+<td style="text-align: right;">6.467</td>
+<td>True</td>
+</tr>
+<tr>
+<td>hotpinkacrobatickitfox</td>
+<td>silent</td>
+<td style="text-align: right;">6057605</td>
+<td>1080x1920</td>
+<td style="text-align: right;">6.467</td>
+<td>False</td>
+</tr>
+<tr>
+<td>ivoryhauntingblackbird</td>
+<td>hd</td>
+<td style="text-align: right;">5456747</td>
+<td>1080x1920</td>
+<td style="text-align: right;">7.767</td>
+<td>True</td>
+</tr>
+<tr>
+<td>ivoryhauntingblackbird</td>
+<td>sd</td>
+<td style="text-align: right;">944146</td>
+<td>480x854</td>
+<td style="text-align: right;">7.767</td>
+<td>True</td>
+</tr>
+<tr>
+<td>ivoryhauntingblackbird</td>
+<td>silent</td>
+<td style="text-align: right;">5375433</td>
+<td>1080x1920</td>
+<td style="text-align: right;">7.767</td>
+<td>False</td>
+</tr>
+<tr>
+<td>toughlongtermbanteng</td>
+<td>hd</td>
+<td style="text-align: right;">12195647</td>
+<td>1080x1920</td>
+<td style="text-align: right;">31.400</td>
+<td>True</td>
+</tr>
+<tr>
+<td>toughlongtermbanteng</td>
+<td>sd</td>
+<td style="text-align: right;">3013502</td>
+<td>480x854</td>
+<td style="text-align: right;">31.400</td>
+<td>True</td>
+</tr>
+<tr>
+<td>toughlongtermbanteng</td>
+<td>silent</td>
+<td style="text-align: right;">11614962</td>
+<td>1080x1920</td>
+<td style="text-align: right;">31.400</td>
+<td>False</td>
+</tr>
+<tr>
+<td>happyfrenchindianspinyloach</td>
+<td>hd</td>
+<td style="text-align: right;">4616356</td>
+<td>1280x640</td>
+<td style="text-align: right;">15.000</td>
+<td>True</td>
+</tr>
+<tr>
+<td>happyfrenchindianspinyloach</td>
+<td>sd</td>
+<td style="text-align: right;">1432872</td>
+<td>640x320</td>
+<td style="text-align: right;">15.000</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Image ID</th>
+<th>Rendition</th>
+<th style="text-align: right;">Bytes</th>
+<th>Dimensions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>deliciousfrontelephant</td>
+<td>hd</td>
+<td style="text-align: right;">320398</td>
+<td>1200x1600</td>
+</tr>
+<tr>
+<td>deliciousfrontelephant</td>
+<td>sd</td>
+<td style="text-align: right;">122777</td>
+<td>800x1067</td>
+</tr>
+</tbody>
+</table>
+<p>The concurrent check downloads different videos simultaneously, then repeats one SD
+download and compares its complete bytes. It validates durations independently to catch
+cross-video source leakage. CLI files are additionally probed. No signed source URLs or
+session tokens are included in this report.</p>
+<p>HLS: actual HD/SD playlists for <code>hotpinkacrobatickitfox</code> are fetched and checked for
+<code>EXT-X-MAP</code>, <code>EXT-X-BYTERANGE</code>, and <code>EXT-X-ENDLIST</code>. HLS <strong>downloads remain unsupported</strong>:
+the current shared downloader discards required byte ranges. No HLS download or remux
+success is claimed. RAW returns a boolean; HLS reports and metadata tag export are not
+advertised by this integration.</p>
+<h3>Complete listing comparisons</h3>
+<p>Each successful full comparison checks every intended page and the entire ordered ID
+sequence against an independent live JSON reader. The current first-party profile and
+collection JavaScript identifies these JSON responses as the rendered tab data; the
+investigation notes record the relevant assets. No recommendation/boosted arrays are
+mixed into the intended listing.</p>
+<ul>
+<li>collection weirdjack/d7ddef5fb0: public expected=246 actual=246; stored contentCount=258; delta=12</li>
+<li>niche duo-chastity: expected=5 actual=5; niche gifs=5</li>
+</ul>
+<p>The final paced run reconfirms the collection and niche comparisons above.
+Earlier successful full-profile comparisons recorded:</p>
+<ul>
+<li><code>naughtygardengirl</code>: expected/actual video IDs 76/76; one public image; stored published count 78.</li>
+<li><code>nickiipeach</code>: expected/actual video IDs 17/17; one image; stored published count 18.</li>
+<li><code>rubycammilf</code>: expected/actual video IDs 4/4; six images; stored published count 10.</li>
+<li><code>dainty-blossomx2</code> in a single page: expected/actual 10/10.</li>
+</ul>
+<p>These earlier profile comparisons were not reverified in the final paced run because
+of HTTP 429. They are retained as dated evidence, not counted as current passing gates.</p>
+<p>The collection matches all 246 public records in pages of 100/100/46, including two
+images on the final page. Its stored <code>contentCount=258</code> is 12 higher. The API supplies
+neither those additional IDs nor reasons for the discrepancy; none are invented.
+<code>naughtygardengirl</code> exposes 76 videos and one image versus 78 stored published records:
+one record is not publicly accounted for, with no API reason disclosed. <code>nickiipeach</code>
+(17 videos plus one image) and <code>rubycammilf</code> (four videos plus six images) reconcile their
+stored published counts. <code>rubycammilf</code> covers an exact multiple at two videos per page;
+<code>nickiipeach</code> covers a partial final page at six per page. Start-page ranges and
+beyond-last behavior are exercised. Collections discover page 1 to avoid mistaking a
+beyond-last HTTP 404 for an unavailable collection.</p>
+<h4>Outstanding profile completeness gate</h4>
+<p>For <code>dainty-blossomx2</code>, all ten uploads have timestamp <code>1782281354</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Requested page size</th>
+<th style="text-align: right;">Slots</th>
+<th style="text-align: right;">Unique IDs</th>
+<th>Repeated ID</th>
+<th>Missing versus single page</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">9</td>
+<td>activetiredaustralianfreshwatercrocodile</td>
+<td>icyhappyhamadryad</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">9</td>
+<td>icyhappyhamadryad</td>
+<td>activetiredaustralianfreshwatercrocodile</td>
+</tr>
+<tr>
+<td>40 (one page)</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">10</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p>Exact failing endpoint family:
+<code>https://api.redgifs.com/v2/users/dainty-blossomx2/search?count=5&amp;page=1&amp;order=new&amp;type=g</code>
+and page 2; likewise count 6. The page responses themselves overlap despite unchanged
+content, no promoted cards, and <code>total=10</code>. The IDs can change as ties reorder.
+The library preserves the raw sequence rather than hiding duplicates or manufacturing
+missing records. Requests of count 40 are a verified workaround for this small profile.
+Completion needs stable upstream tie ordering/cursors; a single-page workaround does
+not prove reliable pagination for all larger profiles. The failing gates remain visible.</p>
+<h3>Packaging</h3>
+<p>Exact command:</p>
+<pre><code class="language-bash">.venv/bin/python -m build --outdir dist
+</code></pre>
+<p>Wheel and sdist build successfully. The sdist includes README, LICENSE, <code>py.typed</code> and
+the public package; the wheel includes README content in metadata, the AGPL license,
+<code>py.typed</code>, public exports and the CLI entry point. LICENSE matches the XVideos reference
+byte for byte. Nothing was published, pushed, or wired into Porn Fetch.</p>
+<p>Gallery enumeration, private/account actions and personalized/recommendation feeds are
+not implemented. These are documented capability boundaries, not successful test gates.</p>
+</section>
+
+<section class="section" id="troubleshooting-errors">
+<h2>Errors and troubleshooting — RedGIFs API</h2>
+<p><code>redgifs_api.modules.errors</code> re-exports shared <code>BotDetection</code>, <code>DownloadFailed</code>,
+<code>NetworkError</code>, <code>NotFound</code>, <code>ProxyError</code>, <code>ResourceGone</code>, <code>UnknownNetworkError</code>, and
+<code>VideoUnavailable</code>. Original HTTP failures and their causes are preserved; not every
+HTTP failure is translated to a provider alias.</p>
+<p><code>BaseMedia</code> wraps ordinary loader failures in <code>MediaLoadError</code> or <code>MediaLoadErrors</code>.
+An unavailable resource must not become an empty successful object. Catch the outer
+loading wrapper, then inspect the original cause or use <code>is_resource_gone()</code>.</p>
+<pre><code class="language-python">from base_api import MediaLoadError, MediaLoadErrors, is_resource_gone
+
+async def fetch_video(client, url):
+    try:
+        return await client.get_video(url)
+    except (MediaLoadError, MediaLoadErrors) as error:
+        if is_resource_gone(error):
+            print(&quot;Resource unavailable:&quot;, url)
+        raise
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Meaning / action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code> before fetching</td>
+<td>Unsupported host/route/identifier, invalid enum, page range or count</td>
+</tr>
+<tr>
+<td><code>DataNotLoadedError</code></td>
+<td>Explicitly await load_fields/load_sources; API-only title remains unloaded</td>
+</tr>
+<tr>
+<td>Wrong media type</td>
+<td>get_video rejects images; get_image rejects videos, including HTML-only loading</td>
+</tr>
+<tr>
+<td>HTTP 404 / 410</td>
+<td>Missing/deleted resource; preserve cause, do not fabricate metadata</td>
+</tr>
+<tr>
+<td>HTTP 401</td>
+<td>Anonymous API session refreshes once through ordinary public authentication</td>
+</tr>
+<tr>
+<td>HTTP 429 / RequestRetriesExhausted</td>
+<td>Respect bounded backend retry/backoff and Retry-After; wait for quotas to permit requests, configure pacing/concurrency</td>
+</tr>
+<tr>
+<td>HTTP 403 or challenge</td>
+<td>Access failure; the provider does not solve CAPTCHA or bypass access protection</td>
+</tr>
+<tr>
+<td>Missing ID-matched structured data</td>
+<td>HTML loader fails rather than merging another video, recommendations or a directory page</td>
+</tr>
+<tr>
+<td>ScrapeResult error</td>
+<td>Unwrap or configure shared iterator policy intentionally; discovery errors raise directly</td>
+</tr>
+<tr>
+<td>Duplicate IDs and missing upload across pages</td>
+<td>Upstream equal-timestamp ordering; no deduplication can recover a genuinely omitted ID</td>
+</tr>
+<tr>
+<td>Published count exceeds listing</td>
+<td>Counts may include images or unavailable records; compare exact intended tabs</td>
+</tr>
+<tr>
+<td>Null/empty API description overwrites HTML description</td>
+<td>Declared API precedence; HTML text stays in page_description</td>
+</tr>
+<tr>
+<td>Malformed HTML date</td>
+<td>Preserved in html_publish_date; use normalized API publish_date</td>
+</tr>
+<tr>
+<td>has_audio false but audible MP4</td>
+<td>Known legacy API metadata error; inspect files when audio decisions matter</td>
+</tr>
+<tr>
+<td>Exact rendition missing</td>
+<td>get_download_url raises ValueError; download wraps the cause in DownloadFailed</td>
+</tr>
+<tr>
+<td>Numeric quality / HLS config</td>
+<td>Unsupported by this provider; choose actual RAW rendition labels</td>
+</tr>
+</tbody>
+</table>
+<p>The final run's 12 failures were all HTTP 429 after four attempts, despite two-second
+per-core pacing. No quota-reset time was established. More immediate full-suite retries
+are not evidence of success. Earlier two-page profile completeness failures persist as
+an independent upstream ordering issue. See <a href="#guides-live-validation">validation</a>.</p>
+<p><code>asyncio</code> cancellation and <code>DownloadCancelled</code> propagate. Close streams with context
+managers and keep an injected core alive for their work. Do not swallow cancellation
+inside broad retry loops. Tenacity's <code>initial</code> deprecation warning comes from the shared
+backend; it is not itself an extraction failure.</p>
+</section>
+
+<section class="section" id="reference-cli">
+<h2>CLI — RedGIFs API</h2>
+<p>Run <code>redgifs_api</code> or <code>python -m redgifs_api</code>. Exactly one of <code>--download</code> and <code>--file</code>
+is required; the URL is not a positional argument.</p>
+<pre><code class="language-sh">redgifs_api -h
+redgifs_api --download https://www.redgifs.com/watch/hotpinkacrobatickitfox --quality sd --output ./
+python -m redgifs_api --file urls.txt --quality worst --output ./
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-d</code>, <code>--download</code></td>
+<td>—</td>
+<td>One supported video URL or stable ID</td>
+</tr>
+<tr>
+<td><code>-f</code>, <code>--file</code></td>
+<td>—</td>
+<td>UTF-8 file with one video URL/ID per line; blank lines ignored</td>
+</tr>
+<tr>
+<td><code>-o</code>, <code>--output</code></td>
+<td><code>./</code></td>
+<td>Output directory; unloaded titles use stable IDs as filenames</td>
+</tr>
+<tr>
+<td><code>-q</code>, <code>--quality</code></td>
+<td><code>best</code></td>
+<td>best, half, worst, hd, sd or silent</td>
+</tr>
+<tr>
+<td><code>-h</code>, <code>--help</code></td>
+<td>—</td>
+<td>Print help without network requests</td>
+</tr>
+</tbody>
+</table>
+<p>File inputs are processed sequentially. The CLI loads API metadata and uses
+<code>DownloadConfigRAW</code>; it closes the owned client/core after completion or an exception.
+It has no <code>--info</code>, <code>--no-title</code>, image mode, account flags, numeric resolution or HLS
+switches. Use the Python API for injected RuntimeConfig, exact filenames, callbacks
+and cancellation. Failed downloads propagate and give a nonzero process exit.</p>
+<p>Both direct-argument and file-input paths completed real downloads in the final suite,
+with output verified by ffprobe. The library's broader live suite is still incomplete;
+see <a href="#guides-live-validation">validation</a>.</p>
+</section>
+
+<section class="section" id="supported-platforms">
+<h2>Supported platforms and hosts — RedGIFs API</h2>
+<p>Requires Python 3.12+. Live checks ran on Linux with CPython 3.15.2 and local
+<code>eaf-base-api</code> 4.2.6, curl-cffi 0.17.0 and selectolax 1.0.2. Other platforms and Python
+versions were not live-verified. ffprobe is needed for live file validation, not for
+normal transfers. There is no runtime FFmpeg requirement for direct MP4/JPG downloads.</p>
+<h3>Accepted hosts and routes</h3>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>redgifs.com</code>, <code>www.redgifs.com</code></td>
+<td>Verified first-party page hosts; canonical objects use https://www.redgifs.com</td>
+</tr>
+<tr>
+<td><code>/watch/&lt;id&gt;</code>, <code>/ifr/&lt;id&gt;</code> on those hosts</td>
+<td>Video/image identity; HTML/API loaders validate the requested media type</td>
+</tr>
+<tr>
+<td><code>media.redgifs.com</code> MP4/JPG media URLs</td>
+<td>Identity input resolves through the API; actual source URLs retain casing and queries</td>
+</tr>
+<tr>
+<td><code>/users/&lt;username&gt;</code> on a page host</td>
+<td>User getter; plain username also accepted</td>
+</tr>
+<tr>
+<td><code>/niches/&lt;id&gt;</code> on a page host</td>
+<td>Niche getter; plain niche ID also accepted</td>
+</tr>
+<tr>
+<td><code>api.redgifs.com</code></td>
+<td>Internal public API origin, not a page-host input alias</td>
+</tr>
+</tbody>
+</table>
+<p>CDN suffixes such as <code>-mobile</code>, <code>-silent</code>, <code>-poster</code>, <code>-small</code>, <code>-medium</code>, <code>-large</code>
+and <code>-timeline</code> normalize to the stable media ID. HLS fMP4 identities use <code>.m4s</code>;
+this acceptance does not implement HLS downloading. Parsed IDs normalize to lowercase;
+returned CDN paths are not lowercased or stripped of signatures.</p>
+<p>No language/proxy variants, arbitrary subdomains, legacy thumbnail hosts or lookalike
+domains are accepted. The client exposes no base_url/locale route option. HTTP(S) input
+is normalized to the canonical HTTPS object identity. Each getter still requires the
+proper resource route; a directory is not an individual media object.</p>
+<p>Publication and current hosted documentation/CI status are not asserted by local
+validation. The latest suite has 38 passing and 12 rate-limited failures; see
+<a href="#guides-live-validation">validation</a> for actual capability coverage.</p>
+</section>
+
+<section class="section" id="changelog">
+<h2>Changelog — RedGIFs API</h2>
+<h3>0.1.0 — initial local implementation</h3>
+<ul>
+<li>Async <code>Client</code>, <code>Video</code>, <code>Image</code>, <code>User</code>, <code>Niche</code>, <code>Collection</code> and immutable <code>Tag</code> records.</li>
+<li>Independent API/HTML media loaders, deferred fields, typed relationships and raw metadata.</li>
+<li>Video/image/creator search, full/trending tags, niches and public collections.</li>
+<li>Shared numeric-page result streams with count/range control, source selection and
+  caller-controlled ordering/concurrency/error policy.</li>
+<li>Public anonymous API authentication through BaseCore; no mutable global auth/CDN headers.</li>
+<li>Shared RAW MP4/JPG transfers, exact HD/SD/silent labels, best/half/worst selectors,
+  source refresh, cancellation, callbacks, filename handling and download/file CLI modes.</li>
+<li>Verified page/CDN hosts and lowercase content identity while preserving source URL casing.</li>
+<li>23 complete MP4 matrix downloads, two JPG renditions, concurrent/repeated transfers
+  and CLI checks; complete collection 246/246 and niche 5/5 in the final run.</li>
+<li>Final live suite on 2026-11-10: <strong>38 passed / 12 failed / 0 skipped</strong> in 363.26 seconds.
+  All final failures were HTTP 429. Earlier equal-timestamp profile page comparisons
+  had omissions/duplicates, and those assertions remain intact.</li>
+<li>Matching HTML and searchable MCP documentation following the shared documentation layout.</li>
+</ul>
+<p>This is an unpublished local version. HLS URLs are inspectable but HLS downloads,
+gallery enumeration, private/account actions and personalized recommendation feeds are
+not implemented. No claim is made that the full validation gate has passed.
+See <a href="#getting-started">getting started</a> and <a href="#guides-live-validation">validation</a>.</p>
+</section>
+                    </article>
+
+                    <footer class="page-footer">
+                        <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · AGPL-3.0-only</span>
+                        <span>Built on <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
+                    </footer>
+                </main>
+
+                <aside class="page-toc" aria-label="On this page">
+                    <div class="page-toc-inner">
+                        <p class="page-toc-title">On this page</p>
+                        <nav id="pageTocList"></nav>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <a href="#main-content" class="back-to-top" id="backToTop" aria-label="Back to top">↑</a>
+</body>
+</html>

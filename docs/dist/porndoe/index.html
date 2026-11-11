@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#09090b">
+    <title>Porndoe API — Documentation</title>
+    <meta name="description" content="Documentation for Porndoe API, an asynchronous Python API wrapper by EchterAlsFake.">
+    <link rel="stylesheet" href="../assets/docs.css">
+    <script src="../assets/docs.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="mobile-header">
+        <a class="mobile-brand" href="../">EAF Docs</a>
+        <button class="mobile-toggle" id="mobileToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </button>
+    </header>
+    <div class="mobile-overlay" id="mobileOverlay" hidden></div>
+
+    <div class="docs-shell">
+        <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+            <div class="sidebar-header">
+                <a href="../" class="sidebar-logo">
+                    <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
+                    <span class="sidebar-logo-text">Porndoe API</span>
+                </a>
+                <span class="sidebar-version">v1.0.1</span>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <a href="#getting-started" class="nav-link">Porndoe API getting started</a>
+<a href="#reference-client" class="nav-link">Client</a>
+<a href="#reference-video" class="nav-link">Video</a>
+<a href="#reference-pornstar" class="nav-link">Pornstar</a>
+<a href="#reference-channel" class="nav-link">Channel</a>
+<a href="#reference-category" class="nav-link">Category</a>
+<a href="#guides-searching-and-filtering" class="nav-link">Searching and filtering</a>
+<a href="#guides-iteration-and-results" class="nav-link">Iteration and results</a>
+<a href="#guides-downloading" class="nav-link">Downloading</a>
+<a href="#troubleshooting-errors" class="nav-link">Errors and troubleshooting</a>
+<a href="#reference-cli" class="nav-link">CLI</a>
+<a href="#supported-platforms" class="nav-link">Supported platforms</a>
+<a href="#changelog" class="nav-link">Changelog</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="../#mcp" class="sidebar-mcp-promo-link" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 7px 10px; border-radius: 4px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.25); color: var(--accent-strong); font-size: 13px; font-weight: 600; text-decoration: none;">
+                    <span style="font-size: 14px;">⚡</span>
+                    <span>Official MCP Server</span>
+                </a>
+                <a href="https://github.com/EchterAlsFake/unofficial-api-for-porndoe" target="_blank" rel="noopener noreferrer">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    <span>Source on GitHub</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="docs-stage">
+            <div class="docs-grid">
+                <main class="main-content" id="main-content" tabindex="-1">
+                    <header class="hero">
+                        <nav class="breadcrumbs" aria-label="Breadcrumb">
+                            <a href="../">Documentation</a>
+                            <span aria-hidden="true">/</span>
+                            <span>Porndoe API</span>
+                        </nav>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.0.1</div>
+                        <h1>Porndoe API</h1>
+                        <p>An asynchronous Python API for the Porndoe video catalog, with rich metadata, search, pornstar and channel profiles, categories and downloads. Powered by eaf_base_api.</p>
+                        <div class="hero-actions">
+                            <button class="install-cmd" type="button" onclick="copyInstall(this)" title="Copy install command">
+                                <span class="prompt" aria-hidden="true">$</span>
+                                <code>pip install unofficial-api-for-porndoe</code>
+                                <span class="copy-icon" aria-hidden="true">Copy</span>
+                            </button>
+                            <a href="https://github.com/EchterAlsFake/unofficial-api-for-porndoe" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+                        </div>
+                    </header>
+
+                    <article class="content-area">
+                        <div class="mcp-banner" role="region" aria-label="Official MCP Server Notice">
+                            <div class="mcp-banner-header">
+                                <span class="mcp-banner-badge">⚡ Recommended AI Workflow</span>
+                                <span class="mcp-banner-title">Official MCP Server: <code>https://mcp.echteralsfake.me/mcp</code></span>
+                            </div>
+                            <p class="mcp-banner-desc">
+                                Supercharge your development by connecting your AI coding assistant (Cursor, VS Code / Copilot, Claude Desktop, Windsurf, Zed, Antigravity).
+                                <strong>No authentication required</strong> · <strong>No strict rate limits</strong> · <strong>Covers all 16 APIs</strong> · <strong>Always up to date</strong> · <strong>Completely anonymous (0 logs, no profiling)</strong>.
+                                Connecting this MCP server to your AI assistant is absolutely the recommended way to work on and build with these APIs.
+                            </p>
+                            <div class="mcp-banner-actions">
+                                <a href="../#mcp" class="mcp-banner-btn primary">Add to Your Editor (Setup Guides & Configs) →</a>
+                                <button class="mcp-banner-btn secondary" type="button" onclick="navigator.clipboard.writeText('https://mcp.echteralsfake.me/mcp');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Server URL',2000)">Copy Server URL</button>
+                            </div>
+                        </div>
+
+                        <section class="section" id="getting-started">
+<h2>Porndoe API getting started</h2>
+<p>Version 1.0.1. Package: <code>unofficial-api-for-porndoe</code>. Import: <code>porndoe_api</code>.
+Requires Python 3.12+ and <code>eaf-base-api&gt;=4.2.2</code> with <code>selectolax</code>.</p>
+<p>Install the local checkout before publication:</p>
+<pre><code class="language-sh">pip install ./unofficial-api-for-porndoe
+</code></pre>
+<p>Once published, use <code>pip install unofficial-api-for-porndoe</code>.</p>
+<pre><code class="language-python">import asyncio
+from base_api import BaseCore
+from base_api.modules.config import RuntimeConfig
+from porndoe_api import Client, DownloadConfigRAW
+
+async def main():
+    runtime = RuntimeConfig()
+    runtime.request_delay = 2
+    runtime.videos_concurrency = 1
+    runtime.pages_concurrency = 1
+    async with BaseCore(runtime) as core, Client(core) as client:
+        video = await client.get_video(&quot;https://porndoe.com/watch/pd4y7n5e2j8r&quot;)
+        print(video.title, video.duration, video.video_qualities)
+        await video.download(DownloadConfigRAW(quality=&quot;best&quot;, path=&quot;./&quot;))
+        async for result in client.search(&quot;eva elfie&quot;, pages=1):
+            item = result.unwrap()
+            print(item.title, item.url)
+
+asyncio.run(main())
+</code></pre>
+<p><code>Client()</code> creates and owns a default core. Its async context manager and
+<code>close()</code> close that core. A caller-supplied core remains caller-owned; use a
+<code>BaseCore</code> context manager as shown above. Every request goes through that core.</p>
+<p>Objects inherit <code>BaseMedia</code> and use the <code>html</code> source. Default individual
+getters load that source. <code>load_html=False</code> constructs a lazy object.
+Call <code>await media.load_sources("html")</code> or <code>await media.load_fields("title")</code>
+before reading unresolved fields; otherwise <code>DataNotLoadedError</code> is raised.
+Video loading fetches the HTML page and player JSON, keeping changes atomic.
+<code>to_dict()</code> returns loaded fields for application integration.</p>
+<p>Public video catalog coverage includes videos, search, category/tag browsing,
+related videos, pornstar/channel directories and profiles, cross-profile
+listings, and downloads. Account mutations, photos, blog articles and advertising
+services are outside this interface.</p>
+<p>See <a href="#reference-client">Client</a>, <a href="#reference-video">Video</a>,
+<a href="#guides-iteration-and-results">iteration</a>, and
+<a href="../eaf_base_api/">base configuration</a>.</p>
+</section>
+
+<section class="section" id="reference-client">
+<h2>Client — Porndoe API</h2>
+<p><code>Client(core: BaseCore | None = None)</code> shares its core with every returned object.
+Supports <code>async with Client() as client</code> and <code>await client.close()</code>.
+Only an internally created core is closed by the client.</p>
+<h3>get_video</h3>
+<pre><code class="language-python">await Client.get_video(url: 'str', load_html: 'bool' = True) -&gt; 'Video'
+</code></pre>
+<h3>get_pornstar</h3>
+<pre><code class="language-python">await Client.get_pornstar(url: 'str', load_html: 'bool' = True) -&gt; 'Pornstar'
+</code></pre>
+<h3>get_channel</h3>
+<pre><code class="language-python">await Client.get_channel(url: 'str', load_html: 'bool' = True) -&gt; 'Channel'
+</code></pre>
+<h3>search</h3>
+<pre><code class="language-python">Client.search(query: 'str', sorting_sort: 'str | Sort' = Sort.Sort_relevance, pages: 'int | str' = 2, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+</code></pre>
+<h3>get_videos</h3>
+<pre><code class="language-python">Client.get_videos(url: 'str' = 'https://porndoe.com/videos', pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+</code></pre>
+<h3>get_pornstars</h3>
+<pre><code class="language-python">Client.get_pornstars(pages: 'int | str' = 2, sorting_sort: 'str | SortPornstar' = SortPornstar.Sort_famous, iterator_config: 'IteratorConfig | None' = None, gender: 'str | None' = None, country: 'str | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Pornstar], None]'
+</code></pre>
+<h3>get_channels</h3>
+<pre><code class="language-python">Client.get_channels(pages: 'int | str' = 2, sorting_sort: 'str | SortChannel' = SortChannel.Sort_ranking, iterator_config: 'IteratorConfig | None' = None, section: 'str' = '', start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Channel], None]'
+</code></pre>
+<h3>get_categories</h3>
+<pre><code class="language-python">await Client.get_categories(sorting_sort: 'str | SortCategory' = SortCategory.Sort_popular) -&gt; 'list[Category]'
+</code></pre>
+<p>Individual getters return a loaded object unless <code>load_html=False</code>.
+They require individual <code>/watch/&lt;hash&gt;</code>, <code>/pornstars-profile/&lt;slug&gt;</code> or
+<code>/channel-profile/&lt;slug&gt;</code> URLs respectively. Relative site paths work.
+Localized Porndoe subdomains are preserved; unrelated hosts are rejected.</p>
+<p><code>search</code> sends the query under <code>keywords</code> with standard URL encoding.
+<code>get_videos</code> accepts <code>/videos</code>, category, tag, or another public video listing
+URL, preserving query filters. <code>get_pornstars</code> supports the site's optional
+<code>gender</code> and country-code routes. Combined filters use <code>/pornstars/country/&lt;code&gt;</code>
+with a <code>gender</code> query parameter, as linked by the site. <code>get_channels</code> supports section <code>""</code>,
+<code>"exclusive"</code>, or <code>"trending"</code>.</p>
+<p>All listings return async iterators of <code>ScrapeResult</code> objects. The initial
+objects contain listing metadata; full item loading is opt-in via
+<code>IteratorConfig(load_specific_sources=("html",))</code>. The exact supplied iterator
+configuration is honored. <code>get_categories</code> is an awaited list of <code>Category</code>
+objects containing directory metadata.</p>
+<p><code>pages</code> is a positive page count or <code>"all"</code>; <code>start_page</code> is a positive,
+one-based start index. The <code>"all"</code> option fetches the first requested page to
+discover its last-page link. Discovery errors raise directly. Other listing
+page/item errors use the configured <code>ScrapeResult</code> error policy.</p>
+<p>See <a href="#guides-searching-and-filtering">sorting</a> and
+<a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="reference-video">
+<h2>Video — Porndoe API</h2>
+<p><code>Video(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass.
+<code>await client.get_video(url)</code> loads its <code>html</code> source. This includes a JSON-LD
+graph, visible page data and the player service. The service gets a per-request
+Referer and a video-specific cache URL, so concurrent videos cannot share
+the wrong player response. Missing detail fields are <code>None</code>; source maps/lists
+are empty when no variants are available. Unknown listing fields remain unloaded.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Resource page URL, preserving the requested host and filters.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared BaseCore networking and download backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final response URL, when recorded by the shared request helper.</td>
+</tr>
+<tr>
+<td><code>video_id</code></td>
+<td><code>str \| None</code></td>
+<td>Public hash from /watch/<hash>.</td>
+</tr>
+<tr>
+<td><code>internal_video_id</code></td>
+<td><code>str \| None</code></td>
+<td>Numeric player ID, represented as a string.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>str \| None</code></td>
+<td>Video title.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Description or plain-text profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Poster, profile image, category image, or directory thumbnail URL.</td>
+</tr>
+<tr>
+<td><code>preview_video_url</code></td>
+<td><code>str \| None</code></td>
+<td>Short preview clip URL.</td>
+</tr>
+<tr>
+<td><code>publish_date</code></td>
+<td><code>str \| None</code></td>
+<td>ISO upload date from JSON-LD.</td>
+</tr>
+<tr>
+<td><code>publish_date_relative</code></td>
+<td><code>str \| None</code></td>
+<td>Relative upload time shown on the page.</td>
+</tr>
+<tr>
+<td><code>content_url</code></td>
+<td><code>str \| None</code></td>
+<td>JSON-LD watch page URL; this is not the MP4 download URL.</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td><code>int \| None</code></td>
+<td>Duration in integer seconds.</td>
+</tr>
+<tr>
+<td><code>length</code></td>
+<td><code>str \| None</code></td>
+<td>Formatted MM:SS or HH:MM:SS duration.</td>
+</tr>
+<tr>
+<td><code>author_name</code></td>
+<td><code>str \| None</code></td>
+<td>Producing channel name.</td>
+</tr>
+<tr>
+<td><code>author_link</code></td>
+<td><code>str \| None</code></td>
+<td>Producing channel profile URL.</td>
+</tr>
+<tr>
+<td><code>pornstars</code></td>
+<td><code>list[dict[str, str]] \| None</code></td>
+<td>Performer dictionaries containing name and url.</td>
+</tr>
+<tr>
+<td><code>pornstars_urls</code></td>
+<td><code>list[str] \| None</code></td>
+<td>Featured performer profile URLs.</td>
+</tr>
+<tr>
+<td><code>categories</code></td>
+<td><code>list[dict[str, str]] \| None</code></td>
+<td>Category dictionaries containing name and url.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>list[str] \| None</code></td>
+<td>Tag names.</td>
+</tr>
+<tr>
+<td><code>tags_urls</code></td>
+<td><code>list[str] \| None</code></td>
+<td>Tag listing URLs, in the same order as tags.</td>
+</tr>
+<tr>
+<td><code>views</code></td>
+<td><code>str \| None</code></td>
+<td>Displayed total view count as a string. Listing summaries may use k/M abbreviations.</td>
+</tr>
+<tr>
+<td><code>likes</code></td>
+<td><code>str \| None</code></td>
+<td>Like count as a string, from the player service.</td>
+</tr>
+<tr>
+<td><code>dislikes</code></td>
+<td><code>str \| None</code></td>
+<td>Dislike count as a string, from the player service.</td>
+</tr>
+<tr>
+<td><code>rating_votes</code></td>
+<td><code>str \| None</code></td>
+<td>Sum of likes and dislikes, as a string when both are available.</td>
+</tr>
+<tr>
+<td><code>rating_percent</code></td>
+<td><code>str \| None</code></td>
+<td>Like percentage, as a string to one decimal place; None for no votes.</td>
+</tr>
+<tr>
+<td><code>video_quality</code></td>
+<td><code>str \| None</code></td>
+<td>HD/SD label supplied by JSON-LD.</td>
+</tr>
+<tr>
+<td><code>is_hd</code></td>
+<td><code>bool \| None</code></td>
+<td>HD flag.</td>
+</tr>
+<tr>
+<td><code>is_vr</code></td>
+<td><code>bool \| None</code></td>
+<td>VR flag when present in a listing; None if unknown on the detail page.</td>
+</tr>
+<tr>
+<td><code>is_exclusive</code></td>
+<td><code>bool \| None</code></td>
+<td>Exclusive flag when present in a listing; None if unknown on the detail page.</td>
+</tr>
+<tr>
+<td><code>license_url</code></td>
+<td><code>str \| None</code></td>
+<td>License URL reported by the site; a metadata value, not an independent grant of rights.</td>
+</tr>
+<tr>
+<td><code>direct_download_urls</code></td>
+<td><code>dict[int, str] \| None</code></td>
+<td>Playable MP4 sources as {height: signed_url}; signup links and deo sources are excluded.</td>
+</tr>
+<tr>
+<td><code>video_qualities</code></td>
+<td><code>list[int] \| None</code></td>
+<td>MP4 heights sorted from lowest to highest, matching direct_download_urls keys.</td>
+</tr>
+<tr>
+<td><code>hls_download_urls</code></td>
+<td><code>dict[int, str] \| None</code></td>
+<td>Playable HLS variants as {height: signed_url}; empty if none are supplied.</td>
+</tr>
+<tr>
+<td><code>m3u8_base_url</code></td>
+<td><code>str \| None</code></td>
+<td>Highest available HLS variant URL, or None. A variant, not a fabricated master playlist.</td>
+</tr>
+</tbody>
+</table>
+<h3>Related objects</h3>
+<pre><code class="language-python">channel = await video.get_author
+async for star in video.get_pornstars:
+    print(star.name)
+async for result in video.get_related_videos(iterator_config=None):
+    related = result.unwrap()
+</code></pre>
+<p><code>get_author</code> is an async property returning a loaded <code>Channel</code> or <code>None</code>.
+<code>get_pornstars</code> is an async-generator property yielding loaded <code>Pornstar</code> objects.
+Both share the video's core. <code>get_related_videos</code> is a method returning a
+<code>ScrapeResult[Video]</code> iterator from the page's related-video cards.</p>
+<h3>download</h3>
+<pre><code class="language-python">await video.download(configuration: DownloadConfigRAW | DownloadConfigHLS)
+</code></pre>
+<p>Returns <code>bool | DownloadReport</code>, according to the selected base downloader.
+MP4 uses <code>BaseCore.legacy_download</code>; HLS uses <code>BaseCore.download</code> and requires
+actual HLS variants. The supplied configuration is copied. Title-based filenames
+are applied unless <code>no_title=True</code>.</p>
+<p>Only <code>sources.mp4</code> entries of type <code>video</code> are exposed as direct MP4 sources.
+Signup/upgrade entries and the separate <code>deo</code> group are excluded. Signed URLs
+expire and can depend on the IP; use a freshly fetched Video for a later download.
+The HTML view total is retained because the service's view counter differs.</p>
+<p>See <a href="#guides-downloading">downloading</a> and <a href="#troubleshooting-errors">errors</a>.</p>
+</section>
+
+<section class="section" id="reference-pornstar">
+<h2>Pornstar — Porndoe API</h2>
+<p><code>Pornstar</code> is a keyword-only <code>BaseMedia</code> dataclass sharing
+<code>BaseChannelPornstar</code> with the other profile class. Use
+<code>await client.get_pornstar("https://porndoe.com/pornstars-profile/&lt;slug&gt;")</code>.
+The <code>html</code> loader reads the first profile page with the requested host and
+filters; a stale input <code>page</code> or fragment does not change that metadata load.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Resource page URL, preserving the requested host and filters.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared BaseCore networking and download backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final response URL, when recorded by the shared request helper.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile or category name.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Description or plain-text profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Poster, profile image, category image, or directory thumbnail URL.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Total videos reported by the site.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Last page from pagination, or calculated for a single page.</td>
+</tr>
+<tr>
+<td><code>per_page</code></td>
+<td><code>int \| None</code></td>
+<td>Number of videos displayed on the loaded profile/category page.</td>
+</tr>
+<tr>
+<td><code>rank</code></td>
+<td><code>int \| None</code></td>
+<td>Site ranking as an integer.</td>
+</tr>
+<tr>
+<td><code>external_urls</code></td>
+<td><code>list[str] \| None</code></td>
+<td>External profile/site URLs from sameAs metadata.</td>
+</tr>
+<tr>
+<td><code>age</code></td>
+<td><code>int \| None</code></td>
+<td>Displayed age as an integer.</td>
+</tr>
+<tr>
+<td><code>country</code></td>
+<td><code>str \| None</code></td>
+<td>Displayed birth country.</td>
+</tr>
+<tr>
+<td><code>birth_date</code></td>
+<td><code>str \| None</code></td>
+<td>ISO birth date from structured metadata.</td>
+</tr>
+<tr>
+<td><code>birth_place</code></td>
+<td><code>str \| None</code></td>
+<td>Birthplace/nationality string reported by the site.</td>
+</tr>
+<tr>
+<td><code>gender</code></td>
+<td><code>str \| None</code></td>
+<td>Gender code reported by the site.</td>
+</tr>
+<tr>
+<td><code>measurements</code></td>
+<td><code>str \| None</code></td>
+<td>Displayed body measurements.</td>
+</tr>
+<tr>
+<td><code>ethnicity</code></td>
+<td><code>str \| None</code></td>
+<td>Displayed ethnicity.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos</h3>
+<pre><code class="language-python">Pornstar.videos(pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+</code></pre>
+<h3>get_channels</h3>
+<pre><code class="language-python">Pornstar.get_channels(pages: 'int | str' = 2, iterator_config: 'IteratorConfig | None' = None) -&gt; 'AsyncGenerator[ScrapeResult[Channel], None]'
+</code></pre>
+<p><code>videos()</code> returns <code>ScrapeResult[Video]</code> using the shared iterator pipeline.
+The profile URL retains its host and filters. <code>sorting_sort=None</code> preserves an
+existing sort query; passing an enum/string replaces it. <code>pages=2</code> fetches two
+pages starting at <code>start_page=1</code>. <code>pages="all"</code> discovers the last page.
+Profile counters and rankings are site-reported, not recalculated estimates.</p>
+<p><code>get_channels()</code> returns <code>ScrapeResult[Channel]</code> from
+<code>/pornstar/&lt;slug&gt;/channels</code>.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a> and <a href="#reference-client">Client</a>.</p>
+</section>
+
+<section class="section" id="reference-channel">
+<h2>Channel — Porndoe API</h2>
+<p><code>Channel</code> is a keyword-only <code>BaseMedia</code> dataclass sharing
+<code>BaseChannelPornstar</code> with the other profile class. Use
+<code>await client.get_channel("https://porndoe.com/channel-profile/&lt;slug&gt;")</code>.
+The <code>html</code> loader reads the first profile page with the requested host and
+filters; a stale input <code>page</code> or fragment does not change that metadata load.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Resource page URL, preserving the requested host and filters.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared BaseCore networking and download backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final response URL, when recorded by the shared request helper.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile or category name.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str \| None</code></td>
+<td>Description or plain-text profile biography.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Poster, profile image, category image, or directory thumbnail URL.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Total videos reported by the site.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Last page from pagination, or calculated for a single page.</td>
+</tr>
+<tr>
+<td><code>per_page</code></td>
+<td><code>int \| None</code></td>
+<td>Number of videos displayed on the loaded profile/category page.</td>
+</tr>
+<tr>
+<td><code>rank</code></td>
+<td><code>int \| None</code></td>
+<td>Site ranking as an integer.</td>
+</tr>
+<tr>
+<td><code>external_urls</code></td>
+<td><code>list[str] \| None</code></td>
+<td>External profile/site URLs from sameAs metadata.</td>
+</tr>
+<tr>
+<td><code>website</code></td>
+<td><code>str \| None</code></td>
+<td>Official website URL from structured metadata.</td>
+</tr>
+<tr>
+<td><code>total_videos_views</code></td>
+<td><code>str \| None</code></td>
+<td>Total channel video views as a string; directory values may be abbreviated.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos</h3>
+<pre><code class="language-python">Channel.videos(pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+</code></pre>
+<h3>get_pornstars</h3>
+<pre><code class="language-python">Channel.get_pornstars(gender: 'str' = 'female', pages: 'int | str' = 2, iterator_config: 'IteratorConfig | None' = None) -&gt; 'AsyncGenerator[ScrapeResult[Pornstar], None]'
+</code></pre>
+<p><code>videos()</code> returns <code>ScrapeResult[Video]</code> using the shared iterator pipeline.
+The profile URL retains its host and filters. <code>sorting_sort=None</code> preserves an
+existing sort query; passing an enum/string replaces it. <code>pages=2</code> fetches two
+pages starting at <code>start_page=1</code>. <code>pages="all"</code> discovers the last page.
+Profile counters and rankings are site-reported, not recalculated estimates.</p>
+<p><code>get_pornstars()</code> returns <code>ScrapeResult[Pornstar]</code> from
+<code>/channel/&lt;slug&gt;/&lt;gender&gt;</code>. <code>gender</code> accepts <code>female</code>, <code>male</code> or <code>models</code>.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a> and <a href="#reference-client">Client</a>.</p>
+</section>
+
+<section class="section" id="reference-category">
+<h2>Category — Porndoe API</h2>
+<p><code>await client.get_categories()</code> returns category objects from the site's
+category directory. These contain <code>name</code>, <code>url</code>, <code>thumbnail_url</code>, and
+<code>total_videos</code> without fetching every category page. A later <code>html</code> load reads
+the category heading, image metadata, counters and pagination.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Resource page URL, preserving the requested host and filters.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared BaseCore networking and download backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str \| None</code></td>
+<td>Final response URL, when recorded by the shared request helper.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str \| None</code></td>
+<td>Profile or category name.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str \| None</code></td>
+<td>Poster, profile image, category image, or directory thumbnail URL.</td>
+</tr>
+<tr>
+<td><code>total_videos</code></td>
+<td><code>int \| None</code></td>
+<td>Total videos reported by the site.</td>
+</tr>
+<tr>
+<td><code>per_page</code></td>
+<td><code>int \| None</code></td>
+<td>Number of videos displayed on the loaded profile/category page.</td>
+</tr>
+<tr>
+<td><code>total_pages</code></td>
+<td><code>int \| None</code></td>
+<td>Last page from pagination, or calculated for a single page.</td>
+</tr>
+</tbody>
+</table>
+<h3>videos</h3>
+<pre><code class="language-python">Category.videos(pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+</code></pre>
+<pre><code class="language-python">categories = await client.get_categories()
+async for result in categories[0].videos(pages=1):
+    print(result.unwrap().title)
+</code></pre>
+<p>Tag pages can be browsed with <code>client.get_videos(tag_url, pages=1)</code>.
+See <a href="#reference-client">Client</a>.</p>
+</section>
+
+<section class="section" id="guides-searching-and-filtering">
+<h2>Searching and filtering — Porndoe API</h2>
+<p>Import enums from <code>porndoe_api.sorting</code>. Plain string values also work.
+<code>Sort</code> applies to videos and profile videos. Search defaults to relevance;
+browse/profile pages default to newest when the sort parameter is absent.
+<code>release</code> explicitly selects newest in search.</p>
+<pre><code class="language-python">from porndoe_api.sorting import Sort
+async for result in client.search(&quot;eva elfie&quot;, sorting_sort=Sort.Sort_most_viewed, pages=1):
+    print(result.unwrap().url)
+</code></pre>
+<h3>Sort</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort_relevance</code></td>
+<td>``</td>
+</tr>
+<tr>
+<td><code>Sort_newest</code></td>
+<td><code>release</code></td>
+</tr>
+<tr>
+<td><code>Sort_most_liked</code></td>
+<td><code>likes</code></td>
+</tr>
+<tr>
+<td><code>Sort_longest</code></td>
+<td><code>length</code></td>
+</tr>
+<tr>
+<td><code>Sort_most_viewed</code></td>
+<td><code>views</code></td>
+</tr>
+</tbody>
+</table>
+<h3>SortPornstar</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort_famous</code></td>
+<td>``</td>
+</tr>
+<tr>
+<td><code>Sort_most_viewed</code></td>
+<td><code>rank</code></td>
+</tr>
+<tr>
+<td><code>Sort_most_videos</code></td>
+<td><code>movies</code></td>
+</tr>
+<tr>
+<td><code>Sort_trending</code></td>
+<td><code>trending</code></td>
+</tr>
+</tbody>
+</table>
+<h3>SortChannel</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort_ranking</code></td>
+<td>``</td>
+</tr>
+<tr>
+<td><code>Sort_name</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>Sort_most_videos</code></td>
+<td><code>movies</code></td>
+</tr>
+<tr>
+<td><code>Sort_most_viewed</code></td>
+<td><code>views</code></td>
+</tr>
+</tbody>
+</table>
+<h3>SortCategory</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sort_popular</code></td>
+<td>``</td>
+</tr>
+<tr>
+<td><code>Sort_name</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>Sort_most_videos</code></td>
+<td><code>movies</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>get_pornstars(gender="male", country="us", ...)</code> uses the site's gender and
+country routes. <code>get_channels(section="exclusive", ...)</code> or <code>"trending"</code>
+selects that channel directory.</p>
+<p>For site filters not represented as dedicated arguments, pass the real
+filtered listing URL to <code>get_videos</code>. Existing query keys survive pagination.
+<code>get_videos("https://porndoe.com/category/32/hd-videos", pages=1)</code> and
+<code>get_videos("https://porndoe.com/tag/2240/american-porn", pages=1)</code> are examples.
+Search queries are URL encoded once, preserving spaces, plus signs and ampersands.</p>
+<p>See <a href="#reference-client">Client</a>.</p>
+</section>
+
+<section class="section" id="guides-iteration-and-results">
+<h2>Iteration and results — Porndoe API</h2>
+<p>Every listing returns an asynchronous <code>ScrapeResult</code> stream from the base
+helper. <code>result.unwrap()</code> returns the media object or raises its error.
+The provider defaults to <code>IteratorConfig()</code> with page/item errors yielded and
+summary metadata loaded. It does not eagerly fetch every listed video's page.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from base_api.modules.config import IteratorConfig
+
+config = IteratorConfig(
+    max_page_concurrency=1,
+    max_item_concurrency=1,
+    load_specific_sources=(&quot;html&quot;,),
+)
+async with aclosing(client.search(&quot;eva elfie&quot;, pages=1, iterator_config=config)) as stream:
+    async for result in stream:
+        video = result.unwrap()
+        print(video.title, video.direct_download_urls)
+        break
+</code></pre>
+<p>Early consumers should close streams with <code>aclosing</code>. The provider closes the
+underlying shared helper on generator cleanup. The caller's configuration is
+forwarded unchanged, including load fields/sources, error policy, concurrency,
+order and retries. Default result order is completion order; choose
+<code>order="original"</code> for page/card order.</p>
+<p>English, German (<code>de</code>), French (<code>fr</code>), Spanish (<code>es</code>), Italian (<code>it</code>) and Brazilian
+Portuguese (<code>br</code>) profile URLs retain their regional host for video listings.
+Translated totals and profile labels are supported. Surrounding whitespace in
+pasted resource URLs is removed.</p>
+<p><code>pages=2, start_page=2</code> fetches pages 2 and 3. <code>pages="all"</code> first reads the
+requested start page and discovers the last page from the pager, including the
+active page number when it has no link. Starting on the final page returns that
+page; starting after the end returns no videos. Huge catalogs
+can have many thousands of pages; use explicit small counts for interactive
+applications. Discovery fetch failures raise directly. Other page/item failures
+follow the supplied iterator error policy. No network failure is converted into
+a successful empty media object.</p>
+<p>See <a href="../eaf_base_api/">base iteration</a> and
+<a href="#troubleshooting-errors">errors</a>.</p>
+</section>
+
+<section class="section" id="guides-downloading">
+<h2>Downloading — Porndoe API</h2>
+<p>MP4 is the normal public player format. Use <code>DownloadConfigRAW</code>.</p>
+<pre><code class="language-python">from porndoe_api import DownloadConfigRAW
+await video.download(DownloadConfigRAW(quality=&quot;best&quot;, path=&quot;./&quot;))
+await video.download(DownloadConfigRAW(
+    quality=&quot;worst&quot;, path=&quot;./chosen-name.mp4&quot;, no_title=True,
+    allow_multipart=True, max_workers=2,
+))
+</code></pre>
+<p><code>best</code>, <code>half</code>, <code>worst</code>, integer heights and labels such as <code>720p</code> use the base
+engine's quality selector. Unavailable numeric requests choose the nearest
+playable tier. Only playable <code>mp4</code> entries are selected; upgrade links and
+other source groups are ignored.</p>
+<p>The download configuration is copied before applying a title or stream URL.
+Callbacks and stop events remain shared with the caller. RAW downloads return
+a boolean. <code>DownloadCancelled</code> propagates unchanged.</p>
+<p><code>DownloadConfigHLS</code> delegates to the base HLS downloader only if the player
+actually exposes HLS variants. If it does not, <code>DownloadFailed</code> instructs the
+caller to use RAW. HLS download reports follow base configuration settings.</p>
+<p>Signed CDN URLs expire and can be IP-bound. Fetch a new Video when downloading
+later, and use the same networking route for metadata and media. Existing
+successful BaseMedia source loads are cached; loading the same source again
+does not refresh it. The base response cache TTL is independently configured
+through RuntimeConfig.</p>
+<p>See <a href="#reference-video">Video</a> and
+<a href="../eaf_base_api/">base RAW downloader</a>.</p>
+</section>
+
+<section class="section" id="troubleshooting-errors">
+<h2>Errors and troubleshooting — Porndoe API</h2>
+<p>Provider exception imports are available under <code>porndoe_api.errors</code>:
+<code>NotFound</code>, <code>NetworkError</code>, <code>UnknownNetworkError</code>, <code>BotDetection</code>, <code>ProxyError</code>,
+<code>DownloadFailed</code>, and <code>ScraperException</code>, re-exported from the base engine.</p>
+<p>An individual source failure raises <code>MediaLoadError</code> with its original cause.
+Inspect <code>media.source_errors</code>, <code>media.source_state("html")</code>, and the exception
+chain. <code>is_resource_gone(error)</code> from <code>base_api</code> detects missing resources
+through wrappers. Missing videos redirected to the general listing are reported
+as <code>NotFound</code>. Source commits are atomic; a failed player parse does not
+leave a Video marked successfully loaded.</p>
+<p><code>DataNotLoadedError</code> means a field needs explicit loading:
+<code>await media.load_fields("title")</code> or <code>await media.load_sources("html")</code>.
+Listings initially contain only metadata present in the summary. Missing values
+after a successful load are <code>None</code> or empty collections.</p>
+<p>HTTP 429 is a real site rate limit. Use <code>RuntimeConfig.request_delay = 2</code> (or
+slower), small page counts and limited concurrency. Avoid eager full loads when
+only summary metadata is needed. Let a rate limit clear before retrying a
+large scrape. The API does not treat 429 responses as empty successful pages.</p>
+<p>An invalid host/path raises <code>ValueError</code> before a resource getter requests it.
+Unknown HTML layouts, unsuccessful service responses, or player responses for
+another video fail extraction. Inspect the page/service before changing tests.
+Signup entries are not downloadable media; absence of playable variants raises
+<code>DownloadFailed</code> from <code>download()</code>.</p>
+<p>Run <code>pytest</code> to execute the live site/CDN tests, including a complete MP4 download.
+Tests use real network requests without saved HTML responses or network mocks;
+network and scraping failures are not silently skipped.
+See <a href="#guides-iteration-and-results">iteration</a> and
+<a href="#getting-started">getting started</a>.</p>
+</section>
+
+<section class="section" id="reference-cli">
+<h2>CLI — Porndoe API</h2>
+<pre><code class="language-sh">python -m porndoe_api --download https://porndoe.com/watch/pd4y7n5e2j8r --output ./ --quality best
+porndoe_api --file urls.txt --output ./ --quality worst
+python -m porndoe_api --download https://porndoe.com/watch/pd4y7n5e2j8r --output ./video.mp4 --no-title
+</code></pre>
+<p>Exactly one of <code>--download URL</code> or <code>--file FILE</code> is required. URL files contain
+one URL per nonempty line. <code>--output</code> is required. <code>--quality</code> defaults to best
+and accepts the same values as RAW downloads. <code>--no-title</code> treats output as the
+explicit filename. Downloads run sequentially and the client closes its core.
+Unsuccessful downloads raise an error and give the process a failing exit code.</p>
+<p>See <a href="#guides-downloading">downloading</a>.</p>
+</section>
+
+<section class="section" id="supported-platforms">
+<h2>Supported platforms — Porndoe API</h2>
+<p>Requires Python 3.12 or later, <code>selectolax</code> and <code>eaf-base-api&gt;=4.2.2</code>.
+The base engine uses curl-cffi for asynchronous networking. Platform availability
+depends on compatible dependency wheels or a working native build environment.
+No browser or JavaScript runtime is required by the wrapper.</p>
+<p>All network access is asynchronous. Video/profile parsing and shared listing
+extraction run in worker threads. Shared BaseCore supplies proxy, timeout,
+cookies, cache, pacing and concurrency configuration. See
+<a href="../eaf_base_api/">base client lifecycle</a>.</p>
+<p>See <a href="#getting-started">getting started</a>.</p>
+</section>
+
+<section class="section" id="changelog">
+<h2>Changelog — Porndoe API</h2>
+<h2>1.0.1</h2>
+<ul>
+<li>Parse video totals, page sizes and profile fields on the German, French,
+  Spanish, Italian and Brazilian Portuguese subdomains.</li>
+<li>Include the active final page when discovering all remaining pages.</li>
+<li>Report zero page size for requests beyond the end of a feed.</li>
+<li>Accept whitespace around pasted resource URLs.</li>
+<li>Verify profile feeds against every live video card, including one-video
+  profiles and complete multi-page feeds. No saved HTML or network mocks.</li>
+</ul>
+<h2>1.0.0</h2>
+<ul>
+<li>Initial asynchronous client, BaseMedia Video/Pornstar/Channel/Category models.</li>
+<li>HTML and player metadata, playable signed MP4 sources and optional HLS sources.</li>
+<li>Search, browse/category/tag URLs, directories, profile videos, related videos
+  and cross-profile listings using shared ScrapeResult streams.</li>
+<li>RAW/HLS delegation, quality selection and command line downloader.</li>
+<li>Live site/CDN integration tests run by default, including a complete MP4 download.</li>
+<li>HTML documentation and searchable MCP documentation.</li>
+</ul>
+<p>See <a href="#getting-started">getting started</a>.</p>
+</section>
+                    </article>
+
+                    <footer class="page-footer">
+                        <span>© 2023–2026 <a href="https://github.com/EchterAlsFake">Johannes Habel</a> · AGPLv3</span>
+                        <span>Built on <a href="https://github.com/EchterAlsFake/eaf_base_api">eaf_base_api</a></span>
+                    </footer>
+                </main>
+
+                <aside class="page-toc" aria-label="On this page">
+                    <div class="page-toc-inner">
+                        <p class="page-toc-title">On this page</p>
+                        <nav id="pageTocList"></nav>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <a href="#main-content" class="back-to-top" id="backToTop" aria-label="Back to top">↑</a>
+</body>
+</html>

@@ -4,14 +4,19 @@ import shutil
 from pathlib import Path
 
 BRAND_MARKS = {
+    "bellesa": "B",
     "eaf_base_api": "EAF",
     "beeg": "B",
     "empflix": "E",
     "eporner": "E",
     "hqporner": "H",
     "missav": "M",
+    "porn": "P",
     "pornhub": "P",
+    "pornhat": "P",
+    "porndoe": "P",
     "porntrex": "P",
+    "redgifs": "R",
     "redtube": "R",
     "spankbang": "S",
     "thumbzilla": "T",
@@ -22,6 +27,7 @@ BRAND_MARKS = {
     "xnxx": "X",
     "xvideos": "X",
     "youporn": "Y",
+    "youjizz": "Y",
 }
 
 
@@ -105,13 +111,15 @@ def build_docs():
             "subtitle": slots.get("HERO_SUBTITLE", ""),
             "version": slots.get("VERSION", "1.0"),
             "github_url": slots.get("GITHUB_URL", ""),
-            "pypi_package": slots.get("PYPI_PACKAGE", "")
+            "pypi_package": slots.get("PYPI_PACKAGE", ""),
+            "install_command": slots.get("INSTALL_COMMAND", f"pip install {slots.get('PYPI_PACKAGE', '')}")
         })
 
         # Optional page metadata keeps clients with different engines and licenses accurate.
         slots.setdefault("LICENSE_LABEL", "AGPLv3")
         slots.setdefault("ENGINE_URL", "https://github.com/EchterAlsFake/eaf_base_api")
         slots.setdefault("ENGINE_NAME", "eaf_base_api")
+        slots.setdefault("INSTALL_COMMAND", f"pip install {slots.get('PYPI_PACKAGE', '')}")
         slots.setdefault("MCP_BANNER", (base_dir / "mcp_banner.html").read_text(encoding="utf-8").rstrip() + "\n\n")
 
         # 3. Inject into template
@@ -162,7 +170,7 @@ def build_docs():
         title = html.escape(api["title"])
         version = html.escape(api["version"])
         subtitle = html.escape(api["subtitle"])
-        pypi_package = html.escape(api["pypi_package"])
+        install_command = html.escape(api["install_command"])
         github_url = html.escape(api["github_url"], quote=True)
         clean_title = html.escape(api["title"], quote=True)
         clean_package = html.escape(api["pypi_package"], quote=True)
@@ -182,7 +190,7 @@ def build_docs():
                         <footer class="card-footer">
                             <button class="card-install" type="button" onclick="copyInstall(this)" title="Copy install command">
                                 <span class="prefix" aria-hidden="true">$</span>
-                                <code>pip install {pypi_package}</code>
+                                <code>{install_command}</code>
                                 <span class="copy-icon" aria-hidden="true">Copy</span>
                             </button>
                             <div class="card-actions">

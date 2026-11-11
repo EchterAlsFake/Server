@@ -1,0 +1,1274 @@
+<!-- SLOT:TITLE = Porn.com API -->
+<!-- SLOT:HERO_TITLE = Porn.com API -->
+<!-- SLOT:HERO_SUBTITLE = An asynchronous Python wrapper for Porn.com scenes, performers, channels, categories and source indexes, with lazy HTML metadata, filtered search and HLS downloads through eaf_base_api. -->
+<!-- SLOT:VERSION = 0.1.0 -->
+<!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-porn -->
+<!-- SLOT:PYPI_PACKAGE = unofficial-api-for-porn -->
+<!-- SLOT:INSTALL_COMMAND = pip install ./unofficial-api-for-porn -->
+<!-- SLOT:LICENSE_LABEL = AGPL-3.0-only -->
+
+<!-- BEGIN:SIDEBAR_NAV -->
+<a href="#getting-started" class="nav-link">Porn.com API getting started</a>
+<a href="#reference-client" class="nav-link">Client</a>
+<a href="#reference-video" class="nav-link">Video</a>
+<a href="#reference-collection" class="nav-link">Collection</a>
+<a href="#reference-pornstar" class="nav-link">Pornstar</a>
+<a href="#reference-channel" class="nav-link">Channel</a>
+<a href="#reference-category" class="nav-link">Category</a>
+<a href="#reference-source" class="nav-link">Source</a>
+<a href="#reference-filters" class="nav-link">Filters</a>
+<a href="#reference-cli" class="nav-link">CLI</a>
+<a href="#guides-source-loading" class="nav-link">Source loading</a>
+<a href="#guides-searching-and-filtering" class="nav-link">Searching and filtering</a>
+<a href="#guides-iteration-and-results" class="nav-link">Iteration and results</a>
+<a href="#guides-downloading" class="nav-link">Downloading</a>
+<a href="#guides-live-validation" class="nav-link">Live validation</a>
+<a href="#troubleshooting-errors" class="nav-link">Errors and troubleshooting</a>
+<a href="#supported-platforms" class="nav-link">Supported platforms</a>
+<a href="#changelog" class="nav-link">Changelog</a>
+<!-- END:SIDEBAR_NAV -->
+
+<!-- BEGIN:MAIN_CONTENT -->
+<section class="section" id="getting-started">
+<h2>Porn.com API getting started</h2>
+<p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-porn</code>. Import: <code>porn_api</code>.
+Requires Python <strong>3.12+</strong>, <code>eaf-base-api[hls]&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
+<p>The package is currently unpublished. From the workspace containing its checkout:</p>
+<pre><code class="language-sh">pip install ./unofficial-api-for-porn
+</code></pre>
+<p>FFmpeg is required when requesting MP4 remuxing or export metadata; ffprobe is used
+by the live download checks. No account or browser cookies are required for the
+verified public scenes.</p>
+<pre><code class="language-python">import asyncio
+from contextlib import aclosing
+from base_api import BaseCore
+from base_api.modules.config import RuntimeConfig
+from porn_api import Client, DownloadConfigHLS
+
+async def main():
+    runtime = RuntimeConfig()
+    runtime.request_delay = 1
+    runtime.videos_concurrency = 2
+    async with BaseCore(runtime) as core, Client(core) as client:
+        video = await client.get_video(&quot;https://www.porn.com/scene/208974141&quot;)
+        print(video.title, video.duration)
+        print([(r.width, r.height) for r in await video.get_qualities()])
+        await video.download(DownloadConfigHLS(
+            quality=&quot;worst&quot;, path=&quot;./&quot;, remux=True, return_report=True,
+        ))
+        async with aclosing(client.search(&quot;yoga&quot;, pages=1)) as stream:
+            async for result in stream:
+                summary = result.unwrap()
+                print(summary.video_id, summary.title)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<p><code>Client()</code> owns its default core and closes it through its async context manager
+or <code>await client.close()</code>. An injected core remains owned by the caller. Every
+request and download uses that same backend; response caches, retries, proxy,
+locale, timeouts, and cancellation remain configurable per core.</p>
+<p>Porn.com includes native HLS scenes and external referrals. Both have usable
+scene metadata; only native public unencrypted HLS is downloadable here.
+Check <code>video.is_playable</code> after loading scene HTML. Referral summaries do not
+mean that media is available on Porn.com.</p>
+<p>See <a href="#reference-client">Client</a>, <a href="#guides-source-loading">source loading</a>,
+<a href="#guides-downloading">downloads</a>, and <a href="#supported-platforms">supported hosts</a>.</p>
+</section>
+
+<section class="section" id="reference-client">
+<h2>Client — Porn.com API</h2>
+<pre><code class="language-python">Client(core: BaseCore | None = None, *,
+       base_url: str = &quot;https://www.porn.com&quot;,
+       orientation: Literal[&quot;straight&quot;, &quot;gay&quot;, &quot;trans&quot;] = &quot;straight&quot;)
+</code></pre>
+<p>Supports <code>async with Client() as client</code> and <code>await client.close()</code>. Only an
+internally created <code>BaseCore</code> is closed by the client. <code>base_url</code> is a verified
+host URL without a resource path or query. Orientation prefixes apply to search
+and directory methods, not to the URLs passed to individual getters.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Result</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>await get_video(url, load_html=True)</code></td>
+<td><code>Video</code></td>
+<td>Valid <code>/scene/&lt;numeric-id&gt;[/&lt;slug&gt;]</code> URL; eager HTML by default.</td>
+</tr>
+<tr>
+<td><code>await get_pornstar(url, load_html=True)</code></td>
+<td><code>Pornstar</code></td>
+<td>A real <code>single-pornstar</code> profile page.</td>
+</tr>
+<tr>
+<td><code>await get_channel(url, load_html=True)</code></td>
+<td><code>Channel</code></td>
+<td>A real <code>single-channel</code> studio profile.</td>
+</tr>
+<tr>
+<td><code>await get_category(url, load_html=True)</code></td>
+<td><code>Category</code></td>
+<td>Category page or <code>/gay</code>/<code>/trans</code> directory root.</td>
+</tr>
+<tr>
+<td><code>await get_source(url, load_html=True)</code></td>
+<td><code>Source</code></td>
+<td>A source-website index such as <code>/xnxx</code>.</td>
+</tr>
+<tr>
+<td><code>search(query, *, pages=1, start_page=1, filters=None, iterator_config=None)</code></td>
+<td>Async <code>ScrapeResult[Video]</code> stream</td>
+<td>Encoded <code>sq</code> search; preserves legitimate redirects to a category.</td>
+</tr>
+<tr>
+<td><code>pornstars(*, pages=1, start_page=1, iterator_config=None)</code></td>
+<td>Async <code>ScrapeResult[Pornstar]</code> stream</td>
+<td><code>/pornstars</code> directory.</td>
+</tr>
+<tr>
+<td><code>channels(*, pages=1, start_page=1, iterator_config=None)</code></td>
+<td>Async <code>ScrapeResult[Channel]</code> stream</td>
+<td><code>/sites</code> directory.</td>
+</tr>
+<tr>
+<td><code>categories(*, iterator_config=None)</code></td>
+<td>Async <code>ScrapeResult[Category]</code> stream</td>
+<td>A–Z <code>/categories</code> directory; no page-count argument.</td>
+</tr>
+</tbody>
+</table>
+<p>Getters take absolute URLs on <a href="#supported-platforms">accepted hosts</a>;
+relative URLs and outbound <code>/out/...</code> links are not accepted by <code>get_video</code>.
+Constructors validate URL identity; HTML loading checks the actual scene ID or
+profile type before committing fields. A channel URL does not become a valid
+performer object just because it contains videos.</p>
+<p>Individual <code>load_html=False</code> constructs a deferred object. Listing methods
+return directly observed summaries without loading every detail page. Use
+<code>result.unwrap()</code> before reading an item. <code>pages</code> accepts a positive integer or
+<code>"all"</code>; <code>start_page</code> is one-based. <code>filters</code> is a <a href="#reference-filters">Filters</a> object.</p>
+<p>There are no <code>get_videos</code>, <code>get_categories</code>, <code>get_channels</code>, or <code>get_pornstars</code>
+aliases: directory method names are exactly <code>categories</code>, <code>channels</code>, and
+<code>pornstars</code>. No account, playlist, independent Model/User, or JSON video API is
+implemented.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a> and <a href="#reference-video">Video</a>.</p>
+</section>
+
+<section class="section" id="reference-video">
+<h2>Video — Porn.com API</h2>
+<p><code>Video(url=..., core=...)</code> is a keyword-only <code>BaseMedia</code> dataclass. Prefer
+<code>await client.get_video(url)</code> for eager HTML metadata, or pass <code>load_html=False</code>
+for deferred loading. The stable URL ID must match the response scene identity.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Requested scene URL; verified host and locale are preserved.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Caller-configured request/download backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str | None</code></td>
+<td>Actual response URL recorded by the shared backend.</td>
+</tr>
+<tr>
+<td><code>video_id</code></td>
+<td><code>str | None</code></td>
+<td>Numeric scene ID as a string; populated from the URL.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>str | None</code></td>
+<td>Target main heading, not generic WordPress metadata.</td>
+</tr>
+<tr>
+<td><code>thumbnail_url</code></td>
+<td><code>str | None</code></td>
+<td>Native player poster; listing image retained if absent on a referral page.</td>
+</tr>
+<tr>
+<td><code>length</code></td>
+<td><code>str | None</code></td>
+<td>M:SS for exact player duration, or retained rounded listing label.</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td><code>int | None</code></td>
+<td>Exact integer seconds from the native player; unknown for referral-only detail pages.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str | None</code></td>
+<td>Response HTML locale, for example de-DE.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>list[str] | None</code></td>
+<td>Category/tag labels on the target scene.</td>
+</tr>
+<tr>
+<td><code>categories_urls</code></td>
+<td><code>list[str] | None</code></td>
+<td>Real category URLs in the same order as tags.</td>
+</tr>
+<tr>
+<td><code>pornstars_names</code></td>
+<td><code>list[str] | None</code></td>
+<td>All observed performer names, including unlinked names.</td>
+</tr>
+<tr>
+<td><code>pornstars_urls</code></td>
+<td><code>list[str] | None</code></td>
+<td>Only performer names that have real profile links.</td>
+</tr>
+<tr>
+<td><code>author_name</code></td>
+<td><code>str | None</code></td>
+<td>Channel label where actually supplied; not inferred from a title.</td>
+</tr>
+<tr>
+<td><code>author_link</code></td>
+<td><code>str | None</code></td>
+<td>Real channel link where supplied.</td>
+</tr>
+<tr>
+<td><code>m3u8_base_url</code></td>
+<td><code>str | None</code></td>
+<td>Signed native HLS master, preserved intact.</td>
+</tr>
+<tr>
+<td><code>embed_url</code></td>
+<td><code>str | None</code></td>
+<td>No independent embed URL was verified; currently None after HTML loading.</td>
+</tr>
+<tr>
+<td><code>is_playable</code></td>
+<td><code>bool | None</code></td>
+<td>Whether the scene exposes the native HLS player.</td>
+</tr>
+<tr>
+<td><code>unavailable_reason</code></td>
+<td><code>str | None</code></td>
+<td>Real referral/no-player notice; None for the checked native scenes.</td>
+</tr>
+<tr>
+<td><code>thumbnail_template</code></td>
+<td><code>str | None</code></td>
+<td>Player thumbnail template where present; empty values become None.</td>
+</tr>
+<tr>
+<td><code>thumbnail_count</code></td>
+<td><code>int | None</code></td>
+<td>Player-reported thumbnail position count.</td>
+</tr>
+<tr>
+<td><code>rating</code></td>
+<td><code>int | None</code></td>
+<td>Listing-only integer rating percentage, not vote count.</td>
+</tr>
+<tr>
+<td><code>preview_video_url</code></td>
+<td><code>str | None</code></td>
+<td>Listing-only preview clip, not the full video.</td>
+</tr>
+<tr>
+<td><code>source_name</code></td>
+<td><code>str | None</code></td>
+<td>Source website label from the originating listing card.</td>
+</tr>
+<tr>
+<td><code>source_url</code></td>
+<td><code>str | None</code></td>
+<td>Actual source-index URL from the listing card.</td>
+</tr>
+<tr>
+<td><code>link_url</code></td>
+<td><code>str | None</code></td>
+<td>Original listing destination, including an outbound referral link when supplied.</td>
+</tr>
+</tbody>
+</table>
+<p>HTML-backed fields use <code>media_field("html")</code>. Unresolved fields raise
+<code>DataNotLoadedError</code>; <code>None</code> means known absence after loading. Listing summaries
+seed only observed fields and retain listing-only rating/preview/source/link
+data when scene HTML is loaded. Direct scene getters do not fetch a listing to
+invent these optional observations.</p>
+<p>The scene document's JSON-LD, canonical link, Open Graph title, dates, and image
+refer to the generic WordPress <code>/scene</code> page. They are excluded. There is no
+fabricated video description, view count, upload date, or vote count.</p>
+<h3>Renditions</h3>
+<p><code>await video.get_qualities()</code> loads required HTML and the actual HLS master. It
+returns a list of immutable <code>Rendition</code> objects, sorted by height then bandwidth:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>width</code></td>
+<td><code>int</code></td>
+<td>Actual master-playlist width.</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td><code>int</code></td>
+<td>Actual master-playlist height.</td>
+</tr>
+<tr>
+<td><code>bandwidth</code></td>
+<td><code>int | None</code></td>
+<td>Declared rendition bandwidth.</td>
+</tr>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Resolved variant URL, including required signature context.</td>
+</tr>
+</tbody>
+</table>
+<p>No persistent <code>video_qualities</code>, <code>renditions</code>, direct MP4 source mapping, or
+separate <code>media</code> loader exists. Inspect <code>get_qualities()</code> when media information
+is needed. A referral without a master raises <code>VideoUnavailable</code>.</p>
+<h3>Relationships</h3>
+<pre><code class="language-python">channel = await video.get_author(load_html=True)
+performers = await video.get_pornstars(load_html=True)
+source = await video.get_source(load_html=True)
+async for result in video.related_videos(iterator_config=None):
+    related = result.unwrap()
+</code></pre>
+<p>These are methods, not async properties. <code>get_author()</code> returns <code>Channel | None</code>;
+<code>get_pornstars()</code> returns a list of linked <code>Pornstar</code> objects. <code>get_source()</code>
+returns <code>Source | None</code> when the originating listing supplies a source URL.
+Unlinked performer names are not guessed into URLs. All objects share the core.
+<code>related_videos()</code> is a one-page result stream of the scene's related grid.</p>
+<h3>Download</h3>
+<pre><code class="language-python">await video.download(configuration: DownloadConfigHLS, *, refresh: bool = True)
+</code></pre>
+<p>Delegates to <code>BaseCore.download</code> after checking public unencrypted HLS variants.
+Returns the shared boolean or <code>DownloadReport</code> according to configuration.
+Caller configuration is copied; a fresh signed scene source is fetched by
+default. See <a href="#guides-downloading">downloading</a>.</p>
+</section>
+
+<section class="section" id="reference-collection">
+<h2>Collection — Porn.com API</h2>
+<p><code>Collection</code> is the keyword-only <code>BaseMedia</code> base for <code>Pornstar</code>, <code>Channel</code>,
+<code>Category</code>, and <code>Source</code>. Use the corresponding Client getter to validate the
+actual domain type. Its only metadata source is <code>html</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td><code>str</code></td>
+<td>Actual profile/category/source URL on a verified host.</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td><code>BaseCore</code></td>
+<td>Shared caller-configured backend.</td>
+</tr>
+<tr>
+<td><code>resolved_url</code></td>
+<td><code>str | None</code></td>
+<td>Actual response URL where recorded.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str | None</code></td>
+<td>Target page heading.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str | None</code></td>
+<td>Plain-text biography/description where exposed.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td><code>str | None</code></td>
+<td>Response HTML locale.</td>
+</tr>
+<tr>
+<td><code>video_count</code></td>
+<td><code>int | None</code></td>
+<td>Advertised total, including positions replaced by native ads where observed.</td>
+</tr>
+<tr>
+<td><code>profile_id</code></td>
+<td><code>str | None</code></td>
+<td>Body data-pi entity ID, with zero/missing values represented as None.</td>
+</tr>
+<tr>
+<td><code>info</code></td>
+<td><code>dict[str, str] | None</code></td>
+<td>Native localized labels and text values for profile details/statistics.</td>
+</tr>
+<tr>
+<td><code>social_links</code></td>
+<td><code>list[str] | None</code></td>
+<td>Observed links in profile information, including an official site where supplied.</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">collection.videos(*, pages: int | Literal[&quot;all&quot;] = 1,
+                  start_page: int = 1, filters: Filters | None = None,
+                  iterator_config: IteratorConfig | None = None)
+</code></pre>
+<p>Returns an async stream of <code>ScrapeResult[Video]</code>, initially containing listing
+summaries. <code>pages</code> counts requested pages from the one-based <code>start_page</code>;
+<code>"all"</code> follows the complete exposed feed. URL filters survive pagination unless
+the caller supplies a replacement <code>Filters</code> object. Ads are excluded; real
+duplicate/pinned entries and entries blended into the grid retain their order.</p>
+<p><code>video_count</code> is the website's advertised count, not <code>len(unique_ids)</code>.
+The initial implementation reconciled total grid positions exactly after native
+ad replacements were accounted for. It does not fabricate results to match a
+counter. See <a href="#guides-live-validation">live validation</a>.</p>
+<p>Native profile <code>info</code> retains localized labels rather than silently converting
+them into another provider's schema. A verified German heading renders malformed
+<code>ge Videos</code>; its valid <code>Gesamtzahl der Videos</code> statistic is used as a fallback.
+Generated biography prose is not used to infer the video count.</p>
+<p>See <a href="#guides-iteration-and-results">iteration</a>, <a href="#reference-filters">filters</a>, and
+<a href="#guides-source-loading">source loading</a>.</p>
+</section>
+
+<section class="section" id="reference-pornstar">
+<h2>Pornstar — Porn.com API</h2>
+<p><code>Pornstar(Collection)</code> represents a real performer page whose HTML body declares
+<code>single-pornstar</code>. Its lazy fields and <code>.videos(...)</code> signature are documented
+under <a href="#reference-collection">Collection</a>. There is no separate <code>Model</code> class.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from porn_api import Client
+
+async def inspect_performer():
+    async with Client() as client:
+        star = await client.get_pornstar(&quot;https://www.porn.com/azumi-mizushima&quot;)
+        print(star.name, star.video_count, star.info)
+        async with aclosing(star.videos(pages=&quot;all&quot;)) as stream:
+            async for result in stream:
+                print(result.unwrap().video_id)
+</code></pre>
+<p>English examples expose gender, birthday, birthplace, ethnicity, height, hair
+and eye color, rank, total videos, and video views in <code>info</code> where supplied.
+Values remain the site's strings. Missing profile fields are not guessed from
+other pages or from a performer's name.</p>
+<p><code>client.pornstars(...)</code> enumerates the performer directory as typed result
+summaries. <code>await video.get_pornstars()</code> resolves only actual scene links.
+The verified one-video profile returns ID <code>205464990</code>; the larger Mia Khalifa
+profile requires continuing numeric pages beyond its disabled Next link.
+See <a href="#guides-live-validation">profile reconciliation</a>.</p>
+</section>
+
+<section class="section" id="reference-channel">
+<h2>Channel — Porn.com API</h2>
+<p><code>Channel(Collection)</code> represents a studio/channel page with HTML body type
+<code>single-channel</code>. A source website such as XNXX is a distinct <a href="#reference-source">Source</a>.
+Use actual links instead of deriving channel URLs from a video title.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from porn_api import Client
+
+async def inspect_channel():
+    async with Client() as client:
+        channel = await client.get_channel(&quot;https://www.porn.com/bratty-sis&quot;)
+        print(channel.name, channel.description, channel.info)
+        async with aclosing(channel.videos(pages=&quot;all&quot;)) as stream:
+            async for result in stream:
+                video = result.unwrap()
+                print(video.video_id, video.title, video.source_name)
+</code></pre>
+<p>All fields and <code>.videos(...)</code> arguments come from <a href="#reference-collection">Collection</a>.
+An official-site link, rank, advertised total, and video views remain in native
+<code>info</code>/<code>social_links</code> where supplied. <code>client.channels(...)</code> enumerates <code>/sites</code>
+as <code>ScrapeResult[Channel]</code> summaries; it is not an awaited list.</p>
+<p>The initial complete comparisons matched four visible Bratty Sis video entries
+plus two native ads, and 1,618 Brazzers entries plus 42 ads. Brazzers has one
+repeated ID on separate pages; iteration preserves both live occurrences.
+See <a href="#guides-live-validation">live validation</a>.</p>
+</section>
+
+<section class="section" id="reference-category">
+<h2>Category — Porn.com API</h2>
+<p><code>Category(Collection)</code> represents an actual <code>single-category</code> page, such as
+<code>https://www.porn.com/yoga-porn</code>. <code>await client.get_category(url)</code> loads metadata
+by default; <code>client.categories()</code> streams summaries from the A–Z directory.
+The full field table and video signature are in <a href="#reference-collection">Collection</a>.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from porn_api import Client, Filters
+
+async def browse_category():
+    async with Client() as client:
+        category = await client.get_category(&quot;https://www.porn.com/yoga-porn&quot;)
+        async with aclosing(category.videos(
+            pages=1, filters=Filters(source=&quot;xVideos&quot;, min_minutes=20),
+        )) as stream:
+            async for result in stream:
+                print(result.unwrap().title)
+</code></pre>
+<h3>Orientation directory roots</h3>
+<p>The straight category directory can link <code>/gay</code> and <code>/trans</code>. These are category
+directory roots, not direct video grids. <code>category.is_directory</code> identifies
+them; <code>.videos(...)</code> raises <code>ValueError</code> with instructions to browse categories.</p>
+<pre><code class="language-python">async def browse_orientation(client):
+    root = await client.get_category(&quot;https://www.porn.com/gay&quot;)
+    if root.is_directory:
+        async for result in root.categories():
+            print(result.unwrap().url)
+</code></pre>
+<p><code>Category.categories(*, iterator_config=None)</code> is only supported on these two
+roots. <code>Client(orientation="gay")</code> or <code>"trans"</code> selects the corresponding
+directory/search prefix. Individual category URLs such as <code>/gay/twink-porn</code>
+and <code>/trans/tgirl-porn</code> are accepted. No guessed category ID or image is derived
+from a related video thumbnail.</p>
+</section>
+
+<section class="section" id="reference-source">
+<h2>Source — Porn.com API</h2>
+<p><code>Source(Collection)</code> represents the site-wide index for a source website, for
+example <code>https://www.porn.com/xnxx</code>. It validates HTML body type <code>single-source</code>.
+It is distinct from a studio <a href="#reference-channel">Channel</a>.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from porn_api import Client
+
+async def browse_source():
+    async with Client() as client:
+        source = await client.get_source(&quot;https://www.porn.com/xnxx&quot;)
+        print(source.name, source.video_count)
+        async with aclosing(source.videos(pages=1)) as stream:
+            async for result in stream:
+                summary = result.unwrap()
+                print(summary.video_id, summary.source_name)
+</code></pre>
+<p>The inherited metadata and <code>.videos(...)</code> contract are in
+<a href="#reference-collection">Collection</a>. An originating listing card can supply
+<code>Video.source_name</code>, <code>source_url</code>, and its original <code>link_url</code>.
+<code>await summary.get_source(load_html=True)</code> resolves the actual source URL, or
+returns <code>None</code> when there is no such observation. Direct scene fetching does
+not automatically infer source metadata from the title.</p>
+<p>Fetching this collection or a referral's metadata does not fetch its external
+website. Large source indexes are validated on representative pages; the
+initial validation did not enumerate their entire multi-million-entry catalogs.</p>
+</section>
+
+<section class="section" id="reference-filters">
+<h2>Filters — Porn.com API</h2>
+<p><code>Filters</code> is a frozen, slotted dataclass exported by <code>porn_api</code>:</p>
+<pre><code class="language-python">Filters(added_days: Literal[1, 7, 30, 90, 365] | None = None,
+        source: str | None = None, hd: bool = False,
+        min_minutes: int | None = None, max_minutes: int | None = None)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Website parameter</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>added_days</code></td>
+<td><code>ad</code></td>
+<td>Today, week, month, three months, or year; None leaves the period unrestricted.</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>so</code></td>
+<td>Actual source label such as <code>xVideos</code> or <code>XNXX</code>.</td>
+</tr>
+<tr>
+<td><code>hd</code></td>
+<td><code>qu=hd</code></td>
+<td>Request the site's HD filter.</td>
+</tr>
+<tr>
+<td><code>min_minutes</code></td>
+<td><code>ll</code></td>
+<td>Nonnegative integer minimum, in minutes.</td>
+</tr>
+<tr>
+<td><code>max_minutes</code></td>
+<td><code>lh</code></td>
+<td>Nonnegative integer maximum, in minutes.</td>
+</tr>
+</tbody>
+</table>
+<p><code>filters.apply(url)</code> returns the URL with these named filter parameters
+replaced; <code>None</code>/false settings remove their corresponding keys. Other query
+keys are preserved. Supplying a Filters object therefore replaces existing
+values for these filter keys; omitting it preserves an existing URL's filters.</p>
+<p>Unsupported added periods, negative/non-integer duration bounds, or an inverted
+minimum/maximum raise <code>ValueError</code>. The implementation performs duration
+validation when <code>apply()</code> is called. There is no separate sorting enum or sort
+parameter. Listing filter behavior follows the website, including injected
+cards that can fall outside a requested filter.</p>
+<p>See <a href="#guides-searching-and-filtering">searching</a>.</p>
+</section>
+
+<section class="section" id="reference-cli">
+<h2>CLI — Porn.com API</h2>
+<p>Both <code>porn_api</code> and <code>python -m porn_api</code> invoke the same entry point. The scene
+URL is a required positional argument; <code>--download</code> is a boolean flag, not the
+argument that takes the URL.</p>
+<pre><code class="language-sh">porn_api -h
+porn_api https://www.porn.com/scene/208974141
+python -m porn_api https://www.porn.com/scene/208974141 --download --quality worst --output ./
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>Required positional value</td>
+<td>Verified Porn.com <code>/scene/&lt;id&gt;[/&lt;slug&gt;]</code> URL.</td>
+</tr>
+<tr>
+<td><code>--download</code></td>
+<td>False</td>
+<td>Download public HLS; otherwise print loaded metadata as JSON.</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td><code>./</code></td>
+<td>Output directory; a title-derived MP4 filename is applied.</td>
+</tr>
+<tr>
+<td><code>--quality</code></td>
+<td><code>best</code></td>
+<td><code>best</code>, <code>half</code>, <code>worst</code>, or a positive resolution height/numeric string.</td>
+</tr>
+<tr>
+<td><code>-h</code>, <code>--help</code></td>
+<td>—</td>
+<td>Show parser help.</td>
+</tr>
+</tbody>
+</table>
+<p>CLI downloads create <code>DownloadConfigHLS(..., remux=True)</code> and therefore require
+FFmpeg. JSON inspection can contain expiring signed media URLs. The Client's
+async context manager closes its core after inspection/download.</p>
+<p>There are no <code>--file</code>, <code>--no-title</code>, or direct MP4 format flags in this provider.
+Use the Python <a href="#guides-downloading">download interface</a> for callbacks,
+reports, exact output paths, metadata export, or cancellation settings.</p>
+</section>
+
+<section class="section" id="guides-source-loading">
+<h2>Source loading — Porn.com API</h2>
+<p><code>Video</code> and the Collection subclasses declare one source: <strong><code>html</code></strong>. Individual
+Client getters load it by default. No independently selectable public video API
+was established: the REST root returned 401, while embedded WordPress schema
+describes the generic <code>/scene</code> page. There are no <code>load_api</code> flags or <code>media</code>
+loader. <code>get_qualities()</code> explicitly requests the real HLS master when needed.</p>
+<pre><code class="language-python">from porn_api import Client
+
+async def inspect_sources():
+    async with Client() as client:
+        video = await client.get_video(
+            &quot;https://www.porn.com/scene/208974141&quot;, load_html=False,
+        )
+        print(video.loaded_sources, video.to_dict())
+        await video.load_fields(&quot;title&quot;, &quot;duration&quot;)
+        print(video.title, video.duration)
+        await video.load_sources(&quot;html&quot;)
+        print(video.to_dict())
+</code></pre>
+<p>The shared <code>BaseMedia</code> loader applies field mappings atomically. Attribute access
+is synchronous and never starts network I/O. An unloaded field raises
+<code>DataNotLoadedError</code>; a loaded <code>None</code> or empty relationship list represents
+known absence. Repeated/concurrent source loads share the shared media contract.</p>
+<p>Use <code>loaded_sources</code>, <code>source_state("html")</code>, <code>source_errors</code>,
+<code>is_field_loaded(name)</code>, <code>unloaded_fields()</code>, <code>load_fields(...)</code>, and
+<code>load_sources(...)</code> to inspect or load state. <code>to_dict()</code> omits unresolved fields
+and the core by default; <code>include_unloaded=True</code>/<code>include_core=True</code> are explicit
+serialization options and do not fetch extra sources.</p>
+<p>Listings return summary objects with observed title/poster/duration/rating or
+directory name already seeded. Other scene/profile fields remain unresolved.
+Because a summary already has <code>title</code>, <code>load_fields("title")</code> may perform no
+detail request. Call <code>load_sources("html")</code> to request full scene metadata, or
+set <code>IteratorConfig(load_specific_sources=("html",))</code> for eager item loading.
+When referral HTML lacks a poster or exact duration, its observed listing image
+and rounded length label are retained. Listing provenance remains separate.</p>
+<p>Unsupported source names raise shared loader configuration errors. See
+<a href="#troubleshooting-errors">errors</a> and <a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="guides-searching-and-filtering">
+<h2>Searching and filtering — Porn.com API</h2>
+<p><code>Client.search(query, *, pages=1, start_page=1, filters=None,
+iterator_config=None)</code> streams <code>ScrapeResult[Video]</code>. A query must contain
+1–100 characters and not be whitespace-only. The client encodes it under <code>sq</code>.
+Search can legitimately redirect to a category: <code>yoga</code> resolves to <code>/yoga-porn</code>.
+An unmatched search uses a verified empty-results layout, not a fake empty Video.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from porn_api import Client, Filters
+
+async def search_videos():
+    async with Client() as client:
+        filters = Filters(source=&quot;xVideos&quot;, min_minutes=20, hd=True)
+        async with aclosing(client.search(&quot;yoga&quot;, pages=2, filters=filters)) as stream:
+            async for result in stream:
+                summary = result.unwrap()
+                print(summary.video_id, summary.title)
+</code></pre>
+<p>The same <a href="#reference-filters">Filters</a> object works with
+<code>Pornstar.videos</code>, <code>Channel.videos</code>, <code>Category.videos</code>, and <code>Source.videos</code>.
+For an existing resource URL, omitting <code>filters</code> preserves its query filters;
+passing a Filters object replaces the supported filter keys.</p>
+<p>Select a verified language host with <code>Client(base_url="https://de.porn.com")</code>.
+Use <code>Client(orientation="gay")</code> or <code>"trans"</code> for <code>/gay/search</code> or <code>/trans/search</code>
+and the corresponding directories. Individual getters retain the URL supplied
+by the caller rather than automatically adding an orientation prefix.</p>
+<p>The backend reproduces the live response grid. Some injected cards can fall
+outside a duration/source/quality filter, and displayed totals can remain
+unfiltered. In the initial live run, yoga's <code>added_days=1</code> and <code>7</code> returned an
+explicit page-0 empty listing; the other tested filters returned actual cards.
+No additional sort parameter or sorting enums were verified.</p>
+<p>See <a href="#guides-iteration-and-results">pagination and result handling</a>.</p>
+</section>
+
+<section class="section" id="guides-iteration-and-results">
+<h2>Iteration and results — Porn.com API</h2>
+<p>Search, profile/category/source videos, related videos, and directories return
+async <code>ScrapeResult</code> streams. Defaults construct observed summaries and raise
+terminal errors. Every result must be unwrapped; a configured yielded failure
+must not silently disappear from the caller's loop.</p>
+<pre><code class="language-python">from contextlib import aclosing
+from base_api import ErrorMode, IteratorConfig, ResultOrder
+from porn_api import Client
+
+async def iterate_profile():
+    config = IteratorConfig(
+        order=ResultOrder.ORIGINAL,
+        max_item_concurrency=2,
+        page_error_mode=ErrorMode.RAISE,
+        item_error_mode=ErrorMode.RAISE,
+        load_specific_sources=(),
+    )
+    async with Client() as client:
+        channel = await client.get_channel(&quot;https://www.porn.com/bratty-sis&quot;)
+        async with aclosing(channel.videos(pages=&quot;all&quot;, iterator_config=config)) as stream:
+            async for result in stream:
+                video = result.unwrap()
+                print(result.page_index, result.item_index, video.video_id)
+</code></pre>
+<p><code>IteratorConfig</code> also controls item/source/field loading, error handling, retries,
+and completion ordering. Set <code>load_specific_sources=("html",)</code> for full item
+loading, or <code>load_specific_fields=("duration",)</code> to request a required lazy field.
+An already seeded field need not trigger a detail fetch. The exact caller
+configuration is passed through to the shared Helper for each page.</p>
+<h3>Pagination</h3>
+<ul>
+<li><code>start_page</code> is a positive one-based page number; <code>pages</code> is a positive count
+  from that start or the string <code>"all"</code>.</li>
+<li>Real Next links determine the next URL. Paging is sequential; item work on a
+  page remains bounded/configurable. This wrapper does not concurrently prefetch
+  a guessed range of pages.</li>
+<li>Disabled/missing Next links are not sufficient proof of completion. If more
+  pages were requested, the established <code>pg</code> route is probed until a genuine
+  empty page or terminal boundary 404. Repeated URLs/entire pages raise errors.</li>
+<li>A boundary probe's 404 ends iteration. An explicitly requested initial page
+  returning 404 raises a typed page error. Other failures remain governed by
+  the caller's error policy. A skipped/failed page cannot establish completeness.</li>
+</ul>
+<p>The verified Mia Khalifa grid disables Next at page 13, but pages 14–23 still
+contain videos. Page 24 returns 404. <code>pages="all"</code> includes these extra live pages.
+No hard-coded page size or advertised count truncates the feed.</p>
+<p>Only actual cards in the intended video grid become items; native ad slots have
+no video identity and are excluded. Duplicate/pinned IDs and recommendations
+blended into that grid are preserved in site order. <code>video_count</code> is an advertised
+slot total, not a unique-ID count. <a href="#guides-live-validation">Reconciliation</a> records
+the observed differences exactly. Use <code>aclosing</code> when stopping a stream early.</p>
+</section>
+
+<section class="section" id="guides-downloading">
+<h2>Downloading — Porn.com API</h2>
+<p>Native public scenes expose HLS masters. <code>await video.get_qualities()</code> inspects
+their actual width/height/bandwidth and preserves signed variant URLs. A referral
+without native media raises <code>VideoUnavailable</code>; this wrapper does not follow its
+outbound link to implement another site's downloader.</p>
+<pre><code class="language-python">from porn_api import Client, DownloadConfigHLS
+
+async def download_video():
+    async with Client() as client:
+        video = await client.get_video(&quot;https://www.porn.com/scene/208974141&quot;)
+        config = DownloadConfigHLS(
+            quality=&quot;worst&quot;, path=&quot;./&quot;, remux=True, return_report=True,
+            metadata={&quot;title&quot;: video.title},
+        )
+        report = await video.download(config)
+        print(report.status, report.downloaded, report.total, report.metadata_written)
+</code></pre>
+<p><code>Video.download(configuration, *, refresh=True)</code> requires <code>DownloadConfigHLS</code>
+and delegates to <code>BaseCore.download</code>. No direct full-video MP4 source or RAW
+download mode was verified. <code>remux=True</code> converts the completed HLS MPEG-TS output
+to MP4 with FFmpeg. With <code>remux=False</code>, the file contains MPEG-TS regardless of a
+<code>.mp4</code> extension. <code>no_title=True</code> treats <code>path</code> as the exact output file path;
+otherwise a sanitized title-derived filename is appended to the output directory.</p>
+<h3>Quality selection</h3>
+<table>
+<thead>
+<tr>
+<th>Selector</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>best</code></td>
+<td>Highest actual available height.</td>
+</tr>
+<tr>
+<td><code>half</code></td>
+<td>Middle available height, not half the best resolution numerically.</td>
+</tr>
+<tr>
+<td><code>worst</code></td>
+<td>Lowest actual available height.</td>
+</tr>
+<tr>
+<td>Positive integer / numeric string such as <code>720</code> or <code>"720p"</code></td>
+<td>Exact height if available; otherwise nearest tier, preferring the higher on a tie.</td>
+</tr>
+</tbody>
+</table>
+<p>Recorded sample sets are 360p/480p/1080p (<code>208974141</code>) and 360p/480p/720p
+(<code>208581087</code>). Requesting 720 on the first set selects 480. Marketing HD labels
+are not used to invent unavailable renditions.</p>
+<h3>Configuration and source lifetime</h3>
+<p>Signed URLs can expire or vary after session cookies are established. Each
+download refreshes the scene through the shared cache refresh policy by default,
+using a new model so concurrent operations do not mutate the existing Video.
+<code>refresh=False</code> reuses its current metadata. Caller configuration is copied;
+callbacks and cancellation signals remain attached to the operation. Shared
+request headers are not mutated per video.</p>
+<p>Use shared <code>DownloadConfigHLS</code> fields for <code>callback</code>, <code>callback_remux</code>,
+<code>stop_event</code>, <code>metadata</code>, <code>thumbnail</code>, <code>return_report</code>, remuxing, and supported
+resume settings. Progress/report semantics remain those of the shared backend.
+Native encrypted/protected variant playlists are rejected before downloading;
+there is no authorization or DRM bypass.</p>
+<p>All renditions in both sample sets were completely downloaded and checked with
+ffprobe. Additional complete files covered metadata export, callbacks, reports,
+presets/fallback, refreshed repeats, TS output, concurrent videos, and the CLI.
+See <a href="#guides-live-validation">live validation</a> for the measured evidence.</p>
+</section>
+
+<section class="section" id="guides-live-validation">
+<h2>Live validation — Porn.com API</h2>
+<p>The implementation run on <strong>2026-11-10</strong> completed <strong>48 passed / 0 failed /
+0 skipped</strong> in <strong>255.80 seconds</strong>, with <strong>15 complete media files</strong> checked.
+This is recorded implementation evidence, not a claim that writing or building
+these docs reruns the website suite. Linux, CPython 3.15.2, local <code>eaf-base-api</code>
+4.2.6, FFmpeg, and ffprobe were used. A separate category/source check passed
+2 cases; an isolated wheel smoke check also used registry <code>eaf-base-api</code> 4.2.6.
+Shared Tenacity <code>initial</code>-parameter deprecation warnings were observed.</p>
+<h3>Complete quality matrix</h3>
+<p>Every row is a full <code>Video.download</code> through the shared backend, followed by
+ffprobe checks for dimensions, duration, audio, and plausible output size.
+Completed reports had no missing segments. Temporary media was removed.</p>
+<table>
+<thead>
+<tr>
+<th>Scene / host context</th>
+<th style="text-align: right;">Height</th>
+<th>Dimensions</th>
+<th style="text-align: right;">Duration</th>
+<th style="text-align: right;">Finished MP4 bytes</th>
+<th>Audio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>208974141</code> / <code>de</code></td>
+<td style="text-align: right;">360</td>
+<td>640×360</td>
+<td style="text-align: right;">345.023222 s</td>
+<td style="text-align: right;">20,488,660</td>
+<td>AAC</td>
+</tr>
+<tr>
+<td><code>208974141</code> / <code>de</code></td>
+<td style="text-align: right;">480</td>
+<td>854×480</td>
+<td style="text-align: right;">345.023222 s</td>
+<td style="text-align: right;">34,698,749</td>
+<td>AAC</td>
+</tr>
+<tr>
+<td><code>208974141</code> / <code>de</code></td>
+<td style="text-align: right;">1080</td>
+<td>1920×1080</td>
+<td style="text-align: right;">345.023222 s</td>
+<td style="text-align: right;">115,687,164</td>
+<td>AAC</td>
+</tr>
+<tr>
+<td><code>208581087</code> / <code>www</code></td>
+<td style="text-align: right;">360</td>
+<td>640×360</td>
+<td style="text-align: right;">631.689889 s</td>
+<td style="text-align: right;">37,198,539</td>
+<td>AAC</td>
+</tr>
+<tr>
+<td><code>208581087</code> / <code>www</code></td>
+<td style="text-align: right;">480</td>
+<td>854×480</td>
+<td style="text-align: right;">631.689889 s</td>
+<td style="text-align: right;">63,324,250</td>
+<td>AAC</td>
+</tr>
+<tr>
+<td><code>208581087</code> / <code>www</code></td>
+<td style="text-align: right;">720</td>
+<td>1280×720</td>
+<td style="text-align: right;">631.689889 s</td>
+<td style="text-align: right;">126,479,802</td>
+<td>AAC</td>
+</tr>
+</tbody>
+</table>
+<p>The other nine complete files exercised five preset/fallback/repeat operations
+on <code>208974141</code> (<code>best</code>, <code>half</code>, <code>worst</code>, missing 720→480, repeated <code>worst</code>), one
+unremuxed TS output (23,140,168 bytes), two concurrent different-video downloads,
+and one CLI download. Preset operations checked actual MP4 title/comment tags
+and <code>metadata_written</code>; explicit qualities checked progress and unchanged caller
+configuration. HEAD requests, URL extraction, and single segments were not
+counted as completed media evidence.</p>
+<h3>Complete profile comparisons</h3>
+<p>A separate Python <code>html.parser</code> observer enumerated every live video ID, ad
+slot, and page independently of production Selectolax extraction. The entire
+ordered sequence/multiset and every page matched.</p>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th style="text-align: right;">Pages</th>
+<th style="text-align: right;">Expected HTML entries</th>
+<th style="text-align: right;">API entries</th>
+<th style="text-align: right;">Unique IDs</th>
+<th style="text-align: right;">Advertised total</th>
+<th style="text-align: right;">Native ad replacements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/bratty-sis</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td><code>/brazzers</code></td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">1,618</td>
+<td style="text-align: right;">1,618</td>
+<td style="text-align: right;">1,617</td>
+<td style="text-align: right;">1,660</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr>
+<td><code>/azumi-mizushima</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td><code>/mia-khalifa</code></td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">1,426</td>
+<td style="text-align: right;">1,426</td>
+<td style="text-align: right;">1,423</td>
+<td style="text-align: right;">1,494</td>
+<td style="text-align: right;">68</td>
+</tr>
+</tbody>
+</table>
+<p>Entries plus native ad replacements equal advertised totals. Brazzers repeats
+<code>202547626</code> on pages 6/7. Mia repeats <code>168759490</code> on pages 1/8, <code>176675344</code> on
+pages 3/4, and <code>197990046</code> twice on page 6. These are website occurrences,
+not additional API videos or silently deduplicated results.</p>
+<p>Brazzers has thirteen pages of 117 entries and a final 97. Mia has seven pages
+of 117, then 68, fourteen pages of 37, then 21; valid pages continue to 23 after
+Next is disabled at 13. The next page is empty for Bratty Sis/Brazzers and 404
+for Azumi/Mia. First/next/middle/final/beyond-last, finite/all/start-page options,
+completion ordering, partial final pages, and partial stream closure were checked.</p>
+<h3>Metadata and discovery coverage</h3>
+<p>Eager/deferred/repeated/concurrent HTML loads, serialization, unloaded fields,
+listing seed preservation, unavailable referrals, real missing scenes, related
+objects, search redirects, all added periods and combined filters were checked.
+All twelve accepted hosts returned consistent scene identity, locale, master and
+variant access, and corresponding profile/listing data. English/German contexts
+were used for complete downloads. Gay/trans listing/search/directory variants
+were exercised; their sampled video grids contained referrals.</p>
+<p>Category/source indexes were compared on representative two-page samples, not
+their entire catalogs. Full directory comparisons matched 2,189 performer and
+448 channel entries in the established session, while the straight category
+directory had 1,099 entries. Initial versus established sessions can differ.</p>
+<h3>Run the live suite</h3>
+<p>From <code>unofficial-api-for-porn</code> beside the local backend checkout:</p>
+<pre><code class="language-sh">uv sync --group dev
+uv pip install -e '../eaf_base_api[hls]'
+.venv/bin/python -u -m pytest -q -s --tb=short
+</code></pre>
+<p>Tests make real requests and full downloads into temporary directories. The
+documentation/catalog checks do not repeat those downloads. Protected streams,
+REST video metadata (401), pictures (403), authenticated features, separate
+Model/User/Playlist interfaces, full-video direct MP4, and unobserved layouts
+remain outside verified support. See <a href="#supported-platforms">supported platforms</a>.</p>
+</section>
+
+<section class="section" id="troubleshooting-errors">
+<h2>Errors and troubleshooting — Porn.com API</h2>
+<p>Provider error imports are available through <code>porn_api.errors</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Exception</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ParseError</code></td>
+<td>Unrecognized/mismatched target layout, unexpected redirect, missing listing region, or repeated pagination.</td>
+</tr>
+<tr>
+<td><code>NotFound</code></td>
+<td>Missing resource translated by the shared request helper.</td>
+</tr>
+<tr>
+<td><code>NetworkError</code></td>
+<td>Shared request/network failure translated by the helper.</td>
+</tr>
+<tr>
+<td><code>BotDetection</code></td>
+<td>Bot-protection failure detected by the shared backend.</td>
+</tr>
+<tr>
+<td><code>ProxyError</code></td>
+<td>Proxy/SSL configuration failure translated by the helper.</td>
+</tr>
+<tr>
+<td><code>UnknownNetworkError</code></td>
+<td>Shared unknown transport error.</td>
+</tr>
+<tr>
+<td><code>VideoUnavailable</code></td>
+<td>No native public HLS source, an external referral, or protected media.</td>
+</tr>
+<tr>
+<td><code>DownloadFailed</code></td>
+<td>Download failure wrapped with resource/API context.</td>
+</tr>
+<tr>
+<td><code>ScraperException</code></td>
+<td>Shared provider exception base.</td>
+</tr>
+</tbody>
+</table>
+<p>Errors inside a lazy metadata loader are normally wrapped in shared
+<code>MediaLoadError</code>; several source failures can use <code>MediaLoadErrors</code>. Inspect
+<code>original_error</code>/the exception cause instead of expecting a bare provider error
+from every Client getter. <code>Video.download</code> preserves <code>VideoUnavailable</code> and
+shared cancellation while wrapping other download errors with <code>DownloadFailed</code>.</p>
+<p>Shared <code>DataNotLoadedError</code> means a declared lazy field has not been loaded.
+Load the <code>html</code> source or the required fields. Unsupported sources such as <code>api</code>
+or <code>media</code> raise loader configuration errors. They are not substitutes for an
+actual network source on this site.</p>
+<p>Listing failures use <code>PageFetchError</code>, <code>ItemFetchError</code>, or configured yielded
+<code>ScrapeResult.error</code> values. Always unwrap yielded results. A speculative terminal
+404 after a confirmed listing page ends iteration; an initial explicit missing
+page still raises. Other errors are not converted into successful empty videos.</p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code> on a URL</td>
+<td>Supply an absolute verified host and real <code>/scene/&lt;numeric-id&gt;[/&lt;slug&gt;]</code> route, not <code>/out/...</code> or a guessed mirror.</td>
+</tr>
+<tr>
+<td>Referral is not downloadable</td>
+<td>Load HTML and inspect <code>is_playable</code>/<code>unavailable_reason</code>; metadata does not imply Porn.com hosts the stream.</td>
+</tr>
+<tr>
+<td>HTML says the wrong profile type</td>
+<td>Use the corresponding real Pornstar/Channel/Source/Category getter.</td>
+</tr>
+<tr>
+<td>Old HLS source fails</td>
+<td>Keep normal <code>refresh=True</code> download behavior; signatures expire and can vary by session.</td>
+</tr>
+<tr>
+<td>No exact requested resolution</td>
+<td>Inspect <code>get_qualities()</code>; nearest-tier fallback is intentional.</td>
+</tr>
+<tr>
+<td>MPEG-TS data in a <code>.mp4</code> filename</td>
+<td>Enable <code>remux=True</code> with FFmpeg for an MP4 container.</td>
+</tr>
+<tr>
+<td>Counts differ from yielded unique IDs</td>
+<td>Account for native ad replacements and visible duplicate occurrences before assuming missing videos.</td>
+</tr>
+<tr>
+<td>Next is disabled despite more entries</td>
+<td>Use <code>pages="all"</code>; this provider probes the established numeric route to its real end.</td>
+</tr>
+</tbody>
+</table>
+<p>The REST metadata root (401), <code>/pics</code> (403), encrypted/protected streams, and
+authenticated-only features are outside this integration. Do not treat access
+denial as a valid empty model. See <a href="#guides-source-loading">source loading</a>
+and <a href="#guides-iteration-and-results">iteration</a>.</p>
+</section>
+
+<section class="section" id="supported-platforms">
+<h2>Supported platforms — Porn.com API</h2>
+<p>The package requires Python <strong>3.12+</strong>. Initial live validation used <strong>Linux with
+CPython 3.15.2</strong>, <code>eaf-base-api</code> 4.2.6, FFmpeg, and ffprobe. Other platforms or
+Python versions have not been validated for this provider.</p>
+<h3>Verified hosts and locales</h3>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Response locale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>porn.com</code> (redirects to <code>www.porn.com</code>)</td>
+<td><code>en-US</code></td>
+</tr>
+<tr>
+<td><code>www.porn.com</code></td>
+<td><code>en-US</code></td>
+</tr>
+<tr>
+<td><code>de.porn.com</code></td>
+<td><code>de-DE</code></td>
+</tr>
+<tr>
+<td><code>es.porn.com</code></td>
+<td><code>es-ES</code></td>
+</tr>
+<tr>
+<td><code>fr.porn.com</code></td>
+<td><code>fr-FR</code></td>
+</tr>
+<tr>
+<td><code>it.porn.com</code></td>
+<td><code>it-IT</code></td>
+</tr>
+<tr>
+<td><code>jp.porn.com</code></td>
+<td><code>ja-JP</code></td>
+</tr>
+<tr>
+<td><code>ru.porn.com</code></td>
+<td><code>ru-RU</code></td>
+</tr>
+<tr>
+<td><code>nl.porn.com</code></td>
+<td><code>nl-NL</code></td>
+</tr>
+<tr>
+<td><code>pt.porn.com</code></td>
+<td><code>pt-BR</code></td>
+</tr>
+<tr>
+<td><code>pl.porn.com</code></td>
+<td><code>pl-PL</code></td>
+</tr>
+<tr>
+<td><code>se.porn.com</code></td>
+<td><code>sv-SE</code></td>
+</tr>
+</tbody>
+</table>
+<p>These hosts were discovered from real hreflang links and checked using scene
+<code>208327863</code>, its 606-second duration, HLS master/variant, and a corresponding
+performer profile/listing. <code>url</code> retains the input host; <code>resolved_url</code> records
+the actual response where the shared helper supplies it. HTTP input normalizes
+to HTTPS. Userinfo, unexpected ports, and unrelated/arbitrary hosts are rejected.
+No alternate numbered domains, proxy hosts, or third-party mirrors are allowlisted.</p>
+<p>Straight routes and <code>/gay</code>/<code>/trans</code> category/search/directory prefixes are
+implemented. Orientation root entries are category directories, not video
+grids. Sampled gay/trans grids had external referrals rather than native HLS.</p>
+<h3>Boundaries</h3>
+<p>Only legitimately public native unencrypted HLS is downloaded. External source
+websites are represented as source indexes/referrals, not crawled for media.
+No account, playlist, separate Model/User type, full-video direct MP4, or
+independent JSON video API was verified. The REST root returned 401 and <code>/pics</code>
+returned 403. These inaccessible capabilities are not advertised as working.
+Unobserved layouts and future site changes remain unverified.</p>
+<p>See <a href="#guides-live-validation">recorded live evidence</a> and
+<a href="#getting-started">getting started</a>.</p>
+</section>
+
+<section class="section" id="changelog">
+<h2>Changelog — Porn.com API</h2>
+<h3>0.1.0</h3>
+<ul>
+<li>Initial async Client and typed <code>Video</code>, <code>Rendition</code>, <code>Collection</code>, <code>Pornstar</code>,
+  <code>Channel</code>, <code>Category</code>, <code>Source</code>, and <code>Filters</code> interfaces.</li>
+<li>Eager/deferred HTML metadata through the shared source-aware BaseMedia model;
+  listing summaries preserve real provenance without loading every scene.</li>
+<li>Scene identity checks, native HLS metadata, referral availability, performer
+  and category relationships, biographies, localized profile information.</li>
+<li>Filtered search, category/source listings, directories, and orientation routes.</li>
+<li>Verified twelve-host allowlist; input locale and content identity are retained.</li>
+<li>Numeric pagination continues beyond premature disabled Next links, preserves
+  real duplicate occurrences, excludes ads, and detects repeated pages.</li>
+<li>Shared-backend HLS downloading, quality selection, signed-source refresh,
+  caller-configuration isolation, optional remux/export metadata, and CLI.</li>
+<li>Recorded 48 passing live cases, 15 complete files, and full small/multipage
+  performer/channel comparisons during implementation on 2026-11-10.</li>
+<li>Matching HTML and focused searchable MCP documentation added for the provider.</li>
+</ul>
+<p>The package is still a local unpublished checkout. See
+<a href="#getting-started">getting started</a> and <a href="#guides-live-validation">live validation</a>.</p>
+</section>
+
+<!-- END:MAIN_CONTENT -->
