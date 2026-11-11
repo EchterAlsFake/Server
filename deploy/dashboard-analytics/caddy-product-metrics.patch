@@ -1,0 +1,48 @@
+--- a/Caddyfile
++++ b/Caddyfile
+@@ -121,22 +121,30 @@
+ 		handle /__infra_health {
+ 			respond "OK" 200
+ 		}
+-		handle /__eaf/visit.js {
+-			rewrite * /dashboard/static/visit.js
+-			reverse_proxy 127.0.0.1:18010 {
+-				import proxy_headers
+-			}
+-		}
+-		@visit {
+-			path /__eaf/visit
+-			method POST
+-		}
+-		handle @visit {
++		@legacy_visit path /__eaf/visit /__eaf/visit.js
++		handle @legacy_visit {
++			respond 410
++		}
++		@aggregate_metrics path /_metrics/event
++		handle @aggregate_metrics {
++			log_skip
+ 			request_body {
+-				max_size 1KB
+-			}
+-			reverse_proxy 127.0.0.1:18010 {
+-				import proxy_headers
++				max_size 256B
++			}
++			reverse_proxy 127.0.0.1:18080 {
++				header_up -Cookie
++				header_up -Authorization
++				header_up -Referer
++				header_up -Forwarded
++				header_up -X-Real-IP
++				header_up -True-Client-IP
++				header_up -CF-Connecting-IP
++				header_up -X-Original-Forwarded-For
++				header_up -X-Forwarded-For
++				header_up -X-Forwarded-Host
++				header_up -X-Forwarded-Port
++				header_up -X-Forwarded-Prefix
++				header_up X-Forwarded-Proto https
+ 			}
+ 		}
+ 		@keygen_portal_root path /dashboard/keygen
