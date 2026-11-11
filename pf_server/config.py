@@ -243,6 +243,7 @@ def load_environment_config(
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
         "PROJECT_ROOT": project_root,
         "DATA_DIR": data_directory,
+        "AGGREGATE_ANALYTICS_ENABLED": _boolean(source, "AGGREGATE_ANALYTICS_ENABLED", False),
         "WEBSITE_RELEASES_DIR": os.path.abspath(source.get("WEBSITE_RELEASES_DIR", os.path.join(data_directory, "website-releases"))),
         "DIRECT_DOWNLOADS_ENABLED": _boolean(source, "DIRECT_DOWNLOADS_ENABLED", False),
         "DIRECT_DOWNLOAD_ORIGIN": direct_origin,

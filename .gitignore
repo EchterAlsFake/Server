@@ -238,3 +238,8 @@ deploy/keygen/credentials/
 
 # Local browser inspection snapshots
 /.playwright-mcp/
+
+# Isolated aggregate analytics counters
+aggregate-analytics.sqlite3*
+aggregate-analytics-report.json
+.analytics-report-*

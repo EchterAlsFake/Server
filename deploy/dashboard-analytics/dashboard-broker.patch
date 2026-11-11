@@ -1,0 +1,33 @@
+--- a/dashboard_broker.py
++++ b/dashboard_broker.py
+@@ -26,6 +26,8 @@
+ from pathlib import Path
+ from typing import Any
+ 
++from aggregate_analytics_report import ReportUnavailable, read_report
++
+ 
+ MAX_REQUEST = 64 * 1024
+ MAX_RESPONSE = 4 * 1024 * 1024
+@@ -134,6 +136,7 @@
+     def dispatch(self, operation: str, arguments: dict[str, Any]) -> Any:
+         handlers = {
+             "overview": self.overview,
++            "website_analytics": lambda: self.website_analytics(arguments),
+             "updates": lambda: self.update_operation("inventory", {}),
+             "preview_update": lambda: self.update_operation("preview", arguments),
+             "delete_update": lambda: self.update_operation("delete", arguments),
+@@ -158,6 +161,13 @@
+         if handler is None:
+             raise OperationError("operation is not allowed")
+         return handler()
++
++    def website_analytics(self, arguments):
++        try:
++            return read_report(self.settings.server_database.parent / "aggregate-analytics-report.json",
++                               arguments.get("weeks", 4))
++        except ReportUnavailable:
++            raise OperationError("Aggregate analytics report unavailable") from None
+ 
+     def update_operation(self, operation, arguments):
+         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:

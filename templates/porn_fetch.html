@@ -23,7 +23,7 @@
                     {% if config.NOWPAYMENTS_SANDBOX %}<label><input type="checkbox" name="test_acknowledged" id="chk-test-site" value="yes" required><span>I understand this is a test checkout. No real purchase.</span></label>{% endif %}
                 </fieldset>
                 <p id="choice-error" class="checkout-error" role="alert" tabindex="-1">{{ checkout_error or '' }}</p>
-                <button type="submit" id="checkout-continue" class="btn btn-primary">Proceed with selected payment method <span aria-hidden="true">→</span></button>
+                <button type="submit" id="checkout-continue" data-metric="checkout_continue" class="btn btn-primary">Proceed with selected payment method <span aria-hidden="true">→</span></button>
                 <p class="checkout-back-note">You can change the method or details before creating a payment.</p>
             </section></form>
             <p class="brand-disclosure">Payment identities identify provider options, not endorsement or guaranteed availability. <a href="/static/notices/payment-brands.txt">Brand notices and usage sources</a>.</p>

@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh private website analytics reports daily
+
+[Timer]
+OnCalendar=*-*-* 00:20:00 UTC
+OnBootSec=5min
+Persistent=true
+Unit=pornfetch-analytics.service
+
+[Install]
+WantedBy=timers.target

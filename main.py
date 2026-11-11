@@ -17,6 +17,7 @@ from pf_server.ci_routes import ci_bp
 from pf_server.config import load_environment_config
 from pf_server.http import TrustedHostMiddleware
 from pf_server.statistics import RequestStatistics
+from pf_server.aggregate_analytics import init_aggregate_analytics
 from pf_server.direct_downloads import init_direct_downloads
 from pf_server.country_service import CheckoutCountryMiddleware, LocalCountryResolver
 from pf_server.docs_routes import docs_bp, handle_docs_subdomain
@@ -95,6 +96,7 @@ def create_app(
     db.init_app(application)
     csrf.init_app(application)
     limiter.init_app(application)
+    init_aggregate_analytics(application)
     migrate.init_app(application, db)
     talisman.init_app(
         application,
@@ -257,6 +259,8 @@ app = create_app()
 
 class NoIPLoggingHandler(WSGIRequestHandler):
     def log_request(self, code="-", size="-"):
+        if self.path.partition("?")[0] == "/_metrics/event":
+            return
         method = self.command
         path = self.path.partition("?")[0]
         logging.getLogger("pf_server.access").info("%s %s -> %s", method, path, code)

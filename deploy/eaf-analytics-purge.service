@@ -1,0 +1,17 @@
+[Unit]
+Description=Expire website aggregate counters after thirteen months
+ConditionPathExists=/srv/server/.env
+
+[Service]
+Type=oneshot
+User=eaf-server
+Group=eaf-server
+WorkingDirectory=/srv/server
+Environment=PF_SERVER_DATA_DIR=/srv/server/data
+ExecStart=/srv/server/.venv/bin/flask --app main analytics-purge
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/server/data
+PrivateTmp=true

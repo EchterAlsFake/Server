@@ -37,26 +37,28 @@ pornfetch.to {
         max_size 2147483648
     }
 
-    @visit_script path /__eaf/visit.js
-    handle @visit_script {
-        rewrite * /dashboard/static/visit.js
-        reverse_proxy 127.0.0.1:8010
+    # Retire stale copies of the former IP-derived visitor counter.
+    @legacy_visit path /__eaf/visit /__eaf/visit.js
+    handle @legacy_visit {
+        respond 410
     }
-    @visit {
-        path /__eaf/visit
-        method POST
-    }
-    handle @visit {
+
+    @aggregate_metrics path /_metrics/event
+    handle @aggregate_metrics {
+        log_skip
         request_body {
-            max_size 1KB
+            max_size 256B
         }
-        reverse_proxy 127.0.0.1:8010 {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up -Cookie
+            header_up -Authorization
+            header_up -Referer
             header_up -Forwarded
             header_up -X-Real-IP
             header_up -True-Client-IP
             header_up -CF-Connecting-IP
-            header_up X-Forwarded-For {client_ip}
-            header_up X-Forwarded-Host {host}
+            header_up -X-Forwarded-For
+            header_up -X-Forwarded-Host
             header_up X-Forwarded-Proto https
         }
     }

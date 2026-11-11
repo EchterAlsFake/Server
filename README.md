@@ -511,3 +511,10 @@ evidence and the saved checkout declarations. Run `flask --app main update-tor-e
 and install the hourly refresh timer before enabling payments. Missing/stale Tor data
 blocks new crypto checkout. Patreon browser retrieval starts a background worker immediately
 and migration `e8b42f930d16`; email alone never reveals a key in the browser.
+
+Optional privacy-first page/button counters and completed-week CLI reports are
+available with `AGGREGATE_ANALYTICS_ENABLED` (disabled by default). They store no
+visitor identifiers or event history. See [aggregate analytics](docs/ANALYTICS.md)
+for reporting commands, limitations, retention and deployment checks. The shared
+website template no longer embeds the legacy dashboard visitor script; this does
+not purge old counters or change download-importer records.

@@ -17,7 +17,8 @@
 
         <h2>2. Local app processing and website operational statistics</h2>
         <p>Porn Fetch runs locally and does not send browsing history or records of downloaded videos to my server. This is separate from requests to this website, downloads of application files and updates, and the separately described purchase, licensing and optional diagnostic processes.</p>
-        <h3>Daily visitor counting</h3>
+        <h3>Legacy visitor counting on other services and retained records</h3>
+        <p>This website no longer embeds the former dashboard visitor script. Other own services and existing records may still use the counter described below; removing the script does not delete historical data.</p>
         <p>A self-hosted dashboard estimates daily visitors per host. It processes the connection IP address in memory with the UTC date and a secret key to form a check value. The counting table stores a derived hash, date, host and fixed group “page”, not the plain IP address. The secret key itself is not currently replaced daily. This is pseudonymisation, not guaranteed anonymisation.</p>
         <p>The same IP can produce matching check values on multiple own domains on the same day because the calculation does not include the hostname. Reporting uses aggregate counts, not individual interest profiles. Shared or changing IP addresses may distort counts. Each new counting operation deletes check values dated before the current UTC date minus two days. Without further counting, this cleanup does not run; there is no independent deletion job. Daily and host totals remain. Backups are handled separately.</p>
         <h3>Application downloads and updates</h3>
@@ -41,7 +42,12 @@
 
         <h2>5. Session cookies, counting script and external content</h2>
         <p>This website uses a secure HTTP-only first-party session cookie for age confirmation, checkout and form protection. It contains session state, not browsing history or downloaded-video records, and has no persistent expiry; browsers may restore session cookies when restoring a session. It is not used for advertising.</p>
-        <p>The self-hosted counting script sends a broad page section derived from the first path segment to a service under this website's own address. URL parameters and page titles are not part of its JSON payload. The counting service ignores the section and stores the fixed group “page”. The counting request omits cookies; the script uses neither local storage nor browser fingerprinting. Processing of the connection IP is described in section 2.</p>
+        {% if config.AGGREGATE_ANALYTICS_ENABLED %}
+        <p>On selected public product, guide, download and checkout pages, a self-hosted script sends only predefined page and action names, such as a page display or download-button click. The collector immediately increments daily totals in a separate database. It stores no individual events, visitor IDs, IP hashes, browser details, full URLs, form contents, payment references or license data, and does not connect actions into browsing histories. Requests omit cookies and referrers. No analytics cookies, browser storage or fingerprinting are used. Do Not Track and Global Privacy Control are respected. Onion pages are excluded.</p>
+        <p>Reports show completed UTC weeks and omit counts below twenty. Daily totals are retained for thirteen calendar months, with scheduled daily cleanup and cleanup on collection or reporting. These are event counts, not distinct people, completed installations or exact abandonment rates. The server necessarily handles connection metadata to deliver requests; the aggregate database does not retain that metadata. Purchase and download processing described separately still applies.</p>
+        {% else %}
+        <p>The aggregate page and button counter is disabled. This website does not embed the former dashboard visitor script. The separate operational, download and purchase processing described in section 2 and below still applies.</p>
+        {% endif %}
         <p>My website fonts, stylesheets and website scripts are self-hosted. No external advertising networks or analytics scripts are embedded for my website statistics. The optional NOWPayments donation widget is an expressly described exception for external content. Activating it may load the payment provider's resources and storage mechanisms, so there is no blanket promise of “no external resources or third-party cookies”. External PayPal and Ko-fi donation links open the respective provider only when selected.</p>
 
         <h2>6. Payment Processing via NowPayments.io</h2>

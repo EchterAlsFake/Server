@@ -1,0 +1,11 @@
+[Unit]
+Description=Export suppressed weekly website analytics and expire old counters
+After=pornfetch-web.service
+Requisite=pornfetch-web.service
+
+[Service]
+Type=oneshot
+# Container GID 0 maps to the host pornfetch group: only the broker can read the
+# group-readable export. The collector database stays owner-only (container UID 1000).
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 0 python -m flask --app main analytics-export
+NoNewPrivileges=true
