@@ -120,9 +120,11 @@ For the production rootless container deployment:
   Check the patch against the current source before applying. Restart the broker
   after the report is generated and the dashboard update is ready.
 - Install `deploy/dashboard-analytics/pornfetch-analytics.{service,timer}` into the
-  `pornfetch` user's systemd directory. The exporter runs as container UID 1000,
-  GID 0; that GID maps to the host `pornfetch` group, allowing its broker to read
-  the group-readable snapshot without making raw counters readable. Enable the
+  `pornfetch` user's systemd directory. The exporter runs as container UID/GID
+  1000. The production data volume already grants the host `pornfetch` user an
+  inherited named-user ACL. The snapshot's 0640 mask permits read access through
+  that ACL; the raw database's 0600 mask prevents it. Verify these effective
+  permissions when deploying to a different volume; do not broaden raw DB access. Enable the
   timer and run the exporter service once. It replaces the standalone purge timer
   on this deployment, since export includes retention cleanup.
 - Enable `AGGREGATE_ANALYTICS_ENABLED=true` in the web Quadlet and restart the web

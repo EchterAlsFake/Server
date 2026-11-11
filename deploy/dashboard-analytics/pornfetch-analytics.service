@@ -5,7 +5,7 @@ Requisite=pornfetch-web.service
 
 [Service]
 Type=oneshot
-# Container GID 0 maps to the host pornfetch group: only the broker can read the
-# group-readable export. The collector database stays owner-only (container UID 1000).
-ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 0 python -m flask --app main analytics-export
+# The data volume already grants the host broker an inherited named-user ACL.
+# Export mode 0640 permits that ACL to read; raw counters remain mode 0600.
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 1000 python -m flask --app main analytics-export
 NoNewPrivileges=true
