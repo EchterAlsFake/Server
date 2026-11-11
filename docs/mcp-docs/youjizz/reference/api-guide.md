@@ -35,7 +35,7 @@ Live validation is performed on this Linux environment with Python 3.13 and FFmp
 
 # Installation
 
-Install the distribution (publication is managed separately):
+Install from PyPI:
 
 ```bash
 pip install unofficial-api-for-youjizz

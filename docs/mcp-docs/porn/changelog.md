@@ -26,5 +26,5 @@ keywords: ["Porn.com", "porn_api", "unofficial-api-for-porn", "changelog", "0.1.
   performer/channel comparisons during implementation on 2026-11-10.
 - Matching HTML and focused searchable MCP documentation added for the provider.
 
-The package is still a local unpublished checkout. See
+Install the package from PyPI. See
 [getting started](getting-started.md) and [live validation](guides/live-validation.md).

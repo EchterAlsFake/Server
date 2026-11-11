@@ -107,31 +107,27 @@
 <h2>Pornhat API getting started</h2>
 <p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-pornhat</code>. Import: <code>pornhat_api</code>.
 Requires Python 3.12+ and <code>eaf-base-api&gt;=4.2.6</code>, <code>selectolax</code>, and <code>m3u8</code>.</p>
-<p>Install the local checkout before publication:</p>
-<pre><code class="language-sh">pip install ./unofficial-api-for-pornhat
+<p>Install from PyPI:</p>
+<pre><code class="language-sh">pip install unofficial-api-for-pornhat
 </code></pre>
-<p>When working with the current neighboring backend checkout, install both editable packages:</p>
-<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-pornhat
-</code></pre>
-<p>Once published, use <code>pip install unofficial-api-for-pornhat</code>.
-FFmpeg is needed for MP4 remuxing and metadata tags; ffprobe is used by the live tests.</p>
-<pre><code class="language-python">import asyncio
-from base_api import BaseCore
-from base_api.modules.config import RuntimeConfig
-from pornhat_api import Client, DownloadConfigHLS
+<p>FFmpeg is needed for MP4 remuxing and metadata tags; ffprobe is used by the live tests.</p>
+<pre><code class="language-python"><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> pornhat_api <span class="token-keyword">import</span> Client, DownloadConfigHLS
 
-async def main():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> main():
     runtime = RuntimeConfig()
-    runtime.max_workers_download = 4
-    runtime.videos_concurrency = 2
-    runtime.pages_concurrency = 2
-    async with BaseCore(runtime) as core, Client(core) as client:
-        video = await client.get_video(&quot;https://www.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/&quot;)
+    runtime.max_workers_download = <span class="token-number">4</span>
+    runtime.videos_concurrency = <span class="token-number">2</span>
+    runtime.pages_concurrency = <span class="token-number">2</span>
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> BaseCore(runtime) <span class="token-keyword">as</span> core, Client(core) <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://www.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/&quot;</span>)
         print(video.title, video.duration, video.views)
-        print(await video.get_available_qualities())
-        await video.download(DownloadConfigHLS(quality=&quot;best&quot;, path=&quot;./&quot;, remux=True))
+        print(<span class="token-keyword">await</span> video.get_available_qualities())
+        <span class="token-keyword">await</span> video.download(DownloadConfigHLS(quality=<span class="token-string">&quot;best&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>, remux=<span class="token-keyword">True</span>))
 
-if __name__ == &quot;__main__&quot;:
+<span class="token-keyword">if</span> __name__ == <span class="token-string">&quot;__main__&quot;</span>:
     asyncio.run(main())
 </code></pre>
 <p>Every runtime request and download uses the shared <code>BaseCore</code>. <code>Client()</code> owns and closes
@@ -157,43 +153,43 @@ Individual getters retain the host in their supplied URL.</p>
 <p>Use <code>async with Client() as client</code> or <code>await client.close()</code>. Only an internally created core
 is closed. An injected core remains caller-owned.</p>
 <h3>get_video</h3>
-<pre><code class="language-python">async def get_video(url: str, *, load_html: bool=True, load_media: bool=False) -&gt; Video: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_video(url: str, *, load_html: bool=<span class="token-keyword">True</span>, load_media: bool=<span class="token-keyword">False</span>) -&gt; Video: ...
 </code></pre>
 <p>Return <code>Video</code>. HTML loads by default. <code>load_html=False</code> creates a deferred object; <code>load_media=True</code> resolves media (loading HTML first even if <code>load_html=False</code>). Requires an absolute <code>/video/&lt;slug&gt;/</code> URL.</p>
 <h3>get_model</h3>
-<pre><code class="language-python">async def get_model(url: str, *, load_html: bool=True) -&gt; Model: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_model(url: str, *, load_html: bool=<span class="token-keyword">True</span>) -&gt; Model: ...
 </code></pre>
 <p>Return <code>Model</code> from an absolute <code>/models/&lt;slug&gt;/</code> URL. <code>load_html=False</code> defers profile metadata.</p>
 <h3>get_channel</h3>
-<pre><code class="language-python">async def get_channel(url: str, *, load_html: bool=True) -&gt; Channel: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_channel(url: str, *, load_html: bool=<span class="token-keyword">True</span>) -&gt; Channel: ...
 </code></pre>
 <p>Return a grouped <code>Channel</code> from an absolute <code>/sites/&lt;slug&gt;/</code> URL. This is distinct from the paysite/brand collection.</p>
 <h3>get_category</h3>
-<pre><code class="language-python">async def get_category(url: str, *, load_html: bool=True) -&gt; Category: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_category(url: str, *, load_html: bool=<span class="token-keyword">True</span>) -&gt; Category: ...
 </code></pre>
 <p>Return a tag <code>Category</code> from an absolute <code>/tags/&lt;slug&gt;/</code> URL.</p>
 <h3>get_site</h3>
-<pre><code class="language-python">async def get_site(url: str, *, load_html: bool=True) -&gt; Site: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_site(url: str, *, load_html: bool=<span class="token-keyword">True</span>) -&gt; Site: ...
 </code></pre>
 <p>Return a paysite/brand <code>Site</code> from an absolute <code>/paysite/&lt;slug&gt;/</code> URL.</p>
 <h3>search</h3>
-<pre><code class="language-python">def search(query: str, *, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> search(query: str, *, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p>Return a lazy <code>ScrapeStream[Video]</code>. Whitespace in the stripped query becomes hyphens before URL encoding, matching the site form. A blank query raises <code>ValueError</code>. No duration, date, quality or search-sort arguments exist.</p>
 <h3>get_videos</h3>
-<pre><code class="language-python">def get_videos(*, sort: Sort=Sort.NEW, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> get_videos(*, sort: Sort=Sort.NEW, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p>Return new, popular or trending <code>Video</code> results. <code>sort</code> is <code>sorting.Sort.NEW</code>, <code>POPULAR</code> or <code>TRENDING</code>. This method takes no arbitrary listing URL.</p>
 <h3>get_models</h3>
-<pre><code class="language-python">def get_models(*, sort: ProfileSort=ProfileSort.RANK, letter: str | None=None, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Model]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> get_models(*, sort: ProfileSort=ProfileSort.RANK, letter: str | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Model]: ...
 </code></pre>
 <p>Return model-directory <code>ScrapeResult[Model]</code> objects. Supports <code>ProfileSort.RANK</code>, <code>VIDEOS</code>, <code>UPDATED</code> and <code>ABC</code>. Alphabet <code>letter</code> accepts A–Z or <code>None</code> for All. The model directory has no <code>other</code> group.</p>
 <h3>get_channels</h3>
-<pre><code class="language-python">def get_channels(*, sort: ProfileSort=ProfileSort.RANK, letter: str | None=None, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Channel]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> get_channels(*, sort: ProfileSort=ProfileSort.RANK, letter: str | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Channel]: ...
 </code></pre>
 <p>Return channel-directory <code>ScrapeResult[Channel]</code> objects. Uses the same sorting enum as models, with the additional alphabet group <code>letter="other"</code>.</p>
 <h3>get_categories</h3>
-<pre><code class="language-python">async def get_categories(*, load_html: bool=False) -&gt; list[Category]: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_categories(*, load_html: bool=<span class="token-keyword">False</span>) -&gt; list[Category]: ...
 </code></pre>
 <p>Await a list of all tag <code>Category</code> objects. These are deferred by default (<code>load_html=False</code>), with only URL/core identity loaded. <code>load_html=True</code> loads each category sequentially and can issue many requests; prefer loading selected categories.</p>
 <h3>Listing options</h3>
@@ -395,32 +391,32 @@ likes/dislikes, ratings, comment counts or invented defaults are exposed.</p>
 <p><code>to_dict()</code> includes only loaded fields by default and never triggers requests. It omits the
 core unless requested; use it for metadata inspection/export. See <a href="#guides-source-loading">source loading</a>.</p>
 <h3>get_available_qualities</h3>
-<pre><code class="language-python">async def get_available_qualities() -&gt; list[int]: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_available_qualities() -&gt; list[int]: ...
 </code></pre>
 <p>Load resolved media, inspect the real HLS master and return sorted unique integer heights. The verified samples expose <code>[360, 480, 720]</code>.</p>
 <h3>get_channel</h3>
-<pre><code class="language-python">async def get_channel(*, load_html: bool=True) -&gt; Channel | None: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_channel(*, load_html: bool=<span class="token-keyword">True</span>) -&gt; Channel | <span class="token-keyword">None</span>: ...
 </code></pre>
 <p>Load <code>author_link</code> if necessary and return the related <code>Channel</code>, or <code>None</code> when absent.</p>
 <h3>get_models</h3>
-<pre><code class="language-python">async def get_models(*, load_html: bool=True) -&gt; list[Model]: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_models(*, load_html: bool=<span class="token-keyword">True</span>) -&gt; list[Model]: ...
 </code></pre>
 <p>Load <code>pornstars_urls</code> if necessary and return related <code>Model</code> objects in page order. There is no separate <code>Pornstar</code> class.</p>
 <h3>get_site</h3>
-<pre><code class="language-python">async def get_site(*, load_html: bool=True) -&gt; Site | None: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_site(*, load_html: bool=<span class="token-keyword">True</span>) -&gt; Site | <span class="token-keyword">None</span>: ...
 </code></pre>
 <p>Load <code>site_url</code> if necessary and return the separate paysite/brand <code>Site</code>, or <code>None</code>.</p>
 <h3>download</h3>
-<pre><code class="language-python">async def download(configuration: DownloadConfigHLS, *, refresh: bool=False): ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> download(configuration: DownloadConfigHLS, *, refresh: bool=<span class="token-keyword">False</span>): ...
 </code></pre>
 <p>Load title and media, copy the download configuration, and delegate to <code>core.download</code>. Returns <code>bool</code> or shared <code>DownloadReport</code> according to <code>return_report</code>. <code>refresh=True</code> invalidates cached page data and loads fresh sources on a separate object, leaving the original metadata state intact.</p>
 <p>Relationship getters are awaited methods and support <code>load_html=False</code> for deferred
 related objects. They share the parent core; keep that core open. Example:</p>
-<pre><code class="language-python">async def inspect_relationships(video):
-    channel = await video.get_channel(load_html=False)
-    models = await video.get_models()
-    site = await video.get_site(load_html=False)
-    return channel, models, site
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_relationships(video):
+    channel = <span class="token-keyword">await</span> video.get_channel(load_html=<span class="token-keyword">False</span>)
+    models = <span class="token-keyword">await</span> video.get_models()
+    site = <span class="token-keyword">await</span> video.get_site(load_html=<span class="token-keyword">False</span>)
+    <span class="token-keyword">return</span> channel, models, site
 </code></pre>
 <p>See <a href="#guides-downloading">downloads</a> for quality selection, remuxing, reports, callbacks,
 refresh, and the observed transport limitation.</p>
@@ -496,19 +492,19 @@ pass <code>load_html=False</code> to defer all metadata. Absolute <code>/models/
 </tbody>
 </table>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
 Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
 loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
 ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
-<pre><code class="language-python">from base_api import make_iterator_config
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> make_iterator_config
 
-async def list_collection(client):
-    collection = await client.get_model(&quot;https://www.pornhat.com/models/armani-black/&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_collection(client):
+    collection = <span class="token-keyword">await</span> client.get_model(<span class="token-string">&quot;https://www.pornhat.com/models/armani-black/&quot;</span>)
     config = make_iterator_config(load_specific_sources=())
-    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> collection.videos(pages=<span class="token-string">&quot;all&quot;</span>, iterator_config=config) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             video = result.unwrap()
             print(video.video_id, video.url)
 </code></pre>
@@ -591,19 +587,19 @@ pass <code>load_html=False</code> to defer all metadata. Absolute <code>/sites/&
 </tbody>
 </table>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
 Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
 loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
 ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
-<pre><code class="language-python">from base_api import make_iterator_config
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> make_iterator_config
 
-async def list_collection(client):
-    collection = await client.get_channel(&quot;https://www.pornhat.com/sites/60-plus-milfs/&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_collection(client):
+    collection = <span class="token-keyword">await</span> client.get_channel(<span class="token-string">&quot;https://www.pornhat.com/sites/60-plus-milfs/&quot;</span>)
     config = make_iterator_config(load_specific_sources=())
-    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> collection.videos(pages=<span class="token-string">&quot;all&quot;</span>, iterator_config=config) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             video = result.unwrap()
             print(video.video_id, video.url)
 </code></pre>
@@ -686,19 +682,19 @@ pass <code>load_html=False</code> to defer all metadata. Absolute <code>/tags/&l
 </tbody>
 </table>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
 Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
 loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
 ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
-<pre><code class="language-python">from base_api import make_iterator_config
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> make_iterator_config
 
-async def list_collection(client):
-    collection = await client.get_category(&quot;https://www.pornhat.com/tags/blowjob/&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_collection(client):
+    collection = <span class="token-keyword">await</span> client.get_category(<span class="token-string">&quot;https://www.pornhat.com/tags/blowjob/&quot;</span>)
     config = make_iterator_config(load_specific_sources=())
-    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> collection.videos(pages=<span class="token-string">&quot;all&quot;</span>, iterator_config=config) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             video = result.unwrap()
             print(video.video_id, video.url)
 </code></pre>
@@ -781,19 +777,19 @@ pass <code>load_html=False</code> to defer all metadata. Absolute <code>/paysite
 </tbody>
 </table>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, pages: int | Literal['all']=1, start_page: int=1, iterator_config: IteratorConfig | None=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, pages: int | Literal[<span class="token-string">&#x27;all&#x27;</span>]=<span class="token-number">1</span>, start_page: int=<span class="token-number">1</span>, iterator_config: IteratorConfig | <span class="token-keyword">None</span>=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> is an alias of <code>videos</code> with the same arguments and return type.
 Results are <code>ScrapeResult[Video]</code> values, sharing this collection's core. Default iteration
 loads each video's HTML. Pass an <code>IteratorConfig</code> to select fields/sources, concurrency,
 ordering and error handling. <code>pages</code> is a positive count or <code>"all"</code>, and <code>start_page</code> is one based.</p>
-<pre><code class="language-python">from base_api import make_iterator_config
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> make_iterator_config
 
-async def list_collection(client):
-    collection = await client.get_site(&quot;https://www.pornhat.com/paysite/naughty-america/&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_collection(client):
+    collection = <span class="token-keyword">await</span> client.get_site(<span class="token-string">&quot;https://www.pornhat.com/paysite/naughty-america/&quot;</span>)
     config = make_iterator_config(load_specific_sources=())
-    async with collection.videos(pages=&quot;all&quot;, iterator_config=config) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> collection.videos(pages=<span class="token-string">&quot;all&quot;</span>, iterator_config=config) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             video = result.unwrap()
             print(video.video_id, video.url)
 </code></pre>
@@ -919,15 +915,15 @@ Collections only declare <code>html</code>. Videos declare both sources.</p>
 </tr>
 </tbody>
 </table>
-<pre><code class="language-python">async def inspect_lazily(client, url):
-    video = await client.get_video(url, load_html=False)
-    assert not video.loaded_sources
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_lazily(client, url):
+    video = <span class="token-keyword">await</span> client.get_video(url, load_html=<span class="token-keyword">False</span>)
+    <span class="token-keyword">assert</span> <span class="token-keyword">not</span> video.loaded_sources
     snapshot = video.to_dict()
-    await video.load_fields(&quot;title&quot;, &quot;duration&quot;)
-    assert video.loaded_sources == {&quot;html&quot;}
-    await video.load_sources(&quot;media&quot;)
-    assert video.loaded_sources == {&quot;html&quot;, &quot;media&quot;}
-    return snapshot, video.to_dict()
+    <span class="token-keyword">await</span> video.load_fields(<span class="token-string">&quot;title&quot;</span>, <span class="token-string">&quot;duration&quot;</span>)
+    <span class="token-keyword">assert</span> video.loaded_sources == {<span class="token-string">&quot;html&quot;</span>}
+    <span class="token-keyword">await</span> video.load_sources(<span class="token-string">&quot;media&quot;</span>)
+    <span class="token-keyword">assert</span> video.loaded_sources == {<span class="token-string">&quot;html&quot;</span>, <span class="token-string">&quot;media&quot;</span>}
+    <span class="token-keyword">return</span> snapshot, video.to_dict()
 </code></pre>
 <p>Field access is synchronous and cannot fetch: unresolved fields raise <code>DataNotLoadedError</code>.
 Known missing fields are <code>None</code>, while relationships can be empty lists. Inspect
@@ -952,30 +948,30 @@ Do not manually construct <code>%20</code> search routes: the observed site reje
 Only a nonblank query and page/iterator options are accepted; there are no search sort,
 upload date, duration, quality, country, gender or language filter arguments.
 Select a verified locale origin with <code>Client(base_url="https://de.pornhat.com")</code>.</p>
-<pre><code class="language-python">from base_api import make_iterator_config
-from pornhat_api.modules.sorting import ProfileSort, Sort
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> make_iterator_config
+<span class="token-keyword">from</span> pornhat_api.modules.sorting <span class="token-keyword">import</span> ProfileSort, Sort
 
-async def browse(client):
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> browse(client):
     lazy = make_iterator_config(load_specific_sources=())
-    async with client.search(&quot;Armani Black&quot;, pages=2, iterator_config=lazy) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.search(<span class="token-string">&quot;Armani Black&quot;</span>, pages=<span class="token-number">2</span>, iterator_config=lazy) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             print(result.unwrap().video_id)
-    async with client.get_videos(sort=Sort.TRENDING, iterator_config=lazy) as results:
-        first = (await anext(results)).unwrap()
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.get_videos(sort=Sort.TRENDING, iterator_config=lazy) <span class="token-keyword">as</span> results:
+        first = (<span class="token-keyword">await</span> anext(results)).unwrap()
         print(first.url)
-    async with client.get_models(sort=ProfileSort.ABC, letter=&quot;A&quot;, iterator_config=lazy) as results:
-        first_model = (await anext(results)).unwrap()
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.get_models(sort=ProfileSort.ABC, letter=<span class="token-string">&quot;A&quot;</span>, iterator_config=lazy) <span class="token-keyword">as</span> results:
+        first_model = (<span class="token-keyword">await</span> anext(results)).unwrap()
         print(first_model.url)
 </code></pre>
 <p>Profile directory sorting supports rank, video count, updated and alphabet groups. Models
 accept A–Z or All; channels also accept <code>other</code>. The <a href="#reference-sorting-enums">sorting reference</a>
 contains exact enum members and values.</p>
-<pre><code class="language-python">async def browse_tag(client):
-    categories = await client.get_categories()
-    tag = next(category for category in categories if category.url.endswith(&quot;/tags/blowjob/&quot;))
-    await tag.load_sources(&quot;html&quot;)
-    async with tag.videos(pages=1) as results:
-        async for result in results:
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> browse_tag(client):
+    categories = <span class="token-keyword">await</span> client.get_categories()
+    tag = next(category <span class="token-keyword">for</span> category <span class="token-keyword">in</span> categories <span class="token-keyword">if</span> category.url.endswith(<span class="token-string">&quot;/tags/blowjob/&quot;</span>))
+    <span class="token-keyword">await</span> tag.load_sources(<span class="token-string">&quot;html&quot;</span>)
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> tag.videos(pages=<span class="token-number">1</span>) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             print(result.unwrap().title)
 </code></pre>
 <p>Categories are deferred by default. <code>get_categories(load_html=True)</code> loads every tag detail
@@ -1024,20 +1020,20 @@ inspect actual pagination, then requests the bounded selected range through the 
 <p>Beyond-last ranges return an empty stream. Invalid counts, booleans or nonpositive indices
 raise <code>ValueError</code>. Initial navigation-discovery errors propagate directly; later page/item
 failures follow <code>IteratorConfig</code>. Call <code>result.unwrap()</code> so failures are not silently ignored.</p>
-<pre><code class="language-python">from base_api import make_iterator_config
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> make_iterator_config
 
-async def list_all(client):
-    model = await client.get_model(&quot;https://www.pornhat.com/models/armani-black/&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_all(client):
+    model = <span class="token-keyword">await</span> client.get_model(<span class="token-string">&quot;https://www.pornhat.com/models/armani-black/&quot;</span>)
     config = make_iterator_config(
         load_specific_sources=(),
-        order=&quot;original&quot;,
-        page_error_mode=&quot;raise&quot;,
-        item_error_mode=&quot;raise&quot;,
-        max_page_concurrency=2,
-        max_item_concurrency=2,
+        order=<span class="token-string">&quot;original&quot;</span>,
+        page_error_mode=<span class="token-string">&quot;raise&quot;</span>,
+        item_error_mode=<span class="token-string">&quot;raise&quot;</span>,
+        max_page_concurrency=<span class="token-number">2</span>,
+        max_item_concurrency=<span class="token-number">2</span>,
     )
-    async with model.videos(pages=&quot;all&quot;, iterator_config=config) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> model.videos(pages=<span class="token-string">&quot;all&quot;</span>, iterator_config=config) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             video = result.unwrap()
             print(video.video_id, video.url)
 </code></pre>
@@ -1100,21 +1096,21 @@ are recognized through explicit empty-state markers; missing containers otherwis
 <p>The verified player endpoints look like MP4 URLs but redirect to real HLS masters.
 Use <code>DownloadConfigHLS</code>; the provider exposes no direct-MP4 downloader. Preserve signed
 query strings and use <code>Video.download</code> rather than guessing CDN routes.</p>
-<pre><code class="language-python">from pornhat_api import DownloadConfigHLS
+<pre><code class="language-python"><span class="token-keyword">from</span> pornhat_api <span class="token-keyword">import</span> DownloadConfigHLS
 
-async def download_video(video):
-    qualities = await video.get_available_qualities()
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> download_video(video):
+    qualities = <span class="token-keyword">await</span> video.get_available_qualities()
     config = DownloadConfigHLS(
-        quality=&quot;best&quot;,
-        path=&quot;./downloads/&quot;,
-        remux=True,
-        return_report=True,
-        metadata={&quot;title&quot;: video.title, &quot;artist&quot;: video.author_name},
-        callback=lambda current, total: print(current, total),
+        quality=<span class="token-string">&quot;best&quot;</span>,
+        path=<span class="token-string">&quot;./downloads/&quot;</span>,
+        remux=<span class="token-keyword">True</span>,
+        return_report=<span class="token-keyword">True</span>,
+        metadata={<span class="token-string">&quot;title&quot;</span>: video.title, <span class="token-string">&quot;artist&quot;</span>: video.author_name},
+        callback=<span class="token-keyword">lambda</span> current, total: print(current, total),
     )
-    report = await video.download(config, refresh=True)
-    assert report.status == &quot;completed&quot; and not report.missing
-    return qualities, report
+    report = <span class="token-keyword">await</span> video.download(config, refresh=<span class="token-keyword">True</span>)
+    <span class="token-keyword">assert</span> report.status == <span class="token-string">&quot;completed&quot;</span> <span class="token-keyword">and</span> <span class="token-keyword">not</span> report.missing
+    <span class="token-keyword">return</span> qualities, report
 </code></pre>
 <p>Create the output directory first. Without <code>no_title=True</code>, the shared provider helper
 joins the configured directory with the sanitized video title and <code>.mp4</code> extension.
@@ -1199,15 +1195,15 @@ See <a href="../eaf_base_api/">shared downloads</a> and
 <code>VideoUnavailable</code>. BaseMedia loading wraps ordinary loader failures in <code>MediaLoadError</code>,
 or <code>MediaLoadErrors</code> for multiple sources. Inspect the original cause; catching only the
 inner provider error around <code>get_video()</code> will miss the loading wrapper.</p>
-<pre><code class="language-python">from base_api import MediaLoadError, MediaLoadErrors, is_resource_gone
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError, MediaLoadErrors, is_resource_gone
 
-async def fetch_video(client, url):
-    try:
-        return await client.get_video(url)
-    except (MediaLoadError, MediaLoadErrors) as error:
-        if is_resource_gone(error):
-            print(&quot;Resource no longer available:&quot;, url)
-        raise
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> fetch_video(client, url):
+    <span class="token-keyword">try</span>:
+        <span class="token-keyword">return</span> <span class="token-keyword">await</span> client.get_video(url)
+    <span class="token-keyword">except</span> (MediaLoadError, MediaLoadErrors) <span class="token-keyword">as</span> error:
+        <span class="token-keyword">if</span> is_resource_gone(error):
+            print(<span class="token-string">&quot;Resource no longer available:&quot;</span>, url)
+        <span class="token-keyword">raise</span>
 </code></pre>
 <table>
 <thead>
@@ -1377,12 +1373,12 @@ FFmpeg and ffprobe. Other Python versions and platforms have not been live-verif
 language, a working three-quality media master, and model ID 22070. Complete downloads
 additionally covered <code>.one</code> and German hosts. Arbitrary subdomains and mirror domains
 are rejected. No other host family has been verified or accepted.</p>
-<pre><code class="language-python">from pornhat_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> pornhat_api <span class="token-keyword">import</span> Client
 
-async def localized_video():
-    async with Client(base_url=&quot;https://de.pornhat.com&quot;) as client:
-        video = await client.get_video(
-            &quot;https://de.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/&quot;
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> localized_video():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client(base_url=<span class="token-string">&quot;https://de.pornhat.com&quot;</span>) <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(
+            <span class="token-string">&quot;https://de.pornhat.com/video/armani-black-wants-her-husband-s-friend-deep-inside/&quot;</span>
         )
         print(video.language)
 </code></pre>
@@ -1411,8 +1407,7 @@ Signed media URL queries are separate and preserved during resolution/download.<
   this remains documented rather than hidden by the successful bounded run.</li>
 <li>HTML documentation and searchable MCP reference pages following the existing API corpus.</li>
 </ul>
-<p>This version is a local checkout; package publication and remote CI badge status are not
-asserted. Exact-multiple profile totals, additional quality sets, other platforms, accounts,
+<p>Exact-multiple profile totals, additional quality sets, other platforms, accounts,
 playlists and player-only recommendation controls remain unverified or unimplemented.</p>
 <p>See <a href="#getting-started">getting started</a> and <a href="#guides-downloading">download evidence</a>.</p>
 </section>

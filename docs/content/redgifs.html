@@ -1,7 +1,7 @@
 <!-- SLOT:TITLE = RedGIFs API -->
 <!-- SLOT:HERO_TITLE = RedGIFs API -->
 <!-- SLOT:HERO_SUBTITLE = An asynchronous Python API for RedGIFs videos, images, creator profiles, tags, niches, public collections, lazy API/HTML metadata and direct downloads. Powered by eaf_base_api. -->
-<!-- SLOT:VERSION = 0.1.0 -->
+<!-- SLOT:VERSION = 1.0.0 -->
 <!-- SLOT:GITHUB_URL = https://github.com/EchterAlsFake/unofficial-api-for-redgifs -->
 <!-- SLOT:PYPI_PACKAGE = unofficial-api-for-redgifs -->
 <!-- SLOT:LICENSE_LABEL = AGPL-3.0-only -->
@@ -30,13 +30,12 @@
 <!-- BEGIN:MAIN_CONTENT -->
 <section class="section" id="getting-started">
 <h2>RedGIFs API getting started</h2>
-<p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-redgifs</code>. Import: <code>redgifs_api</code>.
+<p>Version <strong>1.0.0</strong>. Distribution: <code>unofficial-api-for-redgifs</code>. Import: <code>redgifs_api</code>.
 Requires Python 3.12+, <code>eaf-base-api&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
-<p>Install from the workspace containing both checkouts before publication:</p>
-<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-redgifs
+<p>Install from PyPI:</p>
+<pre><code class="language-sh">pip install unofficial-api-for-redgifs
 </code></pre>
-<p>From the provider directory alone, use <code>pip install .</code>. Package publication and remote
-CI status are not asserted. FFmpeg is not required for direct MP4/JPG transfers;
+<p>FFmpeg is not required for direct MP4/JPG transfers;
 <code>ffprobe</code> is used for live media validation.</p>
 <pre><code class="language-python">import asyncio
 from base_api import BaseCore
@@ -1868,7 +1867,7 @@ validation. The latest suite has 38 passing and 12 rate-limited failures; see
   had omissions/duplicates, and those assertions remain intact.</li>
 <li>Matching HTML and searchable MCP documentation following the shared documentation layout.</li>
 </ul>
-<p>This is an unpublished local version. HLS URLs are inspectable but HLS downloads,
+<p>HLS URLs are inspectable but HLS downloads,
 gallery enumeration, private/account actions and personalized recommendation feeds are
 not implemented. No claim is made that the full validation gate has passed.
 See <a href="#getting-started">getting started</a> and <a href="#guides-live-validation">validation</a>.</p>

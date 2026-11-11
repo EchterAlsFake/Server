@@ -1,6 +1,9 @@
 import html
+import io
+import keyword
 import re
 import shutil
+import tokenize
 from pathlib import Path
 
 BRAND_MARKS = {
@@ -34,6 +37,47 @@ BRAND_MARKS = {
 def clean_html_document(content: str) -> str:
     """Keep generated pages deterministic and free of trailing whitespace."""
     return "\n".join(line.rstrip() for line in content.splitlines()) + "\n"
+
+
+def highlight_python_blocks(content: str) -> str:
+    """Render fenced Python examples with the existing documentation token colors."""
+    def highlight(match):
+        source = html.unescape(match.group(2))
+        lines = source.splitlines(keepends=True)
+        offsets = [0]
+        for line in lines:
+            offsets.append(offsets[-1] + len(line))
+
+        def position(location):
+            row, column = location
+            return offsets[min(row - 1, len(offsets) - 1)] + column
+
+        parts = []
+        cursor = 0
+        try:
+            for token in tokenize.generate_tokens(io.StringIO(source).readline):
+                color = {
+                    tokenize.STRING: "string",
+                    tokenize.NUMBER: "number",
+                    tokenize.COMMENT: "comment",
+                }.get(token.type)
+                if token.type == tokenize.NAME and keyword.iskeyword(token.string):
+                    color = "keyword"
+                if color:
+                    start, end = position(token.start), position(token.end)
+                    parts.append(html.escape(source[cursor:start]))
+                    parts.append(f'<span class="token-{color}">{html.escape(source[start:end])}</span>')
+                    cursor = end
+        except (tokenize.TokenError, IndentationError):
+            # Partial signatures and snippets still retain their original text.
+            pass
+        parts.append(html.escape(source[cursor:]))
+        return match.group(1) + "".join(parts) + match.group(3)
+
+    return re.sub(
+        r'(<pre><code class="language-python">)(.*?)(</code></pre>)',
+        highlight, content, flags=re.DOTALL,
+    )
 
 
 def build_docs():
@@ -128,6 +172,8 @@ def build_docs():
             # Replace placeholder in template, e.g., <!-- SLOT:TITLE -->
             placeholder = f"<!-- SLOT:{slot_name} -->"
             final_html = final_html.replace(placeholder, slot_value)
+
+        final_html = highlight_python_blocks(final_html)
 
         # 4. Save to dist/api_name/index.html
         api_dist_dir = dist_dir / api_name

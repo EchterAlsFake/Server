@@ -28,8 +28,7 @@ keywords:
   this remains documented rather than hidden by the successful bounded run.
 - HTML documentation and searchable MCP reference pages following the existing API corpus.
 
-This version is a local checkout; package publication and remote CI badge status are not
-asserted. Exact-multiple profile totals, additional quality sets, other platforms, accounts,
+Exact-multiple profile totals, additional quality sets, other platforms, accounts,
 playlists and player-only recommendation controls remain unverified or unimplemented.
 
 See [getting started](getting-started.md) and [download evidence](guides/downloading.md).

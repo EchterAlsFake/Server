@@ -32,7 +32,7 @@ keywords:
   had omissions/duplicates, and those assertions remain intact.
 - Matching HTML and searchable MCP documentation following the shared documentation layout.
 
-This is an unpublished local version. HLS URLs are inspectable but HLS downloads,
+HLS URLs are inspectable but HLS downloads,
 gallery enumeration, private/account actions and personalized recommendation feeds are
 not implemented. No claim is made that the full validation gate has passed.
 See [getting started](getting-started.md) and [validation](guides/live-validation.md).

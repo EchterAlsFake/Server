@@ -29,14 +29,10 @@
 <h2>Pornhat API getting started</h2>
 <p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-pornhat</code>. Import: <code>pornhat_api</code>.
 Requires Python 3.12+ and <code>eaf-base-api&gt;=4.2.6</code>, <code>selectolax</code>, and <code>m3u8</code>.</p>
-<p>Install the local checkout before publication:</p>
-<pre><code class="language-sh">pip install ./unofficial-api-for-pornhat
+<p>Install from PyPI:</p>
+<pre><code class="language-sh">pip install unofficial-api-for-pornhat
 </code></pre>
-<p>When working with the current neighboring backend checkout, install both editable packages:</p>
-<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-pornhat
-</code></pre>
-<p>Once published, use <code>pip install unofficial-api-for-pornhat</code>.
-FFmpeg is needed for MP4 remuxing and metadata tags; ffprobe is used by the live tests.</p>
+<p>FFmpeg is needed for MP4 remuxing and metadata tags; ffprobe is used by the live tests.</p>
 <pre><code class="language-python">import asyncio
 from base_api import BaseCore
 from base_api.modules.config import RuntimeConfig
@@ -1333,8 +1329,7 @@ Signed media URL queries are separate and preserved during resolution/download.<
   this remains documented rather than hidden by the successful bounded run.</li>
 <li>HTML documentation and searchable MCP reference pages following the existing API corpus.</li>
 </ul>
-<p>This version is a local checkout; package publication and remote CI badge status are not
-asserted. Exact-multiple profile totals, additional quality sets, other platforms, accounts,
+<p>Exact-multiple profile totals, additional quality sets, other platforms, accounts,
 playlists and player-only recommendation controls remain unverified or unimplemented.</p>
 <p>See <a href="#getting-started">getting started</a> and <a href="#guides-downloading">download evidence</a>.</p>
 </section>

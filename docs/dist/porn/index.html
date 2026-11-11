@@ -81,7 +81,7 @@
                         <div class="hero-actions">
                             <button class="install-cmd" type="button" onclick="copyInstall(this)" title="Copy install command">
                                 <span class="prompt" aria-hidden="true">$</span>
-                                <code>pip install ./unofficial-api-for-porn</code>
+                                <code>pip install unofficial-api-for-porn</code>
                                 <span class="copy-icon" aria-hidden="true">Copy</span>
                             </button>
                             <a href="https://github.com/EchterAlsFake/unofficial-api-for-porn" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
@@ -109,35 +109,35 @@
 <h2>Porn.com API getting started</h2>
 <p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-porn</code>. Import: <code>porn_api</code>.
 Requires Python <strong>3.12+</strong>, <code>eaf-base-api[hls]&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
-<p>The package is currently unpublished. From the workspace containing its checkout:</p>
-<pre><code class="language-sh">pip install ./unofficial-api-for-porn
+<p>Install from PyPI:</p>
+<pre><code class="language-sh">pip install unofficial-api-for-porn
 </code></pre>
 <p>FFmpeg is required when requesting MP4 remuxing or export metadata; ffprobe is used
 by the live download checks. No account or browser cookies are required for the
 verified public scenes.</p>
-<pre><code class="language-python">import asyncio
-from contextlib import aclosing
-from base_api import BaseCore
-from base_api.modules.config import RuntimeConfig
-from porn_api import Client, DownloadConfigHLS
+<pre><code class="language-python"><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client, DownloadConfigHLS
 
-async def main():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> main():
     runtime = RuntimeConfig()
-    runtime.request_delay = 1
-    runtime.videos_concurrency = 2
-    async with BaseCore(runtime) as core, Client(core) as client:
-        video = await client.get_video(&quot;https://www.porn.com/scene/208974141&quot;)
+    runtime.request_delay = <span class="token-number">1</span>
+    runtime.videos_concurrency = <span class="token-number">2</span>
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> BaseCore(runtime) <span class="token-keyword">as</span> core, Client(core) <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://www.porn.com/scene/208974141&quot;</span>)
         print(video.title, video.duration)
-        print([(r.width, r.height) for r in await video.get_qualities()])
-        await video.download(DownloadConfigHLS(
-            quality=&quot;worst&quot;, path=&quot;./&quot;, remux=True, return_report=True,
+        print([(r.width, r.height) <span class="token-keyword">for</span> r <span class="token-keyword">in</span> <span class="token-keyword">await</span> video.get_qualities()])
+        <span class="token-keyword">await</span> video.download(DownloadConfigHLS(
+            quality=<span class="token-string">&quot;worst&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>, remux=<span class="token-keyword">True</span>, return_report=<span class="token-keyword">True</span>,
         ))
-        async with aclosing(client.search(&quot;yoga&quot;, pages=1)) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(client.search(<span class="token-string">&quot;yoga&quot;</span>, pages=<span class="token-number">1</span>)) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 summary = result.unwrap()
                 print(summary.video_id, summary.title)
 
-if __name__ == &quot;__main__&quot;:
+<span class="token-keyword">if</span> __name__ == <span class="token-string">&quot;__main__&quot;</span>:
     asyncio.run(main())
 </code></pre>
 <p><code>Client()</code> owns its default core and closes it through its async context manager
@@ -154,9 +154,9 @@ mean that media is available on Porn.com.</p>
 
 <section class="section" id="reference-client">
 <h2>Client — Porn.com API</h2>
-<pre><code class="language-python">Client(core: BaseCore | None = None, *,
-       base_url: str = &quot;https://www.porn.com&quot;,
-       orientation: Literal[&quot;straight&quot;, &quot;gay&quot;, &quot;trans&quot;] = &quot;straight&quot;)
+<pre><code class="language-python">Client(core: BaseCore | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>, *,
+       base_url: str = <span class="token-string">&quot;https://www.porn.com&quot;</span>,
+       orientation: Literal[<span class="token-string">&quot;straight&quot;</span>, <span class="token-string">&quot;gay&quot;</span>, <span class="token-string">&quot;trans&quot;</span>] = <span class="token-string">&quot;straight&quot;</span>)
 </code></pre>
 <p>Supports <code>async with Client() as client</code> and <code>await client.close()</code>. Only an
 internally created <code>BaseCore</code> is closed by the client. <code>base_url</code> is a verified
@@ -426,10 +426,10 @@ returns a list of immutable <code>Rendition</code> objects, sorted by height the
 separate <code>media</code> loader exists. Inspect <code>get_qualities()</code> when media information
 is needed. A referral without a master raises <code>VideoUnavailable</code>.</p>
 <h3>Relationships</h3>
-<pre><code class="language-python">channel = await video.get_author(load_html=True)
-performers = await video.get_pornstars(load_html=True)
-source = await video.get_source(load_html=True)
-async for result in video.related_videos(iterator_config=None):
+<pre><code class="language-python">channel = <span class="token-keyword">await</span> video.get_author(load_html=<span class="token-keyword">True</span>)
+performers = <span class="token-keyword">await</span> video.get_pornstars(load_html=<span class="token-keyword">True</span>)
+source = <span class="token-keyword">await</span> video.get_source(load_html=<span class="token-keyword">True</span>)
+<span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> video.related_videos(iterator_config=<span class="token-keyword">None</span>):
     related = result.unwrap()
 </code></pre>
 <p>These are methods, not async properties. <code>get_author()</code> returns <code>Channel | None</code>;
@@ -438,7 +438,7 @@ returns <code>Source | None</code> when the originating listing supplies a sourc
 Unlinked performer names are not guessed into URLs. All objects share the core.
 <code>related_videos()</code> is a one-page result stream of the scene's related grid.</p>
 <h3>Download</h3>
-<pre><code class="language-python">await video.download(configuration: DownloadConfigHLS, *, refresh: bool = True)
+<pre><code class="language-python"><span class="token-keyword">await</span> video.download(configuration: DownloadConfigHLS, *, refresh: bool = <span class="token-keyword">True</span>)
 </code></pre>
 <p>Delegates to <code>BaseCore.download</code> after checking public unencrypted HLS variants.
 Returns the shared boolean or <code>DownloadReport</code> according to configuration.
@@ -512,9 +512,9 @@ actual domain type. Its only metadata source is <code>html</code>.</p>
 </tr>
 </tbody>
 </table>
-<pre><code class="language-python">collection.videos(*, pages: int | Literal[&quot;all&quot;] = 1,
-                  start_page: int = 1, filters: Filters | None = None,
-                  iterator_config: IteratorConfig | None = None)
+<pre><code class="language-python">collection.videos(*, pages: int | Literal[<span class="token-string">&quot;all&quot;</span>] = <span class="token-number">1</span>,
+                  start_page: int = <span class="token-number">1</span>, filters: Filters | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+                  iterator_config: IteratorConfig | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>)
 </code></pre>
 <p>Returns an async stream of <code>ScrapeResult[Video]</code>, initially containing listing
 summaries. <code>pages</code> counts requested pages from the one-based <code>start_page</code>;
@@ -538,15 +538,15 @@ Generated biography prose is not used to infer the video count.</p>
 <p><code>Pornstar(Collection)</code> represents a real performer page whose HTML body declares
 <code>single-pornstar</code>. Its lazy fields and <code>.videos(...)</code> signature are documented
 under <a href="#reference-collection">Collection</a>. There is no separate <code>Model</code> class.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from porn_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client
 
-async def inspect_performer():
-    async with Client() as client:
-        star = await client.get_pornstar(&quot;https://www.porn.com/azumi-mizushima&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_performer():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        star = <span class="token-keyword">await</span> client.get_pornstar(<span class="token-string">&quot;https://www.porn.com/azumi-mizushima&quot;</span>)
         print(star.name, star.video_count, star.info)
-        async with aclosing(star.videos(pages=&quot;all&quot;)) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(star.videos(pages=<span class="token-string">&quot;all&quot;</span>)) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().video_id)
 </code></pre>
 <p>English examples expose gender, birthday, birthplace, ethnicity, height, hair
@@ -565,15 +565,15 @@ See <a href="#guides-live-validation">profile reconciliation</a>.</p>
 <p><code>Channel(Collection)</code> represents a studio/channel page with HTML body type
 <code>single-channel</code>. A source website such as XNXX is a distinct <a href="#reference-source">Source</a>.
 Use actual links instead of deriving channel URLs from a video title.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from porn_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client
 
-async def inspect_channel():
-    async with Client() as client:
-        channel = await client.get_channel(&quot;https://www.porn.com/bratty-sis&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_channel():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        channel = <span class="token-keyword">await</span> client.get_channel(<span class="token-string">&quot;https://www.porn.com/bratty-sis&quot;</span>)
         print(channel.name, channel.description, channel.info)
-        async with aclosing(channel.videos(pages=&quot;all&quot;)) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(channel.videos(pages=<span class="token-string">&quot;all&quot;</span>)) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 video = result.unwrap()
                 print(video.video_id, video.title, video.source_name)
 </code></pre>
@@ -593,26 +593,26 @@ See <a href="#guides-live-validation">live validation</a>.</p>
 <code>https://www.porn.com/yoga-porn</code>. <code>await client.get_category(url)</code> loads metadata
 by default; <code>client.categories()</code> streams summaries from the A–Z directory.
 The full field table and video signature are in <a href="#reference-collection">Collection</a>.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from porn_api import Client, Filters
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client, Filters
 
-async def browse_category():
-    async with Client() as client:
-        category = await client.get_category(&quot;https://www.porn.com/yoga-porn&quot;)
-        async with aclosing(category.videos(
-            pages=1, filters=Filters(source=&quot;xVideos&quot;, min_minutes=20),
-        )) as stream:
-            async for result in stream:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> browse_category():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        category = <span class="token-keyword">await</span> client.get_category(<span class="token-string">&quot;https://www.porn.com/yoga-porn&quot;</span>)
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(category.videos(
+            pages=<span class="token-number">1</span>, filters=Filters(source=<span class="token-string">&quot;xVideos&quot;</span>, min_minutes=<span class="token-number">20</span>),
+        )) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().title)
 </code></pre>
 <h3>Orientation directory roots</h3>
 <p>The straight category directory can link <code>/gay</code> and <code>/trans</code>. These are category
 directory roots, not direct video grids. <code>category.is_directory</code> identifies
 them; <code>.videos(...)</code> raises <code>ValueError</code> with instructions to browse categories.</p>
-<pre><code class="language-python">async def browse_orientation(client):
-    root = await client.get_category(&quot;https://www.porn.com/gay&quot;)
-    if root.is_directory:
-        async for result in root.categories():
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> browse_orientation(client):
+    root = <span class="token-keyword">await</span> client.get_category(<span class="token-string">&quot;https://www.porn.com/gay&quot;</span>)
+    <span class="token-keyword">if</span> root.is_directory:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> root.categories():
             print(result.unwrap().url)
 </code></pre>
 <p><code>Category.categories(*, iterator_config=None)</code> is only supported on these two
@@ -627,15 +627,15 @@ from a related video thumbnail.</p>
 <p><code>Source(Collection)</code> represents the site-wide index for a source website, for
 example <code>https://www.porn.com/xnxx</code>. It validates HTML body type <code>single-source</code>.
 It is distinct from a studio <a href="#reference-channel">Channel</a>.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from porn_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client
 
-async def browse_source():
-    async with Client() as client:
-        source = await client.get_source(&quot;https://www.porn.com/xnxx&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> browse_source():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        source = <span class="token-keyword">await</span> client.get_source(<span class="token-string">&quot;https://www.porn.com/xnxx&quot;</span>)
         print(source.name, source.video_count)
-        async with aclosing(source.videos(pages=1)) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(source.videos(pages=<span class="token-number">1</span>)) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 summary = result.unwrap()
                 print(summary.video_id, summary.source_name)
 </code></pre>
@@ -653,9 +653,9 @@ initial validation did not enumerate their entire multi-million-entry catalogs.<
 <section class="section" id="reference-filters">
 <h2>Filters — Porn.com API</h2>
 <p><code>Filters</code> is a frozen, slotted dataclass exported by <code>porn_api</code>:</p>
-<pre><code class="language-python">Filters(added_days: Literal[1, 7, 30, 90, 365] | None = None,
-        source: str | None = None, hd: bool = False,
-        min_minutes: int | None = None, max_minutes: int | None = None)
+<pre><code class="language-python">Filters(added_days: Literal[<span class="token-number">1</span>, <span class="token-number">7</span>, <span class="token-number">30</span>, <span class="token-number">90</span>, <span class="token-number">365</span>] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+        source: str | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>, hd: bool = <span class="token-keyword">False</span>,
+        min_minutes: int | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>, max_minutes: int | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>)
 </code></pre>
 <table>
 <thead>
@@ -765,17 +765,17 @@ Client getters load it by default. No independently selectable public video API
 was established: the REST root returned 401, while embedded WordPress schema
 describes the generic <code>/scene</code> page. There are no <code>load_api</code> flags or <code>media</code>
 loader. <code>get_qualities()</code> explicitly requests the real HLS master when needed.</p>
-<pre><code class="language-python">from porn_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client
 
-async def inspect_sources():
-    async with Client() as client:
-        video = await client.get_video(
-            &quot;https://www.porn.com/scene/208974141&quot;, load_html=False,
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_sources():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(
+            <span class="token-string">&quot;https://www.porn.com/scene/208974141&quot;</span>, load_html=<span class="token-keyword">False</span>,
         )
         print(video.loaded_sources, video.to_dict())
-        await video.load_fields(&quot;title&quot;, &quot;duration&quot;)
+        <span class="token-keyword">await</span> video.load_fields(<span class="token-string">&quot;title&quot;</span>, <span class="token-string">&quot;duration&quot;</span>)
         print(video.title, video.duration)
-        await video.load_sources(&quot;html&quot;)
+        <span class="token-keyword">await</span> video.load_sources(<span class="token-string">&quot;html&quot;</span>)
         print(video.to_dict())
 </code></pre>
 <p>The shared <code>BaseMedia</code> loader applies field mappings atomically. Attribute access
@@ -805,14 +805,14 @@ iterator_config=None)</code> streams <code>ScrapeResult[Video]</code>. A query m
 1–100 characters and not be whitespace-only. The client encodes it under <code>sq</code>.
 Search can legitimately redirect to a category: <code>yoga</code> resolves to <code>/yoga-porn</code>.
 An unmatched search uses a verified empty-results layout, not a fake empty Video.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from porn_api import Client, Filters
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client, Filters
 
-async def search_videos():
-    async with Client() as client:
-        filters = Filters(source=&quot;xVideos&quot;, min_minutes=20, hd=True)
-        async with aclosing(client.search(&quot;yoga&quot;, pages=2, filters=filters)) as stream:
-            async for result in stream:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> search_videos():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        filters = Filters(source=<span class="token-string">&quot;xVideos&quot;</span>, min_minutes=<span class="token-number">20</span>, hd=<span class="token-keyword">True</span>)
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(client.search(<span class="token-string">&quot;yoga&quot;</span>, pages=<span class="token-number">2</span>, filters=filters)) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 summary = result.unwrap()
                 print(summary.video_id, summary.title)
 </code></pre>
@@ -838,22 +838,22 @@ No additional sort parameter or sorting enums were verified.</p>
 async <code>ScrapeResult</code> streams. Defaults construct observed summaries and raise
 terminal errors. Every result must be unwrapped; a configured yielded failure
 must not silently disappear from the caller's loop.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from base_api import ErrorMode, IteratorConfig, ResultOrder
-from porn_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorMode, IteratorConfig, ResultOrder
+<span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client
 
-async def iterate_profile():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> iterate_profile():
     config = IteratorConfig(
         order=ResultOrder.ORIGINAL,
-        max_item_concurrency=2,
+        max_item_concurrency=<span class="token-number">2</span>,
         page_error_mode=ErrorMode.RAISE,
         item_error_mode=ErrorMode.RAISE,
         load_specific_sources=(),
     )
-    async with Client() as client:
-        channel = await client.get_channel(&quot;https://www.porn.com/bratty-sis&quot;)
-        async with aclosing(channel.videos(pages=&quot;all&quot;, iterator_config=config)) as stream:
-            async for result in stream:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        channel = <span class="token-keyword">await</span> client.get_channel(<span class="token-string">&quot;https://www.porn.com/bratty-sis&quot;</span>)
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(channel.videos(pages=<span class="token-string">&quot;all&quot;</span>, iterator_config=config)) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 video = result.unwrap()
                 print(result.page_index, result.item_index, video.video_id)
 </code></pre>
@@ -892,16 +892,16 @@ the observed differences exactly. Use <code>aclosing</code> when stopping a stre
 their actual width/height/bandwidth and preserves signed variant URLs. A referral
 without native media raises <code>VideoUnavailable</code>; this wrapper does not follow its
 outbound link to implement another site's downloader.</p>
-<pre><code class="language-python">from porn_api import Client, DownloadConfigHLS
+<pre><code class="language-python"><span class="token-keyword">from</span> porn_api <span class="token-keyword">import</span> Client, DownloadConfigHLS
 
-async def download_video():
-    async with Client() as client:
-        video = await client.get_video(&quot;https://www.porn.com/scene/208974141&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> download_video():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://www.porn.com/scene/208974141&quot;</span>)
         config = DownloadConfigHLS(
-            quality=&quot;worst&quot;, path=&quot;./&quot;, remux=True, return_report=True,
-            metadata={&quot;title&quot;: video.title},
+            quality=<span class="token-string">&quot;worst&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>, remux=<span class="token-keyword">True</span>, return_report=<span class="token-keyword">True</span>,
+            metadata={<span class="token-string">&quot;title&quot;</span>: video.title},
         )
-        report = await video.download(config)
+        report = <span class="token-keyword">await</span> video.download(config)
         print(report.status, report.downloaded, report.total, report.metadata_written)
 </code></pre>
 <p><code>Video.download(configuration, *, refresh=True)</code> requires <code>DownloadConfigHLS</code>
@@ -1343,7 +1343,7 @@ Unobserved layouts and future site changes remain unverified.</p>
   performer/channel comparisons during implementation on 2026-11-10.</li>
 <li>Matching HTML and focused searchable MCP documentation added for the provider.</li>
 </ul>
-<p>The package is still a local unpublished checkout. See
+<p>Install the package from PyPI. See
 <a href="#getting-started">getting started</a> and <a href="#guides-live-validation">live validation</a>.</p>
 </section>
 

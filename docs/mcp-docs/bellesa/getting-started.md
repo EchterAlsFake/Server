@@ -15,12 +15,6 @@ Requires Python 3.12+, `eaf-base-api[hls]>=4.2.6`, and `selectolax`.
 pip install unofficial-api-for-bellesa
 ```
 
-From a local checkout, use `pip install .`. When developing against the shared backend
-checkout from the workspace root:
-
-```sh
-pip install -e ./eaf_base_api -e ./unofficial-api-for-bellesa
-```
 
 FFmpeg is needed to remux HLS output to MP4. Direct MP4 transfers use the shared RAW
 downloader. No account credentials are required for the public catalog.

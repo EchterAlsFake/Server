@@ -15,19 +15,13 @@ keywords:
 Version **0.1.0**. Distribution: `unofficial-api-for-pornhat`. Import: `pornhat_api`.
 Requires Python 3.12+ and `eaf-base-api>=4.2.6`, `selectolax`, and `m3u8`.
 
-Install the local checkout before publication:
+Install from PyPI:
 
 ```sh
-pip install ./unofficial-api-for-pornhat
+pip install unofficial-api-for-pornhat
 ```
 
-When working with the current neighboring backend checkout, install both editable packages:
 
-```sh
-pip install -e ./eaf_base_api -e ./unofficial-api-for-pornhat
-```
-
-Once published, use `pip install unofficial-api-for-pornhat`.
 FFmpeg is needed for MP4 remuxing and metadata tags; ffprobe is used by the live tests.
 
 ```python

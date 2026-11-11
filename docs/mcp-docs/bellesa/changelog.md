@@ -10,8 +10,7 @@ keywords: ["Bellesa", "bellesa_api", "1.0.0", "changelog", "version"]
 
 ## 1.0.0 — current source
 
-The current checkout declares version 1.0.0. This entry describes its interface; it does
-not assert a package publication date or remote CI status.
+The current checkout declares version 1.0.0. This entry describes its public interface.
 
 - Typed Client, Video, Performer, Channel and Category objects using `eaf-base-api`.
 - Independent API/HTML video and performer metadata with deferred source/field loading.

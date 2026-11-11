@@ -11,10 +11,10 @@ keywords: ["Porn.com", "porn_api", "unofficial-api-for-porn", "installation", "C
 Version **0.1.0**. Distribution: `unofficial-api-for-porn`. Import: `porn_api`.
 Requires Python **3.12+**, `eaf-base-api[hls]>=4.2.6`, and `selectolax`.
 
-The package is currently unpublished. From the workspace containing its checkout:
+Install from PyPI:
 
 ```sh
-pip install ./unofficial-api-for-porn
+pip install unofficial-api-for-porn
 ```
 
 FFmpeg is required when requesting MP4 remuxing or export metadata; ffprobe is used

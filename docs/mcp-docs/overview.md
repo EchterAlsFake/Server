@@ -71,7 +71,7 @@ A fully asynchronous Python API wrapper and scraper for MissAV. Fetch JAV video 
 
 v0.1.0
 
-An asynchronous Python wrapper for Porn.com scenes, performers, channels, categories and source indexes. Includes lazy HTML metadata, filtered search, complete profile pagination, verified language hosts and public HLS downloads through eaf_base_api. Install the local checkout before publication.
+An asynchronous Python wrapper for Porn.com scenes, performers, channels, categories and source indexes. Includes lazy HTML metadata, filtered search, complete profile pagination, verified language hosts and public HLS downloads through eaf_base_api.
 
 ### [Pornhat API](pornhat/getting-started.md)
 
@@ -99,7 +99,7 @@ A fully asynchronous Python API wrapper and scraper for Porntrex. Fetch video me
 
 ### [RedGIFs API](redgifs/getting-started.md)
 
-v0.1.0
+v1.0.0
 
 An asynchronous Python wrapper for RedGIFs videos, images, creators, tags, niches and public collections. Includes independent API/HTML metadata, typed result streams and direct MP4/JPG downloads through eaf_base_api. Live validation remains incomplete because of rate limits and upstream pagination omissions.
 

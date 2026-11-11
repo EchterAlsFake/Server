@@ -1,6 +1,6 @@
 ---
 title: "RedGIFs API getting started"
-summary: "Install local RedGIFs API 0.1.0, configure BaseCore and fetch API/HTML metadata using Python 3.12 or newer."
+summary: "Install RedGIFs API 1.0.0, configure BaseCore and fetch API/HTML metadata using Python 3.12 or newer."
 public_url: "https://docs.echteralsfake.me/redgifs/"
 aliases:
   - "RedGIFs API getting started"
@@ -14,17 +14,16 @@ keywords:
 
 # RedGIFs API getting started
 
-Version **0.1.0**. Distribution: `unofficial-api-for-redgifs`. Import: `redgifs_api`.
+Version **1.0.0**. Distribution: `unofficial-api-for-redgifs`. Import: `redgifs_api`.
 Requires Python 3.12+, `eaf-base-api>=4.2.6`, and `selectolax`.
 
-Install from the workspace containing both checkouts before publication:
+Install from PyPI:
 
 ```sh
-pip install -e ./eaf_base_api -e ./unofficial-api-for-redgifs
+pip install unofficial-api-for-redgifs
 ```
 
-From the provider directory alone, use `pip install .`. Package publication and remote
-CI status are not asserted. FFmpeg is not required for direct MP4/JPG transfers;
+FFmpeg is not required for direct MP4/JPG transfers;
 `ffprobe` is used for live media validation.
 
 ```python

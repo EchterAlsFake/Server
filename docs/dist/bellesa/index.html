@@ -109,23 +109,19 @@
 Requires Python 3.12+, <code>eaf-base-api[hls]&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
 <pre><code class="language-sh">pip install unofficial-api-for-bellesa
 </code></pre>
-<p>From a local checkout, use <code>pip install .</code>. When developing against the shared backend
-checkout from the workspace root:</p>
-<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-bellesa
-</code></pre>
 <p>FFmpeg is needed to remux HLS output to MP4. Direct MP4 transfers use the shared RAW
 downloader. No account credentials are required for the public catalog.</p>
-<pre><code class="language-python">import asyncio
-from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def main():
-    async with Client() as client:
-        video = await client.get_video(&quot;https://www.bellesa.co/videos/7054&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> main():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://www.bellesa.co/videos/7054&quot;</span>)
         print(video.title, video.duration, video.pornstars)
-        await video.load_sources(&quot;media&quot;)
+        <span class="token-keyword">await</span> video.load_sources(<span class="token-string">&quot;media&quot;</span>)
         print(video.available_qualities)
 
-if __name__ == &quot;__main__&quot;:
+<span class="token-keyword">if</span> __name__ == <span class="token-string">&quot;__main__&quot;</span>:
     asyncio.run(main())
 </code></pre>
 <p><code>Client()</code> owns its core and closes it on context exit or <code>await client.close()</code>.
@@ -133,17 +129,17 @@ if __name__ == &quot;__main__&quot;:
 objects, iterators and downloads using it have finished. Requests, caching, retries,
 source loading, iteration and downloads use <code>eaf-base-api</code>; session headers and the
 caller's download configuration are not mutated by this provider.</p>
-<pre><code class="language-python">from base_api import BaseCore
-from base_api.modules.config import RuntimeConfig
-from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def inspect_video():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_video():
     runtime = RuntimeConfig()
-    runtime.request_delay = 1
-    runtime.pages_concurrency = 1
-    runtime.videos_concurrency = 2
-    async with BaseCore(runtime) as core, Client(core) as client:
-        video = await client.get_video(&quot;https://bellesa.co/videos/1094&quot;)
+    runtime.request_delay = <span class="token-number">1</span>
+    runtime.pages_concurrency = <span class="token-number">1</span>
+    runtime.videos_concurrency = <span class="token-number">2</span>
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> BaseCore(runtime) <span class="token-keyword">as</span> core, Client(core) <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://bellesa.co/videos/1094&quot;</span>)
         print(video.title)
 </code></pre>
 <p>See <a href="#reference-client">Client</a>, <a href="#guides-source-loading">source loading</a>,
@@ -157,11 +153,11 @@ async def inspect_video():
 An internally created core is closed by <code>close()</code> or the async context manager. An
 injected core remains caller-owned. The client has no login or account state.</p>
 <h3>Object getters</h3>
-<pre><code class="language-python">async def get_video(url: str, load_html: bool = False, load_api: bool = True) -&gt; Video: ...
-async def get_performer(url: str, load_html: bool = False, load_api: bool = True) -&gt; Performer: ...
-async def get_channel(url: str, load_api: bool = True) -&gt; Channel: ...
-async def get_category(url: str, load_api: bool = True) -&gt; Category: ...
-async def get_categories() -&gt; list[Category]: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_video(url: str, load_html: bool = <span class="token-keyword">False</span>, load_api: bool = <span class="token-keyword">True</span>) -&gt; Video: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_performer(url: str, load_html: bool = <span class="token-keyword">False</span>, load_api: bool = <span class="token-keyword">True</span>) -&gt; Performer: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_channel(url: str, load_api: bool = <span class="token-keyword">True</span>) -&gt; Channel: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_category(url: str, load_api: bool = <span class="token-keyword">True</span>) -&gt; Category: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_categories() -&gt; list[Category]: ...
 </code></pre>
 <p>Getters require complete supported URLs, not bare IDs/handles. Video paths are
 <code>/videos/{numeric-id}</code> or <code>/videos/{numeric-id}/{title-slug}</code>; performer, channel and
@@ -172,9 +168,9 @@ Only individual resources are accepted by object getters.</p>
 Performer have independent API/HTML loaders. Channel and Category have API-only
 metadata. <code>get_categories()</code> is an awaited list of loaded categories, not a stream.</p>
 <h3>get_videos</h3>
-<pre><code class="language-python">def get_videos(*, sort=Sort.RECENT, categories=(), channels=(), performers=(), tags=(),
-               min_duration: int | None = None, max_duration: int | None = None,
-               pages=1, start_page=1, iterator_config=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> get_videos(*, sort=Sort.RECENT, categories=(), channels=(), performers=(), tags=(),
+               min_duration: int | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>, max_duration: int | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+               pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p>Filters are sequences of handles/tags, for example <code>channels=["zero-to-hero"]</code>, not
 individual strings or profile URLs. Duration bounds are nonnegative integer <strong>seconds</strong>;
@@ -182,15 +178,15 @@ when both are given, <code>min_duration &lt;= max_duration</code> is required. P
 multiselects use the site's OR filter. Category/tag combinations retain site semantics.
 Use recent, popular or longest ordering. See <a href="#guides-searching-and-filtering">filters</a>.</p>
 <h3>get_performers</h3>
-<pre><code class="language-python">def get_performers(*, gender=&quot;female&quot;, pages=1, start_page=1,
-                   iterator_config=None) -&gt; ScrapeStream[Performer]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> get_performers(*, gender=<span class="token-string">&quot;female&quot;</span>, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>,
+                   iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Performer]: ...
 </code></pre>
 <p><code>gender</code> is <code>"female"</code>, <code>"male"</code> or <code>"all"</code>. The directory orders by the site's video
 count descending and has 12 items per page. Profile metadata is loaded through API by
 default. It is distinct from <code>Performer.videos()</code>, which lists videos at 9 per page.</p>
 <h3>search</h3>
-<pre><code class="language-python">def search(query: str, *, kind=&quot;video&quot;, sort=Sort.RELEVANCE,
-           pages=1, start_page=1, iterator_config=None) -&gt; ScrapeStream[Video | Performer | Channel]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> search(query: str, *, kind=<span class="token-string">&quot;video&quot;</span>, sort=Sort.RELEVANCE,
+           pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video | Performer | Channel]: ...
 </code></pre>
 <p>The trimmed query must have at least three characters. <code>kind</code> selects <code>"video"</code>,
 <code>"performer"</code>, or <code>"channel"</code>; results are the corresponding typed objects. Searches use
@@ -354,9 +350,9 @@ This dependency does not load HTML automatically.</p>
 Video 1094 has labels 360/480/720 but actual qualities 480/600/960. See
 <a href="#guides-downloading">downloads</a> before selecting numeric quality.</p>
 <h3>Relationships</h3>
-<pre><code class="language-python">async def get_author(load_api: bool = True) -&gt; Channel | None: ...
-async def get_performers(load_api: bool = True) -&gt; list[Performer]: ...
-def related_videos(*, pages=1, start_page=1, iterator_config=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_author(load_api: bool = <span class="token-keyword">True</span>) -&gt; Channel | <span class="token-keyword">None</span>: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_performers(load_api: bool = <span class="token-keyword">True</span>) -&gt; list[Performer]: ...
+<span class="token-keyword">def</span> related_videos(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p>Relationship methods load the required video fields and return usable profile objects.
 With <code>load_api=False</code>, returned profiles are deferred. Author is the first channel,
@@ -364,8 +360,8 @@ not an individual performer. Related videos use the same channel, exclude the cu
 video, and use pages of 6. This stream is separate from the site's randomized autoplay
 rail. If no author exists, it is empty.</p>
 <h3>Download and refresh</h3>
-<pre><code class="language-python">async def download(configuration: DownloadConfigHLS | DownloadConfigRAW): ...
-async def refresh_media() -&gt; Video: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> download(configuration: DownloadConfigHLS | DownloadConfigRAW): ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> refresh_media() -&gt; Video: ...
 </code></pre>
 <p><code>download()</code> requires <code>access.public == 1</code>, loads media, copies configuration and applies
 the shared filename rule. HLS returns the shared report/boolean; RAW returns a boolean.
@@ -430,8 +426,8 @@ Setting both source flags false creates a deferred profile.</p>
 </tbody>
 </table>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, sort=Sort.RECENT, pages=1, start_page=1,
-           iterator_config=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, sort=Sort.RECENT, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>,
+           iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> is an alias of <code>videos</code>. The free catalog listing uses 9 items per page;
 recent, longest and popular ordering are supported. The profile can be deferred because
@@ -440,15 +436,15 @@ pagination total, not <code>video_count</code>.</p>
 <p>Lily Starfire's profile reported 7 videos while the free listing exposed 3; Kenna James's
 free listing exposed 57 over seven pages. The library preserves these distinct count
 semantics instead of including recommendations or premium-only entries.</p>
-<pre><code class="language-python">from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def list_performer():
-    async with Client() as client:
-        performer = await client.get_performer(
-            &quot;https://www.bellesa.co/performers/kenna-james&quot;
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_performer():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        performer = <span class="token-keyword">await</span> client.get_performer(
+            <span class="token-string">&quot;https://www.bellesa.co/performers/kenna-james&quot;</span>
         )
-        async with performer.videos(pages=&quot;all&quot;) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> performer.videos(pages=<span class="token-string">&quot;all&quot;</span>) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 video = result.unwrap()
                 print(video.video_id, video.title)
 </code></pre>
@@ -499,8 +495,8 @@ Only the <code>api</code> source exists for channel metadata; <code>load_api=Fal
 </tbody>
 </table>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, sort=Sort.RECENT, pages=1, start_page=1,
-           iterator_config=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, sort=Sort.RECENT, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>,
+           iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> aliases <code>videos</code>. Streams use the actual provider-filtered public video
 endpoint with 24 items per page. <code>pages="all"</code> uses listing totals and handles partial
@@ -508,14 +504,14 @@ and exact full-page boundaries. Recent, popular and longest sorts are supported.
 <p>The website redirects <code>/channels/{handle}</code> to <code>/videos?providers={handle}</code> and can drop
 a channel URL's page query. The API paginates the actual listing directly, preserving
 the provider filter. Channel profiles have no invented video count or HTML loader.</p>
-<pre><code class="language-python">from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def list_channel():
-    async with Client() as client:
-        channel = await client.get_channel(&quot;https://www.bellesa.co/channels/zero-to-hero&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_channel():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        channel = <span class="token-keyword">await</span> client.get_channel(<span class="token-string">&quot;https://www.bellesa.co/channels/zero-to-hero&quot;</span>)
         print(channel.name)
-        async with channel.videos(pages=&quot;all&quot;) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> channel.videos(pages=<span class="token-string">&quot;all&quot;</span>) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().video_id)
 </code></pre>
 <p>Use <code>Video.get_author()</code> to follow the first provider relationship,
@@ -559,23 +555,23 @@ Metadata uses <code>api</code> only; <code>load_api=False</code> creates a defer
 raise <code>NotFound</code> through the shared media loader error wrapper. The observed directory
 contained 19 categories; catalog contents may change.</p>
 <h3>videos / get_videos</h3>
-<pre><code class="language-python">def videos(*, sort=Sort.RECENT, pages=1, start_page=1,
-           iterator_config=None) -&gt; ScrapeStream[Video]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, sort=Sort.RECENT, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>,
+           iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
 </code></pre>
 <p><code>get_videos</code> aliases <code>videos</code>; it delegates to <code>Client.get_videos(categories=[handle])</code>.
 Pages contain up to 24 items and support recent, popular and longest ordering.</p>
-<pre><code class="language-python">from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def list_categories():
-    async with Client() as client:
-        categories = await client.get_categories()  # list[Category], not ScrapeResult
-        for category in categories:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> list_categories():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        categories = <span class="token-keyword">await</span> client.get_categories()  <span class="token-comment"># list[Category], not ScrapeResult</span>
+        <span class="token-keyword">for</span> category <span class="token-keyword">in</span> categories:
             print(category.category_id, category.name)
-        sensual = await client.get_category(
-            &quot;https://www.bellesa.co/videos/categories/sensual&quot;
+        sensual = <span class="token-keyword">await</span> client.get_category(
+            <span class="token-string">&quot;https://www.bellesa.co/videos/categories/sensual&quot;</span>
         )
-        async with sensual.videos() as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> sensual.videos() <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().title)
 </code></pre>
 <p>See <a href="#reference-client">Client</a> and <a href="#guides-searching-and-filtering">searching and filtering</a>.</p>
@@ -673,20 +669,20 @@ when runtime customization is needed. See <a href="#guides-downloading">download
 load API by default and leave HTML deferred. API is an anonymous JSON request; HTML
 reads the requested object from server-rendered <code>window.__INITIAL_DATA__</code>. Embedded
 JSON is part of the HTML request, not a separate network API.</p>
-<pre><code class="language-python">from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def inspect_sources():
-    url = &quot;https://www.bellesa.co/videos/1094&quot;
-    async with Client() as client:
-        api = await client.get_video(url, load_api=True, load_html=False)
-        html = await client.get_video(url, load_api=False, load_html=True)
-        both = await client.get_video(url, load_api=True, load_html=True)
-        deferred = await client.get_video(url, load_api=False, load_html=False)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_sources():
+    url = <span class="token-string">&quot;https://www.bellesa.co/videos/1094&quot;</span>
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        api = <span class="token-keyword">await</span> client.get_video(url, load_api=<span class="token-keyword">True</span>, load_html=<span class="token-keyword">False</span>)
+        html = <span class="token-keyword">await</span> client.get_video(url, load_api=<span class="token-keyword">False</span>, load_html=<span class="token-keyword">True</span>)
+        both = <span class="token-keyword">await</span> client.get_video(url, load_api=<span class="token-keyword">True</span>, load_html=<span class="token-keyword">True</span>)
+        deferred = <span class="token-keyword">await</span> client.get_video(url, load_api=<span class="token-keyword">False</span>, load_html=<span class="token-keyword">False</span>)
         print(deferred.to_dict())
-        await deferred.load_fields(&quot;title&quot;)
-        await deferred.load_sources(&quot;html&quot;)
+        <span class="token-keyword">await</span> deferred.load_fields(<span class="token-string">&quot;title&quot;</span>)
+        <span class="token-keyword">await</span> deferred.load_sources(<span class="token-string">&quot;html&quot;</span>)
         print(deferred.title, deferred.canonical_url)
-        await deferred.load_sources(&quot;media&quot;)
+        <span class="token-keyword">await</span> deferred.load_sources(<span class="token-string">&quot;media&quot;</span>)
         print(deferred.renditions)
 </code></pre>
 <p>A common field uses API precedence regardless of completion or loading order.
@@ -718,31 +714,31 @@ a general catalog listing. Select <code>kind="performer"</code> or <code>kind="c
 results. Search supports relevance, recent, longest and popular ordering. Matching and
 ranking are site-defined; a query containing one meaningful term can return results
 even when its other tokens appear unusual.</p>
-<pre><code class="language-python">from bellesa_api import Client, Sort
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client, Sort
 
-async def search_catalog():
-    async with Client() as client:
-        async with client.search(&quot;romance&quot;, sort=Sort.POPULAR) as stream:
-            async for result in stream:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> search_catalog():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.search(<span class="token-string">&quot;romance&quot;</span>, sort=Sort.POPULAR) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().title)
-        async with client.search(&quot;lacy lennon&quot;, kind=&quot;performer&quot;) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.search(<span class="token-string">&quot;lacy lennon&quot;</span>, kind=<span class="token-string">&quot;performer&quot;</span>) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().name)
-        async with client.search(&quot;zero&quot;, kind=&quot;channel&quot;) as stream:
-            async for result in stream:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.search(<span class="token-string">&quot;zero&quot;</span>, kind=<span class="token-string">&quot;channel&quot;</span>) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().name)
 </code></pre>
 <p>Use <code>get_videos()</code> for a general or filtered listing:</p>
-<pre><code class="language-python">from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def filter_catalog():
-    async with Client() as client:
-        async with client.get_videos(
-            categories=[&quot;sensual&quot;], channels=[&quot;zero-to-hero&quot;, &quot;belle-says&quot;],
-            performers=[], tags=[], min_duration=60, max_duration=1200,
-            sort=&quot;recent&quot;, pages=2, start_page=1,
-        ) as stream:
-            async for result in stream:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> filter_catalog():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.get_videos(
+            categories=[<span class="token-string">&quot;sensual&quot;</span>], channels=[<span class="token-string">&quot;zero-to-hero&quot;</span>, <span class="token-string">&quot;belle-says&quot;</span>],
+            performers=[], tags=[], min_duration=<span class="token-number">60</span>, max_duration=<span class="token-number">1200</span>,
+            sort=<span class="token-string">&quot;recent&quot;</span>, pages=<span class="token-number">2</span>, start_page=<span class="token-number">1</span>,
+        ) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 print(result.unwrap().video_id)
 </code></pre>
 <p>Each filter accepts a sequence of handles/tags, not a scalar string or object URL.
@@ -762,12 +758,12 @@ See <a href="#reference-client">Client</a>, <a href="#reference-sorting-enums">S
 <p>Listings return <code>ScrapeStream</code> objects yielding <code>ScrapeResult[T]</code>. Stream methods are
 synchronous factories: use <code>async with client.search(...) as stream</code>, not
 <code>await client.search(...)</code>. Object getters such as <code>get_video()</code> are awaited.</p>
-<pre><code class="language-python">from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def iterate():
-    async with Client() as client:
-        async with client.get_videos(pages=2, start_page=1) as stream:
-            async for result in stream:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> iterate():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.get_videos(pages=<span class="token-number">2</span>, start_page=<span class="token-number">1</span>) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
                 video = result.unwrap()
                 print(video.video_id, video.title)
 </code></pre>
@@ -811,25 +807,25 @@ Recommendations, campaigns and autoplay rails are separate from these listings.<
 and item errors. A supplied <code>IteratorConfig</code> is honored instead. A bare shared config
 has no requested metadata sources/fields and uses completion ordering and yielded errors.
 Set ordering explicitly when comparing complete ID sequences.</p>
-<pre><code class="language-python">from base_api import ErrorMode, IteratorConfig, ResultOrder
-from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> ErrorMode, IteratorConfig, ResultOrder
+<span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def deferred_items():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> deferred_items():
     options = IteratorConfig(
         order=ResultOrder.ORIGINAL,
         load_specific_sources=(),
         load_specific_fields=(),
-        max_page_concurrency=1,
-        max_item_concurrency=2,
+        max_page_concurrency=<span class="token-number">1</span>,
+        max_item_concurrency=<span class="token-number">2</span>,
         page_error_mode=ErrorMode.YIELD,
         item_error_mode=ErrorMode.YIELD,
     )
-    async with Client() as client:
-        async with client.get_videos(iterator_config=options) as stream:
-            async for result in stream:
-                if result.succeeded:
-                    print(result.unwrap().video_id)  # Metadata remains deferred.
-                else:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.get_videos(iterator_config=options) <span class="token-keyword">as</span> stream:
+            <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
+                <span class="token-keyword">if</span> result.succeeded:
+                    print(result.unwrap().video_id)  <span class="token-comment"># Metadata remains deferred.</span>
+                <span class="token-keyword">else</span>:
                     print(result.stage, result.url, result.error)
 </code></pre>
 <p>Use <code>load_specific_sources=("html",)</code> for HTML-loaded video results, or
@@ -854,23 +850,23 @@ while consuming the stream.</p>
 <p><code>Video.download(configuration)</code> uses the supplied <code>BaseCore</code> and accepts
 <code>DownloadConfigHLS</code> or <code>DownloadConfigRAW</code>. Only publicly accessible video records are
 eligible. Metadata and media are loaded lazily; missing/unavailable sources raise errors.</p>
-<pre><code class="language-python">import asyncio
-from bellesa_api import Client, DownloadConfigHLS, DownloadConfigRAW
+<pre><code class="language-python"><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client, DownloadConfigHLS, DownloadConfigRAW
 
-async def main():
-    async with Client() as client:
-        video = await client.get_video(&quot;https://www.bellesa.co/videos/7054&quot;)
-        await video.load_sources(&quot;media&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> main():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://www.bellesa.co/videos/7054&quot;</span>)
+        <span class="token-keyword">await</span> video.load_sources(<span class="token-string">&quot;media&quot;</span>)
         print(video.available_qualities)
         hls = DownloadConfigHLS(
-            quality=&quot;worst&quot;, path=&quot;./hls/&quot;, remux=True, return_report=True,
+            quality=<span class="token-string">&quot;worst&quot;</span>, path=<span class="token-string">&quot;./hls/&quot;</span>, remux=<span class="token-keyword">True</span>, return_report=<span class="token-keyword">True</span>,
         )
-        report = await video.download(hls)
-        print(report[&quot;status&quot;])
-        direct = DownloadConfigRAW(quality=&quot;worst&quot;, path=&quot;./mp4/&quot;)
-        print(await video.download(direct))
+        report = <span class="token-keyword">await</span> video.download(hls)
+        print(report[<span class="token-string">&quot;status&quot;</span>])
+        direct = DownloadConfigRAW(quality=<span class="token-string">&quot;worst&quot;</span>, path=<span class="token-string">&quot;./mp4/&quot;</span>)
+        print(<span class="token-keyword">await</span> video.download(direct))
 
-if __name__ == &quot;__main__&quot;:
+<span class="token-keyword">if</span> __name__ == <span class="token-string">&quot;__main__&quot;</span>:
     asyncio.run(main())
 </code></pre>
 <p>HLS uses the master and shared quality selection; <code>remux=True</code> produces MP4 and requires
@@ -1096,18 +1092,18 @@ shared <code>base_api</code> imports for media-loading and iterator contracts.</
 </tr>
 </tbody>
 </table>
-<pre><code class="language-python">from base_api import MediaLoadError, is_resource_gone
-from bellesa_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError, is_resource_gone
+<span class="token-keyword">from</span> bellesa_api <span class="token-keyword">import</span> Client
 
-async def inspect_missing():
-    async with Client() as client:
-        try:
-            await client.get_video(&quot;https://www.bellesa.co/videos/999999999&quot;)
-        except MediaLoadError as error:
-            if is_resource_gone(error):
-                print(&quot;Resource unavailable&quot;, error.original_error)
-            else:
-                raise
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_missing():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        <span class="token-keyword">try</span>:
+            <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://www.bellesa.co/videos/999999999&quot;</span>)
+        <span class="token-keyword">except</span> MediaLoadError <span class="token-keyword">as</span> error:
+            <span class="token-keyword">if</span> is_resource_gone(error):
+                print(<span class="token-string">&quot;Resource unavailable&quot;</span>, error.original_error)
+            <span class="token-keyword">else</span>:
+                <span class="token-keyword">raise</span>
 </code></pre>
 <p>Do not catch only bare <code>NotFound</code> around a source-loading getter: the shared media
 contract wraps ordinary loader exceptions. Translation retains causes, URL and context.
@@ -1176,8 +1172,7 @@ Model/Pornstar subtype separate from Performer, or user-upload profile was verif
 <section class="section" id="changelog">
 <h2>Changelog — Bellesa API</h2>
 <h3>1.0.0 — current source</h3>
-<p>The current checkout declares version 1.0.0. This entry describes its interface; it does
-not assert a package publication date or remote CI status.</p>
+<p>The current checkout declares version 1.0.0. This entry describes its public interface.</p>
 <ul>
 <li>Typed Client, Video, Performer, Channel and Category objects using <code>eaf-base-api</code>.</li>
 <li>Independent API/HTML video and performer metadata with deferred source/field loading.</li>

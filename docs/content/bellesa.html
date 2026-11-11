@@ -32,10 +32,6 @@
 Requires Python 3.12+, <code>eaf-base-api[hls]&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
 <pre><code class="language-sh">pip install unofficial-api-for-bellesa
 </code></pre>
-<p>From a local checkout, use <code>pip install .</code>. When developing against the shared backend
-checkout from the workspace root:</p>
-<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-bellesa
-</code></pre>
 <p>FFmpeg is needed to remux HLS output to MP4. Direct MP4 transfers use the shared RAW
 downloader. No account credentials are required for the public catalog.</p>
 <pre><code class="language-python">import asyncio
@@ -1099,8 +1095,7 @@ Model/Pornstar subtype separate from Performer, or user-upload profile was verif
 <section class="section" id="changelog">
 <h2>Changelog — Bellesa API</h2>
 <h3>1.0.0 — current source</h3>
-<p>The current checkout declares version 1.0.0. This entry describes its interface; it does
-not assert a package publication date or remote CI status.</p>
+<p>The current checkout declares version 1.0.0. This entry describes its public interface.</p>
 <ul>
 <li>Typed Client, Video, Performer, Channel and Category objects using <code>eaf-base-api</code>.</li>
 <li>Independent API/HTML video and performer metadata with deferred source/field loading.</li>

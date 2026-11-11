@@ -104,25 +104,24 @@
 <h2>Porndoe API getting started</h2>
 <p>Version 1.0.1. Package: <code>unofficial-api-for-porndoe</code>. Import: <code>porndoe_api</code>.
 Requires Python 3.12+ and <code>eaf-base-api&gt;=4.2.2</code> with <code>selectolax</code>.</p>
-<p>Install the local checkout before publication:</p>
-<pre><code class="language-sh">pip install ./unofficial-api-for-porndoe
+<p>Install from PyPI:</p>
+<pre><code class="language-sh">pip install unofficial-api-for-porndoe
 </code></pre>
-<p>Once published, use <code>pip install unofficial-api-for-porndoe</code>.</p>
-<pre><code class="language-python">import asyncio
-from base_api import BaseCore
-from base_api.modules.config import RuntimeConfig
-from porndoe_api import Client, DownloadConfigRAW
+<pre><code class="language-python"><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> porndoe_api <span class="token-keyword">import</span> Client, DownloadConfigRAW
 
-async def main():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> main():
     runtime = RuntimeConfig()
-    runtime.request_delay = 2
-    runtime.videos_concurrency = 1
-    runtime.pages_concurrency = 1
-    async with BaseCore(runtime) as core, Client(core) as client:
-        video = await client.get_video(&quot;https://porndoe.com/watch/pd4y7n5e2j8r&quot;)
+    runtime.request_delay = <span class="token-number">2</span>
+    runtime.videos_concurrency = <span class="token-number">1</span>
+    runtime.pages_concurrency = <span class="token-number">1</span>
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> BaseCore(runtime) <span class="token-keyword">as</span> core, Client(core) <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;https://porndoe.com/watch/pd4y7n5e2j8r&quot;</span>)
         print(video.title, video.duration, video.video_qualities)
-        await video.download(DownloadConfigRAW(quality=&quot;best&quot;, path=&quot;./&quot;))
-        async for result in client.search(&quot;eva elfie&quot;, pages=1):
+        <span class="token-keyword">await</span> video.download(DownloadConfigRAW(quality=<span class="token-string">&quot;best&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>))
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">&quot;eva elfie&quot;</span>, pages=<span class="token-number">1</span>):
             item = result.unwrap()
             print(item.title, item.url)
 
@@ -152,28 +151,28 @@ services are outside this interface.</p>
 Supports <code>async with Client() as client</code> and <code>await client.close()</code>.
 Only an internally created core is closed by the client.</p>
 <h3>get_video</h3>
-<pre><code class="language-python">await Client.get_video(url: 'str', load_html: 'bool' = True) -&gt; 'Video'
+<pre><code class="language-python"><span class="token-keyword">await</span> Client.get_video(url: <span class="token-string">&#x27;str&#x27;</span>, load_html: <span class="token-string">&#x27;bool&#x27;</span> = <span class="token-keyword">True</span>) -&gt; <span class="token-string">&#x27;Video&#x27;</span>
 </code></pre>
 <h3>get_pornstar</h3>
-<pre><code class="language-python">await Client.get_pornstar(url: 'str', load_html: 'bool' = True) -&gt; 'Pornstar'
+<pre><code class="language-python"><span class="token-keyword">await</span> Client.get_pornstar(url: <span class="token-string">&#x27;str&#x27;</span>, load_html: <span class="token-string">&#x27;bool&#x27;</span> = <span class="token-keyword">True</span>) -&gt; <span class="token-string">&#x27;Pornstar&#x27;</span>
 </code></pre>
 <h3>get_channel</h3>
-<pre><code class="language-python">await Client.get_channel(url: 'str', load_html: 'bool' = True) -&gt; 'Channel'
+<pre><code class="language-python"><span class="token-keyword">await</span> Client.get_channel(url: <span class="token-string">&#x27;str&#x27;</span>, load_html: <span class="token-string">&#x27;bool&#x27;</span> = <span class="token-keyword">True</span>) -&gt; <span class="token-string">&#x27;Channel&#x27;</span>
 </code></pre>
 <h3>search</h3>
-<pre><code class="language-python">Client.search(query: 'str', sorting_sort: 'str | Sort' = Sort.Sort_relevance, pages: 'int | str' = 2, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+<pre><code class="language-python">Client.search(query: <span class="token-string">&#x27;str&#x27;</span>, sorting_sort: <span class="token-string">&#x27;str | Sort&#x27;</span> = Sort.Sort_relevance, pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Video], None]&#x27;</span>
 </code></pre>
 <h3>get_videos</h3>
-<pre><code class="language-python">Client.get_videos(url: 'str' = 'https://porndoe.com/videos', pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+<pre><code class="language-python">Client.get_videos(url: <span class="token-string">&#x27;str&#x27;</span> = <span class="token-string">&#x27;https://porndoe.com/videos&#x27;</span>, pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, sorting_sort: <span class="token-string">&#x27;str | Sort | None&#x27;</span> = <span class="token-keyword">None</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Video], None]&#x27;</span>
 </code></pre>
 <h3>get_pornstars</h3>
-<pre><code class="language-python">Client.get_pornstars(pages: 'int | str' = 2, sorting_sort: 'str | SortPornstar' = SortPornstar.Sort_famous, iterator_config: 'IteratorConfig | None' = None, gender: 'str | None' = None, country: 'str | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Pornstar], None]'
+<pre><code class="language-python">Client.get_pornstars(pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, sorting_sort: <span class="token-string">&#x27;str | SortPornstar&#x27;</span> = SortPornstar.Sort_famous, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, gender: <span class="token-string">&#x27;str | None&#x27;</span> = <span class="token-keyword">None</span>, country: <span class="token-string">&#x27;str | None&#x27;</span> = <span class="token-keyword">None</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Pornstar], None]&#x27;</span>
 </code></pre>
 <h3>get_channels</h3>
-<pre><code class="language-python">Client.get_channels(pages: 'int | str' = 2, sorting_sort: 'str | SortChannel' = SortChannel.Sort_ranking, iterator_config: 'IteratorConfig | None' = None, section: 'str' = '', start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Channel], None]'
+<pre><code class="language-python">Client.get_channels(pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, sorting_sort: <span class="token-string">&#x27;str | SortChannel&#x27;</span> = SortChannel.Sort_ranking, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, section: <span class="token-string">&#x27;str&#x27;</span> = <span class="token-string">&#x27;&#x27;</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Channel], None]&#x27;</span>
 </code></pre>
 <h3>get_categories</h3>
-<pre><code class="language-python">await Client.get_categories(sorting_sort: 'str | SortCategory' = SortCategory.Sort_popular) -&gt; 'list[Category]'
+<pre><code class="language-python"><span class="token-keyword">await</span> Client.get_categories(sorting_sort: <span class="token-string">&#x27;str | SortCategory&#x27;</span> = SortCategory.Sort_popular) -&gt; <span class="token-string">&#x27;list[Category]&#x27;</span>
 </code></pre>
 <p>Individual getters return a loaded object unless <code>load_html=False</code>.
 They require individual <code>/watch/&lt;hash&gt;</code>, <code>/pornstars-profile/&lt;slug&gt;</code> or
@@ -393,10 +392,10 @@ are empty when no variants are available. Unknown listing fields remain unloaded
 </tbody>
 </table>
 <h3>Related objects</h3>
-<pre><code class="language-python">channel = await video.get_author
-async for star in video.get_pornstars:
+<pre><code class="language-python">channel = <span class="token-keyword">await</span> video.get_author
+<span class="token-keyword">async</span> <span class="token-keyword">for</span> star <span class="token-keyword">in</span> video.get_pornstars:
     print(star.name)
-async for result in video.get_related_videos(iterator_config=None):
+<span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> video.get_related_videos(iterator_config=<span class="token-keyword">None</span>):
     related = result.unwrap()
 </code></pre>
 <p><code>get_author</code> is an async property returning a loaded <code>Channel</code> or <code>None</code>.
@@ -404,7 +403,7 @@ async for result in video.get_related_videos(iterator_config=None):
 Both share the video's core. <code>get_related_videos</code> is a method returning a
 <code>ScrapeResult[Video]</code> iterator from the page's related-video cards.</p>
 <h3>download</h3>
-<pre><code class="language-python">await video.download(configuration: DownloadConfigRAW | DownloadConfigHLS)
+<pre><code class="language-python"><span class="token-keyword">await</span> video.download(configuration: DownloadConfigRAW | DownloadConfigHLS)
 </code></pre>
 <p>Returns <code>bool | DownloadReport</code>, according to the selected base downloader.
 MP4 uses <code>BaseCore.legacy_download</code>; HLS uses <code>BaseCore.download</code> and requires
@@ -526,10 +525,10 @@ filters; a stale input <code>page</code> or fragment does not change that metada
 </tbody>
 </table>
 <h3>videos</h3>
-<pre><code class="language-python">Pornstar.videos(pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+<pre><code class="language-python">Pornstar.videos(pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, sorting_sort: <span class="token-string">&#x27;str | Sort | None&#x27;</span> = <span class="token-keyword">None</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Video], None]&#x27;</span>
 </code></pre>
 <h3>get_channels</h3>
-<pre><code class="language-python">Pornstar.get_channels(pages: 'int | str' = 2, iterator_config: 'IteratorConfig | None' = None) -&gt; 'AsyncGenerator[ScrapeResult[Channel], None]'
+<pre><code class="language-python">Pornstar.get_channels(pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Channel], None]&#x27;</span>
 </code></pre>
 <p><code>videos()</code> returns <code>ScrapeResult[Video]</code> using the shared iterator pipeline.
 The profile URL retains its host and filters. <code>sorting_sort=None</code> preserves an
@@ -625,10 +624,10 @@ filters; a stale input <code>page</code> or fragment does not change that metada
 </tbody>
 </table>
 <h3>videos</h3>
-<pre><code class="language-python">Channel.videos(pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+<pre><code class="language-python">Channel.videos(pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, sorting_sort: <span class="token-string">&#x27;str | Sort | None&#x27;</span> = <span class="token-keyword">None</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Video], None]&#x27;</span>
 </code></pre>
 <h3>get_pornstars</h3>
-<pre><code class="language-python">Channel.get_pornstars(gender: 'str' = 'female', pages: 'int | str' = 2, iterator_config: 'IteratorConfig | None' = None) -&gt; 'AsyncGenerator[ScrapeResult[Pornstar], None]'
+<pre><code class="language-python">Channel.get_pornstars(gender: <span class="token-string">&#x27;str&#x27;</span> = <span class="token-string">&#x27;female&#x27;</span>, pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Pornstar], None]&#x27;</span>
 </code></pre>
 <p><code>videos()</code> returns <code>ScrapeResult[Video]</code> using the shared iterator pipeline.
 The profile URL retains its host and filters. <code>sorting_sort=None</code> preserves an
@@ -698,10 +697,10 @@ the category heading, image metadata, counters and pagination.</p>
 </tbody>
 </table>
 <h3>videos</h3>
-<pre><code class="language-python">Category.videos(pages: 'int | str' = 2, sorting_sort: 'str | Sort | None' = None, iterator_config: 'IteratorConfig | None' = None, start_page: 'int' = 1) -&gt; 'AsyncGenerator[ScrapeResult[Video], None]'
+<pre><code class="language-python">Category.videos(pages: <span class="token-string">&#x27;int | str&#x27;</span> = <span class="token-number">2</span>, sorting_sort: <span class="token-string">&#x27;str | Sort | None&#x27;</span> = <span class="token-keyword">None</span>, iterator_config: <span class="token-string">&#x27;IteratorConfig | None&#x27;</span> = <span class="token-keyword">None</span>, start_page: <span class="token-string">&#x27;int&#x27;</span> = <span class="token-number">1</span>) -&gt; <span class="token-string">&#x27;AsyncGenerator[ScrapeResult[Video], None]&#x27;</span>
 </code></pre>
-<pre><code class="language-python">categories = await client.get_categories()
-async for result in categories[0].videos(pages=1):
+<pre><code class="language-python">categories = <span class="token-keyword">await</span> client.get_categories()
+<span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> categories[<span class="token-number">0</span>].videos(pages=<span class="token-number">1</span>):
     print(result.unwrap().title)
 </code></pre>
 <p>Tag pages can be browsed with <code>client.get_videos(tag_url, pages=1)</code>.
@@ -714,8 +713,8 @@ See <a href="#reference-client">Client</a>.</p>
 <code>Sort</code> applies to videos and profile videos. Search defaults to relevance;
 browse/profile pages default to newest when the sort parameter is absent.
 <code>release</code> explicitly selects newest in search.</p>
-<pre><code class="language-python">from porndoe_api.sorting import Sort
-async for result in client.search(&quot;eva elfie&quot;, sorting_sort=Sort.Sort_most_viewed, pages=1):
+<pre><code class="language-python"><span class="token-keyword">from</span> porndoe_api.sorting <span class="token-keyword">import</span> Sort
+<span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> client.search(<span class="token-string">&quot;eva elfie&quot;</span>, sorting_sort=Sort.Sort_most_viewed, pages=<span class="token-number">1</span>):
     print(result.unwrap().url)
 </code></pre>
 <h3>Sort</h3>
@@ -843,19 +842,19 @@ Search queries are URL encoded once, preserving spaces, plus signs and ampersand
 helper. <code>result.unwrap()</code> returns the media object or raises its error.
 The provider defaults to <code>IteratorConfig()</code> with page/item errors yielded and
 summary metadata loaded. It does not eagerly fetch every listed video's page.</p>
-<pre><code class="language-python">from contextlib import aclosing
-from base_api.modules.config import IteratorConfig
+<pre><code class="language-python"><span class="token-keyword">from</span> contextlib <span class="token-keyword">import</span> aclosing
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> IteratorConfig
 
 config = IteratorConfig(
-    max_page_concurrency=1,
-    max_item_concurrency=1,
-    load_specific_sources=(&quot;html&quot;,),
+    max_page_concurrency=<span class="token-number">1</span>,
+    max_item_concurrency=<span class="token-number">1</span>,
+    load_specific_sources=(<span class="token-string">&quot;html&quot;</span>,),
 )
-async with aclosing(client.search(&quot;eva elfie&quot;, pages=1, iterator_config=config)) as stream:
-    async for result in stream:
+<span class="token-keyword">async</span> <span class="token-keyword">with</span> aclosing(client.search(<span class="token-string">&quot;eva elfie&quot;</span>, pages=<span class="token-number">1</span>, iterator_config=config)) <span class="token-keyword">as</span> stream:
+    <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> stream:
         video = result.unwrap()
         print(video.title, video.direct_download_urls)
-        break
+        <span class="token-keyword">break</span>
 </code></pre>
 <p>Early consumers should close streams with <code>aclosing</code>. The provider closes the
 underlying shared helper on generator cleanup. The caller's configuration is
@@ -881,11 +880,11 @@ a successful empty media object.</p>
 <section class="section" id="guides-downloading">
 <h2>Downloading — Porndoe API</h2>
 <p>MP4 is the normal public player format. Use <code>DownloadConfigRAW</code>.</p>
-<pre><code class="language-python">from porndoe_api import DownloadConfigRAW
-await video.download(DownloadConfigRAW(quality=&quot;best&quot;, path=&quot;./&quot;))
-await video.download(DownloadConfigRAW(
-    quality=&quot;worst&quot;, path=&quot;./chosen-name.mp4&quot;, no_title=True,
-    allow_multipart=True, max_workers=2,
+<pre><code class="language-python"><span class="token-keyword">from</span> porndoe_api <span class="token-keyword">import</span> DownloadConfigRAW
+<span class="token-keyword">await</span> video.download(DownloadConfigRAW(quality=<span class="token-string">&quot;best&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>))
+<span class="token-keyword">await</span> video.download(DownloadConfigRAW(
+    quality=<span class="token-string">&quot;worst&quot;</span>, path=<span class="token-string">&quot;./chosen-name.mp4&quot;</span>, no_title=<span class="token-keyword">True</span>,
+    allow_multipart=<span class="token-keyword">True</span>, max_workers=<span class="token-number">2</span>,
 ))
 </code></pre>
 <p><code>best</code>, <code>half</code>, <code>worst</code>, integer heights and labels such as <code>720p</code> use the base

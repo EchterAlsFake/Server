@@ -15,13 +15,12 @@ keywords:
 Version 1.0.1. Package: `unofficial-api-for-porndoe`. Import: `porndoe_api`.
 Requires Python 3.12+ and `eaf-base-api>=4.2.2` with `selectolax`.
 
-Install the local checkout before publication:
+Install from PyPI:
 
 ```sh
-pip install ./unofficial-api-for-porndoe
+pip install unofficial-api-for-porndoe
 ```
 
-Once published, use `pip install unofficial-api-for-porndoe`.
 
 ```python
 import asyncio

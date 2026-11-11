@@ -30,7 +30,7 @@
                     <span class="sidebar-logo-icon" aria-hidden="true">E/</span>
                     <span class="sidebar-logo-text">RedGIFs API</span>
                 </a>
-                <span class="sidebar-version">v0.1.0</span>
+                <span class="sidebar-version">v1.0.0</span>
             </div>
 
             <nav class="sidebar-nav" id="sidebarNav">
@@ -75,7 +75,7 @@
                             <span aria-hidden="true">/</span>
                             <span>RedGIFs API</span>
                         </nav>
-                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v0.1.0</div>
+                        <div class="hero-eyebrow">Python <span aria-hidden="true">·</span> Async <span aria-hidden="true">·</span> v1.0.0</div>
                         <h1>RedGIFs API</h1>
                         <p>An asynchronous Python API for RedGIFs videos, images, creator profiles, tags, niches, public collections, lazy API/HTML metadata and direct downloads. Powered by eaf_base_api.</p>
                         <div class="hero-actions">
@@ -107,34 +107,33 @@
 
                         <section class="section" id="getting-started">
 <h2>RedGIFs API getting started</h2>
-<p>Version <strong>0.1.0</strong>. Distribution: <code>unofficial-api-for-redgifs</code>. Import: <code>redgifs_api</code>.
+<p>Version <strong>1.0.0</strong>. Distribution: <code>unofficial-api-for-redgifs</code>. Import: <code>redgifs_api</code>.
 Requires Python 3.12+, <code>eaf-base-api&gt;=4.2.6</code>, and <code>selectolax</code>.</p>
-<p>Install from the workspace containing both checkouts before publication:</p>
-<pre><code class="language-sh">pip install -e ./eaf_base_api -e ./unofficial-api-for-redgifs
+<p>Install from PyPI:</p>
+<pre><code class="language-sh">pip install unofficial-api-for-redgifs
 </code></pre>
-<p>From the provider directory alone, use <code>pip install .</code>. Package publication and remote
-CI status are not asserted. FFmpeg is not required for direct MP4/JPG transfers;
+<p>FFmpeg is not required for direct MP4/JPG transfers;
 <code>ffprobe</code> is used for live media validation.</p>
-<pre><code class="language-python">import asyncio
-from base_api import BaseCore
-from base_api.modules.config import RuntimeConfig
-from redgifs_api import Client, DownloadConfigRAW
+<pre><code class="language-python"><span class="token-keyword">import</span> asyncio
+<span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> BaseCore
+<span class="token-keyword">from</span> base_api.modules.config <span class="token-keyword">import</span> RuntimeConfig
+<span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> Client, DownloadConfigRAW
 
-async def main():
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> main():
     runtime = RuntimeConfig()
-    runtime.request_delay = 2
-    runtime.pages_concurrency = 1
-    runtime.videos_concurrency = 2
-    async with BaseCore(runtime) as core, Client(core) as client:
-        video = await client.get_video(
-            &quot;https://www.redgifs.com/watch/hotpinkacrobatickitfox&quot;,
-            load_api=True, load_html=True,
+    runtime.request_delay = <span class="token-number">2</span>
+    runtime.pages_concurrency = <span class="token-number">1</span>
+    runtime.videos_concurrency = <span class="token-number">2</span>
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> BaseCore(runtime) <span class="token-keyword">as</span> core, Client(core) <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(
+            <span class="token-string">&quot;https://www.redgifs.com/watch/hotpinkacrobatickitfox&quot;</span>,
+            load_api=<span class="token-keyword">True</span>, load_html=<span class="token-keyword">True</span>,
         )
         print(video.title, video.duration, video.tags)
-        print(await video.get_qualities())
-        await video.download(DownloadConfigRAW(quality=&quot;best&quot;, path=&quot;./&quot;))
+        print(<span class="token-keyword">await</span> video.get_qualities())
+        <span class="token-keyword">await</span> video.download(DownloadConfigRAW(quality=<span class="token-string">&quot;best&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>))
 
-if __name__ == &quot;__main__&quot;:
+<span class="token-keyword">if</span> __name__ == <span class="token-string">&quot;__main__&quot;</span>:
     asyncio.run(main())
 </code></pre>
 <p><code>Client()</code> owns its core and closes it on context exit or <code>close()</code>.
@@ -161,11 +160,11 @@ backend. The internal <code>_api</code> argument is private. There is no <code>b
 <p>Use <code>async with Client() as client</code> or <code>await client.close()</code>. Only an internally created
 core is closed. Injected cores remain caller-owned.</p>
 <h3>Media and collection getters</h3>
-<pre><code class="language-python">async def get_video(url: str, load_html: bool = False, load_api: bool = True) -&gt; Video: ...
-async def get_image(url: str, *, load_api: bool = True, load_html: bool = False) -&gt; Image: ...
-async def get_user(url: str, *, load_api: bool = True) -&gt; User: ...
-async def get_niche(url: str, *, load_api: bool = True) -&gt; Niche: ...
-async def get_collection(username: str, collection_id: str, *, load_api: bool = True) -&gt; Collection: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_video(url: str, load_html: bool = <span class="token-keyword">False</span>, load_api: bool = <span class="token-keyword">True</span>) -&gt; Video: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_image(url: str, *, load_api: bool = <span class="token-keyword">True</span>, load_html: bool = <span class="token-keyword">False</span>) -&gt; Image: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_user(url: str, *, load_api: bool = <span class="token-keyword">True</span>) -&gt; User: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_niche(url: str, *, load_api: bool = <span class="token-keyword">True</span>) -&gt; Niche: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_collection(username: str, collection_id: str, *, load_api: bool = <span class="token-keyword">True</span>) -&gt; Collection: ...
 </code></pre>
 <p>Video/image getters accept a stable ID or supported watch/embed/CDN URL; getters validate
 the requested object type. User and niche getters accept an identifier or the corresponding
@@ -174,26 +173,26 @@ user URL) <strong>and</strong> a separate folder ID, not one arbitrary collectio
 <p>Setting all available source flags false creates a deferred object. Users, niches and
 collections accept <code>load_api</code> only. See <a href="#guides-source-loading">source loading</a>.</p>
 <h3>Video search</h3>
-<pre><code class="language-python">def search(query: str = &quot;&quot;, *, tags: list[str] | None = None,
-           sort: Sort | str = Sort.TRENDING, pages=1, start_page=1,
-           count=40, verified=False, iterator_config=None): ...
+<pre><code class="language-python"><span class="token-keyword">def</span> search(query: str = <span class="token-string">&quot;&quot;</span>, *, tags: list[str] | <span class="token-keyword">None</span> = <span class="token-keyword">None</span>,
+           sort: Sort | str = Sort.TRENDING, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>,
+           count=<span class="token-number">40</span>, verified=<span class="token-keyword">False</span>, iterator_config=<span class="token-keyword">None</span>): ...
 </code></pre>
 <p>Returns <code>ScrapeStream[Video]</code>. Accepts <code>trending</code>, <code>latest</code>, or <code>top</code>. A blank query is
 allowed for a tag/general listing; no client-side substring matching is imposed.
 <code>verified=True</code> sends the site's verified filter. Verified-only trending may be empty
 even when latest/top returns verified items. Do not substitute sorts silently.</p>
 <h3>Image and creator search</h3>
-<pre><code class="language-python">def search_images(query=&quot;&quot;, *, tags=None, pages=1, start_page=1,
-                  count=40, iterator_config=None): ...
-def search_users(query=&quot;&quot;, *, pages=1, start_page=1, count=40,
-                 verified=False, iterator_config=None): ...
+<pre><code class="language-python"><span class="token-keyword">def</span> search_images(query=<span class="token-string">&quot;&quot;</span>, *, tags=<span class="token-keyword">None</span>, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>,
+                  count=<span class="token-number">40</span>, iterator_config=<span class="token-keyword">None</span>): ...
+<span class="token-keyword">def</span> search_users(query=<span class="token-string">&quot;&quot;</span>, *, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>,
+                 verified=<span class="token-keyword">False</span>, iterator_config=<span class="token-keyword">None</span>): ...
 </code></pre>
 <p><code>search_images()</code> returns <code>ScrapeStream[Image]</code> with latest ordering; it has no sort or
 verified argument. <code>search_users()</code> returns <code>ScrapeStream[User]</code>; it has no tag/sort
 argument. Creators, studios and models use the site's User resource and flags.</p>
 <h3>Directories</h3>
-<pre><code class="language-python">def get_niches(*, pages=1, start_page=1, count=40, iterator_config=None): ...
-async def get_tags(*, trending: bool = False) -&gt; list[Tag]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> get_niches(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>, iterator_config=<span class="token-keyword">None</span>): ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_tags(*, trending: bool = <span class="token-keyword">False</span>) -&gt; list[Tag]: ...
 </code></pre>
 <p>Niches are streamed as typed objects. Their detail loader fetches description/cover
 because directory cards omit those values. Tags are an awaited in-memory list of typed
@@ -462,11 +461,11 @@ false while its direct MP4 contains audible AAC. HTML publication dates are malf
 use API <code>publish_date</code> for normalized UTC dates. Optional card preview/timeline URLs may
 be absent from the detail endpoint. No FPS, codec, dislikes or comment count is fabricated.</p>
 <h3>Relationships and qualities</h3>
-<pre><code class="language-python">async def get_author(*, load_api: bool = True) -&gt; User | None: ...
-async def get_niches() -&gt; list[Niche]: ...
-async def get_qualities() -&gt; list[str]: ...
-async def get_download_url(quality=&quot;best&quot;, *, refresh: bool = False) -&gt; str: ...
-async def download(configuration: DownloadConfigRAW) -&gt; bool: ...
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> get_author(*, load_api: bool = <span class="token-keyword">True</span>) -&gt; User | <span class="token-keyword">None</span>: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_niches() -&gt; list[Niche]: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_qualities() -&gt; list[str]: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> get_download_url(quality=<span class="token-string">&quot;best&quot;</span>, *, refresh: bool = <span class="token-keyword">False</span>) -&gt; str: ...
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> download(configuration: DownloadConfigRAW) -&gt; bool: ...
 </code></pre>
 <p><code>get_author()</code> loads <code>author_link</code> if necessary and returns a typed profile, or <code>None</code>
 when the source has no author. Missing/deleted profiles retain their loading error.
@@ -497,13 +496,13 @@ metadata and optional <code>gallery_id</code> remain available. See the <a href=
 Video HTML is rejected even in HTML-only mode. Conversely, <code>get_video()</code> rejects images.
 Use <code>load_api=False, load_html=True</code>, both flags true, or both false for independent,
 combined or deferred loading. Inherited <code>load_sources()</code> supports either load order.</p>
-<pre><code class="language-python">from redgifs_api import Client, DownloadConfigRAW
+<pre><code class="language-python"><span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> Client, DownloadConfigRAW
 
-async def save_image():
-    async with Client() as client:
-        image = await client.get_image(&quot;deliciousfrontelephant&quot;, load_html=True)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> save_image():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        image = <span class="token-keyword">await</span> client.get_image(<span class="token-string">&quot;deliciousfrontelephant&quot;</span>, load_html=<span class="token-keyword">True</span>)
         print(image.video_id, image.title, image.gallery_id)
-        await image.download(DownloadConfigRAW(quality=&quot;hd&quot;, path=&quot;./&quot;))
+        <span class="token-keyword">await</span> image.download(DownloadConfigRAW(quality=<span class="token-string">&quot;hd&quot;</span>, path=<span class="token-string">&quot;./&quot;</span>))
 </code></pre>
 <p>The default output extension comes from the supplied image rendition URL (observed JPG),
 not <code>.mp4</code>. With <code>no_title=True</code>, the caller supplies the complete filename. Use <code>hd</code>,
@@ -657,21 +656,21 @@ those counts can include images and records missing from public tabs. <code>prof
 is the site's possibly external profile/social URL, while <code>url</code> is the canonical user
 page. Full API detail is retained in <code>raw_metadata</code>.</p>
 <h3>Streams</h3>
-<pre><code class="language-python">def videos(*, pages=1, start_page=1, count=40, sort=ProfileSort.NEW,
-           tags=None, iterator_config=None) -&gt; ScrapeStream[Video]: ...
-def images(*, pages=1, start_page=1, count=40,
-           iterator_config=None) -&gt; ScrapeStream[Image]: ...
-def collections(*, pages=1, start_page=1, count=40,
-                iterator_config=None) -&gt; ScrapeStream[Collection]: ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>, sort=ProfileSort.NEW,
+           tags=<span class="token-keyword">None</span>, iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Video]: ...
+<span class="token-keyword">def</span> images(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>,
+           iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Image]: ...
+<span class="token-keyword">def</span> collections(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>,
+                iterator_config=<span class="token-keyword">None</span>) -&gt; ScrapeStream[Collection]: ...
 </code></pre>
 <p><code>videos()</code> selects the actual video tab (<code>type=g</code>), accepts <code>new</code>/<code>top</code> ordering and
 optional tag names. <code>images()</code> selects the image tab (<code>type=i</code>) with new ordering;
 it has no tag/sort argument. <code>collections()</code> selects published collections for this owner.
 All three are lazy shared result streams; unwrap every result and close partial streams.</p>
-<pre><code class="language-python">async def profile_videos(client):
-    user = await client.get_user(&quot;nickiipeach&quot;)
-    async with user.videos(pages=&quot;all&quot;, count=40) as results:
-        return [result.unwrap() async for result in results]
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> profile_videos(client):
+    user = <span class="token-keyword">await</span> client.get_user(<span class="token-string">&quot;nickiipeach&quot;</span>)
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> user.videos(pages=<span class="token-string">&quot;all&quot;</span>, count=<span class="token-number">40</span>) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">return</span> [result.unwrap() <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results]
 </code></pre>
 <p>A missing/unavailable profile must not become an empty successful User. Upstream equal-time
 ordering can repeat/omit IDs across pages, and public counts can be stale. See
@@ -773,7 +772,7 @@ metadata, so API loading fetches the actual niche detail endpoint even for direc
 counter and may include image records. The type exposes no owner getter or subscriber
 mutation operations.</p>
 <h3>videos</h3>
-<pre><code class="language-python">def videos(*, pages=1, start_page=1, count=40, sort=&quot;new&quot;, iterator_config=None): ...
+<pre><code class="language-python"><span class="token-keyword">def</span> videos(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>, sort=<span class="token-string">&quot;new&quot;</span>, iterator_config=<span class="token-keyword">None</span>): ...
 </code></pre>
 <p>Returns <code>ScrapeStream[Video]</code>. Ordering is <code>new</code> or <code>top</code>; it selects the niche video
 filter and has no tags, shuffle or image-tab argument. Use <a href="#guides-iteration-and-results">iteration options</a>.
@@ -869,19 +868,19 @@ this owner's published collections.</p>
 <p>Collections have an <code>api</code> loader only. Stored <code>content_count</code> is not a promise that
 all those records appear in the public item listing; the latter has its own total.</p>
 <h3>items</h3>
-<pre><code class="language-python">def items(*, pages=1, start_page=1, count=40, iterator_config=None): ...
+<pre><code class="language-python"><span class="token-keyword">def</span> items(*, pages=<span class="token-number">1</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">40</span>, iterator_config=<span class="token-keyword">None</span>): ...
 </code></pre>
 <p>Returns a result stream containing actual typed <code>Video</code> and <code>Image</code> instances in the
 server's mixed-media order. There is no <code>.videos()</code> alias, sort, tag or media-type filter
 on Collection. Separate boosted/promoted arrays are excluded.</p>
-<pre><code class="language-python">from redgifs_api import Image
+<pre><code class="language-python"><span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> Image
 
-async def collection_items(client):
-    collection = await client.get_collection(&quot;weirdjack&quot;, &quot;d7ddef5fb0&quot;)
-    async with collection.items(pages=&quot;all&quot;, count=100) as results:
-        async for result in results:
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> collection_items(client):
+    collection = <span class="token-keyword">await</span> client.get_collection(<span class="token-string">&quot;weirdjack&quot;</span>, <span class="token-string">&quot;d7ddef5fb0&quot;</span>)
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> collection.items(pages=<span class="token-string">&quot;all&quot;</span>, count=<span class="token-number">100</span>) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             item = result.unwrap()
-            print(&quot;image&quot; if isinstance(item, Image) else &quot;video&quot;, item.video_id)
+            print(<span class="token-string">&quot;image&quot;</span> <span class="token-keyword">if</span> isinstance(item, Image) <span class="token-keyword">else</span> <span class="token-string">&quot;video&quot;</span>, item.video_id)
 </code></pre>
 <p>The final live run matched all 246 public records for this example in pages of
 100/100/46, including two images on the last page. Stored <code>content_count</code> was 258;
@@ -918,11 +917,11 @@ nothing while an unavailable collection still raises.</p>
 <p><code>await client.get_tags(trending=False)</code> returns <code>list[Tag]</code> from the full directory.
 <code>trending=True</code> selects the trending directory. Neither result is paginated or wrapped
 in <code>ScrapeResult</code>. Tags do not have a <code>.videos()</code> method or source loader.</p>
-<pre><code class="language-python">async def tagged_results(client):
-    tags = await client.get_tags()
-    selected = next(tag for tag in tags if tag.name == &quot;Amateur&quot;)
-    async with client.search(tags=[selected.name], count=5) as results:
-        return [result.unwrap() async for result in results]
+<pre><code class="language-python"><span class="token-keyword">async</span> <span class="token-keyword">def</span> tagged_results(client):
+    tags = <span class="token-keyword">await</span> client.get_tags()
+    selected = next(tag <span class="token-keyword">for</span> tag <span class="token-keyword">in</span> tags <span class="token-keyword">if</span> tag.name == <span class="token-string">&quot;Amateur&quot;</span>)
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.search(tags=[selected.name], count=<span class="token-number">5</span>) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">return</span> [result.unwrap() <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results]
 </code></pre>
 <p>Counts are reported by the site and do not guarantee exhaustive retrievability through
 ranked search; search caps and availability remain server-owned.</p>
@@ -1035,15 +1034,15 @@ have only <code>api</code>; requesting <code>html</code> on them is a loader con
 </tr>
 </tbody>
 </table>
-<pre><code class="language-python">from redgifs_api import Client
+<pre><code class="language-python"><span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> Client
 
-async def inspect_sources():
-    async with Client() as client:
-        video = await client.get_video(&quot;hotpinkacrobatickitfox&quot;, load_api=False)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> inspect_sources():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;hotpinkacrobatickitfox&quot;</span>, load_api=<span class="token-keyword">False</span>)
         print(video.to_dict())
-        await video.load_fields(&quot;duration&quot;)
-        assert video.loaded_sources == {&quot;api&quot;}
-        await video.load_sources(&quot;html&quot;)
+        <span class="token-keyword">await</span> video.load_fields(<span class="token-string">&quot;duration&quot;</span>)
+        <span class="token-keyword">assert</span> video.loaded_sources == {<span class="token-string">&quot;api&quot;</span>}
+        <span class="token-keyword">await</span> video.load_sources(<span class="token-string">&quot;html&quot;</span>)
         print(video.title, video.page_description, video.duration)
 </code></pre>
 <p><code>load_fields()</code> selects enough sources to cover unloaded requested fields; it may load
@@ -1075,15 +1074,15 @@ See <a href="#reference-video">Video fields</a> and
 and the common page options. Free text is passed as the site's <code>query</code> parameter; no
 literal substring assertion or local filter is imposed. Multiple tags are comma-joined.
 Use exact returned tag names for classification filters.</p>
-<pre><code class="language-python">from redgifs_api import Client, sorting
+<pre><code class="language-python"><span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> Client, sorting
 
-async def find_videos():
-    async with Client() as client:
-        async with client.search(
-            query=&quot;Amateur&quot;, tags=[&quot;Amateur&quot;], sort=sorting.Sort.TOP,
-            pages=2, start_page=1, count=20,
-        ) as results:
-            return [result.unwrap() async for result in results]
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> find_videos():
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        <span class="token-keyword">async</span> <span class="token-keyword">with</span> client.search(
+            query=<span class="token-string">&quot;Amateur&quot;</span>, tags=[<span class="token-string">&quot;Amateur&quot;</span>], sort=sorting.Sort.TOP,
+            pages=<span class="token-number">2</span>, start_page=<span class="token-number">1</span>, count=<span class="token-number">20</span>,
+        ) <span class="token-keyword">as</span> results:
+            <span class="token-keyword">return</span> [result.unwrap() <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results]
 </code></pre>
 <table>
 <thead>
@@ -1185,17 +1184,17 @@ Valid beyond-last ranges end cleanly. Collection beyond-last endpoints return HT
 page-1 discovery distinguishes exhaustion from an unavailable resource. No result-length
 heuristic drops a partial final page or invents another page for exact multiples.
 Invalid booleans/nonpositive page options and invalid counts raise <code>ValueError</code>.</p>
-<pre><code class="language-python">from redgifs_api import make_iterator_config
+<pre><code class="language-python"><span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> make_iterator_config
 
-async def deferred_items(client):
-    user = await client.get_user(&quot;nickiipeach&quot;, load_api=False)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> deferred_items(client):
+    user = <span class="token-keyword">await</span> client.get_user(<span class="token-string">&quot;nickiipeach&quot;</span>, load_api=<span class="token-keyword">False</span>)
     config = make_iterator_config(
-        load_specific_sources=(), order=&quot;original&quot;,
-        page_error_mode=&quot;raise&quot;, item_error_mode=&quot;raise&quot;,
-        max_page_concurrency=1, max_item_concurrency=2,
+        load_specific_sources=(), order=<span class="token-string">&quot;original&quot;</span>,
+        page_error_mode=<span class="token-string">&quot;raise&quot;</span>, item_error_mode=<span class="token-string">&quot;raise&quot;</span>,
+        max_page_concurrency=<span class="token-number">1</span>, max_item_concurrency=<span class="token-number">2</span>,
     )
-    async with user.videos(pages=&quot;all&quot;, count=40, iterator_config=config) as results:
-        async for result in results:
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> user.videos(pages=<span class="token-string">&quot;all&quot;</span>, count=<span class="token-number">40</span>, iterator_config=config) <span class="token-keyword">as</span> results:
+        <span class="token-keyword">async</span> <span class="token-keyword">for</span> result <span class="token-keyword">in</span> results:
             video = result.unwrap()
             print(video.video_id, video.loaded_sources)
 </code></pre>
@@ -1275,20 +1274,20 @@ limits does not resolve the independently observed unstable ordering.</p>
 <p>Use <code>DownloadConfigRAW</code> with <code>Video.download()</code> or <code>Image.download()</code>.
 Every transfer uses the supplied <code>BaseCore.legacy_download()</code>; no second downloader is
 implemented. Direct MP4/JPG downloading does not need FFmpeg.</p>
-<pre><code class="language-python">from pathlib import Path
-from redgifs_api import Client, DownloadConfigRAW
+<pre><code class="language-python"><span class="token-keyword">from</span> pathlib <span class="token-keyword">import</span> Path
+<span class="token-keyword">from</span> redgifs_api <span class="token-keyword">import</span> Client, DownloadConfigRAW
 
-async def download_video():
-    output = Path(&quot;./downloads&quot;)
-    output.mkdir(parents=True, exist_ok=True)
-    async with Client() as client:
-        video = await client.get_video(&quot;hotpinkacrobatickitfox&quot;)
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> download_video():
+    output = Path(<span class="token-string">&quot;./downloads&quot;</span>)
+    output.mkdir(parents=<span class="token-keyword">True</span>, exist_ok=<span class="token-keyword">True</span>)
+    <span class="token-keyword">async</span> <span class="token-keyword">with</span> Client() <span class="token-keyword">as</span> client:
+        video = <span class="token-keyword">await</span> client.get_video(<span class="token-string">&quot;hotpinkacrobatickitfox&quot;</span>)
         config = DownloadConfigRAW(
-            quality=&quot;sd&quot;, path=output / &quot;sample.mp4&quot;, no_title=True,
-            allow_multipart=True, max_workers=3,
-            callback=lambda done, total: print(done, total),
+            quality=<span class="token-string">&quot;sd&quot;</span>, path=output / <span class="token-string">&quot;sample.mp4&quot;</span>, no_title=<span class="token-keyword">True</span>,
+            allow_multipart=<span class="token-keyword">True</span>, max_workers=<span class="token-number">3</span>,
+            callback=<span class="token-keyword">lambda</span> done, total: print(done, total),
         )
-        assert await video.download(config)
+        <span class="token-keyword">assert</span> <span class="token-keyword">await</span> video.download(config)
 </code></pre>
 <h3>Rendition labels</h3>
 <table>
@@ -1723,15 +1722,15 @@ HTTP failure is translated to a provider alias.</p>
 <p><code>BaseMedia</code> wraps ordinary loader failures in <code>MediaLoadError</code> or <code>MediaLoadErrors</code>.
 An unavailable resource must not become an empty successful object. Catch the outer
 loading wrapper, then inspect the original cause or use <code>is_resource_gone()</code>.</p>
-<pre><code class="language-python">from base_api import MediaLoadError, MediaLoadErrors, is_resource_gone
+<pre><code class="language-python"><span class="token-keyword">from</span> base_api <span class="token-keyword">import</span> MediaLoadError, MediaLoadErrors, is_resource_gone
 
-async def fetch_video(client, url):
-    try:
-        return await client.get_video(url)
-    except (MediaLoadError, MediaLoadErrors) as error:
-        if is_resource_gone(error):
-            print(&quot;Resource unavailable:&quot;, url)
-        raise
+<span class="token-keyword">async</span> <span class="token-keyword">def</span> fetch_video(client, url):
+    <span class="token-keyword">try</span>:
+        <span class="token-keyword">return</span> <span class="token-keyword">await</span> client.get_video(url)
+    <span class="token-keyword">except</span> (MediaLoadError, MediaLoadErrors) <span class="token-keyword">as</span> error:
+        <span class="token-keyword">if</span> is_resource_gone(error):
+            print(<span class="token-string">&quot;Resource unavailable:&quot;</span>, url)
+        <span class="token-keyword">raise</span>
 </code></pre>
 <table>
 <thead>
@@ -1945,7 +1944,7 @@ validation. The latest suite has 38 passing and 12 rate-limited failures; see
   had omissions/duplicates, and those assertions remain intact.</li>
 <li>Matching HTML and searchable MCP documentation following the shared documentation layout.</li>
 </ul>
-<p>This is an unpublished local version. HLS URLs are inspectable but HLS downloads,
+<p>HLS URLs are inspectable but HLS downloads,
 gallery enumeration, private/account actions and personalized recommendation feeds are
 not implemented. No claim is made that the full validation gate has passed.
 See <a href="#getting-started">getting started</a> and <a href="#guides-live-validation">validation</a>.</p>

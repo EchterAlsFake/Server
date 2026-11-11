@@ -12,5 +12,4 @@ keywords: ["YouJizz", "youjizz_api", "changelog"]
 
 Typed Video, Collection, Pornstar, Category, User and Comment objects; lazy API,
 HTML and comments; search, listings and directories; MP4/HLS downloads; CLI;
-shared networking and iterator controls. This entry describes local source
-capabilities and does not assert a PyPI publication date or remote CI status.
+shared networking and iterator controls. This entry describes the public interface.
