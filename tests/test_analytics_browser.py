@@ -2,11 +2,16 @@
 import json
 import unittest
 from pathlib import Path
-from playwright.sync_api import sync_playwright
 
 
 class BrowserAnalyticsTests(unittest.TestCase):
     def test_events_visibility_feedback_and_privacy(self):
+        try:
+            from playwright.sync_api import sync_playwright
+        except ModuleNotFoundError as error:
+            if error.name != 'playwright':
+                raise
+            self.skipTest('Playwright is optional; install the dev dependencies to run browser checks')
         script = (Path(__file__).parents[1] / 'static/aggregate-analytics.js').read_text()
         html = '''<header class="site-header"><a href="/porn_fetch" id="premium">Premium</a></header>
             <a id="package" data-metric="download_click" href="/downloads/file.zip">Get app</a>
