@@ -26,7 +26,7 @@
 </select>
 <p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Use the Qt installer for in-app updates.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
 </div>
-<a class="btn btn-primary primary-cta"{% if card.default %} href="{{ download_href(card.default.url) }}" data-vps-url="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
+<a class="btn btn-primary primary-cta" data-metric="download_click"{% if card.default %} href="{{ download_href(card.default.url) }}" data-vps-url="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
 
 <p class="primary-requirements">{{ card.default.min_os if card.default and card.default.min_os else card.requirements }}</p>
 <button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>Different device type?</button>

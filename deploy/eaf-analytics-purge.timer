@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily retention cleanup for aggregate website counters
+
+[Timer]
+OnCalendar=*-*-* 00:15:00 UTC
+Persistent=true
+Unit=eaf-analytics-purge.service
+
+[Install]
+WantedBy=timers.target

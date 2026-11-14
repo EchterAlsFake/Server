@@ -23,13 +23,21 @@ class CatalogTests(unittest.TestCase):
         self.assertGreater(len(results), 5)
         self.assertTrue(all(item["package"] == "pornhub" for item in results))
         with self.assertRaisesRegex(ValueError, "unknown_package"):
-            self.catalog.list("porn")
+            self.catalog.list("nonexistent-provider")
 
     def test_read_rejects_traversal_and_unknown_paths(self):
         self.assertIn("# EAF Python API", self.catalog.read("overview.md"))
         for path in ("../README.md", "/etc/passwd", "pornhub/../../README.md", "missing.md"):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 self.catalog.read(path)
+
+    def test_porndoe_docs_are_discoverable(self):
+        documents = self.catalog.list("porndoe")
+        self.assertGreaterEqual(len(documents), 10)
+        results = self.catalog.search("Porndoe Referer", package="porndoe")
+        self.assertTrue(results)
+        self.assertEqual(results[0]["path"], "porndoe/reference/video.md")
+        self.assertIn("DownloadConfigRAW", self.catalog.read("porndoe/guides/downloading.md"))
 
     def test_search_is_ranked_bounded_and_filtered(self):
         results = self.catalog.search("download HLS", package="pornhub", limit=2)

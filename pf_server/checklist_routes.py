@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 from datetime import datetime, timezone
+from html import escape
 
 from flask import (
     Blueprint,
@@ -137,9 +138,12 @@ def checklist_progress_svg():
     done = db.session.query(db.func.sum(Checklist.is_done)).scalar() or 0
     percentage = round((done / total) * 100) if total else 0
 
-    label = "Version 3.9 Development Progress"
+    label = request.args.get("label", "").strip() or current_app.config[
+        "CHECKLIST_PROGRESS_LABEL"
+    ]
     value = f"{percentage}%"
-    total_width = 400
+    total_width = max(400, len(label) * 9 + 100)
+    label = escape(label, quote=True)
     bar_height = 36
     badge_height = 22
     height = bar_height + badge_height + 12

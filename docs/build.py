@@ -1,17 +1,25 @@
 import html
+import io
+import keyword
 import re
 import shutil
+import tokenize
 from pathlib import Path
 
 BRAND_MARKS = {
+    "bellesa": "B",
     "eaf_base_api": "EAF",
     "beeg": "B",
     "empflix": "E",
     "eporner": "E",
     "hqporner": "H",
     "missav": "M",
+    "porn": "P",
     "pornhub": "P",
+    "pornhat": "P",
+    "porndoe": "P",
     "porntrex": "P",
+    "redgifs": "R",
     "redtube": "R",
     "spankbang": "S",
     "thumbzilla": "T",
@@ -22,12 +30,54 @@ BRAND_MARKS = {
     "xnxx": "X",
     "xvideos": "X",
     "youporn": "Y",
+    "youjizz": "Y",
 }
 
 
 def clean_html_document(content: str) -> str:
     """Keep generated pages deterministic and free of trailing whitespace."""
     return "\n".join(line.rstrip() for line in content.splitlines()) + "\n"
+
+
+def highlight_python_blocks(content: str) -> str:
+    """Render fenced Python examples with the existing documentation token colors."""
+    def highlight(match):
+        source = html.unescape(match.group(2))
+        lines = source.splitlines(keepends=True)
+        offsets = [0]
+        for line in lines:
+            offsets.append(offsets[-1] + len(line))
+
+        def position(location):
+            row, column = location
+            return offsets[min(row - 1, len(offsets) - 1)] + column
+
+        parts = []
+        cursor = 0
+        try:
+            for token in tokenize.generate_tokens(io.StringIO(source).readline):
+                color = {
+                    tokenize.STRING: "string",
+                    tokenize.NUMBER: "number",
+                    tokenize.COMMENT: "comment",
+                }.get(token.type)
+                if token.type == tokenize.NAME and keyword.iskeyword(token.string):
+                    color = "keyword"
+                if color:
+                    start, end = position(token.start), position(token.end)
+                    parts.append(html.escape(source[cursor:start]))
+                    parts.append(f'<span class="token-{color}">{html.escape(source[start:end])}</span>')
+                    cursor = end
+        except (tokenize.TokenError, IndentationError):
+            # Partial signatures and snippets still retain their original text.
+            pass
+        parts.append(html.escape(source[cursor:]))
+        return match.group(1) + "".join(parts) + match.group(3)
+
+    return re.sub(
+        r'(<pre><code class="language-python">)(.*?)(</code></pre>)',
+        highlight, content, flags=re.DOTALL,
+    )
 
 
 def build_docs():
@@ -105,13 +155,15 @@ def build_docs():
             "subtitle": slots.get("HERO_SUBTITLE", ""),
             "version": slots.get("VERSION", "1.0"),
             "github_url": slots.get("GITHUB_URL", ""),
-            "pypi_package": slots.get("PYPI_PACKAGE", "")
+            "pypi_package": slots.get("PYPI_PACKAGE", ""),
+            "install_command": slots.get("INSTALL_COMMAND", f"pip install {slots.get('PYPI_PACKAGE', '')}")
         })
 
         # Optional page metadata keeps clients with different engines and licenses accurate.
         slots.setdefault("LICENSE_LABEL", "AGPLv3")
         slots.setdefault("ENGINE_URL", "https://github.com/EchterAlsFake/eaf_base_api")
         slots.setdefault("ENGINE_NAME", "eaf_base_api")
+        slots.setdefault("INSTALL_COMMAND", f"pip install {slots.get('PYPI_PACKAGE', '')}")
         slots.setdefault("MCP_BANNER", (base_dir / "mcp_banner.html").read_text(encoding="utf-8").rstrip() + "\n\n")
 
         # 3. Inject into template
@@ -120,6 +172,8 @@ def build_docs():
             # Replace placeholder in template, e.g., <!-- SLOT:TITLE -->
             placeholder = f"<!-- SLOT:{slot_name} -->"
             final_html = final_html.replace(placeholder, slot_value)
+
+        final_html = highlight_python_blocks(final_html)
 
         # 4. Save to dist/api_name/index.html
         api_dist_dir = dist_dir / api_name
@@ -162,7 +216,7 @@ def build_docs():
         title = html.escape(api["title"])
         version = html.escape(api["version"])
         subtitle = html.escape(api["subtitle"])
-        pypi_package = html.escape(api["pypi_package"])
+        install_command = html.escape(api["install_command"])
         github_url = html.escape(api["github_url"], quote=True)
         clean_title = html.escape(api["title"], quote=True)
         clean_package = html.escape(api["pypi_package"], quote=True)
@@ -182,7 +236,7 @@ def build_docs():
                         <footer class="card-footer">
                             <button class="card-install" type="button" onclick="copyInstall(this)" title="Copy install command">
                                 <span class="prefix" aria-hidden="true">$</span>
-                                <code>pip install {pypi_package}</code>
+                                <code>{install_command}</code>
                                 <span class="copy-icon" aria-hidden="true">Copy</span>
                             </button>
                             <div class="card-actions">

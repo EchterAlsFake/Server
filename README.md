@@ -123,6 +123,7 @@ Configuration is read and validated centrally by `pf_server/config.py`; `python-
 | `PF_SERVER_DATA_DIR` | Database, secret, and invoice directory | Repository root |
 | `PF_SERVER_DB` | SQLite database path override | `$PF_SERVER_DATA_DIR/server.db` |
 | `CHECKLIST_AUTH` | Password for the checklist editor | Unset; checklist editing is unavailable |
+| `CHECKLIST_PROGRESS_LABEL` | Default title in `/checklist/progress.svg` | `Version 3.9 Development Progress` |
 | `CI_TOKEN` | Authorizes `POST /ci/<test_name>` | Unset; CI writes fail closed |
 | `RATELIMIT_STORAGE_URI` | Flask-Limiter storage backend | `memory://` (per process) |
 | `LOG_LEVEL` | Application warning/error verbosity | `INFO` |
@@ -165,6 +166,13 @@ The main API groups are:
 - Checklist: `/checklist`, `/checklist/login`, `/checklist/api/*`, and `/checklist/progress.svg`
 - Documentation: `/docs/` on the main origin or `/` on a `docs.*` host
 - Operations: `GET /ping`; host shutdown uses operator SSH/system administration.
+
+Customize the checklist progress bar title per embed with
+`/checklist/progress.svg?label=Version%204.0%20Development%20Progress`.
+The `label` query parameter overrides `CHECKLIST_PROGRESS_LABEL`; an omitted or blank
+label uses the configured default. Set `CHECKLIST_PROGRESS_LABEL` in `.env` and restart
+the server to change the default for all embeds. The completion percentage still comes
+from the checklist tasks.
 
 ## Public MCP documentation
 
@@ -504,4 +512,4 @@ and install the hourly refresh timer before enabling payments. Missing/stale Tor
 blocks new crypto checkout. Patreon browser retrieval starts a background worker immediately
 and migration `e8b42f930d16`; email alone never reveals a key in the browser.
 
-Website event counters, privacy limits and minute dashboard integration: [aggregate analytics](docs/ANALYTICS.md).
+Optional identifier-free page/button counters and daily reports are available with `AGGREGATE_ANALYTICS_ENABLED` (disabled by default). See [aggregate analytics](docs/ANALYTICS.md) for the minute dashboard integration, retention, limitations and deployment checks. Retiring the legacy visitor script does not purge historical counters or download-importer records.

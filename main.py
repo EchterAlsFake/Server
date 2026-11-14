@@ -93,11 +93,11 @@ def create_app(
         metrics_enabled=application.config["AGGREGATE_ANALYTICS_ENABLED"],
     )
 
-    init_aggregate_analytics(application)
     init_direct_downloads(application)
     db.init_app(application)
     csrf.init_app(application)
     limiter.init_app(application)
+    init_aggregate_analytics(application)
     migrate.init_app(application, db)
     talisman.init_app(
         application,
