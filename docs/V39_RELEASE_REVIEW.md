@@ -1,8 +1,9 @@
 # Porn Fetch 3.9 release review
 
 Reviewed on 8 November 2026 against the local application source at commit
-`b763aa1`. Changes in this report are prepared in the Server working tree;
-they have not been deployed to production or used to take a real payment.
+`b763aa1`. The website fixes and diagnostic receiver were subsequently deployed
+on 8 November 2026; see the [deployment record](V39_DEPLOYMENT_2026-11-08.md).
+No real payment was taken during these checks.
 
 ## Result
 
@@ -14,11 +15,10 @@ license retrieval in the browser.
 An unconditional legal or operational launch clearance is **not established**.
 The subsequent [SSH infrastructure review](INFRASTRUCTURE_REVIEW_2026-11-08.md)
 verified the running services, proxy, backup records, runtime configuration and
-permanent Keygen policy. It also confirmed that these website changes are not
-deployed and that the diagnostic receiver still needs its v3.9 update. Actual
-live-provider settlement, inbox delivery and new release binaries remain
-unverified. Patreon verification still uses a private sales endpoint without
-provider authorization.
+permanent Keygen policy. Its identified website and diagnostic rollout gaps were
+resolved by the [subsequent deployment](V39_DEPLOYMENT_2026-11-08.md). Actual
+live-provider settlement, inbox delivery and new release binaries remain unverified.
+Patreon verification still uses a private sales endpoint without provider authorization.
 
 ## Changes
 

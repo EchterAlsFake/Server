@@ -1,0 +1,11 @@
+[Unit]
+Description=Export suppressed daily website analytics and expire old counters
+After=pornfetch-web.service
+Requisite=pornfetch-web.service
+
+[Service]
+Type=oneshot
+# The data volume already grants the host broker an inherited named-user ACL.
+# Export mode 0640 permits that ACL to read; raw counters remain mode 0600.
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 1000 python -m flask --app main analytics-export
+NoNewPrivileges=true

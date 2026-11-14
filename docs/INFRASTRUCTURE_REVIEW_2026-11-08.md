@@ -5,6 +5,11 @@ It did not deploy code, change payment modes, create payments, issue licenses or
 read customer records. Secret values were excluded from the output. The review
 supplements the [v3.9 release review](V39_RELEASE_REVIEW.md).
 
+Deployment update: the website fixes, Tor refresh timer and diagnostic receiver
+update identified below were subsequently installed and verified. See the
+[deployment record](V39_DEPLOYMENT_2026-11-08.md). The findings below describe
+the earlier inspection; the owner requested leaving the TPM units unchanged.
+
 My assessment is approximately **90/100 for infrastructure**, and **85/100 for
 overall release readiness** while the prepared changes remain undeployed. These
 are engineering judgments, not a certification or availability guarantee.

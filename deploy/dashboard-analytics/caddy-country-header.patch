@@ -1,0 +1,11 @@
+--- a/Caddyfile
++++ b/Caddyfile
+@@ -140,7 +140,7 @@
+ 				header_up -True-Client-IP
+ 				header_up -CF-Connecting-IP
+ 				header_up -X-Original-Forwarded-For
+-				header_up -X-Forwarded-For
++				header_up X-Forwarded-For {client_ip}
+ 				header_up -X-Forwarded-Host
+ 				header_up -X-Forwarded-Port
+ 				header_up -X-Forwarded-Prefix

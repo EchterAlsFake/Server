@@ -17,6 +17,8 @@ IP_HEADER_ENVIRONMENT_KEYS = (
     "HTTP_X_FORWARDED_FOR",
     "HTTP_X_REAL_IP",
     "HTTP_FORWARDED",
+    "HTTP_X_ORIGINAL_FORWARDED_FOR",
+    "HTTP_CF_CONNECTING_IP",
 )
 BLOCKED_COUNTRY_CODES = frozenset({"KP", "SY"})
 RESTRICTED_UKRAINE_SUBDIVISIONS = frozenset(
@@ -99,7 +101,8 @@ class LocalCountryResolver:
 class CheckoutCountryMiddleware:
     """Resolve checkout IP once, retain only geography, then strip IP headers."""
 
-    def __init__(self, application, resolver: LocalCountryResolver, ip_header: str, tor_resolver=None):
+    def __init__(self, application, resolver: LocalCountryResolver, ip_header: str, tor_resolver=None, metrics_enabled=False):
+        self.metrics_enabled = metrics_enabled
         self.application = application
         self.resolver = resolver
         self.tor_resolver = tor_resolver
@@ -117,14 +120,14 @@ class CheckoutCountryMiddleware:
             environ["PF_TOR_STATUS"] = self.tor_resolver.lookup(raw_address)
         if (
             environ.get("REQUEST_METHOD") == "POST"
-            and environ.get("PATH_INFO") in CHECKOUT_PATHS
+            and (environ.get("PATH_INFO") in CHECKOUT_PATHS
+                 or (self.metrics_enabled and environ.get("PATH_INFO") == "/_metrics/event"
+                     and environ.get("HTTP_DNT") != "1" and environ.get("HTTP_SEC_GPC") != "1"))
         ):
             try:
                 evidence = self.resolver.lookup(raw_address)
             except Exception:
-                logging.getLogger("pf_server.country").exception(
-                    "Local checkout geolocation failed"
-                )
+                logging.getLogger("pf_server.country").warning("Local country lookup unavailable")
                 evidence = CountryEvidence(status="lookup_error")
             environ["PF_COUNTRY_STATUS"] = evidence.status
             if evidence.country_code:

@@ -4,7 +4,23 @@ Research and source review: **25 October 2026**. Initial audience: English-speak
 adults looking for a supported video-downloading workflow. Canonical product
 origin: `https://pornfetch.to`.
 
-## Current implementation: 5 November 2026
+## Current guide presentation: 14 November 2026
+
+The shared provider guides describe the stable 3.9.1 release. Their opening has
+Download for Free and Get Premium (lifetime) links; platform selection and setup
+requirements are on the download pages. Beta/3.8 migration notices were removed
+from guides. Catalog-unavailable/empty states still link honestly to downloads.
+
+Desktop and mobile Downloads screenshots supplied by the maintainer replace the
+old guide images. Originals use versioned filenames; responsive WebP copies are
+built by scripts/build_web_images.py. The desktop screenshot also supplies the
+Article, Open Graph and Twitter image with matching dimensions. Mobile now shows
+Add videos instead of the Account screen. Existing screenshots on other website
+pages are not replaced by this guide update. The introductory links are classified
+as guide_top by the aggregate collector because they sit in the page heading.
+No price, guide URL or search title changed.
+
+## Historical implementation: 5 November 2026
 
 The October launch findings below are historical. A fresh live crawl covered all
 34 sitemap URLs: all returned HTTP 200, matching self-canonicals, and indexable

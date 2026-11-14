@@ -29,6 +29,7 @@
             <p class="brand-disclosure">Payment identities identify provider options, not endorsement or guaranteed availability. <a href="/static/notices/payment-brands.txt">Brand notices and usage sources</a>.</p>
         </section>
     </div>
+    {% if aggregate_analytics_page %}{% include "partials/premium_feedback.html" %}{% endif %}
 </div>
 {% include "partials/license_dialogs.html" %}
 {% endblock %}

@@ -150,7 +150,9 @@ def checkout_start():
         return jsonify(error="The offer has changed. Reload the checkout information and confirm it again."), 409
     session.pop("checkout_selection", None)
     session.pop("checkout_consent", None)
+    from .aggregate_analytics import record_checkout_start
     if pending_crypto:
+        record_checkout_start(method)
         session["checkout_selection"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), payment_method="crypto", offer_digest=data["offer_digest"], **{field: accepted(field) for field in shared_fields})
         target = url_for("payments.buy_license")
         if request.is_json:
@@ -160,6 +162,7 @@ def checkout_start():
         country = None  # No tax-country declaration collected for Patreon Shop.
     agreement_id = record_agreement(method, country, datetime.now(timezone.utc).isoformat())
     session["checkout_consent"] = dict(agreement_id=agreement_id, offer_digest=data["offer_digest"], version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: accepted(field) for field in FIELDS})
+    record_checkout_start(method)
     target = url_for("payments.buy_license") if method == "crypto" else url_for("pages.payment_preview", method=method)
     if request.is_json:
         return jsonify(next=target, method=method, live=not current_app.config['NOWPAYMENTS_SANDBOX'])

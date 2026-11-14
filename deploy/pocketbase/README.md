@@ -1,6 +1,12 @@
 # PocketBase error-log integration
 
-The current source accepts detailed, consented error reports. Deploy the updated hook, proxy configuration and `1793750400_full_error_reports.js` migration together before releasing the updated client. The previous deployed contract accepted only 2,000-character messages in 4 KiB requests and removed URLs; changing the client alone is insufficient. Local verification does not establish production deployment.
+The current source accepts detailed, consented error reports. The updated hook, proxy configuration and `1793750400_full_error_reports.js` migration were deployed together on 8 November 2026. The previous contract accepted only 2,000-character messages in 4 KiB requests and removed URLs. The current public endpoint, `https://api.pornfetch.to/error_log`, was verified with a synthetic traceback above 4 KiB, including unchanged URL and Unicode text; that exact test record was removed afterward. See the [deployment record](../../docs/V39_DEPLOYMENT_2026-11-08.md).
+
+Current production uses rootless Podman: `pocketbase.service` in the `pornfetch`
+user manager, loopback port 18090, hooks/migrations under that account's Quadlet
+configuration, and the `pocketbase-data` volume. The filesystem/service examples
+below describe the older standalone deployment; retain the public wire contract
+when adapting them. Sealed credentials remain managed by the existing wrapper.
 
 Pinned Linux amd64 artifact: https://github.com/pocketbase/pocketbase/releases/download/v0.40.4/pocketbase_0.40.4_linux_amd64.zip
 
@@ -134,7 +140,7 @@ relax rate-limit settings.
 
 ## Historical audit and current verification
 
-The statements below describe the 2026-09-17 deployed audit. The detailed-report source change was tested locally with isolated databases, including verbatim traceback/URL storage beyond 4 KiB and the new byte boundary. It has not been deployed by this change. The earlier redaction behavior and 4 KiB limit are intentionally superseded by the current source contract above.
+The statements below describe the 2026-09-17 deployed audit. The detailed-report update was subsequently tested in isolated databases and deployed on 8 November 2026. Its public route preserves full traceback/URL text above 4 KiB and enforces the 1 MiB boundary. The earlier redaction behavior and 4 KiB limit are superseded by the current contract above.
 
 The audit reproduced credential-redaction leaks, an oversized chunked-body bypass, and failures when redaction expanded a message. All were fixed and deployed. The default users signup permission was locked, per-IP limits made audience-independent, and request-wide auth stripping, aggregate admission, storage bounds, timeouts and process limits added.
 

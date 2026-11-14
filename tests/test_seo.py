@@ -181,7 +181,12 @@ class SEOTests(ServerTestCase):
         for provider in GUIDES:
             response = self.get(guide_path(provider))
             page = Page(response.text)
-            self.assertIn("3.9", response.text)
+            self.assertIn("Porn Fetch 3.9.1", response.text)
+            self.assertNotIn("published beta", response.text)
+            self.assertNotIn("old 3.8 release", response.text)
+            self.assertIn('Download for Free', response.text)
+            self.assertIn('Get Premium (lifetime)', response.text)
+            self.assertNotIn('Get Porn Fetch for your device', response.text)
             self.assertNotIn("?channel=beta", response.text)
             for platform in ("windows", "macos", "linux", "android", "ios", "cli"):
                 self.assertIn("/download/" + platform, page.links)
@@ -194,7 +199,7 @@ class SEOTests(ServerTestCase):
             self.assertEqual(article["datePublished"], GUIDE_PUBLISHED)
             self.assertEqual(article["image"], page.meta["og:image"])
             self.assertEqual(page.meta["og:image"], page.meta["twitter:image"])
-            self.assertIn('media/downloads.png', response.text)
+            self.assertIn('media/guide-desktop-3.9.1.png', response.text)
             image_path = Path(main.app.static_folder) / urlsplit(article["image"]).path.removeprefix("/static/")
             self.assertTrue(image_path.is_file())
 
@@ -203,10 +208,16 @@ class SEOTests(ServerTestCase):
         screenshot = "/static/media/android-account.jpg"
         for provider in GUIDES:
             response = self.get(guide_path(provider))
-            self.assertIn("3.9", response.text)
+            self.assertIn("Porn Fetch 3.9.1", response.text)
+            self.assertNotIn("published beta", response.text)
+            self.assertNotIn("old 3.8 release", response.text)
+            self.assertIn('Download for Free', response.text)
+            self.assertIn('Get Premium (lifetime)', response.text)
+            self.assertNotIn('Get Porn Fetch for your device', response.text)
             self.assertIn("saved to your selected folder automatically", response.text)
             self.assertNotIn("A completed card also has", response.text)
-            self.assertEqual(screenshot in response.text, provider in {"pornhub", "xhamster", "xvideos"})
+            self.assertNotIn(screenshot, response.text)
+            self.assertIn('/static/media/guide-mobile-3.9.1.jpg', response.text)
         android = self.get("/download/android")
         self.assertIn(screenshot, android.text)
         for filename in ("android-account.jpg", "web/android-account-360.webp", "web/android-account-720.webp"):

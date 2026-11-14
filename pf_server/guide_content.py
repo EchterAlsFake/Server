@@ -1,12 +1,12 @@
-"""Website guides checked against the local Porn Fetch 3.9 source.
+"""Website guides checked against the local Porn Fetch 3.9.1 release.
 
 See docs/SEO.md for the source checklist. Dates change only with editorial updates.
 The ordering is editorial priority, not a measured market-share claim.
 """
 
 GUIDE_PUBLISHED = "2026-10-25"
-GUIDE_DATE = "2026-11-08"
-GUIDE_VERSION = "3.9"
+GUIDE_DATE = "2026-11-14"
+GUIDE_VERSION = "3.9.1"
 
 # Each section contains a heading followed by independently authored paragraphs.
 GUIDES = {

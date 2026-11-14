@@ -503,3 +503,5 @@ evidence and the saved checkout declarations. Run `flask --app main update-tor-e
 and install the hourly refresh timer before enabling payments. Missing/stale Tor data
 blocks new crypto checkout. Patreon browser retrieval starts a background worker immediately
 and migration `e8b42f930d16`; email alone never reveals a key in the browser.
+
+Website event counters, privacy limits and minute dashboard integration: [aggregate analytics](docs/ANALYTICS.md).

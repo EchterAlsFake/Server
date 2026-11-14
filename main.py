@@ -16,6 +16,7 @@ from pf_server.checklist_routes import checklist_bp
 from pf_server.ci_routes import ci_bp
 from pf_server.config import load_environment_config
 from pf_server.http import TrustedHostMiddleware
+from pf_server.aggregate_analytics import init_aggregate_analytics
 from pf_server.statistics import RequestStatistics
 from pf_server.direct_downloads import init_direct_downloads
 from pf_server.country_service import CheckoutCountryMiddleware, LocalCountryResolver
@@ -89,8 +90,10 @@ def create_app(
         country_resolver,
         application.config["CHECKOUT_IP_HEADER"],
         application.extensions["tor_resolver"],
+        metrics_enabled=application.config["AGGREGATE_ANALYTICS_ENABLED"],
     )
 
+    init_aggregate_analytics(application)
     init_direct_downloads(application)
     db.init_app(application)
     csrf.init_app(application)
@@ -257,6 +260,8 @@ app = create_app()
 
 class NoIPLoggingHandler(WSGIRequestHandler):
     def log_request(self, code="-", size="-"):
+        if self.path.partition("?")[0] == "/_metrics/event":
+            return
         method = self.command
         path = self.path.partition("?")[0]
         logging.getLogger("pf_server.access").info("%s %s -> %s", method, path, code)

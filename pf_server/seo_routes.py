@@ -159,7 +159,7 @@ def page_metadata():
             "mainEntityOfPage": origin + path,
             "inLanguage": "en",
             "datePublished": GUIDE_PUBLISHED,
-            "image": origin + "/static/media/web/downloads-960.webp",
+            "image": origin + "/static/media/web/guide-desktop-3.9.1-960.webp",
             "dateModified": guide.get("updated", GUIDE_DATE),
             "author": {"@id": origin + "/#maintainer"},
             "publisher": {"@id": origin + "/#maintainer"},
@@ -170,10 +170,10 @@ def page_metadata():
         "canonical": origin + path,
         "breadcrumbs": breadcrumbs,
         "og_type": "article" if guide else "website",
-        "image": origin + ("/static/media/web/downloads-960.webp" if guide else "/static/media/promo-poster.jpg"),
+        "image": origin + ("/static/media/web/guide-desktop-3.9.1-960.webp" if guide else "/static/media/promo-poster.jpg"),
         "image_alt": "Porn Fetch desktop download controls" if guide else "Porn Fetch video downloader interface",
         "image_width": 960 if guide else 1920,
-        "image_height": 549 if guide else 1080,
+        "image_height": 616 if guide else 1080,
         "structured": {"@context": "https://schema.org", "@graph": graph},
     }
     return g.page_meta

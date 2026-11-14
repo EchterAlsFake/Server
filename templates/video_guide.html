@@ -8,14 +8,14 @@
         <p class="eyebrow">{{ guide.name }} · Porn Fetch {{ guide_version }}</p>
         <h1>How to download {{ guide.name }} videos</h1>
         <p>{{ guide.intro }}</p>
+        <nav class="guide-actions" aria-label="Get Porn Fetch">
+            <a class="btn btn-primary" href="/download">Download for Free</a>
+            <a class="btn btn-secondary" href="/porn_fetch">Get Premium (lifetime)</a>
+        </nav>
         <p class="guide-byline">By <a href="/about">Johannes Habel</a> · Updated <time datetime="{{ guide_date }}">{{ guide_date_label }}</time></p>
     </header>
-    <p class="guide-version">These instructions describe {{ guide_version }}, a published beta from the 3.9 development cycle. {% if catalog_unavailable %}The release catalog is temporarily unavailable; <a href="/download">check downloads again shortly</a>.{% elif not releases_available %}No website-hosted packages are available right now. <a href="/download">Check download availability</a>; there may not be a build for your device yet.{% else %}<a href="/download">Choose a recommended download</a>; each package lists its version and channel.{% endif %} Later builds may differ. Do not install the old 3.8 release: it contains known security vulnerabilities.</p>
-    <nav class="guide-platforms" aria-label="Choose your installation guide">
-        <strong>Get Porn Fetch for your device</strong>
-        <ul><li><a href="/download/windows">Windows</a></li><li><a href="/download/macos">macOS</a></li><li><a href="/download/linux">Linux</a></li><li><a href="/download/android">Android APK</a></li><li><a href="/download/ios">iOS IPA · sideloading</a></li><li><a href="/download/cli">Command line</a></li></ul>
-        <p>Check the installation page for compatible packages and requirements. iOS requires re-signing and provisioning; it is not an App Store install.</p>
-    </nav>
+    {% if catalog_unavailable %}<p class="guide-availability" role="status">The release catalog is temporarily unavailable. <a href="/download">Check downloads again shortly</a>.</p>
+    {% elif not releases_available %}<p class="guide-availability" role="status">No website-hosted packages are available right now. <a href="/download">Check download availability</a>.</p>{% endif %}
     <nav class="guide-toc" aria-label="On this page">
         <a href="#download-steps">Desktop steps</a><a href="#android">Android</a><a href="#site-details">{{ guide.name }} details</a><a href="#cli">CLI</a><a href="#troubleshooting">Troubleshooting</a>
     </nav>
@@ -31,14 +31,14 @@
         <p>Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use <strong>Download Selected</strong>.</p>
     </section>
     <figure class="guide-screenshot">
-        <a href="{{ url_for('static', filename='media/downloads.png') }}" aria-label="Open full-size desktop download controls">{{ screenshot("downloads", "Porn Fetch desktop Video URL, Model URL and Playlist URL fields with Get Video and Get Videos controls", 1458, 834) }}</a>
-        <figcaption>Desktop download controls. Paste an individual video page into Video URL; fetching adds it to the list before downloading. This shared interface is used for all supported providers.</figcaption>
+        <a href="{{ url_for('static', filename='media/guide-desktop-3.9.1.png') }}" aria-label="Open full-size desktop download controls">{{ screenshot("guide-desktop-3.9.1", "Porn Fetch 3.9.1 desktop Downloads page with Video URL, Model URL and Playlist URL fields, Get Video and Get Videos buttons, and an empty download list", 1226, 787) }}</a>
+        <figcaption>Porn Fetch 3.9.1 on desktop. Paste a video page into Video URL and choose Get Video to add it to the download list.</figcaption>
     </figure>
     <section id="android" aria-labelledby="android-title">
         <h2 id="android-title">Downloading on Android</h2>
         <p>Install a compatible APK from the <a href="/download/android">Android downloads page</a>. Open <strong>Add videos</strong>, choose <strong>Video URL</strong>, paste the complete {{ guide.name }} address, and tap <strong>Get Video</strong>.</p>
         <p>Choose a quality on the returned video card and tap <strong>Download</strong>. The add-video panel shows <strong>Output folder</strong> and a <strong>Choose folder</strong> control. Completed files are saved to your selected folder automatically; there is no separate per-video Save action. Use your file manager to open the saved file.</p>
-        {% if provider in ("pornhub", "xhamster", "xvideos") %}{% include "partials/android_account_screenshot.html" %}{% endif %}
+        {% include "partials/guide_mobile_screenshot.html" %}
     </section>
     <div id="site-details">
         {% for heading, paragraphs in guide.sections %}
