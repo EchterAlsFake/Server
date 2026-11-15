@@ -72,7 +72,7 @@ def build(app):
     requirements = "mcp_service/pyproject.toml" if app == "mcp" else "pyproject.toml"
     if app in {"server", "mcp"}:
         project = stage / "mcp_service" if app == "mcp" else stage
-        build_run(["uv", "sync", "--project", project, "--locked", "--no-dev", "--no-install-project"],
+        build_run(["uv", "sync", "--project", project, "--no-dev", "--no-install-project"],
                   extra={"UV_PROJECT_ENVIRONMENT": str(stage / ".venv")})
     else:
         build_run(["uv", "pip", "install", "--python", stage / ".venv/bin/python",

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Mollie sandbox test — Porn Fetch{% endblock %}
+{% block content %}
+<main class="purchase-page"><a href="/porn_fetch">← Payment methods</a><h1>Mollie — sandbox test</h1>
+<aside class="sandbox-note" role="note"><strong>{{ test_notice }}</strong><p>Private integration test. This is not a paid purchase.</p></aside>
+<p class="license-price">EUR {{ test_quote.amount }} <span>simulated one-time payment</span></p>
+{% include "partials/lifetime_offer.html" %}
+<details><summary>Product and license terms</summary>{% include "partials/contract_product.html" %}{% include "partials/terms_en.html" %}{% include "partials/withdrawal_information.html" %}</details>
+<form action="{{ url_for('mollie.create_checkout') }}" method="post" class="shared-confirmations">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="offer_digest" value="{{ mollie_offer_digest }}">
+<label for="mollie-email">License delivery email</label><input type="email" id="mollie-email" name="email" required maxlength="254" autocomplete="email"><p>Your license and test confirmation will be emailed here. The email is not sent to Mollie.</p>
+<label for="mollie-country">Country of residence</label><select id="mollie-country" name="country" required><option value="">Select your country</option>{% for code, label in countries %}<option value="{{ code }}">{{ label }}</option>{% endfor %}</select>
+<fieldset class="compact-agreements"><legend>Required confirmations</legend>
+<label><input type="checkbox" name="age_terms_accepted" value="yes" required><span>I am 18+ and accept the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</span></label>
+<label><input type="checkbox" name="withdrawal_accepted" value="yes" required><span>{{ immediate_consent }}</span></label>
+<label><input type="checkbox" name="test_acknowledged" value="yes" required><span>{{ test_notice }}</span></label>
+</fieldset><button type="submit" class="btn btn-primary">Create Mollie test checkout · EUR {{ test_quote.amount }}</button>
+<p>You will receive a private recovery link, then continue to Mollie’s test checkout. This unlock permits one checkout.</p></form>
+<form action="{{ url_for('mollie.lock') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-secondary">Lock tester access</button></form></main>
+{% endblock %}

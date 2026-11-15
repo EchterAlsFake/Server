@@ -743,6 +743,13 @@ class OnrampConfigTests(ServerTestCase):
                 db.session.get(Transaction, "NP-existing").provider_payment_id,
                 "existing",
             )
+            self.assertEqual(db.session.get(Transaction, "NP-existing").provider, "nowpayments")
+            from pf_server.mollie_models import MollieCheckout, MollieGrant
+            for model in (MollieCheckout, MollieGrant):
+                self.assertEqual(
+                    {column["name"] for column in inspect(db.engine).get_columns(model.__tablename__)},
+                    set(model.__table__.columns.keys()),
+                )
             from pf_server.models import WithdrawalRequest, WithdrawalDelivery
             from pf_server import withdrawal_service
             for model in (WithdrawalRequest, WithdrawalDelivery):
@@ -761,6 +768,8 @@ class OnrampConfigTests(ServerTestCase):
             db.session.execute(sa.text('UPDATE "transaction" SET customer_email_encrypted = :value WHERE session_id = :id'), {"value": "synthetic-encrypted-reference", "id": "NP-existing"})
             db.session.commit()
             downgrade(revision="6a30f2b917c4")
+            self.assertNotIn("mollie_checkouts", inspect(db.engine).get_table_names())
+            self.assertNotIn("mollie_grants", inspect(db.engine).get_table_names())
             self.assertNotIn("onramp_checkouts", inspect(db.engine).get_table_names())
             self.assertNotIn("withdrawal_requests", inspect(db.engine).get_table_names())
             self.assertNotIn("withdrawal_deliveries", inspect(db.engine).get_table_names())

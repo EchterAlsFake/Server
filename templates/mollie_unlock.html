@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Tester access — Porn Fetch{% endblock %}
+{% block content %}
+<main class="purchase-page"><h1>Tester access</h1>
+<p>Mollie sandbox testing only. No money is charged.</p>
+<form action="{{ url_for('mollie.unlock') }}" method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label for="tester-password">Tester password</label><input type="password" id="tester-password" name="password" required maxlength="1024" autocomplete="current-password">
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+<button class="btn btn-primary" type="submit">Unlock Mollie test checkout</button>
+</form><a href="/porn_fetch">Return to payment methods</a></main>
+{% endblock %}

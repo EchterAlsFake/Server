@@ -26,6 +26,15 @@
                 <button type="submit" id="checkout-continue" data-metric="checkout_continue" class="btn btn-primary">Proceed with selected payment method <span aria-hidden="true">→</span></button>
                 <p class="checkout-back-note">You can change the method or details before creating a payment.</p>
             </section></form>
+            {% if config.MOLLIE_TEST_ENABLED and mollie_test_enabled() %}
+            <details class="checkout-question"><summary>Tester access</summary>
+                <form action="{{ url_for('mollie.unlock') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="tester-password">Tester password</label><input type="password" name="password" id="tester-password" required maxlength="1024" autocomplete="current-password">
+                    <button type="submit" class="btn btn-secondary">Unlock Mollie test checkout</button>
+                </form>
+            </details>
+            {% endif %}
             <p class="brand-disclosure">Payment identities identify provider options, not endorsement or guaranteed availability. <a href="/static/notices/payment-brands.txt">Brand notices and usage sources</a>.</p>
         </section>
     </div>

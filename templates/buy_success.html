@@ -2,8 +2,9 @@
 {% block title %}Track your payment — Porn Fetch{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='purchase-progress.css') }}">{% endblock %}
 {% block content %}
-<div class="payment-tracking-page" id="payment-tracker" data-session-id="{{ session_id or '' }}" data-access-query="{{ access_query }}" data-card="{{ 'true' if is_card_checkout else 'false' }}">
+<div class="payment-tracking-page" id="payment-tracker" data-session-id="{{ session_id or '' }}" data-access-query="{{ access_query }}" data-mollie="{{ 'true' if is_mollie else 'false' }}" data-card="{{ 'true' if is_card_checkout else 'false' }}">
     <a href="/porn_fetch" class="text-link">← Payment methods</a>
+    {% if mollie_sandbox %}<aside class="sandbox-note" role="note"><strong>Mollie sandbox test — no money is charged.</strong><p>A successful test issues a real lifetime license. Simulated refunds do not revoke it.</p></aside>{% endif %}
     <header class="crypto-heading"><p class="eyebrow">Every step, in view.</p><h1>Your payment, on its way.</h1></header>
     <section class="tracking-card license-ready-card" id="success-container" hidden aria-labelledby="payment-success-heading">
         <p class="eyebrow">Payment verified</p><h1 id="payment-success-heading" data-result-heading tabindex="-1">Your license is ready.</h1><p>Save your license file and invoice safely.</p>
@@ -15,7 +16,7 @@
     </section>
     <section class="tracking-card" id="payment-details" aria-labelledby="payment-progress-title">
         {% if beta %}{% include "onramp_beta_notice.html" %}{% else %}<p class="widget-delivery-note">Lifetime Premium. Your license never expires, and every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. No renewal payments.</p>{% endif %}
-        <div class="tracking-card-heading"><span class="tracking-pulse" aria-hidden="true"></span><span>{{ 'Banxa → Onramp Pay → NOWPayments' if is_card_checkout else 'NOWPayments cryptocurrency checkout' }}</span></div>
+        <div class="tracking-card-heading"><span class="tracking-pulse" aria-hidden="true"></span><span>{{ ('Mollie sandbox checkout' if mollie_sandbox else 'Secure checkout by Mollie') if is_mollie else 'Banxa → Onramp Pay → NOWPayments' if is_card_checkout else 'NOWPayments cryptocurrency checkout' }}</span></div>
         <div id="loading-container" class="purchase-progress" data-activity="active" aria-busy="true">
             <div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label" data-progress-label>Checking · Automatic updates on</span></div>
             <h2 id="payment-progress-title" data-progress-title>Checking your payment status…</h2><p id="payment-progress-message" data-progress-message>The server is checking your payment and license. Keep this page open; your key and download will appear here automatically.</p>
@@ -36,8 +37,10 @@
         </section>
         {% endif %}
         <div id="payment-launch"{% if not payment_url %} hidden{% endif %}>
-            {% if payment_url %}
-                {% if is_card_checkout %}
+            {% if payment_url or is_mollie %}
+                {% if is_mollie %}
+                    <a href="/mollie/launch?{{ access_query }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">{{ 'Open Mollie test checkout' if mollie_sandbox else 'Continue to secure payment' }} ↗</a>
+                {% elif is_card_checkout %}
                     <p>Estimated funding amount: <strong>USD {{ charge_amount }}</strong>, including the Onramp Pay fee. Banxa may apply additional provider or network costs; review the final total before paying. Currency conversion may apply.</p>
                     <a href="/payment-preview/banxa?{{ access_query }}" data-payment-preview="banxa" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open Banxa payment in a new tab</a>
                 {% else %}

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from .countries import country_name
 
-CHECKOUT_PATHS = frozenset({"/create-crypto-payment", "/create-onramp-payment"})
+CHECKOUT_PATHS = frozenset({"/mollie/checkout", "/create-crypto-payment", "/create-onramp-payment"})
 IP_HEADER_ENVIRONMENT_KEYS = (
     "HTTP_TRUE_CLIENT_IP",
     "HTTP_X_FORWARDED_FOR",
@@ -101,7 +101,8 @@ class LocalCountryResolver:
 class CheckoutCountryMiddleware:
     """Resolve checkout IP once, retain only geography, then strip IP headers."""
 
-    def __init__(self, application, resolver: LocalCountryResolver, ip_header: str, tor_resolver=None, metrics_enabled=False):
+    def __init__(self, application, resolver: LocalCountryResolver, ip_header: str, tor_resolver=None, metrics_enabled=False, rate_secret=""):
+        self.rate_secret = str(rate_secret).encode()
         self.metrics_enabled = metrics_enabled
         self.application = application
         self.resolver = resolver
@@ -116,6 +117,15 @@ class CheckoutCountryMiddleware:
             environ.get(self.ip_environment_key)
             if self.ip_environment_key else environ.get("REMOTE_ADDR")
         )
+        if environ.get("PATH_INFO") == "/mollie/unlock":
+            import hashlib
+            import hmac
+            import ipaddress
+            try:
+                address = str(ipaddress.ip_address(raw_address or ""))
+            except ValueError:
+                address = "unknown-address"
+            environ["PF_MOLLIE_LIMIT_KEY"] = hmac.new(self.rate_secret, address.encode(), hashlib.sha256).hexdigest()
         if self.tor_resolver is not None and environ.get("PATH_INFO") in TOR_PATHS:
             environ["PF_TOR_STATUS"] = self.tor_resolver.lookup(raw_address)
         if (

@@ -25,7 +25,7 @@ The project requires Python 3.14 or newer and uses [uv](https://docs.astral.sh/u
 
 ```bash
 uv venv --python 3.14
-uv sync --locked
+uv sync
 cp deploy/server.env.example .env
 .venv/bin/python -m flask --app main db upgrade
 .venv/bin/python main.py
@@ -283,14 +283,14 @@ ffmpeg -ss 3 -i porn-fetch-promo/out/MyComp.mp4 -frames:v 1 -q:v 3 static/media/
 Run the isolated HTTPS browser checks without live provider requests or payments:
 
 ```bash
-uv run --locked python scripts/test_lifetime_browser.py
-uv run --locked python scripts/test_security_browser.py
+uv run python scripts/test_lifetime_browser.py
+uv run python scripts/test_security_browser.py
 ```
 
 These checks use a temporary database and local HTTPS server, block external traffic,
 and cover lifetime copy, desktop/mobile layouts, no-script pricing and terms, Patreon
 handoff, CSRF and simulated crypto checkout. Screenshots go to `/tmp/porn-fetch-*.png`.
-Install Chromium using `uv run --locked playwright install chromium` once.
+Install Chromium using `uv run playwright install chromium` once.
 The capability inventory in `pf_server/product_catalog.py` mirrors the app's
 `docs/WEBSITES.md`; update both when support changes.
 
@@ -495,7 +495,7 @@ Evidence status does not control license entitlement or establish legal enforcea
 
 ## Architecture and security maintenance
 
-See [the architecture review](docs/ARCHITECTURE_REVIEW.md) for trust boundaries, changes, validation, and residual risks. Both Python services use committed `uv.lock` files. Install MCP with `uv sync --project mcp_service --locked --python 3.14`; install promo tooling with `npm ci`.
+See [the architecture review](docs/ARCHITECTURE_REVIEW.md) for trust boundaries, changes, validation, and residual risks. Both Python services resolve their declared dependencies; generated `uv.lock` files are ignored. Install MCP with `uv sync --project mcp_service --python 3.14`; install promo tooling with `npm ci`.
 
 Production requires Redis through `RATELIMIT_STORAGE_URI`. Aggregate statistics now live in Redis, outside payment database sessions; configure Redis persistence if counters must survive Redis restart. Development with `memory://` keeps process-local counters. Historical SQL statistics remain untouched but are no longer updated. `flask --app main init-runtime` explicitly resets the current counters.
 

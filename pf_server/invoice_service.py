@@ -181,12 +181,15 @@ def render_invoice_pdf(invoice: dict) -> bytes:
     pdf.set_font("Helvetica", style="B", size=12)
     pdf.cell(0, 8, "Payment Details:", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", size=12)
-    for label, field in (
+    payment_fields = (
+        ("Simulated Amount" if invoice.get("Environment") == "sandbox" else "Amount Paid", "Test Amount"), ("Mollie Payment Reference", "Payment Reference"),
+    ) if invoice.get("Provider") == "mollie" else (
         ("Base Price", "Base Price in EUR"),
         ("Crypto Paid", "Crypto Paid"),
         ("Exchange Rate", "Exchange Rate"),
         ("Transaction Hash / TxID", "Transaction Hash / TxID"),
-    ):
+    )
+    for label, field in payment_fields:
         pdf.cell(
             0,
             8,

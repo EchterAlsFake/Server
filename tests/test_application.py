@@ -356,6 +356,7 @@ class ApplicationTests(ServerTestCase):
             self.assertEqual(
                 transaction_columns,
             {
+                "provider",
                 "session_id",
                 "provider_payment_id",
                 "provider_reference_type",
