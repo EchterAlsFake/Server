@@ -32,6 +32,16 @@
             <p>Real app screenshots. PornHub is the example shown; use a {{ guide.name }} link for this guide.</p>
         </div>
     </header>
+    <nav class="guide-device-selector" id="all-platforms" aria-label="Platform instructions">
+        <span class="guide-device-selector-label">Platform instructions:</span>
+        <div class="guide-device-tabs">
+            <a href="#android" class="guide-device-tab" data-platform="android" id="tab-android" aria-controls="android">Android</a>
+            <a href="#iphone" class="guide-device-tab" data-platform="ios" id="tab-ios" aria-controls="iphone">iPhone</a>
+            <a href="#download-steps" class="guide-device-tab" data-platform="desktop" id="tab-desktop" aria-controls="download-steps">Desktop (PC / Mac)</a>
+            <a href="#cli" class="guide-device-tab" data-platform="cli" id="tab-cli" aria-controls="cli">Command Line</a>
+            <a href="#all-platforms" class="guide-device-tab" data-platform="all" id="tab-all">All platforms</a>
+        </div>
+    </nav>
     <section class="guide-mobile-downloads guide-platforms" id="mobile-downloads" aria-labelledby="mobile-downloads-title">
         <h2 id="mobile-downloads-title">Choose your phone</h2>
         <div class="guide-platform-grid">
@@ -85,22 +95,26 @@
         <p>Your Premium license never expires. Every future update and feature I release is included. Future development has no guaranteed duration. Activation and periodic validation apply.</p>
         <p>Account collections are exempt from the free five-video preview. Some YouPorn MP4-only videos require a license because their resolution is unknown. Premium does not upscale videos or bypass source restrictions. <a href="/porn_fetch">Review all product and purchase details</a>.</p>
     </section>
-    <section id="download-steps" aria-labelledby="steps-title">
+    <section id="download-steps" data-guide-platform="desktop" aria-labelledby="steps-title">
         <h2 id="steps-title">Download a {{ guide.name }} video on your computer</h2>
-        <ol class="guide-steps">
-            <li><strong>Install Porn Fetch.</strong> Choose your <a href="/download/windows">Windows</a>, <a href="/download/macos">macOS</a>, or <a href="/download/linux">Linux</a> package. Follow that platform’s installation guide and open the app.</li>
-            <li><strong>Copy the video’s page URL.</strong> Open the individual {{ guide.name }} video you are authorized to save in your browser and copy the complete page address.</li>
-            <li><strong>Fetch the video.</strong> In the app’s Downloads page, paste the address into <strong>Video URL</strong> and choose <strong>Get Video</strong>. Wait for its details to appear in the list.</li>
-            <li><strong>Choose a quality and folder.</strong> Use the video row’s quality control to select an available stream. Check <strong>Output Path</strong> in Settings before starting. Free downloads are limited to available qualities up to 720p.</li>
-            <li><strong>Start the download.</strong> Choose <strong>Download</strong> on the video row and wait for completion. Open your configured output folder to find the saved file.</li>
-        </ol>
-        <p>Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use <strong>Download Selected</strong>.</p>
+        <div class="guide-desktop-layout">
+            <div class="guide-desktop-copy">
+                <ol class="guide-steps">
+                    <li><strong>Install Porn Fetch.</strong> Choose your <a href="/download/windows">Windows</a>, <a href="/download/macos">macOS</a>, or <a href="/download/linux">Linux</a> package. Follow that platform’s installation guide and open the app.</li>
+                    <li><strong>Copy the video’s page URL.</strong> Open the individual {{ guide.name }} video you are authorized to save in your browser and copy the complete page address.</li>
+                    <li><strong>Fetch the video.</strong> In the app’s Downloads page, paste the address into <strong>Video URL</strong> and choose <strong>Get Video</strong>. Wait for its details to appear in the list.</li>
+                    <li><strong>Choose a quality and folder.</strong> Use the video row’s quality control to select an available stream. Check <strong>Output Path</strong> in Settings before starting. Free downloads are limited to available qualities up to 720p.</li>
+                    <li><strong>Start the download.</strong> Choose <strong>Download</strong> on the video row and wait for completion. Open your configured output folder to find the saved file.</li>
+                </ol>
+                <p>Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use <strong>Download Selected</strong>.</p>
+            </div>
+            <figure class="guide-screenshot">
+                <a href="{{ url_for('static', filename='media/guide-desktop-3.9.1.png') }}" aria-label="Open full-size desktop download controls">{{ screenshot("guide-desktop-3.9.1", "Porn Fetch 3.9.1 desktop Downloads page with Video URL, Model URL and Playlist URL fields, Get Video and Get Videos buttons, and an empty download list", 1226, 787) }}</a>
+                <figcaption>Porn Fetch 3.9.1 on desktop. Paste a video page into Video URL and choose Get Video to add it to the download list.</figcaption>
+            </figure>
+        </div>
     </section>
-    <figure class="guide-screenshot">
-        <a href="{{ url_for('static', filename='media/guide-desktop-3.9.1.png') }}" aria-label="Open full-size desktop download controls">{{ screenshot("guide-desktop-3.9.1", "Porn Fetch 3.9.1 desktop Downloads page with Video URL, Model URL and Playlist URL fields, Get Video and Get Videos buttons, and an empty download list", 1226, 787) }}</a>
-        <figcaption>Porn Fetch 3.9.1 on desktop. Paste a video page into Video URL and choose Get Video to add it to the download list.</figcaption>
-    </figure>
-    <section id="cli" aria-labelledby="cli-title">
+    <section id="cli" data-guide-platform="cli" aria-labelledby="cli-title">
         <h2 id="cli-title">Using the command line</h2>
         <p>Set up the <a href="/download/cli">Porn Fetch CLI</a> for your system and open its interactive menu. Choose <strong>Download Single URL</strong> for an individual video, paste its full address, and follow the prompts. Use <strong>Settings &amp; Configuration</strong> to check your output folder and preferred quality.</p>
         {% if supports_profiles %}<p>For supported profiles or public playlists, choose <strong>Scrape Profile / Playlist</strong> instead. Provider-specific restrictions above still apply.</p>{% endif %}<p>Android CLI setup uses Termux. These command-line instructions are separate from the <a href="#iphone">native iPhone app walkthrough above</a>.</p>

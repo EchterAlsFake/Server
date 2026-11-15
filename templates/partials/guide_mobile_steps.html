@@ -1,6 +1,6 @@
 {% from "partials/guide_phone_image.html" import phone_image %}
 {% macro mobile_steps(platform, name, provider_name) -%}
-<section id="{{ 'iphone' if platform == 'ios' else 'android' }}" class="guide-phone-tutorial" aria-labelledby="{{ platform }}-title">
+<section id="{{ 'iphone' if platform == 'ios' else 'android' }}" class="guide-phone-tutorial" data-guide-platform="{{ 'ios' if platform == 'ios' else 'android' }}" aria-labelledby="{{ platform }}-title">
     <header class="guide-section-heading">
         <p class="eyebrow">{{ name }} walkthrough</p>
         <h2 id="{{ platform }}-title">Download {{ provider_name }} videos on {{ name }}</h2>
