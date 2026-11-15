@@ -5,7 +5,7 @@ The ordering is editorial priority, not a measured market-share claim.
 """
 
 GUIDE_PUBLISHED = "2026-10-25"
-GUIDE_DATE = "2026-11-14"
+GUIDE_DATE = "2026-11-15"
 GUIDE_VERSION = "3.9.1"
 
 # Each section contains a heading followed by independently authored paragraphs.
@@ -17,7 +17,7 @@ GUIDES = {
         "sections": [
             ("PornHub video links, playlists, and model pages", [
                 "For a normal video, copy the page address containing view_video.php?viewkey=… rather than a search result or the site’s homepage. The app also routes supported embed links and individual short or shorties links as videos.",
-                "On desktop, put a playlist link in Playlist URL and choose Get Videos. For a model, performer, user, or channel page, use Model URL. On Android, choose the corresponding URL type in Add videos. Review the returned list before downloading it.",
+                "On Android and iPhone, choose the corresponding URL type in Add videos. For a model, performer, user, or channel page, use Model URL. On desktop, put a playlist link in Playlist URL and choose Get Videos. Review the returned list before downloading it.",
                 "A public user page is not the same as that user’s uploaded-video tab. The selected tab and the upstream listing can affect which videos are returned. An empty listing does not necessarily mean the URL is malformed.",
             ]),
             ("Using your PornHub account", [
@@ -35,7 +35,7 @@ GUIDES = {
         "sections": [
             ("Which XHamster links should I use?", [
                 "Individual links under videos or movies are video inputs. Supported moments and shorts links also go through the single-video workflow. Copy the item’s address rather than the page listing many shorts.",
-                "Performer, creator, user, and channel pages use Model URL on desktop, or the Model URL type on Android. Directory pages and profile tabs for photos, albums, favorites, or shorts are not accepted as ordinary profile-video inputs.",
+                "Performer, creator, user, and channel pages use the Model URL type on Android and iPhone, or Model URL on desktop. Directory pages and profile tabs for photos, albums, favorites, or shorts are not accepted as ordinary profile-video inputs.",
             ]),
             ("Downloading an XHamster account playlist", [
                 "XHamster collections are account-only in Porn Fetch. Open the account page, choose XHamster, and connect your own account. Use Get Liked Videos for liked videos, or paste your account playlist URL into Account playlist URL and choose Get Playlist Videos.",
@@ -127,7 +127,7 @@ GUIDES = {
         "sections": [
             ("Keep the complete Beeg video address", [
                 "Supported Beeg video paths contain a numeric video ID, either directly after the hostname or under video/. The ID can include a leading minus sign. Keep that sign and the rest of the page address when copying the link.",
-                "Use Video URL on desktop or the Video URL type on Android. There is no Beeg account-login, profile, collection, shorts, or photo-album workflow in the current app.",
+                "Use the Video URL type on Android and iPhone, or Video URL on desktop. There is no Beeg account-login, profile, collection, shorts, or photo-album workflow in the current app.",
             ]),
             ("If a Beeg video does not load", [
                 "The app’s Strict Enforcement for content language setting disables API fetching, and its help specifically warns that providers such as Beeg can be affected. If you enabled it, turn it off and fetch the video again before changing unrelated settings.",

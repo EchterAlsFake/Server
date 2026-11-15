@@ -16,7 +16,7 @@
     <script src="{{ url_for('static', filename='site.js') }}" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body{% block body_attributes %}{% endblock %}>
     <div id="site-content"{% if age_required %} inert aria-hidden="true"{% endif %}>
         <a class="skip-link" href="#main-content">Skip to main content</a>
         {% if config.NOWPAYMENTS_SANDBOX %}
@@ -43,9 +43,9 @@
                 <a class="btn btn-primary header-premium-cta" href="/porn_fetch">Buy Premium<span class="header-premium-price"> · €{{ premium_price }}</span></a>
             </div>
         </header>
-        <nav class="legal-utility" aria-label="Legal information">
+        {% block legal_navigation %}<nav class="legal-utility" aria-label="Legal information">
             <a class="legal-index" href="/impress">Legal</a><a href="/impress">Impress / Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">Terms / AGB</a><a class="withdrawal-link" href="{{ config.APP_DOMAIN if is_onion else '' }}/withdrawal">Withdraw from contract</a>
-        </nav>
+        </nav>{% endblock %}
         <main class="container {% block main_class %}{% endblock %}" id="main-content" tabindex="-1">
             {% block content %}{% endblock %}
         </main>

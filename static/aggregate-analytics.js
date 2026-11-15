@@ -19,6 +19,7 @@
     const target = new URL(element.href, location.origin);
     if (target.origin !== location.origin) return null;
     if (target.pathname === '/download') return 'open_download';
+    if (target.pathname === location.pathname && target.hash === '#mobile-downloads') return 'open_download';
     if (target.pathname === '/porn_fetch') return 'open_premium';
     if (target.pathname === '/help') return 'open_help';
     if (/^\/download\/(windows|macos|linux|android|ios|cli)$/.test(target.pathname)) return `choose_${target.pathname.split('/')[2]}`;

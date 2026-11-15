@@ -14,6 +14,7 @@ class BrowserAnalyticsTests(unittest.TestCase):
             self.skipTest('Playwright is optional; install the dev dependencies to run browser checks')
         script = (Path(__file__).parents[1] / 'static/aggregate-analytics.js').read_text()
         html = '''<header class="site-header"><a href="/porn_fetch" id="premium">Premium</a></header>
+            <div class="page-heading"><a id="mobile" href="#mobile-downloads">Download free</a></div>
             <a id="package" data-metric="download_click" href="/downloads/file.zip">Get app</a>
             <a id="checksum" href="/downloads/file.zip.sha256">Checksum</a>
             <section id="premium-feedback" hidden><button data-feedback="price">Lower price</button>
@@ -43,7 +44,7 @@ class BrowserAnalyticsTests(unittest.TestCase):
                     page.goto('https://analytics.invalid/?email=private@example.org')
                     page.wait_for_load_state('networkidle')
                     page.evaluate("document.addEventListener('click', e=>e.preventDefault())")
-                    page.click('#premium');page.click('#package');page.click('#checksum')
+                    page.click('#premium');page.click('#package');page.click('#checksum');page.click('#mobile')
                     if privacy:
                         self.assertTrue(page.locator('#premium-feedback').is_hidden())
                     else:
@@ -58,6 +59,8 @@ class BrowserAnalyticsTests(unittest.TestCase):
                         self.assertEqual(actions.count('download_click'),1)
                         self.assertEqual(actions.count('feedback_price'),1)
                         self.assertIn('click_premium_header',actions)
+                        self.assertIn('click_download_guide_top',actions)
+                        self.assertEqual(actions.count('visible_download_guide_top'),1)
                         for payload,headers in events:
                             self.assertEqual(set(payload),{'page','action'})
                             self.assertNotIn('cookie',headers)

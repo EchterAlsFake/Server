@@ -32,7 +32,7 @@ PUBLIC_PAGES = {
     ),
     "/guides": (
         "Video Download Guides for PornHub & More — Porn Fetch",
-        "Learn how to download videos from all 15 supported websites with Porn Fetch. Find steps for PornHub, XHamster, XVideos, Eporner and more, with actual app limitations.",
+        "Download videos on Android or iPhone with Porn Fetch. Browse 15 website guides with app screenshots, setup steps and limitations. iPhone sideloading requires a PC.",
     ),
     "/impress": (
         "Legal Disclosure / Impressum — Porn Fetch",
@@ -66,7 +66,7 @@ def page_metadata():
     if guide:
         title_description = (
             f"How to Download {guide['name']} Videos — Porn Fetch",
-            f"Download {guide['name']} videos with Porn Fetch. {guide['summary']} Read desktop and Android steps, supported links, and troubleshooting.",
+            f"Download {guide['name']} videos on Android or iPhone with Porn Fetch. Follow illustrated app steps and supported-link guidance. iPhone setup requires a PC for sideloading.",
         )
     if path.startswith("/download/"):
         from .download_pages import PLATFORMS
@@ -159,7 +159,7 @@ def page_metadata():
             "mainEntityOfPage": origin + path,
             "inLanguage": "en",
             "datePublished": GUIDE_PUBLISHED,
-            "image": origin + "/static/media/web/guide-desktop-3.9.1-960.webp",
+            "image": origin + "/static/media/web/guide-ios-ready-3.9.1-720.webp",
             "dateModified": guide.get("updated", GUIDE_DATE),
             "author": {"@id": origin + "/#maintainer"},
             "publisher": {"@id": origin + "/#maintainer"},
@@ -170,10 +170,10 @@ def page_metadata():
         "canonical": origin + path,
         "breadcrumbs": breadcrumbs,
         "og_type": "article" if guide else "website",
-        "image": origin + ("/static/media/web/guide-desktop-3.9.1-960.webp" if guide else "/static/media/promo-poster.jpg"),
-        "image_alt": "Porn Fetch desktop download controls" if guide else "Porn Fetch video downloader interface",
-        "image_width": 960 if guide else 1920,
-        "image_height": 616 if guide else 1080,
+        "image": origin + ("/static/media/web/guide-ios-ready-3.9.1-720.webp" if guide else "/static/media/promo-poster.jpg"),
+        "image_alt": "Porn Fetch native iPhone app with a video ready to download" if guide else "Porn Fetch video downloader interface",
+        "image_width": 720 if guide else 1920,
+        "image_height": 1281 if guide else 1080,
         "structured": {"@context": "https://schema.org", "@graph": graph},
     }
     return g.page_meta
