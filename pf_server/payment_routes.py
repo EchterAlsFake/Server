@@ -10,6 +10,7 @@ from flask import (
     abort,
     current_app,
     jsonify,
+    redirect,
     render_template,
     request,
     send_file,
@@ -132,18 +133,23 @@ def buy_success():
         progress = db.session.get(PaymentProgress, transaction.session_id) if transaction else None
         if transaction and transaction.status == "pending" and progress and progress.nowpayments_state == "waiting":
             payment_url = hosted_checkout_url(progress.checkout_url)
+    is_stripe = bool(transaction and transaction.provider == 'stripe')
+    stripe_managed = False
+    if is_stripe:
+        from .stripe_models import StripeCheckout
+        from .stripe_service import checkout_url, managed_checkout
+        row = db.session.get(StripeCheckout, session_id)
+        stripe_managed = bool(row and managed_checkout(row))
+        payment_url = checkout_url(row.checkout_url) if row and row.state == 'open' else None
     is_mollie = bool(transaction and transaction.provider == 'mollie')
     if is_mollie:
-        from .mollie_models import MollieCheckout
-        from .mollie_service import checkout_url
-        mollie_checkout = db.session.get(MollieCheckout, session_id)
-        payment_url = checkout_url(mollie_checkout.checkout_url) if mollie_checkout and mollie_checkout.state in {'open', 'pending', 'authorized'} else None
+        payment_url = None  # Retired provider: never reopen a payment.
     from .tor_checkout import checkout_network_status
     if checkout_network_status() != 'clear':
         payment_url = None
     return render_template(
         "buy_success.html", session_id=session_id, **view_context(session_id), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
-        is_mollie=is_mollie, mollie_sandbox=bool(is_mollie and transaction.environment == "sandbox"), has_contract=bool(transaction and transaction.contract_snapshot), payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
+        is_stripe=is_stripe, stripe_managed=stripe_managed, stripe_sandbox=bool(is_stripe and transaction.environment == "sandbox"), is_mollie=is_mollie, mollie_sandbox=bool(is_mollie and transaction.environment == "sandbox"), has_contract=bool(transaction and transaction.contract_snapshot), payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
     )
 
 
@@ -220,10 +226,12 @@ def check_payment_status():
             result = {"status": status, "progress": progress, "recovery_expires_at": view_context(session_id)["recovery_expires_at"]}
             if checkout:
                 result.update(payment_state=progress["provider_state"], payment_method="banxa", beta=checkout.beta)
+            if transaction.provider == 'stripe':
+                from .stripe_models import StripeCheckout
+                row = db.session.get(StripeCheckout, session_id)
+                result.update(payment_method='stripe', checkout_available=bool(row and row.checkout_url and row.state == 'open'))
             if transaction.provider == 'mollie':
-                from .mollie_models import MollieCheckout
-                row = db.session.get(MollieCheckout, session_id)
-                result.update(payment_method='mollie', checkout_available=bool(row.checkout_url and row.state in {'open', 'pending', 'authorized'}))
+                result.update(payment_method='mollie', checkout_available=False)
             return jsonify(result), 200
 
     try:
@@ -247,7 +255,7 @@ def check_payment_status():
     except KeygenUnavailable:
         db.session.rollback()
         from .payment_progress import record_fulfillment
-        if transaction.provider != 'mollie':
+        if transaction.provider not in {'mollie', 'stripe'}:
             record_fulfillment(transaction, 'retry')
         return jsonify(status='pending', progress=public_progress(transaction, checkout, license_pending=True),
                        recovery_expires_at=result['recovery_expires_at']), 200
@@ -279,6 +287,17 @@ def download_invoice():
         return jsonify({"error": "Invoice data is unavailable"}), 503
     if invoice is None:
         return jsonify({"error": "Invoice not found for this session"}), 404
+
+    if transaction.provider == "stripe" and invoice.get("Document Type") == "stripe_managed_receipt":
+        from .stripe_service import managed_document_url, process_order
+        target = managed_document_url(invoice)
+        if not target:
+            process_order(session_id, force=True)
+            invoice = load_invoice(session_id) or invoice
+            target = managed_document_url(invoice)
+        if not target:
+            return jsonify(error="Stripe is preparing your invoice. It is also sent separately by Link."), 503, {"Retry-After": "30"}
+        return redirect(target, code=303)
 
     return send_file(
         BytesIO(render_invoice_pdf(invoice)),

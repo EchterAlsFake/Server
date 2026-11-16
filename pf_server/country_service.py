@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from .countries import country_name
 
-CHECKOUT_PATHS = frozenset({"/mollie/checkout", "/create-crypto-payment", "/create-onramp-payment"})
+CHECKOUT_PATHS = frozenset({"/stripe/checkout", "/mollie/checkout", "/create-crypto-payment", "/create-onramp-payment"})
 IP_HEADER_ENVIRONMENT_KEYS = (
     "HTTP_TRUE_CLIENT_IP",
     "HTTP_X_FORWARDED_FOR",
@@ -117,7 +117,7 @@ class CheckoutCountryMiddleware:
             environ.get(self.ip_environment_key)
             if self.ip_environment_key else environ.get("REMOTE_ADDR")
         )
-        if environ.get("PATH_INFO") == "/mollie/unlock":
+        if environ.get("PATH_INFO") in {"/mollie/unlock", "/stripe/unlock"}:
             import hashlib
             import hmac
             import ipaddress

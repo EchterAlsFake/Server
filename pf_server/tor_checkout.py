@@ -12,7 +12,7 @@ from flask import jsonify, render_template, request
 
 MAX_AGE = 24 * 3600
 TOR_PATHS = frozenset({
-    "/mollie/checkout", "/mollie/test", "/mollie/launch", "/porn_fetch", "/buy_license", "/buy_card", "/donation", "/checkout/start",
+    "/stripe/checkout", "/stripe/test", "/stripe/launch", "/mollie/checkout", "/mollie/test", "/mollie/launch", "/porn_fetch", "/buy_license", "/buy_card", "/donation", "/checkout/start",
     "/checkout/crypto-confirm", "/create-crypto-payment", "/create-onramp-payment",
     "/payment-preview/card", "/payment-preview/banxa", "/buy_success",
 })

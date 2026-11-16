@@ -3,13 +3,20 @@
 {% block content %}
 <article class="legal-document" lang="en">
 <h1>Refunds</h1>
+{% if managed_payments %}
+<p>This purchase is sold through Link using Stripe Managed Payments. For payment receipts, tax invoices and transaction or refund questions, use <a href="https://support.link.com/topics/sold-through-link" rel="noopener noreferrer">Link support</a>. I remain responsible for the Porn Fetch license, delivery and product support; contact me with your order reference if you need help.</p>
+{% else %}
 <p>Updated 15 November 2026. Johannes Habel is responsible for license delivery and refunds owed by me, including purchases processed through Mollie.</p>
+{% endif %}
 <p>For delivery problems, defects or refund requests, email <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> with your order reference and a description of the issue. For crypto payments, a transaction hash helps. Please do not pay again while a payment is under review.</p>
 <p>Statutory remedies for missing or defective digital products remain available. Additional goodwill refunds are considered individually; no voluntary anytime return right is offered.</p>
 <p>For paid digital content, withdrawal rights end only after supply starts with your express consent and acknowledgment, and the required contract confirmation is provided. For a Patreon Shop purchase, the required declarations and confirmation must also be established. <a href="/withdrawal">Withdrawal instructions and model form</a>.</p>
+<p>For Stripe card payments, refunds owed are returned to the original payment method through Stripe. The separate cryptocurrency refund agreement does not apply. I do not deduct my payment-processing or refund fees from legally owed refunds. Statutory rights and deadlines remain unchanged, including repayment within 14 days after a valid withdrawal. If the original payment method is unavailable, I will agree a lawful, cost-free alternative with you.</p>
+{% if not managed_payments %}
 {% include "partials/mollie_refunds_en.html" %}
 {% include "partials/refund_agreement_en.html" %}
 <p>For a separate Banxa cryptocurrency purchase, Banxa handles its own card payment and refund process; this is distinct from direct Mollie checkout. Patreon refunds can also be requested through Patreon. Statutory rights remain available beyond provider processing windows.</p>
-<p><a href="/terms">Terms of Service</a>. Contracts are concluded in English; mandatory consumer protections remain unaffected.</p>
+{% endif %}
+<p><a href="/terms{{ '?method=stripe' if managed_payments else '' }}">Terms of Service</a>. Contracts are concluded in English; mandatory consumer protections remain unaffected.</p>
 </article>
 {% endblock %}

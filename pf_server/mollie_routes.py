@@ -149,23 +149,7 @@ def create_checkout():
 
 @mollie_bp.get("/mollie/launch")
 def launch():
-    from .checkout_recovery import resolve_session_id
-
-    identifier = resolve_session_id()
-    row = db.session.get(MollieCheckout, identifier)
-    if (
-        not row
-        or not row.payment_id
-        or row.state not in {"open", "pending", "authorized"}
-    ):
-        abort(
-            409,
-            description="This checkout is unavailable. Check your order status.",
-        )
-    target = mollie.checkout_url(row.checkout_url)
-    if not target:
-        abort(503)
-    return redirect(target, code=303)
+    abort(410, description="This payment provider is no longer available. Contact support for an existing order.")
 
 
 @mollie_bp.post("/mollie/webhook")

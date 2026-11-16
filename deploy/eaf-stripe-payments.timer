@@ -1,0 +1,10 @@
+[Unit]
+Description=Reconcile Stripe checkout every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+Unit=eaf-stripe-payments.service
+
+[Install]
+WantedBy=timers.target

@@ -78,7 +78,7 @@
         else throw new Error(data.error || 'Payment status is temporarily unavailable.');
       } else {
         renderProgress(data.progress);
-        if (root.dataset.mollie === 'true') {
+        if (root.dataset.mollie === 'true' || root.dataset.stripe === 'true') {
           document.querySelector('#payment-launch').hidden = !data.checkout_available;
         }
         renderExpiry(data.recovery_expires_at, data.status === 'finished');

@@ -51,19 +51,12 @@ def api_key(environment):
 
 
 def live_enabled():
-    return bool(
-        current_app.config.get("MOLLIE_LIVE_ENABLED") and configured("production")
-    )
+    """Mollie is retired; old credentials must never reopen checkout."""
+    return False
 
 
 def enabled():
-    return live_enabled() or bool(
-        current_app.config.get("MOLLIE_TEST_ENABLED")
-        and configured()
-        and current_app.config.get("MOLLIE_TEST_PASSWORD_HASH", "").startswith(
-            ("scrypt:", "pbkdf2:")
-        )
-    )
+    return False
 
 
 def public_access():
@@ -382,31 +375,10 @@ def process_order(identifier, *, force=False):
         ):
             raise ValueError("Invalid transaction")
         if not row.payment_id:
-            if not row.first_attempt_at:
-                row.first_attempt_at = timestamp.isoformat()
-                db.session.commit()
-            if now() - datetime.fromisoformat(row.first_attempt_at) >= timedelta(
-                minutes=55
-            ):
-                row.state, row.last_error = "review", "creation_reconciliation_required"
-                db.session.commit()
-                return False
-            payment = request_api(
-                "POST",
-                "/payments",
-                json=json.loads(row.payload),
-                headers={"Idempotency-Key": row.idempotency_key},
-                environment=transaction.environment,
-            )
-            verify(payment, row, transaction)
-            url = checkout_url(
-                (payment.get("_links", {}).get("checkout") or {}).get("href")
-            )
-            if not url:
-                raise ValueError("Invalid checkout URL")
-            row.payment_id, row.checkout_url = payment["id"], url
-            transaction.provider_payment_id = payment["id"]
+            # Retirement also blocks creation of payments reserved before removal.
+            row.state, row.last_error = "review", "provider_retired"
             db.session.commit()
+            return False
         # Creation responses are never sufficient authority for license issuance.
         payment = request_api(
             "GET", "/payments/" + row.payment_id, environment=transaction.environment

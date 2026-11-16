@@ -1,0 +1,13 @@
+[Unit]
+Description=Reconcile Stripe payments and deliver real licenses
+After=pornfetch-web.service
+Requisite=pornfetch-web.service
+PartOf=pornfetch-web.service
+
+[Service]
+Type=oneshot
+ExecCondition=/usr/bin/podman exec pornfetch-web test -f /app/pf_server/stripe_service.py
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 1000 python3 -m flask --app main:app process-stripe-payments
+TimeoutStartSec=10min
+SuccessExitStatus=143 SIGTERM
+NoNewPrivileges=true

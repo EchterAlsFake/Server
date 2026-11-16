@@ -1,7 +1,7 @@
 <div class="card" style="margin-top: 40px;">
     <p class="legal-section-title">Privacy Policy</p>
     <p style="color: var(--color-text-muted);">Last Updated: 15 November 2026</p>
-    <p><strong>Payment availability:</strong> {% if config.NOWPAYMENTS_SANDBOX %}Crypto payments are simulated while the sandbox notice is displayed.{% else %}Live Mollie card/bank checkout, NOWPayments cryptocurrency checkout and enabled Patreon purchases process real payments.{% endif %} Enabled Banxa checkout charges real money for a lifetime Premium license. Historical beta purchases keep the terms accepted at purchase. The sections below describe the data handled by these services.</p>
+    <p><strong>Payment availability:</strong> {% if config.NOWPAYMENTS_SANDBOX %}Crypto payments are simulated while the sandbox notice is displayed.{% else %}NOWPayments cryptocurrency checkout and enabled Patreon purchases process real payments. Direct card checkout is available only when enabled on the checkout page.{% endif %} Enabled Banxa checkout charges real money for a lifetime Premium license. Historical beta purchases keep the terms accepted at purchase. The sections below describe the data handled by these services.</p>
 
     <div style="margin-top: 25px; line-height: 1.8;">
 
@@ -49,6 +49,7 @@
         {% endif %}
         <p>My website fonts, stylesheets and website scripts are self-hosted. No external advertising networks or analytics scripts are embedded for my website statistics. The optional NOWPayments donation widget is an expressly described exception for external content. Activating it may load the payment provider's resources and storage mechanisms, so there is no blanket promise of “no external resources or third-party cookies”. External PayPal and Ko-fi donation links open the respective provider only when selected.</p>
 
+<section><h2>Card checkout through Stripe</h2><p>Stripe checkout is being prepared and is available only when explicitly enabled. This server sends Stripe the price, currency, product name “Porn Fetch lifetime Premium license”, order reference and return URLs. Your license-delivery email and country declaration are not included in the creation request. Stripe collects payment, contact, device and connection data directly on its hosted checkout. This website does not receive card numbers or security codes and does not load Stripe scripts. The server retrieves payment references, status, amount, currency and refund/dispute indicators to verify payment and deliver your license. Minimal order records are retained under the accounting and contractual retention rules below; full provider responses are not persisted. Stripe processes data under its <a href="https://stripe.com/privacy">privacy policy</a>, including applicable international transfers. No alternative cryptocurrency-refund consent is requested for Stripe card payments.</p></section>
 {% include "partials/mollie_privacy_en.html" %}
         <h2>6. Payment Processing via NowPayments.io</h2>
         <p>If you choose the cryptocurrency option for a license, payment is processed via <strong>NowPayments.io</strong> (operated by FD Transfers LLC). Checkout opens on a payment page operated by the provider. When you visit that page, NowPayments may process the following data:</p>

@@ -66,6 +66,8 @@ class ConfigurationTests(unittest.TestCase):
                 "SEO_INDEXING_ENABLED",
                 "LICENSE_SMTP_SSL",
                 "LICENSE_SMTP_STARTTLS",
+                "STRIPE_TEST_ENABLED",
+                "STRIPE_LIVE_ENABLED",
             ):
                 with self.subTest(variable=variable):
                     with self.assertRaisesRegex(ValueError, variable):

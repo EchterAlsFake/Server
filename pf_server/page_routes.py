@@ -103,20 +103,20 @@ def transparency():
 
 @pages_bp.route("/refund_policy", methods=["GET"])
 def refund_policy():
-    return render_template("refund_policy.html")
+    return render_template("refund_policy.html", managed_payments=request.args.get("method") == "stripe")
 
 
 @pages_bp.route("/terms", methods=["GET"])
 def terms():
-    return render_template("terms.html")
+    return render_template("terms.html", managed_payments=request.args.get("method") == "stripe")
 
 
 @pages_bp.route("/porn_fetch", methods=["GET"])
 def porn_fetch():
-    from . import mollie_service
-    if mollie_service.live_enabled() and request.args.get('method') not in {'crypto', 'patreon'}:
-        from .mollie_routes import checkout_page
-        mollie_service.public_access()
+    from . import stripe_service
+    if stripe_service.live_enabled() and request.args.get('method') not in {'crypto', 'patreon'}:
+        from .stripe_routes import checkout_page
+        stripe_service.public_access()
         return checkout_page()
     return render_template("porn_fetch.html", countries=COUNTRY_OPTIONS, preferred_method=request.args.get("method"))
 

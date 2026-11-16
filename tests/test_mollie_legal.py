@@ -42,14 +42,14 @@ class MollieLegalTests(ServerTestCase):
             snapshot = json.loads(
                 mollie_service.snapshot("DE", "2026-11-15T00:00:00+00:00")
             )
-            self.assertIn("2026-11-15", snapshot["version"])
+            self.assertIn("2026-11-16", snapshot["version"])
             self.assertIn("original payment method", snapshot["terms_en"])
             self.assertIn("Mollie card and bank payments", snapshot["terms_en"])
             self.assertIn("do not deduct my Mollie", snapshot["terms_en"])
             self.assertIn("Mollie payments I use the original", snapshot["withdrawal"])
             self.assertEqual(snapshot["refund_terms"], "")
             self.assertFalse(snapshot["refund_method_accepted"])
-            self.assertFalse(snapshot["test_acknowledged"])
+            self.assertTrue(snapshot["test_acknowledged"])  # Retired live gate stays closed.
             self.assertIn("Payment alone is insufficient", snapshot["withdrawal"])
 
     def test_mollie_digest_changes_if_refund_wording_changes(self):

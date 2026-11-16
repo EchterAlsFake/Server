@@ -32,6 +32,7 @@ from pf_server.operations_routes import (
 from pf_server.page_routes import pages_bp
 from pf_server.payment_routes import payments_bp
 from pf_server.mollie_routes import mollie_bp
+from pf_server.stripe_routes import stripe_bp
 from pf_server.onramp_routes import onramp_bp
 from pf_server.withdrawal_routes import withdrawal_bp, register_withdrawal_commands
 from pf_server.referral_guard import block_vplan_referrals
@@ -97,6 +98,8 @@ def create_app(
 
     from pf_server.mollie_service import enabled as mollie_test_enabled
     application.jinja_env.globals['mollie_test_enabled'] = mollie_test_enabled
+    from pf_server.stripe_service import enabled as stripe_test_enabled
+    application.jinja_env.globals['stripe_test_enabled'] = stripe_test_enabled
     init_direct_downloads(application)
     db.init_app(application)
     csrf.init_app(application)
@@ -132,6 +135,7 @@ def create_app(
         pages_bp,
         payments_bp,
         mollie_bp,
+        stripe_bp,
         onramp_bp,
         withdrawal_bp,
         seo_bp,
@@ -154,7 +158,7 @@ def create_app(
     @application.after_request
     def private_payment_response(response):
         from flask import request
-        if request.path.startswith(('/activate', '/mollie/')) or request.path in {
+        if request.path.startswith(('/activate', '/mollie/', '/stripe/')) or request.path in {
             "/porn_fetch",
             "/activate", "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
@@ -204,6 +208,11 @@ def create_app(
         except PaymentProviderError as error:
             raise click.ClickException(str(error)) from None
         click.echo("Sandbox emulation requested. Await NOWPayments' signed webhook on the recovery page. No local payment was approved.")
+
+    @application.cli.command("process-stripe-payments")
+    def process_stripe_payments_command():
+        from pf_server.stripe_service import process_pending
+        print(process_pending())
 
     @application.cli.command("process-mollie-payments")
     def process_mollie_payments_command():
