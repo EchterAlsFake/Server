@@ -19,12 +19,15 @@ ROOT_FILE = Path(__file__).with_name("android_update_root.json")
 ABIS = {"arm64-v8a", "armeabi-v7a", "x86", "x86_64"}
 
 
-def repository_root():
-    return release_root() / "android-updates"
+def repository_root(channel=None):
+    if channel is not None and channel not in {"stable", "beta"}:
+        raise ValueError("Invalid update channel")
+    root = release_root() / "android-updates"
+    return root / channel if channel else root
 
 
-def current_metadata():
-    path = repository_root() / "current" / "metadata"
+def current_metadata(channel=None):
+    path = repository_root(channel) / "current" / "metadata"
     return path if path.is_dir() else None
 
 
@@ -32,17 +35,17 @@ def current_metadata():
 def update_headers(response):
     response.headers["X-Robots-Tag"] = "noindex"
     response.headers["Referrer-Policy"] = "no-referrer"
-    if request.path.startswith(("/ci/", "/repo/android/metadata/")):
+    if request.path.startswith(("/ci/", "/repo/android/")) and "/targets/" not in request.path:
         response.headers["Cache-Control"] = "no-store"
     return response
 
 
-def validate_files(files):
+def validate_files(files, channel=None):
     if not isinstance(files, dict) or set(files) != {"root.json", "targets.json", "snapshot.json", "timestamp.json"}:
         raise ValueError("Expected four TUF metadata files")
     raw = {name: base64.b64decode(data, validate=True) for name, data in files.items()}
     parsed = {name: Metadata.from_bytes(data) for name, data in raw.items()}
-    previous = current_metadata()
+    previous = current_metadata(channel)
     trusted = Metadata.from_file(str(previous / "root.json" if previous else ROOT_FILE))
     root = parsed["root.json"]
     if root.signed.version not in {trusted.signed.version, trusted.signed.version + 1}:
@@ -72,11 +75,14 @@ def validate_files(files):
     return raw, parsed
 
 
-def publish_metadata(files):
+def publish_metadata(files, channel=None):
     with publication_lock():
-        raw, parsed = validate_files(files)
-        repo = no_symlinks(repository_root())
-        repo.mkdir(exist_ok=True, mode=0o755)
+        raw, parsed = validate_files(files, channel)
+        base = no_symlinks(repository_root())
+        base.mkdir(exist_ok=True, mode=0o755)
+        base.chmod(0o755)
+        repo = no_symlinks(repository_root(channel))
+        repo.mkdir(parents=True, exist_ok=True, mode=0o755)
         repo.chmod(0o755)
         releases = {release["version"]: release for release in catalog()}
         links = []
@@ -85,7 +91,11 @@ def publish_metadata(files):
             custom = target.custom
             if not match or not custom or custom.get("abi") != match[1] or custom.get("package") != "to.pornfetch.app":
                 raise ValueError("Invalid Android target")
+            if channel is not None and custom.get("channel") != channel:
+                raise ValueError("Signed Android channel differs from the feed")
             release = releases.get(custom.get("version"))
+            if channel is not None and release and release["channel"] != channel:
+                raise ValueError("Signed Android channel differs from the catalog")
             artifact = next((a for a in release["artifacts"] if a["filename"] == custom.get("filename") and a["kind"] == "apk"), None) if release else None
             if not artifact or artifact["size"] != target.length or artifact["sha256"] != target.hashes.get("sha256"):
                 raise ValueError("Android target does not match a published APK")
@@ -108,7 +118,7 @@ def publish_metadata(files):
             metadata = snapshot / "metadata"
             metadata.mkdir(mode=0o755)
             metadata.chmod(0o755)
-            previous = current_metadata()
+            previous = current_metadata(channel)
             if previous:
                 for path in previous.glob("*.root.json"):
                     shutil.copyfile(path, metadata / path.name)
@@ -129,10 +139,13 @@ def publish_metadata(files):
             raise
 
 
-@android_updates_bp.post("/ci/android-updates")
+@android_updates_bp.post("/ci/android-updates", defaults={"channel": None})
+@android_updates_bp.post("/ci/android-updates/<channel>")
 @csrf.exempt
 @limiter.limit("60 per hour", key_func=lambda: "android-publisher")
-def publish():
+def publish(channel=None):
+    if channel is not None and channel not in {"stable", "beta"}:
+        abort(404)
     expected = current_app.config.get("WEBSITE_RELEASE_TOKEN", "")
     if not expected:
         abort(503)
@@ -140,7 +153,7 @@ def publish():
         abort(401)
     request.max_content_length = 2 * 1024**2
     try:
-        publish_metadata((request.get_json(silent=True) or {}).get("files"))
+        publish_metadata((request.get_json(silent=True) or {}).get("files"), channel)
     except (ValueError, KeyError, TypeError, ReleaseError):
         return jsonify(error="Invalid Android update metadata"), 400
     except Exception:
@@ -149,11 +162,14 @@ def publish():
     return jsonify(published=True), 200
 
 
-@android_updates_bp.get("/repo/android/metadata/<name>")
-def metadata_file(name):
+@android_updates_bp.get("/repo/android/metadata/<name>", defaults={"channel": None})
+@android_updates_bp.get("/repo/android/<channel>/metadata/<name>")
+def metadata_file(name, channel=None):
+    if channel is not None and channel not in {"stable", "beta"}:
+        abort(404)
     if not re.fullmatch(r"(?:[0-9]+\.)?(?:root|targets|snapshot|timestamp)\.json", name):
         abort(404)
-    directory = current_metadata()
+    directory = current_metadata(channel)
     if not directory or not (directory / name).is_file():
         abort(404)
     response = send_file(directory / name, conditional=True)
@@ -161,11 +177,14 @@ def metadata_file(name):
     return response
 
 
-@android_updates_bp.get("/repo/android/targets/android/<name>")
-def target_file(name):
+@android_updates_bp.get("/repo/android/targets/android/<name>", defaults={"channel": None})
+@android_updates_bp.get("/repo/android/<channel>/targets/android/<name>")
+def target_file(name, channel=None):
+    if channel is not None and channel not in {"stable", "beta"}:
+        abort(404)
     if not re.fullmatch(r"[a-f0-9]{64}\.(?:arm64-v8a|armeabi-v7a|x86|x86_64)\.apk", name):
         abort(404)
-    path = no_symlinks(repository_root() / "targets" / "android" / name)
+    path = no_symlinks(repository_root(channel) / "targets" / "android" / name)
     if not path.is_file():
         abort(404)
     return send_file(path, conditional=True, as_attachment=True)

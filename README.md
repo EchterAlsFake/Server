@@ -174,6 +174,22 @@ label uses the configured default. Set `CHECKLIST_PROGRESS_LABEL` in `.env` and 
 the server to change the default for all embeds. The completion percentage still comes
 from the checklist tasks.
 
+### Android update channels
+
+`POST /ci/android-updates/stable` and `/ci/android-updates/beta` publish independent
+signed feeds with the existing `WEBSITE_RELEASE_TOKEN`. Metadata and payloads are
+served beneath `/repo/android/{channel}/metadata/` and
+`/repo/android/{channel}/targets/`. Each signed target's channel must match both
+the requested feed and the immutable website catalog entry. Each channel keeps
+its own TUF versions and current snapshot under `android-updates/{channel}`.
+Legacy Android routes and storage remain available for older applications.
+
+Deploy the updated `deploy/pornfetch-site.caddy` and `deploy/pornfetch-onion.caddy`
+snippets with the application: channel APKs should bypass Flask, and the onion
+routes must resolve locally before the generic `/repo/*` upstream route.
+Desktop/CLI channel routing and Stable bridge publication are handled by the
+adjacent infrastructure repository's `ops/release_intake.py`.
+
 ## Public MCP documentation
 
 The generated Markdown corpus in `docs/mcp-docs/` is published without authentication at
