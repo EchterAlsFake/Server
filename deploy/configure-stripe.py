@@ -6,6 +6,7 @@ secret values never enter command arguments, public configuration, or output.
 This prepares the next deployment; it does not restart the running web service.
 """
 
+import argparse
 import fcntl
 import json
 import os
@@ -49,8 +50,12 @@ def validate(values):
         raise ValueError("Invalid STRIPE_TEST_PASSWORD_HASH")
 
 
-def render_settings(text, values):
+def render_settings(text, values, *, enable_sandbox=False):
     validate(values)
+    if enable_sandbox and not values.get("STRIPE_TEST_PASSWORD_HASH"):
+        raise ValueError(
+            "STRIPE_TEST_PASSWORD_HASH is required for private sandbox access"
+        )
     lines = [
         line
         for line in text.splitlines()
@@ -66,7 +71,8 @@ def render_settings(text, values):
             output.extend(
                 [
                     "Environment=STRIPE_LIVE_ENABLED=true",
-                    "Environment=STRIPE_TEST_ENABLED=false",
+                    "Environment=STRIPE_TEST_ENABLED="
+                    + ("true" if enable_sandbox else "false"),
                     "Environment=STRIPE_TEST_ACCOUNT_ID="
                     + values["STRIPE_TEST_ACCOUNT_ID"],
                     "Environment=STRIPE_LIVE_ACCOUNT_ID="
@@ -126,6 +132,13 @@ def atomic_write(path, content, uid, gid):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--enable-sandbox",
+        action="store_true",
+        help="Enable the password-protected sandbox alongside live checkout",
+    )
+    args = parser.parse_args()
     if os.geteuid() != 0:
         raise ValueError("Run the reviewed root-owned script with sudo")
     values = json.load(sys.stdin)
@@ -134,7 +147,9 @@ def main():
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (STATE / "configure.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        prepared = render_settings(QUADLET.read_text(), values).encode()
+        prepared = render_settings(
+            QUADLET.read_text(), values, enable_sandbox=args.enable_sandbox
+        ).encode()
         run(["/usr/local/sbin/pfctl", "backup"])
         paths = [
             QUADLET,

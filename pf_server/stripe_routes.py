@@ -7,6 +7,7 @@ from flask import (
     Blueprint,
     abort,
     current_app,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -15,6 +16,7 @@ from flask import (
     url_for,
 )
 from werkzeug.security import check_password_hash
+from werkzeug.exceptions import Forbidden
 
 from .extensions import csrf, db, limiter, browser_limit_key
 from .stripe_models import StripeCheckout, StripeGrant
@@ -28,15 +30,24 @@ def require_enabled():
         abort(404)
 
 
+def require_sandbox():
+    if not stripe.test_enabled():
+        abort(404)
+    g.stripe_sandbox_checkout = True
+
+
 @stripe_bp.get("/stripe/test")
 def review():
-    require_enabled()
-    access = stripe.grant()
+    require_sandbox()
+    try:
+        access = stripe.grant()
+    except Forbidden:
+        return render_template("stripe_unlock.html")
     if access.order_id:
         return redirect(
             url_for("payments.buy_success", session_id=access.order_id), code=303
         )
-    return checkout_page(test_mode=not stripe.live_enabled())
+    return checkout_page(test_mode=True)
 
 
 def checkout_page(*, test_mode=False):
@@ -62,7 +73,7 @@ def checkout_page(*, test_mode=False):
     key_func=lambda: request.environ.get("PF_MOLLIE_LIMIT_KEY", "unknown-address"),
 )
 def unlock():
-    require_enabled()
+    require_sandbox()
     password = request.form.get("password", "")
     try:
         valid = len(password) <= 1024 and check_password_hash(
@@ -83,19 +94,26 @@ def unlock():
         )
     )
     db.session.commit()
-    session["stripe_grant"] = token
+    session[stripe.grant_session_key()] = token
     return redirect(url_for("stripe.review"), code=303)
 
 
 @stripe_bp.post("/stripe/lock")
 def lock():
-    token = session.pop("stripe_grant", "")
+    g.stripe_sandbox_checkout = True
+    token = session.pop(stripe.grant_session_key(), "")
     if isinstance(token, str) and token:
         db.session.execute(
             db.delete(StripeGrant).where(StripeGrant.digest == stripe.digest(token))
         )
         db.session.commit()
     return redirect(url_for("pages.porn_fetch"), code=303)
+
+
+@stripe_bp.post("/stripe/test/checkout")
+def create_test_checkout():
+    require_sandbox()
+    return create_checkout()
 
 
 @stripe_bp.post("/stripe/checkout")
@@ -118,7 +136,7 @@ def create_checkout():
                 error="The offer has changed. Reload and review the checkout again."
             ), 409
         required = ["age_terms_accepted", "withdrawal_accepted"]
-        if not stripe.live_enabled():
+        if stripe.new_environment() == "sandbox":
             required.append("test_acknowledged")
         if any(request.form.get(name) != "yes" for name in required):
             return jsonify(

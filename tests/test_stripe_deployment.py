@@ -13,6 +13,15 @@ spec.loader.exec_module(module)
 
 
 class StripeDeploymentTests(unittest.TestCase):
+    def test_private_sandbox_requires_a_password_and_preserves_live_mode(self):
+        with self.assertRaises(ValueError):
+            module.render_settings(self.source, self.values, enable_sandbox=True)
+        values = self.values | {"STRIPE_TEST_PASSWORD_HASH": "scrypt:synthetic"}
+        result = module.render_settings(self.source, values, enable_sandbox=True)
+        self.assertIn("Environment=STRIPE_TEST_ENABLED=true", result)
+        self.assertIn("Environment=STRIPE_LIVE_ENABLED=true", result)
+        self.assertNotIn("scrypt:synthetic", result)
+
     def setUp(self):
         self.values = dict(
             STRIPE_TEST_ACCOUNT_ID="acct_Test",

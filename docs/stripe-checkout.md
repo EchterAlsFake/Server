@@ -43,12 +43,35 @@ Configure secrets through the deployment's environment/credential mechanism:
 - `STRIPE_TEST_API_KEY`: preferably a restricted `rk_test_...` key; `sk_test_...` is also supported.
 - `STRIPE_TEST_WEBHOOK_SECRET`: `whsec_...` for the sandbox webhook endpoint.
 - `STRIPE_TEST_PASSWORD_HASH`: a Werkzeug password hash for private tester access.
-- `STRIPE_TEST_ENABLED=true`: exposes the tester form on `/porn_fetch`.
+- `STRIPE_TEST_ENABLED=true`: enables private tester access at `/stripe/test`.
 
-Keep `STRIPE_LIVE_ENABLED=false` during sandbox validation. Existing SMTP,
+For an initial sandbox-only rollout, keep `STRIPE_LIVE_ENABLED=false`. Private
+testing alongside live checkout is described below. Existing SMTP,
 recipient-encryption, Keygen, country database and Tor-list settings are also
 required. Sandbox success currently issues a real lifetime license, with sandbox
 provenance and test documents; use controlled test recipients.
+
+### Test alongside live checkout
+
+The password-protected `/stripe/test` page and `/stripe/test/checkout` submission
+always use the sandbox account and test API key, even while public purchases use
+live Stripe. The two flows have separate browser grants. Test acknowledgments and
+the sandbox notice are mandatory on the test flow; a URL query or form field
+cannot switch the public checkout's payment environment.
+
+Enable private testing on the rootless server using the reviewed configuration
+helper with `--enable-sandbox`; provide the existing private JSON settings on
+stdin and keep `STRIPE_TEST_PASSWORD_HASH` configured. Prepare settings before
+deploying the new commit through `pfctl update web`. The public checkout remains
+live. Without this option, the configuration helper disables private testing.
+
+Open `https://pornfetch.to/stripe/test`, enter the tester password, then enter
+your email/country and confirm the sandbox notice. Save the private recovery
+link before continuing to Stripe. Verify Stripe's Sandbox banner, then pay with
+test card `4242 4242 4242 4242`, a future expiry and any three-digit CVC. Confirm
+the license appears on the recovery page and is emailed to the chosen address.
+These payments move no money but issue a real lifetime license with sandbox
+provenance. Review them in the matching Stripe sandbox, rather than live mode.
 
 An MCP OAuth connection authorizes the assistant; it does not provide persistent
 API credentials to the web service. Create a separate backend restricted key in

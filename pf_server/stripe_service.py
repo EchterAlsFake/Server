@@ -12,7 +12,7 @@ from decimal import Decimal
 from urllib.parse import urlsplit
 
 import httpx
-from flask import abort, current_app, session
+from flask import abort, current_app, g, session
 from sqlalchemy import or_
 
 from .extensions import db
@@ -31,7 +31,13 @@ def now():
 
 
 def new_environment():
+    if getattr(g, "stripe_sandbox_checkout", False):
+        return "sandbox"
     return "production" if live_enabled() else "sandbox"
+
+
+def grant_session_key():
+    return "stripe_test_grant" if new_environment() == "sandbox" else "stripe_grant"
 
 
 def configured(environment="sandbox"):
@@ -79,7 +85,11 @@ def live_enabled():
 
 
 def enabled():
-    return live_enabled() or bool(
+    return live_enabled() or test_enabled()
+
+
+def test_enabled():
+    return bool(
         current_app.config.get("STRIPE_TEST_ENABLED")
         and configured()
         and current_app.config.get("STRIPE_TEST_WEBHOOK_SECRET", "").startswith(
@@ -93,7 +103,7 @@ def enabled():
 
 def public_access():
     """A live browser gets a single-order nonce; no password is needed to buy."""
-    token = session.get("stripe_grant", "")
+    token = session.get(grant_session_key(), "")
     row = db.session.get(StripeGrant, digest(token)) if token else None
     if (
         row
@@ -109,7 +119,7 @@ def public_access():
     )
     db.session.add(row)
     db.session.commit()
-    session["stripe_grant"] = token
+    session[grant_session_key()] = token
     return row
 
 
@@ -126,7 +136,9 @@ def configuration():
             "STRIPE_LIVE_ACCOUNT_ID",
         )
     )
-    return hashlib.sha256((material + str(live_enabled())).encode()).hexdigest()
+    return hashlib.sha256(
+        (material + str(new_environment() == "production")).encode()
+    ).hexdigest()
 
 
 def digest(token):
@@ -134,7 +146,7 @@ def digest(token):
 
 
 def grant():
-    token = session.get("stripe_grant", "")
+    token = session.get(grant_session_key(), "")
     row = (
         db.session.get(StripeGrant, digest(token))
         if isinstance(token, str) and token
@@ -144,6 +156,13 @@ def grant():
         abort(403, description="Unlock tester access first.")
     if row.order_id:
         from .checkout_recovery import resolve_session_id
+
+        transaction = db.session.get(Transaction, row.order_id)
+        if not transaction or transaction.environment != new_environment():
+            abort(
+                403,
+                description="This checkout belongs to a different payment environment.",
+            )
 
         remember_recovery(row.order_id)
         resolve_session_id(row.order_id)
@@ -198,7 +217,7 @@ def offer_digest():
 def remember_recovery(identifier):
     # Reconstruct the same bearer token after a lost response or concurrent request.
     # Requires the browser's original random grant secret and the server secret.
-    material = session["stripe_grant"] + "\0" + identifier
+    material = session[grant_session_key()] + "\0" + identifier
     key = str(current_app.config["SECRET_KEY"]).encode()
     token = (
         base64.urlsafe_b64encode(

@@ -26,7 +26,7 @@
                 <button type="submit" id="checkout-continue" data-metric="checkout_continue" class="btn btn-primary">Proceed with selected payment method <span aria-hidden="true">→</span></button>
                 <p class="checkout-back-note">You can change the method or details before creating a payment.</p>
             </section></form>
-            {% if config.STRIPE_TEST_ENABLED and stripe_test_enabled() %}
+            {% if config.STRIPE_TEST_ENABLED and not config.STRIPE_LIVE_ENABLED and stripe_test_enabled() %}
             <details class="checkout-question"><summary>Tester access</summary>
                 <form action="{{ url_for('stripe.unlock') }}" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

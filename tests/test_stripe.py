@@ -47,21 +47,27 @@ class StripeTests(ServerTestCase):
         self.addCleanup(self.mail.stop)
         self.status = "open"
         self.change = {}
+        self.orders = {}
 
     def api(self, method, path, **kwargs):
+        environment = kwargs.get("environment", "sandbox")
         if path == "/account":
             return {"id": ACCOUNT}
         if method == "POST":
             self.order = kwargs["json"]["metadata"]["order_id"]
+            self.orders[environment] = self.order
+        order = self.orders.get(environment, self.order)
         return (
             dict(
                 object="checkout.session",
-                id="cs_test_Synthetic123",
-                livemode=False,
+                id="cs_live_Synthetic123"
+                if environment == "production"
+                else "cs_test_Synthetic123",
+                livemode=environment == "production",
                 mode="payment",
                 managed_payments={"enabled": True},
-                metadata={"order_id": self.order},
-                client_reference_id=self.order,
+                metadata={"order_id": order},
+                client_reference_id=order,
                 amount_total=2999,
                 currency="eur",
                 status="complete" if self.status == "paid" else self.status,
@@ -93,8 +99,11 @@ class StripeTests(ServerTestCase):
             "/stripe/unlock", data={"password": "private-test-password"}
         )
 
-    def form(self):
-        with main.app.app_context():
+    def form(self, *, sandbox=False):
+        from flask import g
+
+        with main.app.test_request_context():
+            g.stripe_sandbox_checkout = sandbox
             digest = stripe.offer_digest()
         return dict(
             offer_digest=digest,
@@ -145,9 +154,9 @@ class StripeTests(ServerTestCase):
         with patch.dict(
             main.app.config, STRIPE_TEST_PASSWORD_HASH=generate_password_hash("rotated")
         ):
-            self.assertEqual(self.client.get("/stripe/test").status_code, 403)
+            self.assertIn("Tester password", self.client.get("/stripe/test").text)
         self.assertEqual(self.client.post("/stripe/lock").status_code, 303)
-        self.assertEqual(self.client.get("/stripe/test").status_code, 403)
+        self.assertIn("Tester password", self.client.get("/stripe/test").text)
         self.api_mock.assert_not_called()
 
     def test_csrf_and_address_rate_limits(self):
@@ -483,12 +492,12 @@ class StripeTests(ServerTestCase):
     def test_order_resumes_even_if_first_response_cookie_is_lost(self):
         self.unlock()
         with self.client.session_transaction() as browser:
-            original_grant = browser["stripe_grant"]
+            original_grant = browser["stripe_test_grant"]
         response = self.client.post("/stripe/checkout", data=self.form())
         self.assertEqual(response.status_code, 303)
         with self.client.session_transaction() as browser:
             browser.pop("checkout_recovery")
-            browser["stripe_grant"] = original_grant
+            browser["stripe_test_grant"] = original_grant
         self.assertEqual(self.client.post("/stripe/checkout", data={}).status_code, 303)
         self.assertEqual(self.client.get(response.location).status_code, 200)
         with main.app.app_context():
@@ -538,7 +547,7 @@ class StripeTests(ServerTestCase):
 
         self.unlock()
         with self.client.session_transaction() as browser:
-            token = browser["stripe_grant"]
+            token = browser["stripe_test_grant"]
         barrier = Barrier(2)
         decision = CheckoutCountryDecision(
             status="verified",
@@ -549,7 +558,7 @@ class StripeTests(ServerTestCase):
 
         def reserve():
             with main.app.test_request_context("/stripe/checkout"):
-                session["stripe_grant"] = token
+                session["stripe_test_grant"] = token
                 access = stripe.grant()
                 barrier.wait(timeout=5)
                 return stripe.reserve(access, decision, "DE", "tester@example.com")
@@ -636,6 +645,7 @@ class StripeTests(ServerTestCase):
             )
 
     def test_live_order_rejects_sandbox_response(self):
+        self.change = {"livemode": False}
         with patch.dict(
             main.app.config,
             STRIPE_LIVE_ENABLED=True,
@@ -868,6 +878,97 @@ class StripeTests(ServerTestCase):
                         transaction = db.session.get(Transaction, identifier)
                         self.assertEqual(transaction.environment, environment)
                         self.assertEqual(transaction.status, "finished")
+
+    def test_private_sandbox_does_not_change_public_live_checkout(self):
+        with patch.dict(
+            main.app.config,
+            STRIPE_LIVE_ENABLED=True,
+            STRIPE_LIVE_API_KEY="sk_live_synthetic",
+        ):
+            self.client.get("/porn_fetch")
+            self.assertIn("Tester password", self.client.get("/stripe/test").text)
+            self.assertEqual(self.unlock().status_code, 303)
+            page = self.client.get("/stripe/test")
+            self.assertIn('action="/stripe/test/checkout"', page.text)
+            self.assertIn("No money is charged", page.text)
+            missing_ack = self.form(sandbox=True)
+            missing_ack.pop("test_acknowledged")
+            self.assertEqual(
+                self.client.post("/stripe/test/checkout", data=missing_ack).status_code,
+                400,
+            )
+            self.assertEqual(
+                self.client.post(
+                    "/stripe/test/checkout", data=self.form(sandbox=True)
+                ).status_code,
+                303,
+            )
+            sandbox_id = self.order
+            live_form = self.form() | {"environment": "sandbox", "test": "true"}
+            live_form.pop("test_acknowledged")
+            self.assertEqual(
+                self.client.post(
+                    "/stripe/checkout?test=true", data=live_form
+                ).status_code,
+                303,
+            )
+            live_id = self.order
+            self.status = "paid"
+            self.assertTrue(self.reconcile(sandbox_id))
+            self.assertTrue(self.reconcile(live_id))
+            with main.app.app_context():
+                self.assertEqual(
+                    db.session.get(Transaction, sandbox_id).environment, "sandbox"
+                )
+                self.assertEqual(
+                    db.session.get(Transaction, live_id).environment, "production"
+                )
+                self.assertEqual(License.query.count(), 2)
+            self.assertNotIn(
+                'name="test_acknowledged"', self.client.get("/porn_fetch").text
+            )
+            self.assertEqual(self.client.post("/stripe/lock").status_code, 303)
+            with self.client.session_transaction() as browser:
+                self.assertIn("stripe_grant", browser)
+                self.assertNotIn("stripe_test_grant", browser)
+
+    def test_live_mode_does_not_bypass_disabled_sandbox_gate(self):
+        with patch.dict(
+            main.app.config,
+            STRIPE_LIVE_ENABLED=True,
+            STRIPE_LIVE_API_KEY="sk_live_synthetic",
+            STRIPE_TEST_ENABLED=False,
+        ):
+            self.assertEqual(self.client.get("/porn_fetch").status_code, 200)
+            self.assertEqual(self.client.get("/stripe/test").status_code, 404)
+            self.assertEqual(self.unlock().status_code, 404)
+            self.assertEqual(
+                self.client.post(
+                    "/stripe/test/checkout", data=self.form(sandbox=True)
+                ).status_code,
+                404,
+            )
+            self.api_mock.assert_not_called()
+
+    def test_sandbox_grant_cannot_be_reused_for_live_payment(self):
+        identifier = self.create()
+        with self.client.session_transaction() as browser:
+            browser["stripe_grant"] = browser["stripe_test_grant"]
+        calls = self.api_mock.call_count
+        with patch.dict(
+            main.app.config,
+            STRIPE_LIVE_ENABLED=True,
+            STRIPE_LIVE_API_KEY="sk_live_synthetic",
+        ):
+            self.assertEqual(
+                self.client.post("/stripe/checkout", data=self.form()).status_code, 403
+            )
+            self.assertEqual(self.api_mock.call_count, calls)
+            with main.app.app_context():
+                self.assertEqual(Transaction.query.count(), 1)
+                self.assertEqual(
+                    db.session.get(Transaction, identifier).environment, "sandbox"
+                )
 
     def test_missing_live_webhook_secret_keeps_public_checkout_disabled(self):
         with patch.dict(
