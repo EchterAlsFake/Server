@@ -38,12 +38,15 @@ class PaywarpTests(ServerTestCase):
             return dict(id='pl_test', checkout_url='https://paywarp.app/pay/test', amount=p['amount_minor'],
                 currency=p['currency'], reference=p['reference'], status='pending')
         with patch.object(service, 'api', side_effect=response) as api:
-            r = self.client.post('/create-paywarp-payment', data=dict(country='DE', delivery_email='buyer@example.com',
-                verification_acknowledged='yes', withdrawal_accepted='yes'))
+            r = self.client.post('/create-paywarp-payment', data=dict(delivery_email='buyer@example.com', withdrawal_accepted='yes'))
             self.assertEqual(r.status_code, 303, r.data)
             payload = api.call_args.kwargs['json']
             self.assertEqual(payload['amount_minor'], 2999)
             self.assertEqual(payload['currency'], 'EUR')
+            with main.app.app_context():
+                transaction = db.session.get(Transaction, payload['reference'])
+                self.assertEqual(transaction.customer_country, 'Germany')
+                self.assertEqual(transaction.country_evidence, 'local_ip_geolocation')
         return payload, r.location
 
     def status(self, payload, **changes):
@@ -94,7 +97,7 @@ class PaywarpTests(ServerTestCase):
 
     def test_provider_failure_retry_keeps_reference_and_idempotency_key(self):
         self.select()
-        data = dict(country='DE', delivery_email='buyer@example.com', verification_acknowledged='yes', withdrawal_accepted='yes')
+        data = dict(delivery_email='buyer@example.com', withdrawal_accepted='yes')
         with patch.object(service, 'api', side_effect=service.PaymentProviderError('offline')) as api:
             self.assertEqual(self.client.post('/create-paywarp-payment', data=data).status_code, 503)
             first = api.call_args
@@ -113,13 +116,38 @@ class PaywarpTests(ServerTestCase):
             self.assertEqual(result.status_code, 200)
             self.assertEqual(result.json['status'], 'finished')
 
-    def test_eligibility_and_verification_and_consent_are_required(self):
+    def test_delivery_email_and_supply_consent_remain_required(self):
         self.select()
         with patch.object(service, 'api') as api:
-            for data in ({'country':'GB', 'verification_acknowledged':'yes', 'withdrawal_accepted':'yes'},
-                         {'country':'DE', 'withdrawal_accepted':'yes'}):
+            for data in ({'withdrawal_accepted': 'yes'}, {'delivery_email': 'buyer@example.com'}):
                 self.assertEqual(self.client.post('/create-paywarp-payment', data=data).status_code, 400)
             api.assert_not_called()
+
+    def test_country_is_automatic_and_untrusted_form_country_cannot_bypass_it(self):
+        from pf_server.country_service import CountryEvidence
+        self.select()
+        self.mock_country_lookup.return_value = CountryEvidence(status='found', country_code='GB', database_label='test')
+        with patch.object(service, 'api') as api:
+            response = self.client.post('/create-paywarp-payment', data=dict(country='DE',
+                delivery_email='buyer@example.com', withdrawal_accepted='yes'))
+            self.assertEqual(response.status_code, 400)
+            api.assert_not_called()
+        self.mock_country_lookup.return_value = CountryEvidence(status='not_found')
+        with patch.object(service, 'api') as api:
+            response = self.client.post('/create-paywarp-payment', data=dict(
+                delivery_email='buyer@example.com', withdrawal_accepted='yes'))
+            self.assertEqual(response.status_code, 503)
+            api.assert_not_called()
+
+    def test_simplified_form_has_no_country_or_redundant_verification_checkbox(self):
+        self.select()
+        response = self.client.get('/buy_paywarp')
+        self.assertNotIn('name="country"', response.text)
+        self.assertNotIn('name="verification_acknowledged"', response.text)
+        self.assertNotIn('Real credit card payment', response.text)
+        self.assertIn('name="delivery_email"', response.text)
+        self.assertIn('name="withdrawal_accepted"', response.text)
+        self.assertIn('EU: Tax ID required.', response.text)
 
     def test_untrusted_checkout_urls_are_rejected(self):
         for url in ('https://paywarp.app.evil/pay/a', 'http://paywarp.app/pay/a', 'https://evil@paywarp.app/pay/a', 'https://paywarp.app:999/pay/a'):

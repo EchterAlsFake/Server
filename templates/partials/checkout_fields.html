@@ -1,8 +1,8 @@
-{% macro email_field(banxa=false) %}
+{% macro email_field(banxa=false, help_text=none, label="Email address") %}
 <div class="checkout-email delivery-email-block">
-    <label for="delivery-email">Email address <span>Required</span></label>
+    <label for="delivery-email">{{ label }} <span>Required</span></label>
     <input id="delivery-email" name="delivery_email" type="email" maxlength="254" autocomplete="email" autocapitalize="none" required placeholder="you@example.com" aria-describedby="delivery-email-help">
-    <p id="delivery-email-help">For license delivery and future purchase enquiries. Your address is stored encrypted with your order and is not included in your license file.{% if banxa %} Enter your verification email separately at Banxa.{% endif %} <a href="/privacy_policy">Privacy policy</a>.</p>
+    <p id="delivery-email-help">{% if help_text %}{{ help_text }}{% else %}For license delivery and future purchase enquiries. Your address is stored encrypted with your order and is not included in your license file.{% if banxa %} Enter your verification email separately at Banxa.{% endif %}{% endif %} <a href="/privacy_policy">Privacy policy</a>.</p>
 </div>
 {% endmacro %}
 

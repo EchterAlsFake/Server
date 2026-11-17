@@ -97,3 +97,11 @@
 .browser-license h2 { font-size: var(--text-prominent); }
 .browser-license .checkout-email { margin-bottom: 1.25rem; }
 .activation-form .checkout-email input { display: block; box-sizing: border-box; width: 100%; min-height: 49px; padding: 12px 14px; border: 1px solid #ffffff35; border-radius: 7px; color: var(--color-text); font-size: 1rem; }
+
+/* PayWarp's single supply consent remains one aligned, touch-friendly row. */
+.paywarp-payment-form { display: grid; gap: 20px; }
+.paywarp-payment-form .paywarp-consent { display: flex; align-items: flex-start; gap: 12px; font-size: var(--text-small); line-height: 1.6; cursor: pointer; }
+.paywarp-consent input { flex: 0 0 20px; width: 20px; height: 20px; margin: 3px 0 0; }
+.paywarp-consent span { min-width: 0; }
+.paywarp-payment-form .btn { width: 100%; }
+.paywarp-payment-form .checkout-error:empty { display: none; }

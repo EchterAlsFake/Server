@@ -2,8 +2,8 @@
 
 PayWarp is an alternative to the recommended Patreon Shop purchase. It uses the
 server's EUR lifetime price in integer cents. Only US and EU residents can start
-checkout, with the same local country evidence and network checks as direct
-crypto purchases. Email verification, phone, address and the EU Tax ID requirement
+checkout, with automatic local country evidence and the existing network checks. The
+customer does not select a country on this checkout. Email verification, phone, address and the EU Tax ID requirement
 are explained before payment. Those verification checks happen at the hosted
 provider; the documented API does not expose verification flags or a processor
 selection field.
@@ -103,3 +103,19 @@ runs migrations and performs the health-checked cutover. Check the public paymen
 picker, authenticated PayWarp provider lookup from the runtime, and all delivery
 timers afterward. The public webhook URL is
 `https://api.pornfetch.to/paywarp-webhook`; register it in the PayWarp site settings.
+
+### Minimal checkout and buyer email
+
+The final PayWarp form asks only for the license delivery email and immediate
+supply consent. Verification requirements are informational, with no separate
+acknowledgment checkbox. Country eligibility comes from the middleware's local
+geolocation evidence, recorded as `local_ip_geolocation`, without claiming that
+the customer made a country declaration. PayWarp collects verification details.
+
+A read-only API inspection on 2026-11-17 confirmed `customer_email` in the
+transaction list, but not in the payment-status response. The supplied
+`payment.completed` webhook documentation also contains no email field. An
+email in the merchant dashboard/list is not a guaranteed email on a webhook tied
+to the verified order. Retain the delivery-email field until PayWarp documents
+and confirms such a delivery source. No buyer email or other personal response
+values were retained by this inspection.

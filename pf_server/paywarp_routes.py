@@ -44,11 +44,15 @@ def create():
     selection = current_selection() or current_consent()
     if not selection or selection.get('payment_method') != 'paywarp' or selection.get('offer_digest') != offer_digest():
         return jsonify(error='Review the payment methods and confirmations again.'), 409
-    if data.get('withdrawal_accepted') != 'yes' or data.get('verification_acknowledged') != 'yes':
-        return jsonify(error='Confirm immediate delivery and the verification requirements.'), 400
-    if data.get('country') not in SUPPORTED_COUNTRIES:
+    if data.get('withdrawal_accepted') != 'yes':
+        return jsonify(error='Please consent to immediate license delivery.'), 400
+    # No country form field: middleware supplies transient local location evidence.
+    country_code = request.environ.get('PF_COUNTRY_CODE')
+    if request.environ.get('PF_COUNTRY_STATUS') != 'found' or not country_code:
+        return jsonify(error='Country verification is temporarily unavailable.'), 503
+    if country_code not in SUPPORTED_COUNTRIES:
         return jsonify(error='PayWarp supports US and EU residents only.'), 400
-    country, error = validate_checkout_country(data)
+    country, error = validate_checkout_country({'country': country_code})
     if error:
         return error
     email = normalize_recipient_email(data.get('delivery_email'))
@@ -57,11 +61,11 @@ def create():
     try:
         encrypted = encrypt_recipient(email)
         verify_lifetime_policy()
-        agreement = record_agreement('paywarp', data['country'], datetime.now(timezone.utc).isoformat())
-        session['checkout_consent'] = dict(selection, agreement_id=agreement, country=data['country'],
+        agreement = record_agreement('paywarp', country_code, datetime.now(timezone.utc).isoformat())
+        session['checkout_consent'] = dict(selection, agreement_id=agreement, country=country_code,
             withdrawal_accepted=True, version=CONSENT_VERSION)
         session.pop('checkout_selection', None)
-        snapshot = checkout_snapshot('paywarp', data['country'])
+        snapshot = checkout_snapshot('paywarp', country_code)
         transaction = db.session.get(Transaction, session.get('paywarp_order', ''))
         if transaction and (transaction.customer_country != country.country_name or transaction.expected_price_amount != PREMIUM_PRICE_TEXT):
             transaction = None
@@ -78,7 +82,7 @@ def create():
             timestamp = datetime.now(timezone.utc).isoformat()
             transaction = Transaction(session_id=identifier, provider_payment_id='reserved-' + identifier,
                 provider='paywarp', provider_reference_type='paywarp', environment='production', expected_price_amount=PREMIUM_PRICE_TEXT,
-                expected_price_currency='eur', customer_country=country.country_name, country_evidence=country.evidence_source,
+                expected_price_currency='eur', customer_country=country.country_name, country_evidence='local_ip_geolocation',
                 geolocation_database=country.database_label, status='pending', created_at=timestamp,
                 contract_snapshot=snapshot, customer_email_encrypted=encrypted)
             db.session.add_all([transaction, PaymentProgress(session_id=identifier),
