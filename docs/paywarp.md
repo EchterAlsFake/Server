@@ -86,3 +86,20 @@ The verified rotated credentials from `tokens_new.env` were copied to the ignore
 `PAYWARP_WEBHOOK_SECRET` environment values still take precedence and must also
 be updated if configured. Restart the deployed service after updating code and
 credentials. Webhook delivery and an end-to-end payment still need live validation.
+
+## Rootless production rollout
+
+Use `deploy/configure-paywarp.py` on the MSI origin as root, passing the two
+PayWarp secrets as JSON on stdin over SSH. It seals them as user credentials with
+`host+tpm2` and adds declarations to both web and migration Quadlets. It stages
+`PAYWARP_ENABLED=true` and the registered site URL without restarting services,
+keeps a protected configuration rollback copy, and mirrors the installed Quadlets
+in the infrastructure source. It preserves existing SMTP, Keygen, Patreon and
+NOWPayments settings. Never place the plaintext token file in a container image.
+
+Commit and push the tested Server source, then run `sudo pfctl update web`. That
+builds/tests the exact fetched commit, takes the coordinated application backup,
+runs migrations and performs the health-checked cutover. Check the public payment
+picker, authenticated PayWarp provider lookup from the runtime, and all delivery
+timers afterward. The public webhook URL is
+`https://api.pornfetch.to/paywarp-webhook`; register it in the PayWarp site settings.

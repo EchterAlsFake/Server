@@ -77,7 +77,7 @@ def create():
             session['paywarp_order'] = identifier
             timestamp = datetime.now(timezone.utc).isoformat()
             transaction = Transaction(session_id=identifier, provider_payment_id='reserved-' + identifier,
-                provider_reference_type='paywarp', environment='production', expected_price_amount=PREMIUM_PRICE_TEXT,
+                provider='paywarp', provider_reference_type='paywarp', environment='production', expected_price_amount=PREMIUM_PRICE_TEXT,
                 expected_price_currency='eur', customer_country=country.country_name, country_evidence=country.evidence_source,
                 geolocation_database=country.database_label, status='pending', created_at=timestamp,
                 contract_snapshot=snapshot, customer_email_encrypted=encrypted)

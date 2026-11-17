@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block body_attributes %} class="guide-surface{% if provider is defined %} guide-detail{% endif %}"{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='guides.css') }}">{% endblock %}
+{% block legal_navigation %}
+<nav class="legal-utility guide-legal" aria-label="Legal information">
+    <a href="/impress">Impressum</a><a href="/privacy_policy">Privacy</a><a href="/terms">Terms</a><a class="withdrawal-link" href="{{ config.APP_DOMAIN if is_onion else '' }}/withdrawal">Withdrawal</a>
+</nav>
+{% endblock %}

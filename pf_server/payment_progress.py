@@ -1,7 +1,7 @@
-"""Read-only provider progress, bound to known orders and cached across browsers.
+"""Provider progress bound to known orders and cached across browsers.
 
-Only the existing signed NOWPayments IPN fulfillment path can approve payment.
-Neither unsigned callbacks nor any API observation changes Transaction.status.
+NOWPayments settlement uses authenticated receipts; PayWarp and historical Mollie
+orders use their provider-specific authenticated settlement paths.
 """
 
 import re
@@ -79,6 +79,7 @@ def record_nowpayments(webhook):
     state = (webhook.payment_status or "").lower()
     if (
         not transaction
+        or transaction.provider != "nowpayments"
         or transaction.status == "finished"
         or webhook.parent_payment_id
         or state not in PHASES.keys() | PROBLEMS
@@ -159,6 +160,10 @@ def refresh_providers(transaction):
                 record.refresh_unavailable = True
             db.session.commit()
         return record
+    if transaction.provider == 'mollie':
+        from .mollie_service import process_order
+        process_order(transaction.session_id)
+        return None
     record = progress_record(transaction)
     if transaction.status in {"finished", "processing"} or transaction.provider_payment_id.startswith(
         "mock-"
@@ -302,6 +307,9 @@ def record_fulfillment(transaction, stage):
 
 
 def public_progress(transaction, checkout=None, *, license_pending=False):
+    if transaction.provider == 'mollie':
+        from .mollie_service import progress
+        return progress(transaction, license_pending=license_pending)
     record = db.session.get(PaymentProgress, transaction.session_id)
     state = record.nowpayments_state if record else "waiting"
     if checkout and checkout.payment_state in PROBLEMS:

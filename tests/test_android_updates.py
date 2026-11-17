@@ -64,8 +64,8 @@ class AndroidUpdateTests(ServerTestCase):
                     "platform": "android", "arch": "arm64", "kind": "apk", "experimental": False,
                     "min_os": "Android 9", "size": len(self.payload), "sha256": self.target.hashes["sha256"]}]}])
 
-    def publish(self, files, token="synthetic-token"):
-        return self.client.post("/ci/android-updates", headers={"Authorization": "Bearer " + token},
+    def publish(self, files, token="synthetic-token", channel=None):
+        return self.client.post("/ci/android-updates" + ("/" + channel if channel else ""), headers={"Authorization": "Bearer " + token},
                                 json={"files": {name: base64.b64encode(data).decode() for name, data in files.items()}})
 
     def test_atomic_feed_range_and_failed_retry(self):
@@ -82,6 +82,25 @@ class AndroidUpdateTests(ServerTestCase):
         self.assertIn(self.publish(tampered).status_code, (400, 422))
         self.assertEqual(self.client.get("/repo/android/metadata/timestamp.json").data, files["timestamp.json"])
 
+    def test_channel_feeds_are_isolated_and_bound_to_catalog(self):
+        self.target.custom["channel"] = "beta"
+        files = self.signed_files(self.root_bytes, {self.target.path: self.target}, self.signer)
+        payload = {"files": {name: base64.b64encode(data).decode() for name, data in files.items()}}
+        headers = {"Authorization": "Bearer synthetic-token"}
+        response = self.client.post("/ci/android-updates/beta", headers=headers, json=payload)
+        self.assertEqual(response.status_code, 200, response.data)
+        with self.client.get("/repo/android/beta/metadata/timestamp.json") as response:
+            self.assertEqual(response.data, files["timestamp.json"])
+        self.assertEqual(self.client.get("/repo/android/stable/metadata/timestamp.json").status_code, 404)
+        self.assertEqual(self.client.get("/repo/android/metadata/timestamp.json").status_code, 404)
+        response = self.client.post("/ci/android-updates/stable", headers=headers, json=payload)
+        self.assertIn(response.status_code, (400, 422))
+        self.target.custom["channel"] = "stable"
+        files = self.signed_files(self.root_bytes, {self.target.path: self.target}, self.signer)
+        payload = {"files": {name: base64.b64encode(data).decode() for name, data in files.items()}}
+        response = self.client.post("/ci/android-updates/stable", headers=headers, json=payload)
+        self.assertIn(response.status_code, (400, 422))  # Catalog still identifies this APK as Beta.
+
     def test_expired_timestamp_and_changed_apk_are_rejected(self):
         files = self.signed_files(self.root_bytes, {self.target.path: self.target}, self.signer)
         expired = Metadata.from_bytes(files["timestamp.json"])
@@ -93,11 +112,14 @@ class AndroidUpdateTests(ServerTestCase):
         self.assertEqual(self.client.get("/repo/android/metadata/timestamp.json").status_code, 404)
 
     def test_private_service_umask_keeps_public_metadata_traversable(self):
-        files = self.signed_files(self.root_bytes, {self.target.path: self.target}, self.signer)
-        previous = os.umask(0o077)
-        try:
-            self.assertEqual(self.publish(files).status_code, 200)
-        finally:
-            os.umask(previous)
-        directory = self.directory / "android-updates/current/metadata"
-        self.assertEqual(directory.stat().st_mode & 0o005, 0o005)
+        for channel in ("beta", None):
+            self.target.custom["channel"] = "beta"
+            files = self.signed_files(self.root_bytes, {self.target.path: self.target}, self.signer)
+            previous = os.umask(0o077)
+            try:
+                self.assertEqual(self.publish(files, channel=channel).status_code, 200)
+            finally:
+                os.umask(previous)
+            directory = self.directory / "android-updates" / (channel or ".") / "current/metadata"
+            self.assertEqual(directory.stat().st_mode & 0o005, 0o005)
+            self.assertEqual((self.directory / "android-updates").stat().st_mode & 0o005, 0o005)

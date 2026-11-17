@@ -19,13 +19,15 @@ Production addresses:
 
 Middleware temporarily uses the client address supplied by the trusted local reverse proxy for country checks on payment creation and local Tor-exit checks on payment pages and requests. It then removes that address, `REMOTE_ADDR`, and common forwarding headers before Flask and its extensions see the request. Other requests are stripped without a lookup. Keep VPS, reverse-proxy, and process-manager access logs disabled if the deployment must retain this no-IP-log property.
 
+Patreon is the default payment option; cryptocurrency is also available. Mollie is retired for new purchases.
+
 ## Quick start
 
 The project requires Python 3.14 or newer and uses [uv](https://docs.astral.sh/uv/) for dependency management.
 
 ```bash
 uv venv --python 3.14
-uv sync --locked
+uv sync
 cp deploy/server.env.example .env
 .venv/bin/python -m flask --app main db upgrade
 .venv/bin/python main.py
@@ -174,6 +176,22 @@ label uses the configured default. Set `CHECKLIST_PROGRESS_LABEL` in `.env` and 
 the server to change the default for all embeds. The completion percentage still comes
 from the checklist tasks.
 
+### Android update channels
+
+`POST /ci/android-updates/stable` and `/ci/android-updates/beta` publish independent
+signed feeds with the existing `WEBSITE_RELEASE_TOKEN`. Metadata and payloads are
+served beneath `/repo/android/{channel}/metadata/` and
+`/repo/android/{channel}/targets/`. Each signed target's channel must match both
+the requested feed and the immutable website catalog entry. Each channel keeps
+its own TUF versions and current snapshot under `android-updates/{channel}`.
+Legacy Android routes and storage remain available for older applications.
+
+Deploy the updated `deploy/pornfetch-site.caddy` and `deploy/pornfetch-onion.caddy`
+snippets with the application: channel APKs should bypass Flask, and the onion
+routes must resolve locally before the generic `/repo/*` upstream route.
+Desktop/CLI channel routing and Stable bridge publication are handled by the
+adjacent infrastructure repository's `ops/release_intake.py`.
+
 ## Public MCP documentation
 
 The generated Markdown corpus in `docs/mcp-docs/` is published without authentication at
@@ -283,14 +301,14 @@ ffmpeg -ss 3 -i porn-fetch-promo/out/MyComp.mp4 -frames:v 1 -q:v 3 static/media/
 Run the isolated HTTPS browser checks without live provider requests or payments:
 
 ```bash
-uv run --locked python scripts/test_lifetime_browser.py
-uv run --locked python scripts/test_security_browser.py
+uv run python scripts/test_lifetime_browser.py
+uv run python scripts/test_security_browser.py
 ```
 
 These checks use a temporary database and local HTTPS server, block external traffic,
 and cover lifetime copy, desktop/mobile layouts, no-script pricing and terms, Patreon
 handoff, CSRF and simulated crypto checkout. Screenshots go to `/tmp/porn-fetch-*.png`.
-Install Chromium using `uv run --locked playwright install chromium` once.
+Install Chromium using `uv run playwright install chromium` once.
 The capability inventory in `pf_server/product_catalog.py` mirrors the app's
 `docs/WEBSITES.md`; update both when support changes.
 
@@ -495,7 +513,7 @@ Evidence status does not control license entitlement or establish legal enforcea
 
 ## Architecture and security maintenance
 
-See [the architecture review](docs/ARCHITECTURE_REVIEW.md) for trust boundaries, changes, validation, and residual risks. Both Python services use committed `uv.lock` files. Install MCP with `uv sync --project mcp_service --locked --python 3.14`; install promo tooling with `npm ci`.
+See [the architecture review](docs/ARCHITECTURE_REVIEW.md) for trust boundaries, changes, validation, and residual risks. Both Python services resolve their declared dependencies; generated `uv.lock` files are ignored. Install MCP with `uv sync --project mcp_service --python 3.14`; install promo tooling with `npm ci`.
 
 Production requires Redis through `RATELIMIT_STORAGE_URI`. Aggregate statistics now live in Redis, outside payment database sessions; configure Redis persistence if counters must survive Redis restart. Development with `memory://` keeps process-local counters. Historical SQL statistics remain untouched but are no longer updated. `flask --app main init-runtime` explicitly resets the current counters.
 

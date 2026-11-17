@@ -217,12 +217,51 @@ class SEOTests(ServerTestCase):
             self.assertIn("saved to your selected folder automatically", response.text)
             self.assertNotIn("A completed card also has", response.text)
             self.assertNotIn(screenshot, response.text)
-            self.assertIn('/static/media/guide-mobile-3.9.1.jpg', response.text)
+            for platform in ("android", "ios"):
+                for stage in ("start", "add", "ready", "downloading"):
+                    filename = f"web/guide-{platform}-{stage}-3.9.1-720.webp"
+                    self.assertIn(filename, response.text)
+                    self.assertTrue((Path(main.app.static_folder) / "media" / filename).is_file())
         android = self.get("/download/android")
         self.assertIn(screenshot, android.text)
         for filename in ("android-account.jpg", "web/android-account-360.webp", "web/android-account-720.webp"):
             self.assertTrue((Path(main.app.static_folder) / "media" / filename).is_file())
         self.assertIn("first five videos", self.get(guide_path("xvideos")).text)
+
+    def test_mobile_guides_preserve_search_content_and_explain_iphone_setup_before_purchase(self):
+        for provider in GUIDES:
+            response = self.get(guide_path(provider))
+            html = response.text
+            self.assertLess(html.index('id="android"'), html.index('id="download-steps"'))
+            self.assertLess(html.index('id="iphone"'), html.index('id="download-steps"'))
+            opening = html[html.index('<header class="guide-hero">'):html.index('id="mobile-downloads"')]
+            self.assertLess(opening.index("iPhone requires a PC"), opening.index('href="/porn_fetch"'))
+            self.assertIn("Up to 10 active installations", html)
+            self.assertIn("On My iPhone", html)
+            self.assertIn("not automatically added to Photos", html)
+            self.assertIn("Download in progress. Wait for completion", html)
+            for heading, paragraphs in GUIDES[provider]["sections"]:
+                self.assertIn(heading, html)
+            metadata = Page(html)
+            self.assertIn("Android or iPhone", metadata.meta["description"])
+            self.assertIn("iPhone", metadata.meta["og:image:alt"])
+        home = self.get("/").text
+        self.assertNotIn('class="guide-surface', home)
+        self.assertNotIn('/static/guides.js', home)
+        self.assertNotIn('/static/guides.css', home)
+
+    def test_mobile_availability_is_checked_for_each_platform(self):
+        def artifacts(releases, platform, kinds):
+            return [{"experimental": False}] if platform == "android" else []
+
+        with patch("pf_server.guide_routes.latest_artifacts", side_effect=artifacts):
+            html = self.get(guide_path("xvideos")).text
+            self.assertNotIn("No Android APK is currently listed", html)
+            self.assertIn("No iPhone IPA is currently listed", html)
+        with patch("pf_server.guide_routes.latest_artifacts", return_value=[{"experimental": True}]):
+            html = self.get(guide_path("xvideos")).text
+            self.assertIn("No Android APK is currently listed", html)
+            self.assertIn("No iPhone IPA is currently listed", html)
 
     def test_legal_pages_have_one_heading_and_transparency_redirect_works(self):
         for path in ("/privacy_policy", "/terms"):

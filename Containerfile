@@ -6,10 +6,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# The same committed resolution is used by development and deployment.
+# Resolve dependencies declared in pyproject.toml; generated lock files are ignored.
 COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
-COPY pyproject.toml uv.lock /app/
-RUN uv sync --locked --no-dev --no-install-project
+COPY pyproject.toml /app/
+RUN uv sync --no-dev --no-install-project
 ENV PATH="/app/.venv/bin:$PATH" PF_SERVER_DATA_DIR=/data
 
 # Copy application source

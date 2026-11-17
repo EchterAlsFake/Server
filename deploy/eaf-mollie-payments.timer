@@ -1,0 +1,10 @@
+[Unit]
+Description=Reconcile Mollie sandbox checkout every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+Unit=eaf-mollie-payments.service
+
+[Install]
+WantedBy=timers.target

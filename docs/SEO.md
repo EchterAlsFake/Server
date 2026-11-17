@@ -4,7 +4,61 @@ Research and source review: **25 October 2026**. Initial audience: English-speak
 adults looking for a supported video-downloading workflow. Canonical product
 origin: `https://pornfetch.to`.
 
-## Current guide presentation: 14 November 2026
+## Current guide presentation: 15 November 2026
+
+The guide hub and all 15 provider guides now lead with Android and the native
+iPhone app. The homepage and checkout are outside this presentation change.
+Existing guide paths, canonical URLs, broad provider search titles, original
+publication dates, supported-link restrictions, and desktop/CLI instructions are
+preserved. This editorial revision updates dateModified to 15 November.
+
+Free and lifetime Premium receive equal opening actions. iPhone's PC requirement
+for sideloading is visible before either action, in its platform card, and in its
+walkthrough. Android APK/iPhone IPA links lead to installation pages, never an
+automatic binary download. Each platform's availability is checked against actual
+eligible catalog artifacts; source archives do not count as mobile binaries.
+
+Eight real screenshots supplied by the maintainer on 15 November show start,
+Add videos, ready, and downloading on Android/iPhone. They illustrate PornHub,
+explicitly labeled as the example on every guide. Progress screenshots are not
+described as completed downloads or proof of every provider working. UI controls
+were checked against AndroidDownloadsPage.qml (shared by the mobile GUI), and iOS
+file sharing is enabled in ios-lab/device/finalize-qt-app.py; its app/main.py sets
+the default working folder to Documents/PornFetch. Physical-device
+installation and completion are not established by the website browser checks.
+
+Delivery copies retain the complete screenshot, omit EXIF metadata, and use
+360/720px WebP variants (about 10–42 KB each). The display crops long screenshots
+with CSS; each links to its full 720px copy. Rebuild with:
+`uv run --with pillow python scripts/build_guide_images.py /path/to/screenshots`.
+Source filenames are recorded in that script; private originals remain untouched.
+Article/Open Graph/Twitter now use the real native-iPhone ready screenshot with
+matching 720×1281 metadata. Only that preview and the Android preview load eagerly;
+walkthrough images are lazy-loaded with reserved dimensions.
+
+All steps and platform links are server-rendered, usable without JavaScript.
+Optional device detection suggests a download page locally, with no persistence,
+redirect, cookie, or additional analytics dimension. The bottom action bar appears
+only after the opening actions pass and hides around equivalent actions/footer.
+Guide-only navigation styling compacts utility links while retaining one-click
+legal access. Free/Premium comparison includes up to 10 active installations and
+the actual source-quality/free-preview exceptions.
+
+Existing anonymous counters measure platform choices and Premium openings; no
+visitor identifiers or new analytics service were introduced. The 5 November
+Search Console snapshot remains historical, not a fresh baseline. Refresh settled
+page/device/query data before assessing post-deployment trends over 28 days.
+Clicks and delivery requests must not be described as installations.
+
+Verification: `python -m unittest discover -s tests -p test_seo.py` covers all
+providers' metadata, links, content order, actual image paths, iPhone setup notice,
+and per-platform missing/experimental-artifact states. The isolated
+`scripts/check_seo_browser.py` exercises Chromium and WebKit at 320, 360, 390, 430,
+768, and 1440px, all providers at 390px, images, keyboard access, device suggestions,
+sticky-action visibility and no-JavaScript navigation. These are browser/lab
+checks, not real-device or field Core Web Vitals measurements.
+
+## Historical guide presentation: 14 November 2026
 
 The shared provider guides describe the stable 3.9.1 release. Their opening has
 Download for Free and Get Premium (lifetime) links; platform selection and setup

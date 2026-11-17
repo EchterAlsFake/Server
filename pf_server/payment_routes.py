@@ -136,12 +136,15 @@ def buy_success():
     if is_paywarp and transaction.status == 'pending' and progress:
         from .paywarp_service import checkout_url
         payment_url = checkout_url(progress.checkout_url)
+    is_mollie = bool(transaction and transaction.provider == 'mollie')
+    if is_mollie:
+        payment_url = None  # Retired provider: never reopen a payment.
     from .tor_checkout import checkout_network_status
     if checkout_network_status() != 'clear':
         payment_url = None
     return render_template(
         "buy_success.html", session_id=session_id, **view_context(session_id), beta=bool(checkout and checkout.beta), is_card_checkout=bool(checkout),
-        is_paywarp=is_paywarp, has_contract=bool(transaction and transaction.contract_snapshot), payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
+        is_paywarp=is_paywarp, is_mollie=is_mollie, mollie_sandbox=bool(is_mollie and transaction.environment == "sandbox"), has_contract=bool(transaction and transaction.contract_snapshot), payment_url=payment_url, charge_amount=checkout.charge_amount if checkout else None,
     )
 
 
@@ -211,13 +214,17 @@ def check_payment_status():
     checkout = db.session.get(OnrampCheckout, session_id)
     if transaction.status != "finished":
         refresh_providers(transaction)
-    if transaction.status != "finished":
-        progress = public_progress(transaction, checkout)
-        status = progress["provider_state"] if progress["provider_state"] in {"partially_paid", "failed", "expired", "refunded", "wrong_asset_confirmed"} else "pending"
-        result = {"status": status, "progress": progress, "recovery_expires_at": view_context(session_id)["recovery_expires_at"]}
-        if checkout:
-            result.update(payment_state=progress["provider_state"], payment_method="banxa", beta=checkout.beta)
-        return jsonify(result), 200
+        db.session.refresh(transaction)
+        if transaction.status != "finished":
+            progress = public_progress(transaction, checkout)
+            status = progress["provider_state"] if progress["provider_state"] in {"partially_paid", "failed", "expired", "refunded", "wrong_asset_confirmed", "canceled", "review"} else "pending"
+            result = {"status": status, "progress": progress, "recovery_expires_at": view_context(session_id)["recovery_expires_at"]}
+            if checkout:
+                result.update(payment_state=progress["provider_state"], payment_method="banxa", beta=checkout.beta)
+
+            if transaction.provider == 'mollie':
+                result.update(payment_method='mollie', checkout_available=False)
+            return jsonify(result), 200
 
     try:
         invoice = load_invoice(session_id)
@@ -240,7 +247,8 @@ def check_payment_status():
     except KeygenUnavailable:
         db.session.rollback()
         from .payment_progress import record_fulfillment
-        record_fulfillment(transaction, 'retry')
+        if transaction.provider not in {'mollie'}:
+            record_fulfillment(transaction, 'retry')
         return jsonify(status='pending', progress=public_progress(transaction, checkout, license_pending=True),
                        recovery_expires_at=result['recovery_expires_at']), 200
     delivery = db.session.get(CryptoLicenseDelivery, session_id)
@@ -295,7 +303,9 @@ def simulate_payment_success():
     transaction = db.session.get(Transaction, session_id)
     if transaction is None:
         return jsonify({"error": "Session not found"}), 404
-    if transaction.provider_reference_type == "paywarp" or db.session.get(OnrampCheckout, session_id) is not None:
+    if transaction.provider != "nowpayments":
+        abort(404)
+    if db.session.get(OnrampCheckout, session_id) is not None:
         return jsonify({"error": "Real-money beta purchases cannot be simulated."}), 400
 
     try:

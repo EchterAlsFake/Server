@@ -20,6 +20,7 @@ class CiStatus(db.Model):
 
 class Transaction(db.Model):
     session_id = db.Column(db.String, primary_key=True)
+    provider = db.Column(db.String(20), nullable=False, default="nowpayments", server_default="nowpayments", index=True)
     provider_payment_id = db.Column(db.String, unique=True, nullable=False)
     provider_reference_type = db.Column(db.String(16), nullable=False)
     environment = db.Column(db.String(16), nullable=False, default="production")

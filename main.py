@@ -31,6 +31,7 @@ from pf_server.operations_routes import (
 )
 from pf_server.page_routes import pages_bp
 from pf_server.payment_routes import payments_bp
+from pf_server.mollie_routes import mollie_bp
 from pf_server.onramp_routes import onramp_bp
 from pf_server.withdrawal_routes import withdrawal_bp, register_withdrawal_commands
 from pf_server.referral_guard import block_vplan_referrals
@@ -98,8 +99,11 @@ def create_app(
         application.config["CHECKOUT_IP_HEADER"],
         application.extensions["tor_resolver"],
         metrics_enabled=application.config["AGGREGATE_ANALYTICS_ENABLED"],
+        rate_secret=application.config["SECRET_KEY"],
     )
 
+    from pf_server.mollie_service import enabled as mollie_test_enabled
+    application.jinja_env.globals['mollie_test_enabled'] = mollie_test_enabled
     init_direct_downloads(application)
     db.init_app(application)
     csrf.init_app(application)
@@ -136,6 +140,7 @@ def create_app(
         paywarp_bp,
         pages_bp,
         payments_bp,
+        mollie_bp,
         onramp_bp,
         withdrawal_bp,
         seo_bp,
@@ -158,7 +163,8 @@ def create_app(
     @application.after_request
     def private_payment_response(response):
         from flask import request
-        if request.path.startswith('/activate') or request.path in {
+        if request.path.startswith(('/activate', '/mollie/')) or request.path in {
+            "/porn_fetch",
             "/activate", "/buy_card", "/buy_success", "/download_license", "/download_contract", "/download_invoice",
             "/check-payment-status", "/onramp-acknowledgment", "/create-onramp-payment",
             "/onramp-callback", "/download-recovery", "/create-crypto-payment",
@@ -207,6 +213,12 @@ def create_app(
         except PaymentProviderError as error:
             raise click.ClickException(str(error)) from None
         click.echo("Sandbox emulation requested. Await NOWPayments' signed webhook on the recovery page. No local payment was approved.")
+
+    @application.cli.command("process-mollie-payments")
+    def process_mollie_payments_command():
+        """Reconcile test payments and retry real license delivery."""
+        from pf_server.mollie_service import process_pending
+        click.echo(f"Processed {process_pending()} Mollie test orders.")
 
     @application.cli.command("process-nowpayments-receipts")
     def process_nowpayments_receipts_command():

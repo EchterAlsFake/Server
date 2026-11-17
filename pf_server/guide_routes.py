@@ -7,13 +7,14 @@ from flask import Blueprint, abort, render_template
 from .download_pages import load_catalog
 from .guide_content import GUIDES, GUIDE_DATE, GUIDE_VERSION, RELATED_GUIDES
 from .product_catalog import WEBSITES
+from .website_releases import latest_artifacts
 
 guides_bp = Blueprint("guides", __name__)
 
 
 @guides_bp.get("/guides")
 def index():
-    return render_template("guides.html", guides=GUIDES)
+    return render_template("guides.html", guides=GUIDES, guide_version=GUIDE_VERSION)
 
 
 @guides_bp.get("/guides/download-<provider>-videos")
@@ -31,4 +32,10 @@ def provider_guide(provider):
         supports_profiles=any(row[0] == guide["name"] and row[2] == "Yes" for row in WEBSITES),
         releases_available=bool(releases["releases"]),
         catalog_unavailable=releases["unavailable"],
+        mobile_available={
+            platform: any(not artifact["experimental"] for artifact in latest_artifacts(
+                releases["releases"], platform, {kind},
+            ))
+            for platform, kind in (("android", "apk"), ("ios", "ipa"))
+        },
     )
