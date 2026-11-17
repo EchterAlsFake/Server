@@ -19,7 +19,7 @@ Production addresses:
 
 Middleware temporarily uses the client address supplied by the trusted local reverse proxy for country checks on payment creation and local Tor-exit checks on payment pages and requests. It then removes that address, `REMOTE_ADDR`, and common forwarding headers before Flask and its extensions see the request. Other requests are stripped without a lookup. Keep VPS, reverse-proxy, and process-manager access logs disabled if the deployment must retain this no-IP-log property.
 
-Stripe checkout is prepared but disabled by default; Mollie is retired for new purchases. See [Stripe setup and activation](docs/stripe-checkout.md).
+Patreon is the default payment option; cryptocurrency is also available. Mollie is retired for new purchases.
 
 ## Quick start
 

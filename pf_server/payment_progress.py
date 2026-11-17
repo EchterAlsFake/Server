@@ -146,10 +146,6 @@ def _api_observation(payload):
 
 def refresh_providers(transaction):
     """At most once per minute per order, with a shared DB lease and finite timeouts."""
-    if transaction.provider == 'stripe':
-        from .stripe_service import process_order
-        process_order(transaction.session_id)
-        return None
     if transaction.provider == 'mollie':
         from .mollie_service import process_order
         process_order(transaction.session_id)
@@ -297,9 +293,6 @@ def record_fulfillment(transaction, stage):
 
 
 def public_progress(transaction, checkout=None, *, license_pending=False):
-    if transaction.provider == 'stripe':
-        from .stripe_service import progress
-        return progress(transaction, license_pending=license_pending)
     if transaction.provider == 'mollie':
         from .mollie_service import progress
         return progress(transaction, license_pending=license_pending)

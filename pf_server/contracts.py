@@ -12,7 +12,7 @@ from sqlalchemy import update
 from .extensions import db
 from .models import CheckoutAgreement, Transaction
 
-VERSION = "contract-2026-11-16-stripe-v1"
+VERSION = "contract-2026-11-17-v1"
 IMMEDIATE_EN = "I expressly consent to immediate digital supply before the 14-day withdrawal period ends. I understand that I lose my withdrawal right when supply starts, provided I receive the required contract confirmation."
 REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
 
@@ -39,13 +39,13 @@ def text_template(name, **context):
     return "\n".join(line.strip() for line in "".join(parser.parts).splitlines() if line.strip())
 
 
-def terms_snapshot(*, managed_payments=False):
+def terms_snapshot():
     return {
         "version": VERSION,
         "language": "en",
-        "product": text_template("partials/contract_product.html", managed_payments=managed_payments),
+        "product": text_template("partials/contract_product.html"),
         "terms_de": "",  # Retain the field for older snapshot readers.
-        "terms_en": text_template("partials/terms_en.html", managed_payments=managed_payments),
+        "terms_en": text_template("partials/terms_en.html"),
         "withdrawal": text_template("partials/withdrawal_information.html"),
         "immediate_en": IMMEDIATE_EN,
         "refund_en": REFUND_EN,

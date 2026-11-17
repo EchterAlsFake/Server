@@ -183,7 +183,7 @@ def render_invoice_pdf(invoice: dict) -> bytes:
     pdf.set_font("Helvetica", size=12)
     payment_fields = (
         ("Simulated Amount" if invoice.get("Environment") == "sandbox" else "Amount Paid", "Test Amount"), (str(invoice.get("Provider", "")).title() + " Payment Reference", "Payment Reference"),
-    ) if invoice.get("Provider") in {"mollie", "stripe"} else (
+    ) if invoice.get("Provider") in {"mollie"} else (
         ("Base Price", "Base Price in EUR"),
         ("Crypto Paid", "Crypto Paid"),
         ("Exchange Rate", "Exchange Rate"),

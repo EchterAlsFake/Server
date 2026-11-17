@@ -6,7 +6,7 @@
     <div class="purchase-layout">
         <aside class="purchase-summary" aria-labelledby="offer-heading"><span class="eyebrow">Porn Fetch Premium</span><h2 id="offer-heading">Higher quality.<br>Full collections.</h2><p class="license-price">€{{ premium_price }} <span>one-time payment</span></p><p class="price-note">Provider, network and conversion fees may apply. Review the final total before paying.</p>{% include "partials/lifetime_offer.html" %}{% include "partials/license_benefits.html" %}<a class="text-link" href="/terms">License terms / AGB ↗</a></aside>
         <section class="payment-picker" aria-labelledby="method-heading">
-            {% if not stripe_test_enabled() %}<p role="status">Direct card checkout is temporarily unavailable while we change payment providers.</p>{% endif %}<p class="eyebrow checkout-step">01 / Payment</p><h2 id="method-heading">Choose your payment method.</h2><p class="method-intro">Choose your payment method, then confirm the details below.{% if config.NOWPAYMENTS_SANDBOX %} Test previews only: do not send money.{% endif %}</p>
+            <p class="eyebrow checkout-step">01 / Payment</p><h2 id="method-heading">Choose your payment method.</h2><p class="method-intro">Choose your payment method, then confirm the details below.{% if config.NOWPAYMENTS_SANDBOX %} Test previews only: do not send money.{% endif %}</p>
             <form action="/checkout/start" method="post" id="payment-choice-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="offer_digest" value="{{ offer_digest() }}">
             {% set default_method = "patreon" if config.PATREON_SHOP_ENABLED or config.NOWPAYMENTS_SANDBOX else "crypto" %}
             {% set selected_method = preferred_method if preferred_method in ("patreon", "crypto") else checkout_consent.payment_method if checkout_consent else default_method %}
@@ -15,7 +15,7 @@
                 <label class="payment-option" for="method-crypto"><input id="method-crypto" type="radio" name="payment_method" value="crypto" required{% if checkout_network_status != "clear" %} disabled{% endif %}{% if checkout_network_status == "clear" and (selected_method == "crypto") %} checked{% endif %}><span><span class="method-title">Cryptocurrency</span><span class="method-description">One-time payment · no account required</span><span class="payment-brand-strip crypto-brands"><img class="coin-logo bitcoin-logo" src="/static/media/payments/bitcoin.svg" alt="Bitcoin" width="28" height="28"><img class="coin-logo" src="/static/media/payments/ethereum.svg" alt="Ethereum" width="20" height="28"><img class="coin-logo" src="/static/media/payments/solana.svg" alt="Solana" width="32" height="28"><img class="coin-logo" src="/static/media/payments/litecoin.svg" alt="Litecoin" width="28" height="28"></span><span class="provider-brand"><img src="/static/media/payments/nowpayments.svg" alt="NOWPayments" width="126" height="25"><span>350+ cryptocurrencies supported</span></span><span class="method-condition">{% if checkout_network_status == "tor" %}<strong>Unavailable over Tor.</strong>{% elif checkout_network_status != "clear" %}<strong>Network verification is temporarily unavailable.</strong>{% elif config.NOWPAYMENTS_SANDBOX %}<strong>Sandbox: simulated payment only.</strong>{% else %}Provider and network fees may apply.{% endif %}</span></span></label>
             </fieldset>
             <details class="checkout-question"><summary>Product and contract details</summary>{% with english_only=true %}{% include "partials/contract_product.html" %}{% endwith %}</details><section class="shared-confirmations" aria-labelledby="confirmations-heading">
-                {% if not stripe_test_enabled() %}<p role="status">Direct card checkout is temporarily unavailable while we change payment providers.</p>{% endif %}<p class="eyebrow checkout-step">02 / Confirmation</p><h3 id="confirmations-heading">Review and confirm.</h3>
+                <p class="eyebrow checkout-step">02 / Confirmation</p><h3 id="confirmations-heading">Review and confirm.</h3>
                 <details class="checkout-question" id="refund-agreement"><summary>Refund method</summary>{% include "partials/refund_agreement_en.html" %}</details>
                 <fieldset class="compact-agreements"><legend class="visually-hidden">Required confirmations</legend>
                     <label><input type="checkbox" name="age_terms_accepted" id="chk-age-terms" value="yes" required><span>I am 18+ and accept the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</span></label>
@@ -26,15 +26,6 @@
                 <button type="submit" id="checkout-continue" data-metric="checkout_continue" class="btn btn-primary">Proceed with selected payment method <span aria-hidden="true">→</span></button>
                 <p class="checkout-back-note">You can change the method or details before creating a payment.</p>
             </section></form>
-            {% if config.STRIPE_TEST_ENABLED and not config.STRIPE_LIVE_ENABLED and stripe_test_enabled() %}
-            <details class="checkout-question"><summary>Tester access</summary>
-                <form action="{{ url_for('stripe.unlock') }}" method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <label for="tester-password">Tester password</label><input type="password" name="password" id="tester-password" required maxlength="1024" autocomplete="current-password">
-                    <button type="submit" class="btn btn-secondary">Unlock Stripe test checkout</button>
-                </form>
-            </details>
-            {% endif %}
             <p class="brand-disclosure">Payment identities identify provider options, not endorsement or guaranteed availability. <a href="/static/notices/payment-brands.txt">Brand notices and usage sources</a>.</p>
         </section>
     </div>

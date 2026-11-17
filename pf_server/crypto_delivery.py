@@ -86,11 +86,10 @@ def deliver_crypto_license(session_id):
         invoice = load_invoice(session_id)
         if invoice is None:
             raise ValueError("Paid order invoice is unavailable")
-        managed = transaction.provider == "stripe" and invoice.get("Document Type") == "stripe_managed_receipt"
         send_license_email(
             cipher().decrypt(delivery.recipient_encrypted.encode()).decode(),
             license_file,
-            invoice=None if managed else invoice, payment_environment=transaction.environment, confirmation_pdf=document,
+            invoice=invoice, payment_environment=transaction.environment, confirmation_pdf=document,
         )
     except Exception:
         db.session.rollback()

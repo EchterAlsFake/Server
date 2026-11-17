@@ -3,11 +3,11 @@
 {% block content %}
 <article class="legal-document" lang="en">
 <h1>Terms of Service</h1>
-{% if not managed_payments %}<div id="de">{% include "partials/terms_de.html" %}</div>{% endif %}
+<div id="de">{% include "partials/terms_de.html" %}</div>
 <section id="en">
 {% include "partials/contract_product.html" %}
 {% include "partials/terms_en.html" %}
-{% if not managed_payments %}{% include "partials/refund_agreement_en.html" %}{% endif %}
+{% include "partials/refund_agreement_en.html" %}
 </section>
 <p><a href="/withdrawal">Withdrawal instructions and model form</a> · <a href="/refund_policy">Refund help</a> · <a href="/privacy_policy">Privacy</a></p>
 </article>

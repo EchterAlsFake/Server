@@ -42,7 +42,7 @@ class MollieLegalTests(ServerTestCase):
             snapshot = json.loads(
                 mollie_service.snapshot("DE", "2026-11-15T00:00:00+00:00")
             )
-            self.assertIn("2026-11-16", snapshot["version"])
+            self.assertIn(contracts.VERSION, snapshot["version"])
             self.assertIn("original payment method", snapshot["terms_en"])
             self.assertIn("Mollie card and bank payments", snapshot["terms_en"])
             self.assertIn("do not deduct my Mollie", snapshot["terms_en"])
