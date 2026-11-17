@@ -1,0 +1,19 @@
+{% extends "checkout_base.html" %}
+{% from "partials/checkout_fields.html" import email_field %}
+{% block title %}PayWarp checkout — Porn Fetch{% endblock %}
+{% block checkout_notice %}<aside class="checkout-notice"><strong>Real payment through PayWarp · Stripe (Link).</strong><p>Patreon remains our <a href="/porn_fetch?method=patreon">recommended option</a>. Use PayWarp if you prefer not to create a Patreon account. Review the provider’s final total, including any fees, before paying.</p></aside>{% endblock %}
+{% block checkout_method %}<h2 id="method-heading">Pay with PayWarp</h2><p>US and EU residents only.</p><p><strong>EU residents: have your Tax ID ready. It is required for verification.</strong></p><p>Everyone needs email verification, a phone number and an address. Complete these checks in the hosted checkout. ID is usually not needed, but additional checks may apply.</p>{% endblock %}
+{% block checkout_form %}
+<form action="/create-paywarp-payment" method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label for="paywarp-country">Country of residence</label><select id="paywarp-country" name="country" required><option value="">Select your country</option>{% for code, name in countries %}<option value="{{ code }}">{{ name }}</option>{% endfor %}</select>
+<p>Checked locally for eligibility and tax purposes.</p>
+{{ email_field() }}
+<p>Your email is also shared with PayWarp for checkout and receipts. Phone, address and Tax ID are entered with the payment provider.</p>
+<label><input type="checkbox" name="verification_acknowledged" value="yes" required> I understand that email verification, phone number and address are required, plus a Tax ID for EU residents.</label>
+<label><input type="checkbox" name="withdrawal_accepted" value="yes" required> {{ immediate_en }}</label>
+<p><a href="/terms">Terms</a> · <a href="/privacy_policy">Privacy</a> · <a href="/refund_policy">Refunds and withdrawal</a></p>
+<p role="alert">{{ checkout_error or '' }}</p>
+<button class="btn btn-primary" type="submit"{% if not config.PAYWARP_ENABLED or not (checkout_selection or checkout_consent) %} disabled{% endif %}>Create payment · €{{ premium_price }}</button>
+</form>
+{% endblock %}

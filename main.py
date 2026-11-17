@@ -47,6 +47,13 @@ from pf_server.android_updates import android_updates_bp
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Legacy key names are scoped to PayWarp; never load generic API_KEY globally.
+from dotenv import dotenv_values
+_paywarp_tokens = dotenv_values(os.path.join(BASE_DIR, "tokens.env"))
+for _setting, _legacy in (("PAYWARP_API_KEY", "API_KEY"), ("PAYWARP_WEBHOOK_SECRET", "WEBHOOK_SECRET")):
+    if _paywarp_tokens.get(_setting) or _paywarp_tokens.get(_legacy):
+        os.environ.setdefault(_setting, _paywarp_tokens.get(_setting) or _paywarp_tokens[_legacy])
+del _paywarp_tokens
 
 
 def ratelimit_handler(_error):
@@ -124,7 +131,9 @@ def create_app(
         referrer_policy="no-referrer",
     )
 
+    from pf_server.paywarp_routes import paywarp_bp
     for blueprint in (
+        paywarp_bp,
         pages_bp,
         payments_bp,
         onramp_bp,

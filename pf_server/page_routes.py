@@ -18,7 +18,7 @@ from .guide_content import GUIDES, guide_path
 from .download_pages import render_download_page
 
 pages_bp = Blueprint("pages", __name__)
-AGE_GATED_PATHS = {"/porn_fetch", "/donation", "/buy_license", "/buy_card", "/buy_success", "/buy_cancel", "/payment-preview/patreon", "/payment-preview/card", "/payment-preview/banxa"}
+AGE_GATED_PATHS = {"/buy_paywarp", "/porn_fetch", "/donation", "/buy_license", "/buy_card", "/buy_success", "/buy_cancel", "/payment-preview/patreon", "/payment-preview/card", "/payment-preview/banxa"}
 
 
 @pages_bp.app_context_processor
@@ -124,24 +124,26 @@ def checkout_start():
     if data.get("age_terms_accepted") is True or data.get("age_terms_accepted") == "yes":
         data = dict(data, age_confirmed=True, terms_accepted=True)
     method = data.get("payment_method")
-    if isinstance(method, str) and method in {"crypto", "card"}:
+    if isinstance(method, str) and method in {"crypto", "card", "paywarp"}:
         from .tor_checkout import block_crypto_checkout
         blocked = block_crypto_checkout()
         if blocked is not None:
             return blocked
     if method == "patreon" and not current_app.config["NOWPAYMENTS_SANDBOX"] and not current_app.config["PATREON_SHOP_ENABLED"]:
         return jsonify(error="Patreon purchases are not available yet."), 503
+    if method == "paywarp" and not current_app.config.get("PAYWARP_ENABLED"):
+        return jsonify(error="PayWarp is temporarily unavailable. Please use Patreon."), 503
     country = data.get("country")
     def accepted(field):
         return data.get(field) == "yes" or data.get(field) is True
 
     shared_fields = tuple(field for field in required_fields(method) if field != "withdrawal_accepted")
-    if not isinstance(method, str) or method not in {"crypto", "patreon", "card"} or not all(accepted(field) for field in shared_fields):
+    if not isinstance(method, str) or method not in {"crypto", "patreon", "card", "paywarp"} or not all(accepted(field) for field in shared_fields):
         error = "Choose your payment method and accept all required confirmations."
         if request.is_json:
             return jsonify(error=error), 400
         return render_template("porn_fetch.html", countries=COUNTRY_OPTIONS, checkout_error=error), 400
-    pending_crypto = method == "crypto" and country is None and not accepted("withdrawal_accepted")
+    pending_crypto = method in {"crypto", "paywarp"} and country is None and not accepted("withdrawal_accepted")
     if method != "patreon" and not pending_crypto and (not isinstance(country, str) or country not in dict(COUNTRY_OPTIONS) or not accepted("withdrawal_accepted")):
         return jsonify(error="Select your country and consent to immediate digital supply on the crypto checkout."), 400
     from .contracts import offer_digest, record_agreement
@@ -152,9 +154,12 @@ def checkout_start():
     session.pop("checkout_consent", None)
     from .aggregate_analytics import record_checkout_start
     if pending_crypto:
+        if method == "paywarp":
+            import secrets
+            session.setdefault("paywarp_order", "PW-" + secrets.token_urlsafe(24))
         record_checkout_start(method)
-        session["checkout_selection"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), payment_method="crypto", offer_digest=data["offer_digest"], **{field: accepted(field) for field in shared_fields})
-        target = url_for("payments.buy_license")
+        session["checkout_selection"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), payment_method=method, offer_digest=data["offer_digest"], **{field: accepted(field) for field in shared_fields})
+        target = url_for("paywarp.checkout") if method == "paywarp" else url_for("payments.buy_license")
         if request.is_json:
             return jsonify(next=target, method=method)
         return redirect(target, code=303)
@@ -163,7 +168,7 @@ def checkout_start():
     agreement_id = record_agreement(method, country, datetime.now(timezone.utc).isoformat())
     session["checkout_consent"] = dict(agreement_id=agreement_id, offer_digest=data["offer_digest"], version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: accepted(field) for field in FIELDS})
     record_checkout_start(method)
-    target = url_for("payments.buy_license") if method == "crypto" else url_for("pages.payment_preview", method=method)
+    target = url_for("paywarp.checkout") if method == "paywarp" else url_for("payments.buy_license") if method == "crypto" else url_for("pages.payment_preview", method=method)
     if request.is_json:
         return jsonify(next=target, method=method, live=not current_app.config['NOWPAYMENTS_SANDBOX'])
     return redirect(target, code=303)

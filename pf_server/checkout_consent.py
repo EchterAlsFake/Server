@@ -40,6 +40,6 @@ def current_selection():
     accepted_at = value.get("accepted_at")
     if not isinstance(accepted_at, (int, float)) or not 0 <= time.time() - accepted_at < 3600:
         return None
-    if value.get("payment_method") != "crypto" or not all(value.get(field) is True for field in required_fields('crypto') if field != "withdrawal_accepted"):
+    if value.get("payment_method") not in {"crypto", "paywarp"} or not all(value.get(field) is True for field in required_fields('crypto') if field != "withdrawal_accepted"):
         return None
     return value

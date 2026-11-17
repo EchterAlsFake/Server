@@ -137,6 +137,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+tokens.env
+tokens_new.env
 .env
 .env.*
 !.env.example

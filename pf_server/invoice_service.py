@@ -148,6 +148,8 @@ def render_invoice_pdf(invoice: dict) -> bytes:
         ("Invoice Date", "Invoice Date"),
         ("Delivery Date", "Delivery Date"),
     ):
+        if field not in invoice:
+            continue
         pdf.cell(
             0,
             8,
@@ -183,10 +185,14 @@ def render_invoice_pdf(invoice: dict) -> bytes:
     pdf.set_font("Helvetica", size=12)
     for label, field in (
         ("Base Price", "Base Price in EUR"),
+        ("Payment Method", "Payment Method"),
+        ("Amount Paid", "Amount Paid"),
         ("Crypto Paid", "Crypto Paid"),
         ("Exchange Rate", "Exchange Rate"),
         ("Transaction Hash / TxID", "Transaction Hash / TxID"),
     ):
+        if field not in invoice:
+            continue
         pdf.cell(
             0,
             8,

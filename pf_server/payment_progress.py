@@ -145,6 +145,20 @@ def _api_observation(payload):
 
 def refresh_providers(transaction):
     """At most once per minute per order, with a shared DB lease and finite timeouts."""
+    if transaction.provider_reference_type == "paywarp":
+        from .paywarp_service import refresh_payment
+        record = progress_record(transaction)
+        if not record.checked_at or (now() - datetime.fromisoformat(record.checked_at)).total_seconds() >= 60:
+            record.checked_at = now().isoformat()
+            db.session.commit()
+            try:
+                refresh_payment(transaction)
+                record.refresh_unavailable = False
+            except Exception:
+                db.session.rollback()
+                record.refresh_unavailable = True
+            db.session.commit()
+        return record
     record = progress_record(transaction)
     if transaction.status in {"finished", "processing"} or transaction.provider_payment_id.startswith(
         "mock-"
@@ -314,6 +328,9 @@ def public_progress(transaction, checkout=None, *, license_pending=False):
             ("ready", "License ready to save"),
         ]
     )
+    if transaction.provider_reference_type == "paywarp":
+        steps = [("payment", "Complete PayWarp checkout"), ("settlement", "Verify payment"),
+                 ("license", "Generate your signed license"), ("invoice", "Prepare your invoice"), ("ready", "License ready to save")]
     index = 0
     title = "Waiting for Banxa checkout" if card else "Waiting for your crypto payment"
     message = (
@@ -321,6 +338,9 @@ def public_progress(transaction, checkout=None, *, license_pending=False):
         if card
         else "Open NOWPayments and follow the payment instructions. I’ll update this page when your transaction is detected."
     )
+    if transaction.provider_reference_type == "paywarp":
+        title = "Waiting for your PayWarp payment"
+        message = "Complete verification and payment in PayWarp. Your license is released after payment confirmation."
     if card and record and record.onramp_state == "received":
         index = 1
         title, message = (

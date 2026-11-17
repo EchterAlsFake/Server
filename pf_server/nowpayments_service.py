@@ -232,6 +232,8 @@ def _validate_finished_payment(
     transaction: Transaction, webhook: NowPaymentsWebhook
 ) -> str | None:
     """Return a privacy-safe rejection reason, or ``None`` when fulfillment is safe."""
+    if transaction.provider_reference_type not in {"payment", "invoice"}:
+        return "provider_type_mismatch"
     provider_reference = (
         webhook.payment_id
         if transaction.provider_reference_type == "payment"

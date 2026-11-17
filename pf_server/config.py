@@ -97,6 +97,7 @@ def load_environment_config(
     os.makedirs(data_directory, exist_ok=True)
 
     app_domain, _ = _origin(source, "APP_DOMAIN", "https://pornfetch.to")
+    paywarp_site_url, _ = _origin(source, "PAYWARP_SITE_URL", app_domain)
     direct_origin, _ = _origin(source, "DIRECT_DOWNLOAD_ORIGIN", "https://direct6.pornfetch.to")
     if not direct_origin.startswith("https://"):
         raise ValueError("DIRECT_DOWNLOAD_ORIGIN must use HTTPS")
@@ -279,6 +280,11 @@ def load_environment_config(
         "LICENSE_SMTP_SSL": smtp_ssl,
         "LICENSE_SMTP_TIMEOUT_SECONDS": 15,
         "NOWPAYMENTS_API_KEY": nowpayments_api_key,
+        "PAYWARP_API_KEY": source.get("PAYWARP_API_KEY", ""),
+        "PAYWARP_WEBHOOK_SECRET": source.get("PAYWARP_WEBHOOK_SECRET", ""),
+        "PAYWARP_SITE_ID": source.get("PAYWARP_SITE_ID", ""),
+        "PAYWARP_SITE_URL": paywarp_site_url,
+        "PAYWARP_ENABLED": _boolean(source, "PAYWARP_ENABLED", bool(source.get("PAYWARP_API_KEY") and source.get("PAYWARP_WEBHOOK_SECRET")) and not nowpayments_sandbox),
         "NOWPAYMENTS_IPN_SECRET": nowpayments_ipn_secret,
         "NOWPAYMENTS_SANDBOX": nowpayments_sandbox,
         "NOWPAYMENTS_LOCAL_SIMULATION_ENABLED": local_simulation,
