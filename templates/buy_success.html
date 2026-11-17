@@ -16,7 +16,7 @@
     </section>
     <section class="tracking-card" id="payment-details" aria-labelledby="payment-progress-title">
         {% if beta %}{% include "onramp_beta_notice.html" %}{% else %}<p class="widget-delivery-note">Lifetime Premium. Your license never expires, and every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. No renewal payments.</p>{% endif %}
-        <div class="tracking-card-heading"><span class="tracking-pulse" aria-hidden="true"></span><span>{{ 'PayWarp · Stripe (Link)' if is_paywarp else ('Mollie sandbox checkout' if mollie_sandbox else 'Secure checkout by Mollie') if is_mollie else 'Banxa → Onramp Pay → NOWPayments' if is_card_checkout else 'NOWPayments cryptocurrency checkout' }}</span></div>
+        <div class="tracking-card-heading"><span class="tracking-pulse" aria-hidden="true"></span><span>{{ 'Credit card · PayWarp' if is_paywarp else ('Mollie sandbox checkout' if mollie_sandbox else 'Secure checkout by Mollie') if is_mollie else 'Banxa → Onramp Pay → NOWPayments' if is_card_checkout else 'NOWPayments cryptocurrency checkout' }}</span></div>
         <div id="loading-container" class="purchase-progress" data-activity="active" aria-busy="true">
             <div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label" data-progress-label>Checking · Automatic updates on</span></div>
             <h2 id="payment-progress-title" data-progress-title>Checking your payment status…</h2><p id="payment-progress-message" data-progress-message>The server is checking your payment and license. Keep this page open; your key and download will appear here automatically.</p>

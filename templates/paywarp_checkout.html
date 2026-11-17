@@ -1,8 +1,8 @@
 {% extends "checkout_base.html" %}
 {% from "partials/checkout_fields.html" import email_field %}
-{% block title %}PayWarp checkout — Porn Fetch{% endblock %}
-{% block checkout_notice %}<aside class="checkout-notice"><strong>Real payment through PayWarp · Stripe (Link).</strong><p>Patreon remains our <a href="/porn_fetch?method=patreon">recommended option</a>. Use PayWarp if you prefer not to create a Patreon account. Review the provider’s final total, including any fees, before paying.</p></aside>{% endblock %}
-{% block checkout_method %}<h2 id="method-heading">Pay with PayWarp</h2><p>US and EU residents only.</p><p><strong>EU residents: have your Tax ID ready. It is required for verification.</strong></p><p>Everyone needs email verification, a phone number and an address. Complete these checks in the hosted checkout. ID is usually not needed, but additional checks may apply.</p>{% endblock %}
+{% block title %}Credit card checkout — Porn Fetch{% endblock %}
+{% block checkout_notice %}<aside class="checkout-notice"><strong>Real credit card payment through PayWarp.</strong><p>Patreon remains our <a href="/porn_fetch?method=patreon">recommended option</a>. Use PayWarp if you prefer not to create a Patreon account. Review the provider’s final total, including any fees, before paying.</p></aside>{% endblock %}
+{% block checkout_method %}<h2 id="method-heading">Pay by credit card</h2><p>Credit card payments are processed through PayWarp using Stripe (Link).</p><p>US and EU residents only.</p><p><strong>EU residents: have your Tax ID ready. It is required for verification.</strong></p><p>Everyone needs email verification, a phone number and an address. Complete these checks in the hosted checkout. ID is usually not needed, but additional checks may apply.</p>{% endblock %}
 {% block checkout_form %}
 <form action="/create-paywarp-payment" method="post">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

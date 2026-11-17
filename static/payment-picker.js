@@ -3,7 +3,7 @@
   if (!form) return;
   const button = form.querySelector('#checkout-continue');
   const error = form.querySelector('#choice-error');
-  const names = {paywarp: 'Continue to PayWarp checkout', crypto: 'Continue to crypto checkout', patreon: 'Proceed with selected payment method'};
+  const names = {paywarp: 'Continue to credit card checkout', crypto: 'Continue to crypto checkout', patreon: 'Proceed with selected payment method'};
   function update() {
     const method = form.querySelector('input[name="payment_method"]:checked')?.value;
     button.textContent = names[method] || 'Proceed with selected payment method →';

@@ -16,7 +16,8 @@ class PaymentProviderTests(ServerTestCase):
         self.assertRegex(response.text, r'id="method-patreon"[^>]* checked')
         self.assertIn('id="method-crypto"', response.text)
         self.assertNotIn('id="method-stripe"', response.text)
-        self.assertIn('PayWarp · Stripe (Link)', response.text)
+        self.assertIn('Credit card · PayWarp', response.text)
+        self.assertIn('Pay by credit card through Stripe (Link)', response.text)
         self.assertFalse(any(rule.rule.startswith('/stripe') for rule in main.app.url_map.iter_rules()))
         self.assertNotIn('process-stripe-payments', main.app.cli.commands)
 
