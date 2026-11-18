@@ -1,13 +1,16 @@
 """Product downloads and setup guides backed only by the local website catalog."""
 
-from flask import Blueprint, abort, current_app, render_template, request
+from flask import Blueprint, abort, current_app, g, render_template, request
 
+from .website_locale import language, published_languages, source_path
 from .website_releases import ReleaseError, catalog, latest_artifacts
 
 downloads_bp = Blueprint("downloads", __name__)
 PLATFORMS = {
     "windows": {
         "name": "Windows",
+        "title": "Porn Fetch for Windows — Installer & Portable Download",
+        "description": "Get Porn Fetch for Windows 10 or later. Compare the installer and portable packages, choose x64 or ARM64, and check your download’s SHA-256.",
         "summary": "Desktop app for x64 and ARM64 PCs.",
         "requirements": "Windows 10 or later",
         "kinds": {"gui", "installer"},
@@ -19,6 +22,8 @@ PLATFORMS = {
     },
     "linux": {
         "name": "Linux",
+        "title": "Porn Fetch for Linux — Installer & Portable Packages",
+        "description": "Install Porn Fetch on 64-bit Linux with the Qt installer or a portable archive. Choose x64 or ARM64 and check the instructions for X11 or Wayland.",
         "summary": "Desktop app for x64 and ARM64 systems.",
         "requirements": "64-bit Linux · X11 or Wayland",
         "kinds": {"gui", "installer"},
@@ -30,6 +35,8 @@ PLATFORMS = {
     },
     "macos": {
         "name": "macOS",
+        "title": "Porn Fetch for Mac — Intel & Apple Silicon Downloads",
+        "description": "Find Porn Fetch installers and portable packages for Apple Silicon or Intel Macs on macOS 14.4 or later. Check your chip and follow the setup steps.",
         "summary": "Desktop app for Intel and Apple Silicon Macs.",
         "requirements": "macOS 14.4 Sonoma or later",
         "kinds": {"gui", "installer"},
@@ -41,17 +48,23 @@ PLATFORMS = {
     },
     "android": {
         "name": "Android",
+        "title": "Porn Fetch APK for Android — Download & Installation",
+        "description": "Download the official Porn Fetch APK for Android 9 or later, including compatible Android TV and Android Automotive OS devices.",
         "summary": "Installable APKs, with CLI setup through Termux.",
         "requirements": "Android 9.0 or later · compatible APK ABI",
         "kinds": {"apk"},
         "steps": [
             "Choose the APK for your device: ARM64 (arm64-v8a), ARMv7 (armeabi-v7a), x86, or x86_64. Availability depends on the published release.",
             "Download the APK and open it with Android’s package installer. Android may ask you to allow installation from the browser or file manager you used.",
+            "On Android TV or Google TV, open Porn Fetch from the Apps screen and navigate using your remote’s directional pad and center button.",
+            "On Android Automotive OS, install the APK directly on a compatible vehicle that allows sideloading. Use the app while parked. Android Auto phone projection is unavailable.",
             "For the command line, use Termux and the CLI source package. Desktop CLI executables do not run as Android apps. Android download tracking and statistics are unavailable.",
         ],
     },
     "ios": {
         "name": "iOS",
+        "title": "Porn Fetch for iPhone & iPad — IPA Download & Setup",
+        "description": "Get the Porn Fetch IPA for iPhone or iPad on iOS 15 or later. Use a PC to sideload the app with your Apple account. No jailbreak is required.",
         "summary": "Officially supported native GUI for iOS 15 and later.",
         "requirements": "iOS 15.0 or later · ARM64 · sideloading",
         "kinds": {"ipa"},
@@ -64,6 +77,8 @@ PLATFORMS = {
     },
     "cli": {
         "name": "CLI",
+        "title": "Porn Fetch CLI — Downloads & Command-Line Setup",
+        "description": "Get Porn Fetch command-line packages or source code. Follow terminal setup for your operating system or use Termux on Android.",
         "summary": "Terminal packages and source for supported systems.",
         "requirements": "No Qt or graphical desktop required",
         "kinds": {"cli", "source"},
@@ -106,8 +121,14 @@ def load_catalog():
         return {"releases": [], "unavailable": True}
 
 
+def request_catalog():
+    if "website_release_catalog" not in g:
+        g.website_release_catalog = load_catalog()
+    return g.website_release_catalog
+
+
 def download_context(selected_platform=None):
-    data = load_catalog()
+    data = request_catalog()
     channel = request.args.get("channel")
     channel = channel if channel in {"stable", "beta"} else None
     releases = data["releases"]
@@ -215,16 +236,16 @@ def platform_download(platform):
 
 @downloads_bp.get("/releases")
 def release_history():
-    return render_template("release_history.html", **load_catalog())
+    return render_template("release_history.html", **request_catalog())
 
 
 @downloads_bp.get("/releases/<version>")
 def release_notes(version):
-    data = load_catalog()
+    data = request_catalog()
     release = next(
         (item for item in data["releases"] if item["version"] == version), None
     )
-    if not release:
+    if not release or language() not in published_languages(source_path(), release=release):
         abort(404)
     return render_template("release_notes.html", release=release)
 

@@ -1,12 +1,15 @@
-"""Website guides checked against the local Porn Fetch 3.9.1 release.
+"""Website guides checked against the local Porn Fetch app.
 
 See docs/SEO.md for the source checklist. Dates change only with editorial updates.
 The ordering is editorial priority, not a measured market-share claim.
 """
 
+from .product_catalog import WEBSITE_SUPPORT_VERSION
+
 GUIDE_PUBLISHED = "2026-10-25"
 GUIDE_DATE = "2026-11-15"
 GUIDE_VERSION = "3.9.1"
+NEW_PROVIDER_GUIDE = {"version": WEBSITE_SUPPORT_VERSION, "published": "2026-11-18"}
 
 # Each section contains a heading followed by independently authored paragraphs.
 GUIDES = {
@@ -31,7 +34,9 @@ GUIDES = {
     "xhamster": {
         "name": "XHamster",
         "summary": "Download videos and shorts, fetch profiles, or open your account playlists.",
-        "intro": "Porn Fetch can save individual XHamster videos and supported shorts to your device. Copy the video page’s full address, fetch it in the app, choose a quality, and download. Profiles and your own account playlists use separate workflows.",
+        "updated": "2026-11-18",
+        "description": "Use Porn Fetch to download a video from an XHamster link. See which video and Moments links work and how to save a file on Android, iPhone or desktop.",
+        "intro": "Copy the full page address of an individual XHamster video or supported Moment. In Porn Fetch, paste it into Video URL and choose Get Video. Once the video appears, pick an available quality and choose Download.",
         "sections": [
             ("Which XHamster links should I use?", [
                 "Individual links under videos or movies are video inputs. Supported moments and shorts links also go through the single-video workflow. Copy the item’s address rather than the page listing many shorts.",
@@ -65,7 +70,9 @@ GUIDES = {
     "eporner": {
         "name": "Eporner",
         "summary": "Save individual videos and fetch supported performer or channel pages.",
-        "intro": "Copy an Eporner video’s full page address, fetch it in Porn Fetch, and download one of the qualities the app actually returns. You can also fetch supported performer and channel pages. Eporner login and playlists are not app features.",
+        "updated": "2026-11-18",
+        "description": "Download Eporner videos with Porn Fetch on Android, iPhone or desktop. Check which Eporner links work and why the available video quality can vary.",
+        "intro": "Copy the full page address of an Eporner video and keep the original capitalization of its video ID. Paste the link into Video URL in Porn Fetch and choose Get Video. Pick an available quality and choose Download.",
         "sections": [
             ("Choosing an Eporner video or channel link", [
                 "Supported video-address forms include video- followed by the video ID, hd-porn, embed, and localized porno-video paths. Copy the complete address so the video ID keeps its original letter casing.",
@@ -232,6 +239,85 @@ GUIDES = {
         "question": "Why is a TNAFlix category link rejected?",
         "answer": "The app routes supported individual videos and profile or channel pages. Category directories and keyword searches are outside that workflow. Open a specific video or supported profile in your browser, then copy its address.",
     },
+    "bellesa": {
+        **NEW_PROVIDER_GUIDE,
+        "name": "Bellesa",
+        "summary": "Download videos or browse uploads from a channel or performer.",
+        "intro": "Copy the full Bellesa video URL into Video URL and choose an available quality after the video loads. To load a channel or performer’s videos, use Model URL.",
+        "sections": [
+            ("Bellesa videos, channels and performers", [
+                "Use /videos/<id> for an individual video. A title slug after the ID is optional. For profiles, use /channels/<handle> or /performers/<handle> on bellesa.co or www.bellesa.co.",
+            ]),
+        ],
+        "question": "Why does the quality differ from the label on Bellesa?",
+        "answer": "Porn Fetch shows the measured stream resolution. For example, a stream labeled 480 on Bellesa may appear as 450p in the app.",
+    },
+    "porn": {
+        **NEW_PROVIDER_GUIDE,
+        "name": "Porn.com",
+        "summary": "Download native scenes or load a channel, performer or collection.",
+        "intro": "Paste a native Porn.com scene link into Video URL. Channel, performer and collection links can look alike, so choose the input for the type of page you opened.",
+        "sections": [
+            ("Porn.com scenes and collections", [
+                "For a video, copy a /scene/<id> link, including the title slug if present. Paste channel and performer links into Model URL. Paste collection links into Playlist URL.",
+            ]),
+        ],
+        "question": "Why are some Porn.com entries missing?",
+        "answer": "Only native Porn.com scenes are included. The app skips links to other websites before applying the free five-video preview.",
+    },
+    "porndoe": {
+        **NEW_PROVIDER_GUIDE,
+        "name": "Porndoe",
+        "summary": "Download MP4 videos or load performer and channel uploads.",
+        "intro": "Open a Porndoe video and paste its full address into Video URL. After the video loads, choose from the available MP4 qualities.",
+        "sections": [
+            ("Porndoe video and profile URLs", [
+                "Use /watch/<id> for videos. For performer and channel pages, paste /pornstars-profile/<slug> or /channel-profile/<slug> into Model URL. Localized Porndoe subdomains are supported.",
+            ]),
+        ],
+        "question": "Which Porndoe page should I open to load multiple videos?",
+        "answer": "Open an individual performer or channel page, then paste its address into Model URL. These are the supported multi-video inputs for Porndoe.",
+    },
+    "pornhat": {
+        **NEW_PROVIDER_GUIDE,
+        "name": "Pornhat",
+        "summary": "Download individual videos or load a model or channel page.",
+        "intro": "Paste a full Pornhat video address into Video URL and choose an available quality after it loads. Model and channel pages go in Model URL.",
+        "sections": [
+            ("Pornhat video and profile URLs", [
+                "Use /video/<slug> for videos, /models/<slug> for models and /sites/<slug> for channels. The app accepts pornhat.com, pornhat.one and the de, fr, it, es, pt and hi subdomains of pornhat.com.",
+            ]),
+        ],
+        "question": "Which Pornhat page should I use to load a channel?",
+        "answer": "Open the individual channel under /sites/<slug>, then paste its full address into Model URL.",
+    },
+    "redgifs": {
+        **NEW_PROVIDER_GUIDE,
+        "name": "RedGIFs",
+        "summary": "Save video clips from watch pages, user profiles, niches and public collections.",
+        "intro": "Paste a RedGIFs watch or embed link into Video URL. Direct MP4 links on media.redgifs.com also work. Choose from the qualities shown in Porn Fetch after the clip loads.",
+        "sections": [
+            ("RedGIFs users, niches and collections", [
+                "Paste a /users/<name> profile into Model URL. Use Playlist URL for /niches/<id> pages or public /users/<name>/collections/<id> links.",
+            ]),
+        ],
+        "question": "Why do some items from a RedGIFs collection disappear?",
+        "answer": "Porn Fetch includes video clips and skips still images before applying the free five-video preview. Quality choices reflect the dimensions of the available MP4 files.",
+    },
+    "youjizz": {
+        **NEW_PROVIDER_GUIDE,
+        "name": "YouJizz",
+        "summary": "Download videos or load public uploads, verified performer pages and numbered lists.",
+        "intro": "Paste the full YouJizz video page or embed URL into Video URL. Use Model URL for a public user or performer page, and Playlist URL for a supported numbered list.",
+        "sections": [
+            ("YouJizz videos, profiles and numbered lists", [
+                "Video links use /videos/<slug>-<id>.html or /videos/embed/<id>. Open /profile/user/<id> or its /videos tab for public uploads. Copy performer links from the performer directory so the app can verify the /search/<name>-<page>.html address.",
+                "Use Playlist URL for numbered popular, newest, top-rated, trending or HD lists. For example, /most-popular/1.html opens the first popular list page.",
+            ]),
+        ],
+        "question": "Why was a YouJizz search link rejected?",
+        "answer": "Porn Fetch verifies performer links against the performer directory. For a keyword search result, open a specific video and copy its video-page address.",
+    },
 }
 
 
@@ -263,4 +349,10 @@ RELATED_GUIDES = {
     "tube8": ("redtube", "thumbzilla", "empflix", "tnaflix"),
     "empflix": ("tnaflix", "tube8", "porntrex", "spankbang"),
     "tnaflix": ("empflix", "porntrex", "tube8", "spankbang"),
+    "bellesa": ("porndoe", "pornhat", "porn", "eporner"),
+    "porn": ("bellesa", "youjizz", "redgifs", "youporn"),
+    "porndoe": ("pornhat", "bellesa", "eporner", "porntrex"),
+    "pornhat": ("porndoe", "bellesa", "porn", "spankbang"),
+    "redgifs": ("youjizz", "porn", "redtube", "youporn"),
+    "youjizz": ("redgifs", "porn", "xvideos", "youporn"),
 }

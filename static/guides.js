@@ -14,20 +14,19 @@
   // Adapt hero free download and sticky bar for mobile users
   if (isAndroid || isIOS) {
     const mobileKey = isIOS ? 'ios' : 'android';
-    const mobileLabel = isIOS ? 'iPhone' : 'Android';
+    const card = document.querySelector(`.guide-platform-card[data-platform="${mobileKey}"]`);
+    const destination = card?.querySelector('a.btn')?.href;
     const download = document.getElementById('guide-free-download');
-    if (download) {
-      download.href = `/download/${mobileKey}`;
-      download.textContent = `Download for ${mobileLabel}`;
+    if (download && destination) {
+      download.href = destination;
+      download.textContent = card.dataset.downloadLabel;
     }
-    if (bar) {
-      const stickyDownload = bar.querySelector('[data-guide-free]');
-      if (stickyDownload) {
-        stickyDownload.href = `/download/${mobileKey}`;
-        stickyDownload.textContent = `${mobileLabel} · Free`;
-      }
+    const stickyDownload = bar?.querySelector('[data-guide-free]');
+    if (stickyDownload && destination) {
+      stickyDownload.href = destination;
+      stickyDownload.textContent = card.dataset.freeLabel;
     }
-    document.querySelector(`[data-platform="${mobileKey}"]`)?.classList.add('guide-suggested');
+    card?.classList.add('guide-suggested');
   }
 
   // Device selector management

@@ -1,42 +1,59 @@
 {% from "partials/guide_phone_image.html" import phone_image %}
+{% macro control(label) -%}<strong>{{ label }}</strong>{%- endmacro %}
+{% macro guide_link(path, label) -%}<a {{ site_link(path) }}>{{ label }}</a>{%- endmacro %}
 {% macro mobile_steps(platform, name, provider_name) -%}
-<section id="{{ 'iphone' if platform == 'ios' else 'android' }}" class="guide-phone-tutorial" data-guide-platform="{{ 'ios' if platform == 'ios' else 'android' }}" aria-labelledby="{{ platform }}-title">
+<section id="{{ 'iphone' if platform == 'ios' else 'android' }}" class="guide-phone-tutorial" data-guide-platform="{{ platform }}" aria-labelledby="{{ platform }}-title">
     <header class="guide-section-heading">
-        <p class="eyebrow">{{ name }} walkthrough</p>
-        <h2 id="{{ platform }}-title">Download {{ provider_name }} videos on {{ name }}</h2>
+        <p class="eyebrow">{{ _("%(platform)s walkthrough", platform=name) }}</p>
+        <h2 id="{{ platform }}-title">{{ _("Download %(provider)s videos on %(platform)s", platform=name, provider=provider_name) }}</h2>
         {% if platform == 'ios' %}
-        <p class="guide-requirement"><strong>iPhone setup requires a PC for sideloading.</strong> Use iOS 15 or later. Install the IPA with your own Apple account and a compatible sideloading tool; renew signing when required. No jailbreak is needed for the native app.</p>
+        <p class="guide-requirement"><strong>{{ _("iPhone setup requires a PC for sideloading.") }}</strong> {{ _("Use iOS 15 or later. Install the IPA with your own Apple account and a compatible sideloading tool; renew signing when required. No jailbreak is needed for the native app.") }}</p>
         {% else %}
-        <p class="guide-requirement">Use Android 9 or later and an APK compatible with your phone. Installation happens directly on Android.</p>
+        <p class="guide-requirement">{{ _("Use Android 9 or later and an APK compatible with your phone. Installation happens directly on Android.") }}</p>
         {% endif %}
-        <a class="text-link" href="/download/{{ platform }}">{{ name }} packages &amp; installation instructions →</a>
+        <a class="text-link" {{ site_link("/download/" ~ platform) }}>{{ _("%(platform)s packages & installation instructions →", platform=name) }}</a>
     </header>
+    {% set downloads = control(_("Downloads")) %}
+    {% set add_videos = control(_("Add videos")) %}
+    {% set output_folder = control(_("Output folder")) %}
+    {% set choose_folder = control(_("Choose folder")) %}
     <ol class="guide-mobile-steps guide-steps" role="list">
         <li>
-            <div><span class="guide-step-number" aria-hidden="true">01</span><h3>Install and open the app</h3>
-            {% if platform == 'ios' %}<p>On your PC, follow the <a href="/download/ios">iPhone installation guide</a> to sign and sideload the IPA. Open Porn Fetch on your iPhone and go to <strong>Downloads</strong>. Tap <strong>Add videos</strong>.</p>
-            {% else %}<p>Get the <a href="/download/android">Android APK</a>, open it, and allow installation from your browser or file manager if Android asks. Open Porn Fetch, go to <strong>Downloads</strong>, and tap <strong>Add videos</strong>.</p>{% endif %}</div>
-            {{ phone_image(platform, 'start', 'Porn Fetch ' ~ name ~ ' Downloads screen with Add videos', '1 · Open Downloads and tap Add videos.') }}
+            <div><span class="guide-step-number" aria-hidden="true">01</span><h3>{{ _("Install and open the app") }}</h3>
+            {% if platform == 'ios' %}
+                {% set setup = guide_link("/download/ios", _("iPhone installation guide")) %}
+                <p>{{ _("Follow the %(setup)s on your PC to sign and sideload the IPA. Open Porn Fetch on your iPhone, go to %(downloads)s and tap %(add_videos)s.", setup=setup, downloads=downloads, add_videos=add_videos) }}</p>
+            {% else %}
+                {% set apk = guide_link("/download/android", _("Android APK")) %}
+                <p>{{ _("Get the %(apk)s and open it. Allow installation from your browser or file manager if Android asks. Open Porn Fetch, go to %(downloads)s and tap %(add_videos)s.", apk=apk, downloads=downloads, add_videos=add_videos) }}</p>
+            {% endif %}</div>
+            {{ phone_image(platform, 'start', _("Porn Fetch %(platform)s Downloads screen with Add videos", platform=name), _("1 · Open Downloads and tap Add videos.")) }}
         </li>
         <li>
-            <div><span class="guide-step-number" aria-hidden="true">02</span><h3>Paste the video-page link</h3>
-            <p>In your browser, copy the complete page address of a {{ provider_name }} video you are authorized to save. In <strong>Add videos</strong>, select <strong>Video URL</strong>, paste the address, and tap <strong>Get Video</strong>.</p>
-            <p>This fetches the video’s details; it does not start downloading. For a supported profile or playlist, use its corresponding URL type. <a href="#site-details">Check {{ provider_name }}’s supported links below</a>.</p></div>
-            {{ phone_image(platform, 'add', name ~ ' Add videos panel with Video URL, Get Video and Output folder', '2 · Paste your link and tap Get Video. The screenshot uses a PornHub example.') }}
+            <div><span class="guide-step-number" aria-hidden="true">02</span><h3>{{ _("Paste the video-page link") }}</h3>
+            <p>{{ _("In your browser, copy the complete page address of a %(provider)s video you are authorized to save. In %(add_videos)s, select %(video_url)s, paste the address, and tap %(get_video)s.", provider=provider_name, add_videos=add_videos, video_url=control(_("Video URL")), get_video=control(_("Get Video"))) }}</p>
+            <p>{{ _("This fetches the video’s details; it does not start downloading. For a supported profile or playlist, use its corresponding URL type.") }} <a href="#site-details">{{ _("Check %(provider)s’s supported links below", provider=provider_name) }}</a>.</p></div>
+            {{ phone_image(platform, 'add', _("%(platform)s Add videos panel with Video URL, Get Video and Output folder", platform=name), _("2 · Paste your link and tap Get Video. The screenshot uses a PornHub example.")) }}
         </li>
         <li>
-            <div><span class="guide-step-number" aria-hidden="true">03</span><h3>Choose quality and a destination</h3>
-            <p>Close the add-video panel if it is still open. Expand the returned video card with its arrow to review the available qualities. Free use supports available streams up to <strong>720p</strong>; higher qualities require Premium and a usable source stream.</p>
-            {% if platform == 'ios' %}<p>Check <strong>Output folder</strong> in Add videos before starting. “App storage” means the app’s own storage. Use <strong>Choose folder</strong> if you want another destination.</p>
-            {% else %}<p>In Add videos, check <strong>Output folder</strong> and use <strong>Choose folder</strong> to select a destination you can find in your file manager.</p>{% endif %}</div>
-            {{ phone_image(platform, 'ready', name ~ ' fetched video card showing Ready, 720 and Download', '3 · A fetched video is ready at 720p. This is a PornHub example, not a completed download.') }}
+            <div><span class="guide-step-number" aria-hidden="true">03</span><h3>{{ _("Choose quality and a destination") }}</h3>
+            <p>{{ _("Close the add-video panel if it is still open. Expand the video card with its arrow to see the available qualities. Free use supports available streams up to %(resolution)s. Higher qualities require Premium and a usable source stream.", resolution=control("720p")) }}</p>
+            {% if platform == 'ios' %}
+                <p>{{ _("Check %(output_folder)s in %(add_videos)s before starting. “App storage” means the app’s own storage. Use %(choose_folder)s to select a different folder.", output_folder=output_folder, add_videos=add_videos, choose_folder=choose_folder) }}</p>
+            {% else %}
+                <p>{{ _("In %(add_videos)s, check %(output_folder)s and use %(choose_folder)s to select a destination you can find in your file manager.", add_videos=add_videos, output_folder=output_folder, choose_folder=choose_folder) }}</p>
+            {% endif %}</div>
+            {{ phone_image(platform, 'ready', _("%(platform)s fetched video card showing Ready, 720 and Download", platform=name), _("3 · A fetched video is ready at 720p. This is a PornHub example, not a completed download.")) }}
         </li>
         <li>
-            <div><span class="guide-step-number" aria-hidden="true">04</span><h3>Download and find your file</h3>
-            <p>Tap <strong>Download</strong> on the video card. Wait for the download to finish; a percentage below 100% means it is still running. Files are saved to your selected folder automatically.</p>
-            {% if platform == 'ios' %}<p>For app storage, open the iPhone’s <strong>Files</strong> app and look under <strong>Browse → On My iPhone → Porn Fetch</strong>, including its <strong>PornFetch</strong> subfolder. If you chose another folder, look there instead. A download is not automatically added to Photos.</p>
-            {% else %}<p>Open your phone’s file manager and navigate to the folder you selected. There is no separate per-video Save action.</p>{% endif %}</div>
-            {{ phone_image(platform, 'downloading', name ~ ' download in progress with a percentage bar and Stop control', '4 · Download in progress. Wait for completion before opening the saved file.') }}
+            <div><span class="guide-step-number" aria-hidden="true">04</span><h3>{{ _("Download and find your file") }}</h3>
+            <p>{{ _("Tap %(download)s on the video card. Wait for the download to finish. A percentage below 100%% means it is still running. Files are saved to your selected folder automatically.", download=control(_("Download"))) }}</p>
+            {% if platform == 'ios' %}
+                <p>{{ _("For app storage, open the %(files)s app on your iPhone and go to %(files_path)s. Check the %(subfolder)s subfolder too. If you chose another folder, look there instead. A download is not automatically added to Photos.", files=control(_("Files")), files_path=control(_("Browse → On My iPhone → Porn Fetch")), subfolder=control("PornFetch")) }}</p>
+            {% else %}
+                <p>{{ _("Open your phone’s file manager and navigate to the folder you selected. There is no separate per-video Save action.") }}</p>
+            {% endif %}</div>
+            {{ phone_image(platform, 'downloading', _("%(platform)s download in progress with a percentage bar and Stop control", platform=name), _("4 · Download in progress. Wait for completion before opening the saved file.")) }}
         </li>
     </ol>
 </section>

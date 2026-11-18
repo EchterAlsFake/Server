@@ -13,7 +13,7 @@ from .extensions import limiter, browser_limit_key
 from .checkout_consent import CONSENT_VERSION, FIELDS, current_consent, current_selection, required_fields
 from .countries import COUNTRY_OPTIONS
 from .http import normalized_hostname
-from .product_catalog import WEBSITES
+from .product_catalog import WEBSITES, WEBSITE_SUPPORT_VERSION
 from .guide_content import GUIDES, guide_path
 from .download_pages import render_download_page
 
@@ -60,7 +60,7 @@ def landing_page():
         if request.accept_mimetypes.best == "application/json":
             return jsonify({"error": error}), 400
     return make_response(render_template(
-        "index.html", websites=WEBSITES,
+        "index.html", websites=WEBSITES, support_version=WEBSITE_SUPPORT_VERSION,
         guide_links={guide["name"]: guide_path(key) for key, guide in GUIDES.items()},
         featured_guides=dict(list(GUIDES.items())[:5]), age_error=error,
     ), 400 if error else 200)

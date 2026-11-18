@@ -2,21 +2,27 @@
 {% block title %}Impress / Impressum — Porn Fetch{% endblock %}
 {% block content %}
 <article class="legal-document">
-<h1>Impress / Impressum</h1>
-{% include "partials/languages.html" %}
-<section class="legal-language" id="en" lang="en" aria-labelledby="impress-en-title">
-<h2 id="impress-en-title">Legal Disclosure · English</h2><p>Information according to § 5 DDG (Digitale-Dienste-Gesetz):</p>
-<p><strong>Johannes Habel</strong><br>Bahnstr. 21<br>06886 Lutherstadt Wittenberg<br>Germany</p>
-<h3>Contact</h3><p>Email: <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a><br>Phone: <a href="tel:+491744646064">+49 1744646064</a></p>
-<p>VAT identification number under § 27a UStG: <strong>DE463457168</strong>.</p>
-<h3>Content and external links</h3><p>I maintain the information on this website. External links lead to independently operated websites whose content I do not control. My statutory responsibilities and liability remain unaffected. For purchase terms and statutory consumer rights, see my <a href="/terms">Terms of Service</a>.</p>
+{% if website_language == "de" %}
+<h1>Impressum</h1>
+{% else %}
+<h1>{{ _("Impress / Impressum") }}</h1>
+{% if website_language == "en" %}{% include "partials/languages.html" %}{% endif %}
+<section class="legal-language" id="en" lang="{{ language_tag(website_language) }}" aria-labelledby="impress-en-title">
+<h2 id="impress-en-title">{{ "Legal Disclosure · English" if website_language == "en" else _("Operator details") }}</h2><p>{{ _("Information according to § 5 DDG (Digitale-Dienste-Gesetz):") }}</p>
+<p><strong>Johannes Habel</strong><br>Bahnstr. 21<br>06886 Lutherstadt Wittenberg<br>{{ _("Germany") }}</p>
+<h3>{{ _("Contact") }}</h3><p>{{ _("Email:") }} <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a><br>{{ _("Phone:") }} <a href="tel:+491744646064">+49 1744646064</a></p>
+<p>{{ _("VAT identification number under § 27a UStG:") }} <strong>DE463457168</strong>.</p>
+<h3>{{ _("Content and external links") }}</h3><p>{{ _("I maintain the information on this website. External links lead to independently operated websites whose content I do not control. My statutory responsibilities and liability remain unaffected. For purchase terms and statutory consumer rights, see my") }} <a {{ site_link("/terms") }}>{{ _("Terms of Service") }}</a>.</p>
 </section>
+{% endif %}
+{% if website_language in ("en", "de") %}
 <section class="legal-language" id="de" lang="de" aria-labelledby="impress-de-title">
-<h2 id="impress-de-title">Impressum · Deutsch</h2><p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz):</p>
+<h2 id="impress-de-title">{{ "Angaben zum Betreiber" if website_language == "de" else "Impressum · Deutsch" }}</h2><p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz):</p>
 <p><strong>Johannes Habel</strong><br>Bahnstr. 21<br>06886 Lutherstadt Wittenberg<br>Deutschland</p>
 <h3>Kontakt</h3><p>E-Mail: <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a><br>Telefon: <a href="tel:+491744646064">+49 1744646064</a></p>
 <p>Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: <strong>DE463457168</strong>.</p>
-<h3>Inhalte und externe Links</h3><p>Ich pflege die Informationen auf dieser Website. Externe Links führen zu unabhängig betriebenen Websites, deren Inhalte ich nicht kontrolliere. Meine gesetzlichen Pflichten und meine Haftung bleiben unberührt. Für Käufe und gesetzliche Verbraucherrechte gelten meine <a href="/terms">Vertragsbedingungen</a>.</p>
+<h3>Inhalte und externe Links</h3><p>Ich pflege die Informationen auf dieser Website. Externe Links führen zu unabhängig betriebenen Websites, deren Inhalte ich nicht kontrolliere. Meine gesetzlichen Pflichten und meine Haftung bleiben unberührt. Für Käufe und gesetzliche Verbraucherrechte gelten meine <a {{ site_link("/terms") }}>Vertragsbedingungen</a>.</p>
 </section>
+{% endif %}
 </article>
 {% endblock %}

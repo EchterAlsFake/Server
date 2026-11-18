@@ -67,7 +67,6 @@
 .video-guide.js-platform-filter[data-active-platform="cli"] [data-guide-platform]:not([data-guide-platform="cli"]) { display: none; }
 .video-guide.js-platform-filter[data-active-platform="all"] [data-guide-platform] { display: block; }
 
-.guide-provider-intro { max-width: 780px; margin-bottom: 28px; }
 .guide-section-heading { max-width: 780px; }
 .guide-section-heading > .text-link { display: inline-flex; align-items: center; min-height: 44px; font-size: .75rem; margin-bottom: 18px; }
 .guide-requirement { padding: 16px 20px; background: #ffffff04; border-left: 2px solid #f18bb0; }

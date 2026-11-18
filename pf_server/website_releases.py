@@ -19,6 +19,7 @@ from flask import Blueprint, abort, current_app, jsonify, request, send_file
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from .extensions import csrf, limiter
+from .website_locale import LANGUAGES
 
 releases_bp = Blueprint("website_releases", __name__)
 VERSION = re.compile(
@@ -157,6 +158,10 @@ def validate_manifest(value, *, uploading=False):
                 "min_os": plain_text(item.get("min_os", ""), 160),
             }
         )
+    notes_i18n = value.get("notes_i18n", {})
+    if not isinstance(notes_i18n, dict) or any(code == "en" or code not in LANGUAGES for code in notes_i18n):
+        raise ReleaseError("Invalid release note languages.")
+    notes_i18n = {code: plain_text(notes, 60000) for code, notes in notes_i18n.items()}
     return {
         "schema": 1,
         "version": version,
@@ -164,6 +169,7 @@ def validate_manifest(value, *, uploading=False):
         "commit": commit,
         "published_at": published.astimezone(UTC).isoformat(),
         "notes": plain_text(value.get("notes", ""), 60000),
+        **({"notes_i18n": notes_i18n} if notes_i18n else {}),
         "artifacts": sorted(records, key=lambda item: item["filename"]),
     }
 

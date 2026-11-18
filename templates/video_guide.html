@@ -7,66 +7,66 @@
     {% include "partials/breadcrumbs.html" %}
     <header class="guide-hero">
         <div class="page-heading">
-            <p class="eyebrow">{{ guide.name }} · Android &amp; iPhone</p>
-            <h1>How to download {{ guide.name }} videos</h1>
-            <p class="guide-lead">Save {{ guide.name }} videos on Android or iPhone. Paste a supported link into Porn Fetch and download to your phone.</p>
-            <p class="guide-iphone-note"><strong>iPhone requires a PC for sideloading.</strong> Android installs directly from an APK.</p>
-            <div class="guide-actions" id="guide-opening-actions" role="group" aria-label="Get Porn Fetch">
+            <p class="eyebrow">{{ _("%(provider)s · Android & iPhone", provider=guide.name) }}</p>
+            <h1>{{ _("How to download %(provider)s videos", provider=guide.name) }}</h1>
+            <p class="guide-lead">{{ guide.intro }}</p>
+            <p class="guide-iphone-note"><strong>{{ _("iPhone requires a PC for sideloading.") }}</strong> {{ _("Android installs directly from an APK.") }}</p>
+            {% if guide.version %}<p class="guide-install-note">{{ _("This website requires Porn Fetch %(version)s or later.", version=guide.version) }}</p>{% endif %}
+            <div class="guide-actions" id="guide-opening-actions" role="group" aria-label="{{ _("Get Porn Fetch") }}">
                 <div class="guide-offer">
-                    <span class="guide-offer-label">Free app</span>
-                    <p>Available qualities up to 720p.</p>
-                    <a class="btn guide-action" id="guide-free-download" href="#mobile-downloads">Download for Free <span aria-hidden="true">↓</span></a>
+                    <span class="guide-offer-label">{{ _("Free app") }}</span>
+                    <p>{{ _("Available qualities up to 720p.") }}</p>
+                    <a class="btn guide-action" id="guide-free-download" href="#mobile-downloads">{{ _("Download for Free") }} <span aria-hidden="true">↓</span></a>
                 </div>
                 <div class="guide-offer">
-                    <span class="guide-offer-label">Lifetime Premium · €{{ premium_price }}</span>
-                    <p>Higher qualities &amp; full collections.</p>
-                    <a class="btn guide-action" href="/porn_fetch">Get Premium (lifetime) <span aria-hidden="true">↗</span></a>
+                    <span class="guide-offer-label">{{ _("Lifetime Premium · €%(premium_price)s", premium_price=premium_price) }}</span>
+                    <p>{{ _("Higher qualities & full collections.") }}</p>
+                    <a class="btn guide-action" {{ site_link("/porn_fetch") }}>{{ _("Get Premium (lifetime)") }} <span aria-hidden="true">↗</span></a>
                 </div>
             </div>
-            <p class="guide-install-note">Premium unlocks the same app; installation is still required.</p>
-            <p class="guide-byline">By <a href="/about">Johannes Habel</a> · Porn Fetch {{ guide_version }} · Updated <time datetime="{{ guide_date }}">{{ guide_date_label }}</time></p>
+            <p class="guide-install-note">{{ _("Premium unlocks the same app; installation is still required.") }}</p>
+            <p class="guide-byline">{{ _("By") }} <a {{ site_link("/about") }}>Johannes Habel</a> {{ _("· Porn Fetch %(version)s · Updated", version=guide_version) }} <time datetime="{{ guide_date }}">{{ guide_date_label }}</time></p>
         </div>
-        <div class="guide-phone-preview" role="group" aria-label="The real app on Android and iPhone">
-            <div><span>Android</span>{{ phone_image('android', 'ready', 'Porn Fetch on Android with a video ready to download', 'Android · Ready to download', true) }}</div>
-            <div><span>iPhone</span>{{ phone_image('ios', 'ready', 'Porn Fetch on iPhone with a video ready to download', 'iPhone · Ready to download', true) }}</div>
-            <p>Real app screenshots. PornHub is the example shown; use a {{ guide.name }} link for this guide.</p>
+        <div class="guide-phone-preview" role="group" aria-label="{{ _("The real app on Android and iPhone") }}">
+            <div><span>Android</span>{{ phone_image('android', 'ready', _('Porn Fetch on Android with a video ready to download'), _('Android · Ready to download'), true) }}</div>
+            <div><span>iPhone</span>{{ phone_image('ios', 'ready', _('Porn Fetch on iPhone with a video ready to download'), _('iPhone · Ready to download'), true) }}</div>
+            <p>{{ _("Screenshots from Porn Fetch 3.9.1 show PornHub as an example. Use a %(provider)s link for this guide.", provider=guide.name) }}</p>
         </div>
     </header>
-    <nav class="guide-device-selector" id="all-platforms" aria-label="Platform instructions">
-        <span class="guide-device-selector-label">Platform instructions:</span>
+    <nav class="guide-device-selector" id="all-platforms" aria-label="{{ _("Platform instructions") }}">
+        <span class="guide-device-selector-label">{{ _("Platform instructions:") }}</span>
         <div class="guide-device-tabs">
             <a href="#android" class="guide-device-tab" data-platform="android" id="tab-android" aria-controls="android">Android</a>
             <a href="#iphone" class="guide-device-tab" data-platform="ios" id="tab-ios" aria-controls="iphone">iPhone</a>
-            <a href="#download-steps" class="guide-device-tab" data-platform="desktop" id="tab-desktop" aria-controls="download-steps">Desktop (PC / Mac)</a>
-            <a href="#cli" class="guide-device-tab" data-platform="cli" id="tab-cli" aria-controls="cli">Command Line</a>
-            <a href="#all-platforms" class="guide-device-tab" data-platform="all" id="tab-all">All platforms</a>
+            <a href="#download-steps" class="guide-device-tab" data-platform="desktop" id="tab-desktop" aria-controls="download-steps">{{ _("Desktop (PC / Mac)") }}</a>
+            <a href="#cli" class="guide-device-tab" data-platform="cli" id="tab-cli" aria-controls="cli">{{ _("Command Line") }}</a>
+            <a href="#all-platforms" class="guide-device-tab" data-platform="all" id="tab-all">{{ _("All platforms") }}</a>
         </div>
     </nav>
     <section class="guide-mobile-downloads guide-platforms" id="mobile-downloads" aria-labelledby="mobile-downloads-title">
-        <h2 id="mobile-downloads-title">Choose your phone</h2>
+        <h2 id="mobile-downloads-title">{{ _("Choose your phone") }}</h2>
         <div class="guide-platform-grid">
-            <div class="guide-platform-card" data-platform="android">
+            <div class="guide-platform-card" data-platform="android" data-download-label="{{ _('Download for %(platform)s', platform='Android') }}" data-free-label="{{ _('%(platform)s · Free', platform='Android') }}">
                 <h3>Android <span>9+</span></h3>
-                <p>Install the APK on your phone.</p>
-                <a class="btn btn-secondary" href="/download/android">Android download &amp; setup →</a>
-                {% if not mobile_available.android %}<p class="guide-availability">{{ 'Package availability could not be checked.' if catalog_unavailable else 'No Android APK is currently listed.' }} Check the downloads page.</p>{% endif %}
-                <a class="guide-jump" href="#android">Already installed? Android steps ↓</a>
+                <p>{{ _("Install the APK on your phone.") }}</p>
+                <a class="btn btn-secondary" {{ site_link("/download/android") }}>{{ _("Android download & setup →") }}</a>
+                {% if not mobile_available.android %}<p class="guide-availability">{{ _("%(status)s Check the downloads page.", status=_('Package availability could not be checked.') if catalog_unavailable else _('No Android APK is currently listed.')) }}</p>{% endif %}
+                <a class="guide-jump" href="#android">{{ _("Already installed? Android steps ↓") }}</a>
             </div>
-            <div class="guide-platform-card" data-platform="ios">
+            <div class="guide-platform-card" data-platform="ios" data-download-label="{{ _('Download for %(platform)s', platform='iPhone') }}" data-free-label="{{ _('%(platform)s · Free', platform='iPhone') }}">
                 <h3>iPhone <span>iOS 15+</span></h3>
-                <p><strong>PC required</strong> to sideload the IPA.</p>
-                <a class="btn btn-secondary" href="/download/ios">iPhone download &amp; setup →</a>
-                {% if not mobile_available.ios %}<p class="guide-availability">{{ 'Package availability could not be checked.' if catalog_unavailable else 'No iPhone IPA is currently listed.' }} Check the downloads page.</p>{% endif %}
-                <a class="guide-jump" href="#iphone">Already installed? iPhone steps ↓</a>
+                <p><strong>{{ _("PC required") }}</strong> {{ _("to sideload the IPA.") }}</p>
+                <a class="btn btn-secondary" {{ site_link("/download/ios") }}>{{ _("iPhone download & setup →") }}</a>
+                {% if not mobile_available.ios %}<p class="guide-availability">{{ _("%(status)s Check the downloads page.", status=_('Package availability could not be checked.') if catalog_unavailable else _('No iPhone IPA is currently listed.')) }}</p>{% endif %}
+                <a class="guide-jump" href="#iphone">{{ _("Already installed? iPhone steps ↓") }}</a>
             </div>
         </div>
     </section>
-    {% if catalog_unavailable %}<p class="guide-availability" role="status">The release catalog is temporarily unavailable. <a href="/download">Check downloads again shortly</a>.</p>
-    {% elif not releases_available %}<p class="guide-availability" role="status">No website-hosted packages are available right now. <a href="/download">Check download availability</a>.</p>{% endif %}
-    <nav class="guide-toc" aria-label="On this page">
-        <a href="#android">Android</a><a href="#iphone">iPhone</a><a href="#site-details">{{ guide.name }} links</a><a href="#troubleshooting">Troubleshooting</a><a href="#free-premium">Free &amp; Premium</a><a href="#download-steps">Desktop</a><a href="#cli">CLI</a>
+    {% if catalog_unavailable %}<p class="guide-availability" role="status">{{ _("The release catalog is temporarily unavailable.") }} <a {{ site_link("/download") }}>{{ _("Check downloads again shortly") }}</a>.</p>
+    {% elif not releases_available %}<p class="guide-availability" role="status">{{ _("No website-hosted packages are available right now.") }} <a {{ site_link("/download") }}>{{ _("Check download availability") }}</a>.</p>{% endif %}
+    <nav class="guide-toc" aria-label="{{ _("On this page") }}">
+        <a href="#android">Android</a><a href="#iphone">iPhone</a><a href="#site-details">{{ _("%(provider)s links", provider=guide.name) }}</a><a href="#troubleshooting">{{ _("Troubleshooting") }}</a><a href="#free-premium">{{ _("Free & Premium") }}</a><a href="#download-steps">{{ _("Desktop") }}</a><a href="#cli">CLI</a>
     </nav>
-    <div class="guide-provider-intro"><h2>A {{ guide.name }} link, saved on your phone</h2><p>{{ guide.intro }}</p></div>
     {{ mobile_steps('android', 'Android', guide.name) }}
     {{ mobile_steps('ios', 'iPhone', guide.name) }}
     <div id="site-details">
@@ -75,64 +75,70 @@
         {% endfor %}
     </div>
     <section id="troubleshooting" aria-labelledby="troubleshooting-title">
-        <h2 id="troubleshooting-title">If the download does not work</h2>
+        <h2 id="troubleshooting-title">{{ _("If the download does not work") }}</h2>
         <h3>{{ guide.question }}</h3><p>{{ guide.answer }}</p>
-        <h3>The video loads, but I cannot choose the quality I want</h3>
-        <p>Choose from the streams returned for that video. Qualities above 720p require a valid Porn Fetch license, and the source must expose a usable stream. Premium does not upscale videos or remove website-side restrictions. <a href="/help">Read the license activation guide</a> if your purchased entitlement is not active.</p>
-        {% if supports_profiles %}<h3>A profile or playlist is empty</h3>
-        <p>Check the URL type, <strong>Max Result Limit</strong> in Settings, and any filters in <strong>Advanced Configuration</strong>. Free use previews the first five videos of a public model, channel, or playlist before filters are applied; a license is needed for the full collection. Account collections are exempt from this preview. Duration, quality, date, and text filters can remove entries. Some pages also depend on region or account access. Only use the profile and playlist workflows supported for {{ guide.name }}.</p>
+        <h3>{{ _("The video loads, but I cannot choose the quality I want") }}</h3>
+        <p>{{ _("Choose from the streams returned for that video. Qualities above 720p require a valid Porn Fetch license, and the source must expose a usable stream. Premium does not upscale videos or remove website-side restrictions.") }} <a {{ site_link("/help") }}>{{ _("Read the license activation guide") }}</a> {{ _("if your purchased entitlement is not active.") }}</p>
+        {% if supports_profiles %}<h3>{{ _("A profile or playlist is empty") }}</h3>
+        <p>{{ _("Check the URL type,") }} <strong>{{ _("Max Result Limit") }}</strong> {{ _("in Settings, and any filters in") }} <strong>{{ _("Advanced Configuration") }}</strong>{{ _(". Free use previews the first five videos of a public model, channel, or playlist before filters are applied; a license is needed for the full collection. Account collections are exempt from this preview. Duration, quality, date, and text filters can remove entries. Some pages also depend on region or account access. Only use the profile and playlist workflows supported for %(provider)s.", provider=guide.name) }}</p>
         {% endif %}
-        <h3>The video still fails</h3>
-        <p>Check your app version against the <a href="/releases">release notes</a>, confirm that the page is accessible in your browser, and try fetching it again. Website changes can break support. If it continues, <a href="/help">contact support</a> with the app version, operating system, and exact error. Keep passwords, session tokens, and cookies out of your message.</p>
+        <h3>{{ _("The video still fails") }}</h3>
+        <p>{{ _("Check your app version against the") }} <a {{ site_link("/releases") }}>{{ _("release notes") }}</a>{{ _(", confirm that the page is accessible in your browser, and try fetching it again. Website changes can break support. If it continues,") }} <a {{ site_link("/help") }}>{{ _("contact support") }}</a> {{ _("with the app version, operating system, and exact error. Keep passwords, session tokens, and cookies out of your message.") }}</p>
     </section>
     <section id="free-premium" data-metric-section="comparison" aria-labelledby="free-premium-title">
-        <p class="eyebrow">One app. Your choice.</p>
-        <h2 id="free-premium-title">Free downloads or lifetime Premium</h2>
+        <p class="eyebrow">{{ _("One app. Your choice.") }}</p>
+        <h2 id="free-premium-title">{{ _("Free downloads or lifetime Premium") }}</h2>
         <div class="guide-comparison">
-            <div><h3>Free</h3><ul><li>Available streams up to 720p</li><li>One active download</li><li>First five videos of a public profile or playlist</li><li>Free app updates</li></ul><a class="btn btn-secondary" href="#mobile-downloads">Download for Free</a></div>
-            <div><h3>Premium · €{{ premium_price }} once</h3><ul><li>1080p, 1440p and 4K when available</li><li>Parallel downloads</li><li>Full supported public collections</li><li>Up to 10 active installations</li></ul><a class="btn btn-secondary" href="/porn_fetch">Get Premium (lifetime)</a></div>
+            <div><h3>{{ _("Free") }}</h3><ul><li>{{ _("Available streams up to 720p") }}</li><li>{{ _("One active download") }}</li><li>{{ _("First five videos of a public profile or playlist") }}</li><li>{{ _("Free app updates") }}</li></ul><a class="btn btn-secondary" href="#mobile-downloads">{{ _("Download for Free") }}</a></div>
+            <div><h3>{{ _("Premium · €%(premium_price)s once", premium_price=premium_price) }}</h3><ul><li>{{ _("1080p, 1440p and 4K when available") }}</li><li>{{ _("Parallel downloads") }}</li><li>{{ _("Full supported public collections") }}</li><li>{{ _("Up to 10 active installations") }}</li></ul><a class="btn btn-secondary" {{ site_link("/porn_fetch") }}>{{ _("Get Premium (lifetime)") }}</a></div>
         </div>
-        <p>Your Premium license never expires. Every future update and feature I release is included. Future development has no guaranteed duration. Activation and periodic validation apply.</p>
-        <p>Account collections are exempt from the free five-video preview. Some YouPorn MP4-only videos require a license because their resolution is unknown. Premium does not upscale videos or bypass source restrictions. <a href="/porn_fetch">Review all product and purchase details</a>.</p>
+        <p>{{ _("Your Premium license never expires. Every future update and feature I release is included. Future development has no guaranteed duration. Activation and periodic validation apply.") }}</p>
+        <p>{{ _("Account collections are exempt from the free five-video preview. Some YouPorn MP4-only videos require a license because their resolution is unknown. Premium does not upscale videos or bypass source restrictions.") }} <a {{ site_link("/porn_fetch") }}>{{ _("Review all product and purchase details") }}</a>.</p>
     </section>
     <section id="download-steps" data-guide-platform="desktop" aria-labelledby="steps-title">
-        <h2 id="steps-title">Download a {{ guide.name }} video on your computer</h2>
+        <h2 id="steps-title">{{ _("Download a %(provider)s video on your computer", provider=guide.name) }}</h2>
         <div class="guide-desktop-layout">
             <div class="guide-desktop-copy">
                 <ol class="guide-steps">
-                    <li><strong>Install Porn Fetch.</strong> Choose your <a href="/download/windows">Windows</a>, <a href="/download/macos">macOS</a>, or <a href="/download/linux">Linux</a> package. Follow that platform’s installation guide and open the app.</li>
-                    <li><strong>Copy the video’s page URL.</strong> Open the individual {{ guide.name }} video you are authorized to save in your browser and copy the complete page address.</li>
-                    <li><strong>Fetch the video.</strong> In the app’s Downloads page, paste the address into <strong>Video URL</strong> and choose <strong>Get Video</strong>. Wait for its details to appear in the list.</li>
-                    <li><strong>Choose a quality and folder.</strong> Use the video row’s quality control to select an available stream. Check <strong>Output Path</strong> in Settings before starting. Free downloads are limited to available qualities up to 720p.</li>
-                    <li><strong>Start the download.</strong> Choose <strong>Download</strong> on the video row and wait for completion. Open your configured output folder to find the saved file.</li>
+                    <li><strong>{{ _("Install Porn Fetch.") }}</strong> {{ _("Choose your") }} <a {{ site_link("/download/windows") }}>Windows</a>, <a {{ site_link("/download/macos") }}>macOS</a>{{ _(", or") }} <a {{ site_link("/download/linux") }}>Linux</a> {{ _("package. Follow that platform’s installation guide and open the app.") }}</li>
+                    <li><strong>{{ _("Copy the video’s page URL.") }}</strong> {{ _("Open the individual %(provider)s video you are authorized to save in your browser and copy the complete page address.", provider=guide.name) }}</li>
+                    <li><strong>{{ _("Fetch the video.") }}</strong> {{ _("In the app’s Downloads page, paste the address into") }} <strong>{{ _("Video URL") }}</strong> {{ _("and choose") }} <strong>{{ _("Get Video") }}</strong>{{ _(". Wait for its details to appear in the list.") }}</li>
+                    <li><strong>{{ _("Choose a quality and folder.") }}</strong> {{ _("Use the video row’s quality control to select an available stream. Check") }} <strong>{{ _("Output Path") }}</strong> {{ _("in Settings before starting. Free downloads are limited to available qualities up to 720p.") }}</li>
+                    <li><strong>{{ _("Start the download.") }}</strong> {{ _("Choose") }} <strong>{{ _("Download") }}</strong> {{ _("on the video row and wait for completion. Open your configured output folder to find the saved file.") }}</li>
                 </ol>
-                <p>Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use <strong>Download Selected</strong>.</p>
+                <p>{{ _("Fetching loads the video into the list; it does not start the download. For several entries, review and select the rows first, then use") }} <strong>{{ _("Download Selected") }}</strong>.</p>
             </div>
             <figure class="guide-screenshot">
-                <a href="{{ url_for('static', filename='media/guide-desktop-3.9.1.png') }}" aria-label="Open full-size desktop download controls">{{ screenshot("guide-desktop-3.9.1", "Porn Fetch 3.9.1 desktop Downloads page with Video URL, Model URL and Playlist URL fields, Get Video and Get Videos buttons, and an empty download list", 1226, 787) }}</a>
-                <figcaption>Porn Fetch 3.9.1 on desktop. Paste a video page into Video URL and choose Get Video to add it to the download list.</figcaption>
+                <a href="{{ url_for('static', filename='media/guide-desktop-3.9.1.png') }}" aria-label="{{ _("Open full-size desktop download controls") }}">{{ screenshot("guide-desktop-3.9.1", _("Porn Fetch 3.9.1 desktop Downloads page with Video URL, Model URL and Playlist URL fields, Get Video and Get Videos buttons, and an empty download list"), 1226, 787) }}</a>
+                <figcaption>{{ _("Porn Fetch 3.9.1 on desktop. Paste a video page into Video URL and choose Get Video to add it to the download list.") }}</figcaption>
             </figure>
         </div>
     </section>
     <section id="cli" data-guide-platform="cli" aria-labelledby="cli-title">
-        <h2 id="cli-title">Using the command line</h2>
-        <p>Set up the <a href="/download/cli">Porn Fetch CLI</a> for your system and open its interactive menu. Choose <strong>Download Single URL</strong> for an individual video, paste its full address, and follow the prompts. Use <strong>Settings &amp; Configuration</strong> to check your output folder and preferred quality.</p>
-        {% if supports_profiles %}<p>For supported profiles or public playlists, choose <strong>Scrape Profile / Playlist</strong> instead. Provider-specific restrictions above still apply.</p>{% endif %}<p>Android CLI setup uses Termux. These command-line instructions are separate from the <a href="#iphone">native iPhone app walkthrough above</a>.</p>
+        <h2 id="cli-title">{{ _("Using the command line") }}</h2>
+        {% if guide.version %}
+        <p><a {{ site_link("/download/cli") }}>{{ _("CLI installation guide") }}</a></p>
+        <p>{{ _("Run the Porn Fetch CLI with %(video_flag)s followed by the full video URL, or use %(profile_flag)s for a profile.", video_flag="--url", profile_flag="--model") }}</p>
+        {% if supports_collections %}<p>{{ _("Use %(flag)s for a supported collection URL.", flag="--collection") }}</p>{% endif %}
+        {% else %}
+        <p>{{ _("Set up the") }} <a {{ site_link("/download/cli") }}>Porn Fetch CLI</a> {{ _("for your system and open its interactive menu. Choose") }} <strong>{{ _("Download Single URL") }}</strong> {{ _("for an individual video, paste its full address, and follow the prompts. Use") }} <strong>{{ _("Settings & Configuration") }}</strong> {{ _("to check your output folder and preferred quality.") }}</p>
+        {% if supports_profiles %}<p>{{ _("For supported profiles or public playlists, choose") }} <strong>{{ _("Scrape Profile / Playlist") }}</strong> {{ _("instead. Provider-specific restrictions above still apply.") }}</p>{% endif %}<p>{{ _("Android CLI setup uses Termux. These command-line instructions are separate from the") }} <a href="#iphone">{{ _("native iPhone app walkthrough above") }}</a>.</p>
+        {% endif %}
     </section>
     <section aria-labelledby="use-title">
-        <h2 id="use-title">Access and responsible use</h2>
-        <p>For adults 18+. Download only content you are authorized to save and respect the source website’s terms and applicable law. A Porn Fetch license does not grant rights to third-party content or access to a website account.</p>
-        <p>Porn Fetch is an independent project and is not affiliated with {{ guide.name }}. Downloads run on your device; network, website, and account services still have their own data handling. See the <a href="/privacy_policy">privacy policy</a> and <a href="/legal-statement">legal statement</a>.</p>
+        <h2 id="use-title">{{ _("Access and responsible use") }}</h2>
+        <p>{{ _("For adults 18+. Download only content you are authorized to save and respect the source website’s terms and applicable law. A Porn Fetch license does not grant rights to third-party content or access to a website account.") }}</p>
+        <p>{{ _("Porn Fetch is an independent project and is not affiliated with %(provider)s. Downloads run on your device; network, website, and account services still have their own data handling. See the", provider=guide.name) }} <a {{ site_link("/privacy_policy") }}>{{ _("privacy policy") }}</a> {{ _("and") }} <a {{ site_link("/legal-statement") }}>{{ _("legal statement") }}</a>.</p>
     </section>
     <aside class="guide-related" aria-labelledby="related-title">
-        <h2 id="related-title">More download guides</h2>
-        <ul>{% for key, related in related_guides.items() %}<li><a href="/guides/download-{{ key }}-videos">{{ related.name }} videos</a></li>{% endfor %}</ul>
-        <a href="/guides">All 15 supported website guides →</a>
+        <h2 id="related-title">{{ _("More download guides") }}</h2>
+        <ul>{% for key, related in related_guides.items() %}<li><a {{ site_link("/guides/download-" ~ key ~ "-videos") }}>{{ _("%(provider)s download guide", provider=related.name) }}</a></li>{% endfor %}</ul>
+        <a {{ site_link("/guides") }}>{{ _("See all website guides →") }}</a>
     </aside>
 </article>
-<nav class="guide-bottom-actions" aria-label="Get Porn Fetch" hidden>
-    <a class="btn guide-action" data-guide-free href="#mobile-downloads">Download free</a>
-    <a class="btn guide-action" href="/porn_fetch">Premium · €{{ premium_price }}</a>
+<nav class="guide-bottom-actions" aria-label="{{ _("Get Porn Fetch") }}" hidden>
+    <a class="btn guide-action" data-guide-free href="#mobile-downloads">{{ _("Download free") }}</a>
+    <a class="btn guide-action" {{ site_link("/porn_fetch") }}>Premium · €{{ premium_price }}</a>
 </nav>
 {% endblock %}
 

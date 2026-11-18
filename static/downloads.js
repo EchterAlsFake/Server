@@ -1,6 +1,7 @@
 (() => {
   const picker = document.querySelector('.download-picker');
   if (!picker) return;
+  const downloadPath = picker.dataset.downloadPath;
   const links = [...picker.querySelectorAll('[data-platform]')];
   const panels = [...picker.querySelectorAll('.platform-panel')];
   let detectedPlatform = null;
@@ -23,7 +24,7 @@
     if (!option.value) { cta.removeAttribute('href'); return; }
     cta.dataset.vpsUrl = option.value;
     cta.href = (picker.dataset.directOrigin || '') + option.value;
-    panel.querySelector('.primary-version').textContent = `Recommended version: ${option.dataset.version} · ${option.dataset.channel === 'beta' ? 'Beta' : 'Stable'}`;
+    panel.querySelector('.primary-version').textContent = option.dataset.versionLabel;
     panel.querySelector('.primary-requirements').textContent = option.dataset.requirements;
     panel.querySelector('.primary-installation').textContent = option.dataset.installationNote;
   }
@@ -36,7 +37,7 @@
     picker.querySelector('.installation-link').href = `#guide-${key}`;
     picker.querySelectorAll('.download-channels a').forEach(link => {
       const url = new URL(link.href);
-      link.href = `/download/${key}${url.search}`;
+      link.href = `${downloadPath}/${key}${url.search}`;
     });
     const panel = panels.find(item => item.id === key);
     const select = panel?.querySelector('.primary-package');
@@ -54,16 +55,6 @@
     }
     if (panel) updatePackage(panel);
   }
-  links.forEach(link => link.addEventListener('click', event => {
-    if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    userSelectedPackage = false;
-    selectPlatform(link.dataset.platform);
-    history.pushState({}, '', link.href);
-  }));
-  window.addEventListener('popstate', () => {
-    selectPlatform(location.pathname.split('/')[2] || detectedPlatform || 'windows');
-  });
   picker.querySelectorAll('.primary-package').forEach(select => select.addEventListener('change', () => {
     userSelectedPackage = true;
     updatePackage(select.closest('.platform-panel'));

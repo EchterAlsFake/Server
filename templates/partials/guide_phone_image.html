@@ -1,12 +1,12 @@
 {% macro phone_image(platform, stage, alt, caption, eager=false) -%}
 {% set height = 1602 if platform == 'android' else 1281 %}
 <figure class="guide-phone-image">
-    <a href="{{ url_for('static', filename='media/web/guide-' ~ platform ~ '-' ~ stage ~ '-3.9.1-720.webp') }}" aria-label="Open full screenshot: {{ alt }}">
+    <a href="{{ url_for('static', filename='media/web/guide-' ~ platform ~ '-' ~ stage ~ '-3.9.1-720.webp') }}" aria-label="{{ _("Open full screenshot: %(alt)s", alt=alt) }}">
         <img src="{{ url_for('static', filename='media/web/guide-' ~ platform ~ '-' ~ stage ~ '-3.9.1-360.webp') }}"
              srcset="{{ url_for('static', filename='media/web/guide-' ~ platform ~ '-' ~ stage ~ '-3.9.1-360.webp') }} 360w, {{ url_for('static', filename='media/web/guide-' ~ platform ~ '-' ~ stage ~ '-3.9.1-720.webp') }} 720w"
              sizes="(max-width: 600px) calc(100vw - 80px), 320px" width="720" height="{{ height }}"
              alt="{{ alt }}" loading="{{ 'eager' if eager else 'lazy' }}" decoding="async">
     </a>
-    <figcaption>{{ caption }} Tap the image to view it in full.</figcaption>
+    <figcaption>{{ _("%(caption)s Tap the image to view it in full.", caption=caption) }}</figcaption>
 </figure>
 {%- endmacro %}

@@ -7,52 +7,53 @@ from flask import Blueprint, Response, abort, current_app, g, redirect, request
 
 from .guide_content import GUIDES, GUIDE_DATE, GUIDE_PUBLISHED, guide_for_path, guide_path
 from .http import normalized_hostname
+from .website_locale import commercial_host, language, language_tag, path_in_language, published_languages, source_path, translate
 
 seo_bp = Blueprint("seo", __name__)
 PUBLIC_PAGES = {
     "/": (
         "Porn Fetch — Video Downloader for PornHub & More",
-        "Download videos from PornHub, XHamster, XVideos and other supported adult websites with Porn Fetch. Get the app, read practical guides, and save files locally.",
+        "Porn Fetch saves videos from PornHub, XHamster, XVideos and other supported sites. Get the app for Android, iPhone, Windows, macOS or Linux.",
     ),
     "/download": (
-        "Download Porn Fetch — Windows, Linux, macOS, Android & CLI",
-        "Official Porn Fetch downloads hosted here. Choose your platform and architecture, check requirements and SHA-256 checksums, and read local setup guides.",
+        "Download Porn Fetch for Android, iPhone & Desktop",
+        "Get Porn Fetch for Android, iPhone, Windows, macOS or Linux, or choose the CLI. Find setup instructions, system requirements and SHA-256 checksums.",
     ),
     "/about": (
         "About Porn Fetch — Independent Software by Johannes Habel",
-        "Meet Johannes Habel, the independent developer and maintainer of Porn Fetch. Learn about the app, source availability, Premium, and support.",
+        "Meet Johannes Habel, the developer of Porn Fetch. Find the app’s source code and learn how Premium purchases support its development.",
     ),
     "/help": (
         "Porn Fetch Help — Installation & License Activation",
-        "Get help installing Porn Fetch, choosing a download, activating a license, and resolving common setup issues. Contact me directly.",
+        "Fix a Porn Fetch installation, verify a download or activate Premium. Find platform setup guides and the support details to include with your request.",
     ),
     "/releases": (
         "Porn Fetch Releases — Changelog & Previous Downloads",
-        "Browse Porn Fetch release notes, publication dates, previous downloads, checksums and legal notices on the official product website.",
+        "Compare stable and beta Porn Fetch releases. Read what changed in each version and find its original download files and SHA-256 checksums.",
     ),
     "/guides": (
-        "Video Download Guides for PornHub & More — Porn Fetch",
-        "Download videos on Android or iPhone with Porn Fetch. Browse 15 website guides with app screenshots, setup steps and limitations. iPhone sideloading requires a PC.",
+        "Video Download Guides for Supported Sites — Porn Fetch",
+        "Find your site and follow illustrated Porn Fetch download steps for Android, iPhone, desktop or CLI. Check supported links and troubleshoot errors.",
     ),
     "/impress": (
-        "Legal Disclosure / Impressum — Porn Fetch",
-        "Legal disclosure and contact details for Porn Fetch, the independent software project maintained by Johannes Habel in Germany.",
+        "Legal Disclosure — Porn Fetch",
+        "Find the operator, postal address and contact information for Porn Fetch, the software project maintained by Johannes Habel in Germany.",
     ),
     "/privacy_policy": (
-        "Privacy Policy / Datenschutzerklärung — Porn Fetch",
-        "How the Porn Fetch website handles session cookies, aggregate statistics, license purchases, payment providers and support. Read the English and German privacy policy.",
+        "Privacy Policy — Porn Fetch",
+        "Learn how Porn Fetch handles cookies, aggregate statistics, purchase records and support requests, and how to exercise your data protection rights.",
     ),
     "/terms": (
-        "Terms of Service / AGB — Porn Fetch",
-        "Read Porn Fetch’s terms for software licenses, activation, updates, purchases and use of the website in English and German.",
+        "Terms of Service — Porn Fetch",
+        "Read the Porn Fetch license terms for purchases, Premium activation, software updates and the rights that come with a license.",
     ),
     "/refund_policy": (
         "Refund Policy — Porn Fetch",
-        "Read the refund and cancellation policy for Porn Fetch licenses, including how to contact me about a purchase.",
+        "Find out how to request a refund or report a missing or defective Porn Fetch license. See what order information to include when you contact support.",
     ),
     "/legal-statement": (
         "Legal Statement & Responsible Use — Porn Fetch",
-        "Learn about Porn Fetch’s independent status, website compatibility, and responsible use of the software for content you are authorized to save.",
+        "Learn how Porn Fetch describes third-party site compatibility, independent status and the rules for saving content you are authorized to download.",
     ),
 }
 
@@ -60,35 +61,45 @@ PUBLIC_PAGES = {
 def page_metadata():
     if hasattr(g, "page_meta"):
         return g.page_meta
-    path = request.path
+    path = source_path()
     title_description = PUBLIC_PAGES.get(path)
+    if title_description:
+        title_description = tuple(translate(text) for text in title_description)
+    release = None
     guide = guide_for_path(path)
     if guide:
+        description = translate(guide["description"]) if "description" in guide else translate(
+            "Porn Fetch guide for %(provider)s on Android, iPhone and desktop. %(summary)s",
+            provider=guide["name"], summary=translate(guide["summary"]),
+        )
         title_description = (
-            f"How to Download {guide['name']} Videos — Porn Fetch",
-            f"Download {guide['name']} videos on Android or iPhone with Porn Fetch. Follow illustrated app steps and supported-link guidance. iPhone setup requires a PC for sideloading.",
+            translate("How to Download %(provider)s Videos — Porn Fetch", provider=guide["name"]),
+            description,
         )
     if path.startswith("/download/"):
         from .download_pages import PLATFORMS
 
         platform = PLATFORMS.get(path.removeprefix("/download/"))
         if platform:
-            title_description = (
-                f"Download Porn Fetch for {platform['name']} — Installation & Requirements",
-                f"Official Porn Fetch {platform['name']} downloads and installation guide. {platform['summary']} Requirements: {platform['requirements']}.",
-            )
+            title_description = tuple(translate(platform[field]) for field in ("title", "description"))
     elif path.startswith("/releases/"):
-        from .download_pages import load_catalog
+        from .download_pages import request_catalog
 
         version = path.removeprefix("/releases/")
-        if any(item["version"] == version for item in load_catalog()["releases"]):
+        release = next((item for item in request_catalog()["releases"] if item["version"] == version), None)
+        if release and language() in published_languages(path, release=release):
             title_description = (
-                f"Porn Fetch {version} — Release Notes & Downloads",
-                f"Read Porn Fetch {version} release notes and download its original packages, SHA-256 checksums, and legal notices.",
+                translate("Porn Fetch %(version)s — Release Notes & Downloads", version=version),
+                translate("%(channel)s release of Porn Fetch %(version)s, published %(date)s. See release notes, original packages and SHA-256 checksums.",
+                          channel=translate(release["channel"].capitalize()), version=version, date=release["published_at"][:10]),
             )
     if not title_description:
         return None
     origin = current_app.config["APP_DOMAIN"]
+    locale = language()
+    canonical_path = path_in_language(path, locale)
+    locales = published_languages(path, release=release)
+    language_urls = {code: path_in_language(path, code) for code in locales}
     title, description = title_description
     graph = [
         {
@@ -112,8 +123,8 @@ def page_metadata():
                 "@type": "SoftwareApplication",
                 "@id": origin + "/#software",
                 "name": "Porn Fetch",
-                "url": origin + "/",
-                "downloadUrl": origin + "/download",
+                "url": origin + canonical_path,
+                "downloadUrl": origin + path_in_language("/download", locale),
                 "applicationCategory": "MultimediaApplication",
                 "operatingSystem": [
                     "Windows",
@@ -124,17 +135,19 @@ def page_metadata():
                 ],
                 "publisher": {"@id": origin + "/#maintainer"},
                 "description": description,
+                "inLanguage": language_tag(locale),
             }
         )
     else:
-        crumbs = [("Home", "/")]
+        crumbs = [(translate("Home"), "/")]
         if guide:
-            crumbs.append(("Guides", "/guides"))
+            crumbs.append((translate("Guides"), "/guides"))
         if path.startswith("/download/"):
-            crumbs.append(("Downloads", "/download"))
+            crumbs.append((translate("Downloads"), "/download"))
         if path.startswith("/releases/"):
-            crumbs.append(("Releases", "/releases"))
+            crumbs.append((translate("Releases"), "/releases"))
         crumbs.append((title.split(" — ")[0], path))
+        crumbs = [(name, path_in_language(location, locale)) for name, location in crumbs]
         breadcrumbs = [{"name": name, "url": location} for name, location in crumbs]
         graph.append(
             {
@@ -153,25 +166,30 @@ def page_metadata():
     if guide:
         graph.append({
             "@type": "Article",
-            "@id": origin + path + "#article",
+            "@id": origin + canonical_path + "#article",
             "headline": title.split(" — ")[0],
             "description": description,
-            "mainEntityOfPage": origin + path,
-            "inLanguage": "en",
-            "datePublished": GUIDE_PUBLISHED,
+            "mainEntityOfPage": origin + canonical_path,
+            "inLanguage": language_tag(locale),
+            "datePublished": guide.get("published", GUIDE_PUBLISHED),
             "image": origin + "/static/media/web/guide-ios-ready-3.9.1-720.webp",
-            "dateModified": guide.get("updated", GUIDE_DATE),
+            "dateModified": guide.get("updated", guide.get("published", GUIDE_DATE)),
             "author": {"@id": origin + "/#maintainer"},
             "publisher": {"@id": origin + "/#maintainer"},
         })
     g.page_meta = {
         "title": title,
         "description": description,
-        "canonical": origin + path,
+        "canonical": origin + canonical_path,
+        "language_urls": language_urls if len(language_urls) > 1 else {},
+        "alternates": {
+            language_tag(code): origin + url for code, url in {**language_urls, "x-default": path}.items()
+        } if len(language_urls) > 1 and commercial_host() and current_app.config["SEO_INDEXING_ENABLED"] else {},
         "breadcrumbs": breadcrumbs,
         "og_type": "article" if guide else "website",
         "image": origin + ("/static/media/web/guide-ios-ready-3.9.1-720.webp" if guide else "/static/media/promo-poster.jpg"),
-        "image_alt": "Porn Fetch native iPhone app with a video ready to download" if guide else "Porn Fetch video downloader interface",
+        "image_alt": translate("Porn Fetch native iPhone app with a video ready to download" if guide
+                               else "Porn Fetch video downloader interface"),
         "image_width": 720 if guide else 1920,
         "image_height": 1281 if guide else 1080,
         "structured": {"@context": "https://schema.org", "@graph": graph},
@@ -185,7 +203,7 @@ def indexing_directive():
 
     if is_onion():
         return "noindex, follow"
-    if not current_app.config["SEO_INDEXING_ENABLED"] or not _is_commercial_host():
+    if not current_app.config["SEO_INDEXING_ENABLED"] or not commercial_host():
         return "noindex, nofollow"
     return "index, follow" if page_metadata() else "noindex"
 
@@ -193,10 +211,6 @@ def indexing_directive():
 @seo_bp.app_context_processor
 def seo_context():
     return {"page_meta": page_metadata(), "robots_directive": indexing_directive()}
-
-
-def _is_commercial_host():
-    return normalized_hostname(request.host) == urlsplit(current_app.config["APP_DOMAIN"]).hostname
 
 
 @seo_bp.before_app_request
@@ -223,7 +237,7 @@ def indexing_headers(response):
 
 def _commercial_origin():
     origin = current_app.config["APP_DOMAIN"]
-    if not _is_commercial_host():
+    if not commercial_host():
         abort(404)
     return origin
 
@@ -243,18 +257,21 @@ def sitemap():
     origin = _commercial_origin()
     if not current_app.config["SEO_INDEXING_ENABLED"]:
         abort(404)
-    from .download_pages import PLATFORMS, load_catalog
+    from .download_pages import PLATFORMS, request_catalog
 
     paths = [
         *PUBLIC_PAGES,
         *(guide_path(provider) for provider in GUIDES),
         *(f"/download/{key}" for key in PLATFORMS),
-        *(f"/releases/{release['version']}" for release in load_catalog()["releases"]),
     ]
+    releases = {f"/releases/{release['version']}": release for release in request_catalog()["releases"]}
     entries = "\n".join(
-        f"  <url><loc>{escape(origin + path)}</loc>"
-        + (f"<lastmod>{guide_for_path(path).get('updated', GUIDE_DATE)}</lastmod>" if guide_for_path(path) else "")
-        + "</url>" for path in paths
+        f"  <url><loc>{escape(origin + path_in_language(path, locale))}</loc>"
+        + (f"<lastmod>{guide.get('updated', guide.get('published', GUIDE_DATE))}</lastmod>"
+           if (guide := guide_for_path(path)) else "")
+        + "</url>"
+        for path in [*paths, *releases]
+        for locale in published_languages(path, release=releases.get(path))
     )
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

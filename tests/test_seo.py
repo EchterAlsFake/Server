@@ -1,6 +1,9 @@
 """Crawlability, metadata consistency, and the public guide surface."""
 
 import json
+import re
+from collections import Counter
+from html import unescape
 from html.parser import HTMLParser
 from urllib.parse import urlsplit
 from unittest.mock import patch
@@ -21,6 +24,8 @@ class Page(HTMLParser):
         self.h1s = []
         self.structured = []
         self.canonical = None
+        self.language = None
+        self.alternates = {}
         self._tag = None
         self._text = ""
         self.feed(html)
@@ -31,10 +36,14 @@ class Page(HTMLParser):
             self.ids.add(attrs["id"])
         if tag == "meta":
             self.meta[attrs.get("name", attrs.get("property"))] = attrs.get("content")
+        if tag == "html":
+            self.language = attrs.get("lang")
         if tag == "a" and "href" in attrs:
             self.links.append(attrs["href"])
         if tag == "link" and attrs.get("rel") == "canonical":
             self.canonical = attrs["href"]
+        if tag == "link" and attrs.get("rel") == "alternate" and "hreflang" in attrs:
+            self.alternates[attrs["hreflang"]] = attrs["href"]
         if tag in {"title", "h1"} or (tag == "script" and attrs.get("type") == "application/ld+json"):
             self._tag, self._text = tag, ""
 
@@ -79,10 +88,11 @@ class SEOTests(ServerTestCase):
 
     def test_staging_remains_crawlable_so_noindex_can_be_seen(self):
         with patch.dict(main.app.config, {"SEO_INDEXING_ENABLED": False}):
-            for path in ("/", "/download", "/guides", guide_path("pornhub")):
+            for path in ("/", "/download", "/guides", guide_path("pornhub"), "/hi" + guide_path("pornhub")):
                 response = self.get(path)
                 self.assertEqual(response.headers["X-Robots-Tag"], "noindex, nofollow")
                 self.assertEqual(Page(response.text).meta["robots"], "noindex, nofollow")
+                self.assertFalse(Page(response.text).alternates)
             self.assertEqual(self.get("/sitemap.xml").status_code, 404)
             robots = self.get("/robots.txt").text
             self.assertIn("Allow: /", robots)
@@ -105,7 +115,7 @@ class SEOTests(ServerTestCase):
                 self.assertIn(guide["name"], page.h1s[0])
                 self.assertEqual(page.canonical, self.origin + path)
                 self.assertEqual(page.meta["robots"], "index, follow")
-                self.assertEqual(page.meta["rating"], "adult")
+                self.assertNotIn("rating", page.meta)
                 self.assertEqual(page.title, page.meta["og:title"])
                 self.assertEqual(page.title, page.meta["twitter:title"])
                 self.assertNotIn(page.title, titles)
@@ -114,7 +124,7 @@ class SEOTests(ServerTestCase):
                 descriptions.add(page.meta["description"])
                 graph = page.structured[0]["@graph"]
                 article = next(item for item in graph if item["@type"] == "Article")
-                self.assertEqual(article["dateModified"], GUIDE_DATE)
+                self.assertEqual(article["dateModified"], guide.get("updated", guide.get("published", GUIDE_DATE)))
                 self.assertEqual(article["mainEntityOfPage"], page.canonical)
                 crumbs = next(item for item in graph if item["@type"] == "BreadcrumbList")
                 self.assertEqual(len(crumbs["itemListElement"]), 3)
@@ -128,15 +138,156 @@ class SEOTests(ServerTestCase):
         locations = [item.text for item in root.findall("s:url/s:loc", namespace)]
         self.assertEqual(len(locations), len(set(locations)))
         for provider in GUIDES:
-            self.assertIn(self.origin + guide_path(provider), locations)
+            for prefix in ("", "/de", "/es", "/hi", "/zh-hans"):
+                self.assertIn(self.origin + prefix + guide_path(provider), locations)
+        page_titles = {}
+        page_descriptions = {}
         for url in locations:
             with self.subTest(url=url):
                 response = self.get(urlsplit(url).path)
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.headers["X-Robots-Tag"], "index, follow")
-                self.assertEqual(Page(response.text).canonical, url)
+                page = Page(response.text)
+                self.assertEqual(page.canonical, url)
+                self.assertNotIn("rating", page.meta)
+                self.assertEqual(len(page.h1s), 1)
+                for value, seen in ((page.title, page_titles), (page.meta["description"], page_descriptions)):
+                    self.assertTrue(value.strip())
+                    localized_values = seen.setdefault(page.language, set())
+                    self.assertNotIn(value, localized_values)
+                    localized_values.add(value)
+                self.assertEqual(page.meta["description"], page.meta["og:description"])
+                self.assertEqual(page.meta["description"], page.meta["twitter:description"])
         for private in ("/porn_fetch", "/buy_license", "/buy_card", "/download_license", "/checklist", "/download/catalog.json"):
             self.assertNotIn(self.origin + private, locations)
+
+    def test_priority_guides_show_localized_opening_steps_and_search_descriptions(self):
+        from pf_server.website_locale import LANGUAGES, catalog_for, path_in_language
+
+        sitemap = ElementTree.fromstring(self.get("/sitemap.xml").data)
+        last_modified = {
+            entry.findtext("{*}loc"): entry.findtext("{*}lastmod")
+            for entry in sitemap.findall("{*}url")
+        }
+        for provider in ("eporner", "xhamster"):
+            guide = GUIDES[provider]
+            for locale in LANGUAGES:
+                with self.subTest(provider=provider, locale=locale):
+                    catalog = catalog_for(locale)
+                    path = path_in_language(guide_path(provider), locale)
+                    html = self.get(path).text
+                    page = Page(html)
+                    rendered = unescape(html)
+                    intro = guide["intro"] if locale == "en" else catalog[guide["intro"]]
+                    description = guide["description"] if locale == "en" else catalog[guide["description"]]
+                    self.assertIn(f'<p class="guide-lead">{intro}</p>', rendered)
+                    self.assertEqual(rendered.count(intro), 1)
+                    self.assertEqual(page.meta["description"], description)
+                    self.assertEqual(page.meta["og:description"], description)
+                    self.assertEqual(page.meta["twitter:description"], description)
+                    self.assertEqual(last_modified[self.origin + path], guide["updated"])
+
+    def test_download_pages_identify_the_platform_and_keep_channel_urls_canonical(self):
+        expectations = {
+            "/download": ("Download Porn Fetch", "SHA-256"),
+            "/download/windows": ("Windows", "x64"),
+            "/download/linux": ("Linux", "Wayland"),
+            "/download/macos": ("macOS", "Apple Silicon"),
+            "/download/android": ("Android", "APK"),
+            "/download/ios": ("iPhone & iPad", "IPA"),
+            "/download/cli": ("CLI", "terminal"),
+        }
+        hub = Page(self.get("/download").text)
+        for prefix in ("", "/es"):
+            for path, (heading, detail) in expectations.items():
+                with self.subTest(path=prefix + path):
+                    page = Page(self.get(prefix + path + "?channel=beta").text)
+                    self.assertEqual(page.canonical, self.origin + prefix + path)
+                    self.assertIn(prefix + "/guides", page.links)
+                    self.assertIn(path, hub.links)
+                    if not prefix:
+                        self.assertIn(heading, page.h1s[0])
+                    self.assertIn(detail.lower(), page.meta["description"].lower())
+
+    def test_every_localized_guide_has_translated_content_and_reciprocal_seo(self):
+        from pf_server.website_locale import catalog_for
+
+        locales = {"de": "de", "es": "es", "hi": "hi", "zh-hans": "zh-Hans"}
+        hub_html = {code: self.get(f"/{code}/guides").text for code in locales}
+        hubs = {code: Page(html) for code, html in hub_html.items()}
+        homes = {code: Page(self.get(f"/{code}/").text) for code in locales}
+        for provider, guide in GUIDES.items():
+            path = guide_path(provider)
+            english = Page(self.get(path, headers={"Accept-Language": "de,es,hi,zh-Hans"}).text)
+            self.assertEqual(english.language, "en")
+            self.assertEqual(english.alternates, {
+                "en": self.origin + path, "x-default": self.origin + path,
+                **{tag: f"{self.origin}/{code}{path}" for code, tag in locales.items()},
+            })
+            for code, tag in locales.items():
+                with self.subTest(provider=provider, locale=code):
+                    prefix = f"/{code}"
+                    localized_path = prefix + path
+                    self.assertIn(localized_path, hubs[code].links)
+                    self.assertIn(localized_path, homes[code].links)
+                    response = self.get(localized_path + "?utm_source=test")
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn('class="guide-surface guide-detail"', response.text)
+                    page = Page(response.text)
+                    self.assertEqual(page.language, tag)
+                    self.assertEqual(page.canonical, self.origin + localized_path)
+                    self.assertEqual(page.alternates, english.alternates)
+                    self.assertIn(path, page.links)
+                    self.assertIn(prefix + "/download/android", page.links)
+                    self.assertIn(prefix + "/help", page.links)
+                    self.assertIn(guide["name"], page.h1s[0])
+                    self.assertNotEqual(page.h1s, english.h1s)
+                    self.assertNotEqual(page.meta["description"], english.meta["description"])
+                    self.assertNotIn("rating", page.meta)
+                    article = next(item for item in page.structured[0]["@graph"] if item["@type"] == "Article")
+                    self.assertEqual(article["inLanguage"], tag)
+                    self.assertEqual(article["mainEntityOfPage"], page.canonical)
+                    translations = catalog_for(code)
+                    self.assertIn(translations[guide["summary"]], unescape(hub_html[code]))
+                    rendered = unescape(response.text)
+                    self.assertIn(f'<p class="guide-lead">{translations[guide["intro"]]}</p>', rendered)
+                    if "description" not in guide:
+                        self.assertIn(translations[guide["summary"]], page.meta["description"])
+                    for message in (guide["intro"], guide["question"], guide["answer"],
+                                    *(text for heading, paragraphs in guide["sections"] for text in (heading, *paragraphs))):
+                        self.assertNotEqual(translations[message], message)
+                        self.assertIn(translations[message], rendered)
+
+    def test_release_note_alternates_require_localized_content(self):
+        release = {"version": "4.0.0", "notes": "Original notes", "channel": "stable",
+                   "artifacts": [], "commit": "abcdef", "published_at": "2026-11-18"}
+        data = {"releases": [release], "unavailable": False}
+        with patch("pf_server.download_pages.load_catalog", return_value=data):
+            self.assertEqual(self.get("/de/releases/4.0.0").status_code, 404)
+            self.assertNotIn("de", Page(self.get("/releases/4.0.0").text).alternates)
+            self.assertNotIn("/de/releases/4.0.0", self.get("/sitemap.xml").text)
+            self.assertNotIn("Original notes", self.get("/de/releases").text)
+            release["notes_i18n"] = {"de": "Deutsche Versionshinweise"}
+            response = self.get("/de/releases/4.0.0")
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Deutsche Versionshinweise", response.text)
+            page = Page(response.text)
+            self.assertEqual(page.alternates["de"], self.origin + "/de/releases/4.0.0")
+            self.assertEqual(set(page.alternates), {"en", "de", "x-default"})
+            self.assertIn("2026-11-18", page.meta["description"])
+            self.assertIn("Versionshinweise", page.meta["description"])
+            self.assertIn("/de/releases/4.0.0", self.get("/sitemap.xml").text)
+
+    def test_translation_catalogs_preserve_interpolation(self):
+        from pf_server.website_locale import LANGUAGES, catalog_for
+
+        pattern = re.compile(r"%\((\w+)\)s|%%")
+        for locale in LANGUAGES:
+            for source, translation in catalog_for(locale).items():
+                with self.subTest(locale=locale, source=source):
+                    self.assertTrue(translation.strip())
+                    self.assertEqual(Counter(pattern.findall(translation)), Counter(pattern.findall(source)))
+                    self.assertNotIn("%", pattern.sub("", translation))
 
     def test_canonicals_drop_query_strings_and_ignore_forwarded_host_input(self):
         response = self.get(guide_path("pornhub") + "?utm_source=test", headers={"Host": "other.example"})
@@ -196,7 +347,7 @@ class SEOTests(ServerTestCase):
             for key in related:
                 self.assertIn(guide_path(key), page.links)
             article = next(row for row in page.structured[0]["@graph"] if row["@type"] == "Article")
-            self.assertEqual(article["datePublished"], GUIDE_PUBLISHED)
+            self.assertEqual(article["datePublished"], GUIDES[provider].get("published", GUIDE_PUBLISHED))
             self.assertEqual(article["image"], page.meta["og:image"])
             self.assertEqual(page.meta["og:image"], page.meta["twitter:image"])
             self.assertIn('media/guide-desktop-3.9.1.png', response.text)
@@ -243,7 +394,8 @@ class SEOTests(ServerTestCase):
             for heading, paragraphs in GUIDES[provider]["sections"]:
                 self.assertIn(heading, html)
             metadata = Page(html)
-            self.assertIn("Android or iPhone", metadata.meta["description"])
+            self.assertIn("Android", metadata.meta["description"])
+            self.assertIn("iPhone", metadata.meta["description"])
             self.assertIn("iPhone", metadata.meta["og:image:alt"])
         home = self.get("/").text
         self.assertNotIn('class="guide-surface', home)

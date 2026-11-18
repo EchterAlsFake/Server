@@ -396,7 +396,9 @@ class WebsiteReleaseTests(ServerTestCase):
         self.assertEqual(page.count(b'aria-label="Release channel"'), 1)
 
     def test_public_pages_work_without_github_and_escape_release_notes(self):
-        self.complete(self.manifest())
+        manifest = self.manifest()
+        manifest["notes_i18n"] = {"es": 'Novedades <script>alert("unsafe")</script>'}
+        self.complete(manifest)
         with patch("httpx.get", side_effect=AssertionError("No website GitHub calls")):
             for path in (
                 "/",
@@ -414,6 +416,10 @@ class WebsiteReleaseTests(ServerTestCase):
             page = self.client.get("/releases/3.9.66").data
             self.assertIn(b"&lt;script&gt;", page)
             self.assertNotIn(b"<script>alert('unsafe')", page)
+            translated = self.client.get("/es/releases/3.9.66")
+            self.assertEqual(translated.status_code, 200)
+            self.assertIn(b"Novedades &lt;script&gt;", translated.data)
+            self.assertEqual(self.client.get("/hi/releases/3.9.66").status_code, 404)
         self.assertIn(b'id="age-overlay"', self.client.get("/porn_fetch").data)
         self.assertEqual(self.client.get("/download/missing").status_code, 404)
 

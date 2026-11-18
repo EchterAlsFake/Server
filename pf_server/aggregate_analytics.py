@@ -17,6 +17,7 @@ from .download_pages import PLATFORMS
 from .extensions import csrf, limiter
 from .guide_content import GUIDES
 from .onion import is_onion
+from .website_locale import source_path
 
 analytics_bp = Blueprint("aggregate_analytics", __name__)
 PAGES = {
@@ -154,7 +155,7 @@ def init_aggregate_analytics(app):
     def analytics_context():
         page = None
         if app.config["AGGREGATE_ANALYTICS_ENABLED"] and public_origin() and not is_onion() and request.method == "GET":
-            page = PAGES.get(request.path)
+            page = PAGES.get(source_path())
         return {"aggregate_analytics_page": page}
 
     @app.after_request

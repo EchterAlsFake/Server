@@ -6,6 +6,7 @@ from html import unescape
 
 from _support import ServerTestCase, main
 from pf_server import product_catalog
+from pf_server.guide_content import GUIDES, guide_path
 
 
 class MarketingTests(ServerTestCase):
@@ -55,13 +56,13 @@ class MarketingTests(ServerTestCase):
         self.assertIn(b'id="de"', terms.data)  # Old German links reach the language notice.
         self.assertEqual(terms.data.count(b'<h2>Terms</h2>'), 1)
 
-    def test_homepage_lists_all_fifteen_providers_and_factual_controls(self):
+    def test_homepage_lists_all_supported_providers_and_factual_controls(self):
         page = self.client.get('/').data
-        for website in product_catalog.WEBSITES:
-            self.assertIn(f'<th scope="row"><a href="/guides/download-{website[0].lower()}-videos">{website[0]}</a></th>'.encode(), page)
-        self.assertEqual(page.count(b'<th scope="row">'), 15)
+        for provider, guide in GUIDES.items():
+            self.assertIn(f'<th scope="row"><a href="{guide_path(provider)}">{guide["name"]}</a></th>'.encode(), page)
+        self.assertEqual(page.count(b'<th scope="row">'), len(product_catalog.WEBSITES))
         self.assertIn(b'not affiliated with', page)
-        self.assertIn(b'Porn Fetch 3.9', page)
+        self.assertIn(f'Porn Fetch {product_catalog.WEBSITE_SUPPORT_VERSION}'.encode(), page)
         self.assertIn(b'Arch Linux', page)
         self.assertIn(b'preload="none"', page)
         self.assertIn(b'data-src="/static/media/porn-fetch-promo.mp4"', page)
@@ -75,6 +76,18 @@ class MarketingTests(ServerTestCase):
             for platform in ('windows', 'linux', 'macos', 'android', 'ios', 'cli'):
                 self.assertEqual(self.client.get('/download/' + platform).status_code, 200)
         self.assertIn(b'Official native GUI', self.client.get('/download/ios').data)
+
+    def test_creators_and_new_android_platforms_are_visible(self):
+        home = self.client.get('/').text
+        self.assertIn('id="creators"', home)
+        self.assertIn('the same five videos per subscription at up to 720p', home)
+        self.assertIn('after the first successful full scan', home)
+        self.assertIn('Android TV and Android Automotive OS', home)
+        for prefix in ('', '/de', '/es', '/hi', '/zh-hans'):
+            with self.subTest(locale=prefix or 'en'):
+                android = self.client.get(prefix + '/download/android').text
+                self.assertIn('Android TV', android)
+                self.assertIn('Android Automotive OS', android)
 
     def test_media_range_requests_support_seekable_video(self):
         response = self.client.get('/static/media/porn-fetch-promo.mp4', headers={'Range': 'bytes=0-99'})

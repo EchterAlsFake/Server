@@ -1,7 +1,7 @@
 /* Fixed aggregate counters only; no cookies, storage, IDs or journey state. */
 (() => {
   'use strict';
-  const page = document.currentScript?.dataset.page;
+  const {page, localePrefix} = document.currentScript?.dataset || {};
   if (!page || navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true) return;
   const send = action => fetch('/_metrics/event', {
     method: 'POST', credentials: 'omit', referrerPolicy: 'no-referrer',
@@ -18,11 +18,13 @@
     if (!element.matches('a[href]')) return null;
     const target = new URL(element.href, location.origin);
     if (target.origin !== location.origin) return null;
-    if (target.pathname === '/download') return 'open_download';
+    const path = localePrefix && target.pathname.startsWith(`${localePrefix}/`)
+      ? target.pathname.slice(localePrefix.length) : target.pathname;
+    if (path === '/download') return 'open_download';
     if (target.pathname === location.pathname && target.hash === '#mobile-downloads') return 'open_download';
-    if (target.pathname === '/porn_fetch') return 'open_premium';
-    if (target.pathname === '/help') return 'open_help';
-    if (/^\/download\/(windows|macos|linux|android|ios|cli)$/.test(target.pathname)) return `choose_${target.pathname.split('/')[2]}`;
+    if (path === '/porn_fetch') return 'open_premium';
+    if (path === '/help') return 'open_help';
+    if (/^\/download\/(windows|macos|linux|android|ios|cli)$/.test(path)) return `choose_${path.split('/')[2]}`;
     if (target.hash.startsWith('#guide-')) return 'installation_guide';
     return null;
   }

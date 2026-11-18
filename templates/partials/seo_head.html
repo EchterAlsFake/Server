@@ -1,7 +1,9 @@
 {% if page_meta %}
-<meta name="rating" content="adult">
 <meta name="description" content="{{ page_meta.description }}">
 <link rel="canonical" href="{{ page_meta.canonical }}">
+{% for locale, url in page_meta.alternates.items() %}
+<link rel="alternate" hreflang="{{ locale }}" href="{{ url }}">
+{% endfor %}
 <meta property="og:type" content="{{ page_meta.og_type }}">
 <meta property="og:site_name" content="Porn Fetch">
 <meta property="og:title" content="{{ page_meta.title }}">

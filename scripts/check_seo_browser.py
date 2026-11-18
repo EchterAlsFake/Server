@@ -35,6 +35,19 @@ def run():
 
             for engine in engines:
                 browser = engine.launch()
+                context = browser.new_context(ignore_https_errors=True)
+                context.route("**/_metrics/**", lambda route: route.fulfill(body=""))
+                page = context.new_page()
+                page.goto(origin + "/es/download?channel=beta")
+                page.locator(".device-switcher summary").click()
+                page.locator('.device-switcher a[data-platform="android"]').click()
+                expect(page).to_have_url(origin + "/es/download/android?channel=beta")
+                expect(page.locator("h1")).to_contain_text("Android")
+                expect(page.locator("head link[rel=canonical]")).to_have_attribute("href", origin + "/es/download/android")
+                page.go_back()
+                expect(page.locator("head link[rel=canonical]")).to_have_attribute("href", origin + "/es/download")
+                context.close()
+
                 # Test the 5 required widths: 360, 390, 768, 1024, 1440
                 for width in (360, 390, 768, 1024, 1440):
                     context = browser.new_context(ignore_https_errors=True, reduced_motion="reduce", viewport={"width": width, "height": 844})
@@ -152,7 +165,7 @@ def run():
                     expect(page.locator(tab_id)).to_have_attribute('aria-current', 'true')
                     expect(page.locator('#' + ('android' if platform == 'android' else 'iphone'))).to_be_visible()
                     expect(page.locator('#' + ('iphone' if platform == 'android' else 'android'))).to_be_hidden()
-                    expect(page.locator('#guide-free-download')).to_have_attribute('href', '/download/' + platform)
+                    expect(page.locator('#guide-free-download')).to_have_js_property('href', origin + '/download/' + platform)
                     if platform == 'ios':
                         expect(page.locator('.guide-iphone-note')).to_contain_text('PC for sideloading')
                     page.screenshot(path=f"/tmp/guide-{engine.name}-{platform}.png")
@@ -184,7 +197,7 @@ def run():
                 context.close()
                 browser.close()
 
-        print('Browser tests passed: all 15 guides, 5 viewport sizes (360, 390, 768, 1024, 1440), Android/iPhone defaults & switching, compact screenshots, sticky action controls, keyboard navigation, and no-JS fallback.')
+        print(f'Browser tests passed: all {len(GUIDES)} guides, 5 viewport sizes (360, 390, 768, 1024, 1440), Android/iPhone defaults & switching, compact screenshots, sticky action controls, keyboard navigation, and no-JS fallback.')
     finally:
         server.shutdown()
         fixture.tearDown()

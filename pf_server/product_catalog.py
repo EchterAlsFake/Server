@@ -1,6 +1,8 @@
-"""Public v3.9 website capabilities. Download releases live in the local catalog."""
+"""Public website capabilities for Porn Fetch 4.0.0."""
 
-# Kept in sync with Porn_Fetch/docs/WEBSITES.md. No provider branding assets.
+WEBSITE_SUPPORT_VERSION = "4.0.0"
+
+# Kept in sync with the app's shared provider catalog.
 # Columns: name, videos, profiles, collections, login, shorts, photo albums.
 WEBSITES = (
     ("PornHub", "Yes", "Yes", "Yes", "Yes", "Yes", "CLI only"),
@@ -18,4 +20,10 @@ WEBSITES = (
     ("Tube8", "Yes", "Yes", "—", "—", "—", "—"),
     ("EMPFlix", "Yes", "Yes", "—", "—", "—", "—"),
     ("TNAFlix", "Yes", "Yes", "—", "—", "—", "—"),
+    ("Bellesa", "Yes", "Yes", "—", "—", "—", "—"),
+    ("Porn.com", "Yes", "Yes", "Yes", "—", "—", "—"),
+    ("Porndoe", "Yes", "Yes", "—", "—", "—", "—"),
+    ("Pornhat", "Yes", "Yes", "—", "—", "—", "—"),
+    ("RedGIFs", "Yes", "Yes", "Yes", "—", "—", "—"),
+    ("YouJizz", "Yes", "Yes", "Yes", "—", "—", "—"),
 )

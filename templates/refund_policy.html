@@ -1,17 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Refunds — Porn Fetch{% endblock %}
 {% block content %}
-<article class="legal-document" lang="en">
-<h1>Refunds</h1>
-<p>Updated 15 November 2026. Johannes Habel is responsible for license delivery and refunds owed by me, including purchases processed through Mollie.</p>
+{% if website_language == "de" %}
+<article class="legal-document">
+<h1>Erstattungen</h1>
+<p>Stand: 15. November 2026. Ich, Johannes Habel, bin für die Bereitstellung der Lizenz und für von mir geschuldete Erstattungen verantwortlich. Das gilt auch für Zahlungen über Mollie.</p>
+<p>Schreiben Sie bei Zustellproblemen, Mängeln oder Erstattungsanfragen an <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a>. Geben Sie Ihre Bestellreferenz an und beschreiben Sie das Problem. Bei Kryptozahlungen hilft der Transaktionshash. Zahlen Sie nicht erneut, solange eine Zahlung geprüft wird.</p>
+<p>Gesetzliche Ansprüche bei fehlenden oder mangelhaften digitalen Produkten bleiben bestehen. Zusätzliche Kulanz-Erstattungen prüfe ich im Einzelfall. Ein freiwilliges jederzeitiges Rückgaberecht besteht nicht.</p>
+<p>Bei entgeltlichen digitalen Inhalten erlischt das Widerrufsrecht erst, wenn die Bereitstellung mit Ihrer ausdrücklichen Zustimmung und Kenntnisbestätigung begonnen hat und die erforderliche Vertragsbestätigung bereitgestellt wurde. Auch bei einem Kauf im Patreon Shop müssen die erforderlichen Erklärungen und die Bestätigung vorliegen. <a {{ site_link("/withdrawal") }}>Widerrufsbelehrung und Musterformular</a>.</p>
+{% include "partials/mollie_refunds_de.html" %}
+{% include "partials/refund_agreement_de.html" %}
+<p>Bei einem separaten Kryptokauf über Banxa bearbeitet Banxa die eigene Kartenzahlung und deren Erstattung. Dieser Vorgang unterscheidet sich von einer direkten Zahlung über Mollie. Erstattungen für Käufe über Patreon können Sie auch bei Patreon anfragen. Gesetzliche Ansprüche bestehen über die Bearbeitungsfristen der Anbieter hinaus.</p>
+<p><a {{ site_link("/terms") }}>Vertragsbedingungen</a>. Verträge werden auf Englisch geschlossen. Zwingende Verbraucherschutzvorschriften bleiben unberührt.</p>
+</article>
+{% else %}
+<article class="legal-document" lang="{{ language_tag(website_language) }}">
+<h1>{{ _("Refunds") }}</h1>
+<p>{{ _("Updated 15 November 2026. Johannes Habel is responsible for license delivery and refunds owed by me, including purchases processed through Mollie.") }}</p>
 
-<p>For delivery problems, defects or refund requests, email <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> with your order reference and a description of the issue. For crypto payments, a transaction hash helps. Please do not pay again while a payment is under review.</p>
-<p>Statutory remedies for missing or defective digital products remain available. Additional goodwill refunds are considered individually; no voluntary anytime return right is offered.</p>
-<p>For paid digital content, withdrawal rights end only after supply starts with your express consent and acknowledgment, and the required contract confirmation is provided. For a Patreon Shop purchase, the required declarations and confirmation must also be established. <a href="/withdrawal">Withdrawal instructions and model form</a>.</p>
+<p>{{ _("For delivery problems, defects or refund requests, email") }} <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> {{ _("with your order reference and a description of the issue. For crypto payments, a transaction hash helps. Please do not pay again while a payment is under review.") }}</p>
+<p>{{ _("Statutory remedies for missing or defective digital products remain available. Additional goodwill refunds are considered individually; no voluntary anytime return right is offered.") }}</p>
+<p>{{ _("For paid digital content, withdrawal rights end only after supply starts with your express consent and acknowledgment, and the required contract confirmation is provided. For a Patreon Shop purchase, the required declarations and confirmation must also be established.") }} <a {{ site_link("/withdrawal") }}>{{ _("Withdrawal instructions and model form") }}</a>.</p>
 {% include "partials/mollie_refunds_en.html" %}
 {% include "partials/refund_agreement_en.html" %}
-<p>For a separate Banxa cryptocurrency purchase, Banxa handles its own card payment and refund process; this is distinct from direct Mollie checkout. Patreon refunds can also be requested through Patreon. Statutory rights remain available beyond provider processing windows.</p>
+<p>{{ _("For a separate Banxa cryptocurrency purchase, Banxa handles its own card payment and refund process; this is distinct from direct Mollie checkout. Patreon refunds can also be requested through Patreon. Statutory rights remain available beyond provider processing windows.") }}</p>
 
-<p><a href="/terms">Terms of Service</a>. Contracts are concluded in English; mandatory consumer protections remain unaffected.</p>
+<p><a {{ site_link("/terms") }}>{{ _("Terms of Service") }}</a>{{ _(". Contracts are concluded in English; mandatory consumer protections remain unaffected.") }}</p>
 </article>
+{% endif %}
 {% endblock %}

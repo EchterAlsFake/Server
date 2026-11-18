@@ -3,57 +3,63 @@
 {% block title %}Download Porn Fetch — Choose your device{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='direct-downloads.js') }}" defer></script><script src="{{ url_for('static', filename='downloads.js') }}" defer></script>{% endblock %}
 {% block content %}
-<div class="downloads-page download-picker" data-direct-origin="{{ direct_download_origin }}" data-initial-platform="{{ selected_platform or '' }}">
-<header class="page-heading"><p class="eyebrow">Official downloads</p><h1>Your videos. On your device.</h1><p>Get Porn Fetch for your computer or phone.</p></header>
-{% if unavailable %}<p class="download-status" role="status">The release catalog is temporarily unavailable. Please try again later.</p>{% elif not releases %}<p class="download-status" role="status">The first website-hosted release has not been published yet. Installation guides are available below.</p>{% endif %}
+<div class="downloads-page download-picker" data-direct-origin="{{ direct_download_origin }}" data-download-path="{{ site_path('/download') }}" data-initial-platform="{{ selected_platform or '' }}">
+{% set selected = cards|selectattr("key", "equalto", selected_platform)|first %}
+<header class="page-heading">
+    {% if selected_platform == "ios" %}<h1>{{ _("Download Porn Fetch for iPhone & iPad") }}</h1>
+    {% elif selected_platform == "cli" %}<h1>{{ _("Download Porn Fetch CLI") }}</h1>
+    {% elif selected_platform %}<h1>{{ _("Download Porn Fetch for %(platform)s", platform=selected.name) }}</h1>
+    {% else %}<h1>{{ _("Download Porn Fetch") }}</h1><p>{{ _("Get Porn Fetch for your computer or phone.") }}</p>{% endif %}
+</header>
+{% if unavailable %}<p class="download-status" role="status">{{ _("The release catalog is temporarily unavailable. Please try again later.") }}</p>{% elif not releases %}<p class="download-status" role="status">{{ _("The first website-hosted release has not been published yet. Installation guides are available below.") }}</p>{% endif %}
 {% for card in cards %}
 <section id="{{ card.key }}" class="platform-panel" aria-labelledby="{{ card.key }}-title"{% if card.key != (selected_platform or 'windows') %} hidden{% endif %}>
 <div class="primary-download">
-<p class="eyebrow">{{ 'Command line' if card.key == 'cli' else 'Get the app' }}</p>
-<h2 id="{{ card.key }}-title">Porn Fetch for {{ card.name }}</h2>
-<p class="primary-description">{% if card.key == 'android' %}Save videos on your Android phone or tablet.{% elif card.key == 'ios' %}The iPhone and iPad app, installed outside the App Store.{% elif card.key == 'cli' %}{{ card.summary }}{% else %}Save videos on your {{ card.name }} computer.{% endif %}</p>
+<p class="eyebrow">{{ _('Command line') if card.key == 'cli' else _('Get the app') }}</p>
+<h2 id="{{ card.key }}-title">{{ _("Available packages") if card.key == selected_platform else _("Porn Fetch for %(platform)s", platform=card.name) }}</h2>
+<p class="primary-description">{% if card.key == 'android' %}{{ _("The Android APK supports compatible Android phones, tablets, Android TV and Android Automotive OS devices.") }}{% elif card.key == 'ios' %}{{ _("The iPhone and iPad app, installed outside the App Store.") }}{% elif card.key == 'cli' %}{{ site_text(card.summary) }}{% else %}{{ _("Save videos on your %(platform)s computer.", platform=card.name) }}{% endif %}</p>
 {% if card.key == 'ios' %}{% include 'partials/ios_warning.html' %}{% endif %}
 {% if card.key == 'cli' %}
-<p>Choose a terminal package for your operating system in advanced downloads below.</p>
-<a href="#guide-{{ card.key }}" class="text-link guide-jump">Read the installation guide →</a>
+<p>{{ _("Choose a terminal package for your operating system in advanced downloads below.") }}</p>
+<a href="#guide-{{ card.key }}" class="text-link guide-jump">{{ _("Read the installation guide →") }}</a>
 {% elif card.primary %}
-<p class="primary-version" aria-live="polite">{% if card.default %}Recommended version: {{ card.default.version }} · {{ card.default.channel|capitalize }}{% else %}Choose your device below to get the recommended version.{% endif %}</p>
+<p class="primary-version" aria-live="polite">{% if card.default %}{{ _("Recommended version: %(version)s · %(channel)s", version=card.default.version, channel=site_text(card.default.channel|capitalize)) }}{% else %}{{ _("Choose your device below to get the recommended version.") }}{% endif %}</p>
 <div class="package-choice"{% if card.default %} hidden{% endif %}>
-<label for="package-{{ card.key }}">{{ 'Your Mac' if card.key == 'macos' else 'Your device' }}</label>
+<label for="package-{{ card.key }}">{{ _('Your Mac') if card.key == 'macos' else _('Your device') }}</label>
 <select id="package-{{ card.key }}" class="primary-package">
-<option value="">Choose {{ 'Apple Silicon or Intel' if card.key == 'macos' else 'your device type' }}</option>
-{% for file in card.primary %}<option value="{{ file.url }}" data-arch="{{ file.arch }}" data-kind="{{ file.kind }}" data-version="{{ file.version }}" data-channel="{{ file.channel }}" data-requirements="{{ file.min_os or card.requirements }}" data-installation-note="{{ file.installation_note }}"{% if card.default == file %} selected{% endif %}>{{ file.arch_label }}</option>{% endfor %}
+<option value="">{{ _("Choose %(value1)s", value1=_('Apple Silicon or Intel') if card.key == 'macos' else _('your device type')) }}</option>
+{% for file in card.primary %}<option value="{{ file.url }}" data-arch="{{ file.arch }}" data-kind="{{ file.kind }}" data-version="{{ file.version }}" data-channel="{{ file.channel }}" data-version-label="{{ _('Recommended version: %(version)s · %(channel)s', version=file.version, channel=site_text(file.channel|capitalize)) }}" data-requirements="{{ site_text(file.min_os or card.requirements) }}" data-installation-note="{{ site_text(file.installation_note) }}"{% if card.default == file %} selected{% endif %}>{{ site_text(file.arch_label) }}</option>{% endfor %}
 </select>
-<p class="choice-help">{% if card.key == 'macos' %}Check Apple menu → About This Mac for your chip or processor.{% elif card.key == 'windows' %}Check Settings → System → About → System type.{% elif card.key == 'linux' %}Run <code>uname -m</code>: x86_64 means x64; aarch64 means ARM64. Use the Qt installer for in-app updates.{% else %}Most recent phones use ARM64. Check your device specifications if unsure.{% endif %}</p>
+<p class="choice-help">{% if card.key == 'macos' %}{{ _("Check Apple menu → About This Mac for your chip or processor.") }}{% elif card.key == 'windows' %}{{ _("Check Settings → System → About → System type.") }}{% elif card.key == 'linux' %}{{ _("Run") }} <code>uname -m</code>{{ _(": x86_64 means x64; aarch64 means ARM64. Use the Qt installer for in-app updates.") }}{% else %}{{ _("Most recent phones use ARM64. Check your device specifications if unsure.") }}{% endif %}</p>
 </div>
-<a class="btn btn-primary primary-cta" data-metric="download_click"{% if card.default %} href="{{ download_href(card.default.url) }}" data-vps-url="{{ card.default.url }}"{% else %} hidden{% endif %}>Download for {{ card.name }} <span aria-hidden="true">↓</span></a>
+<a class="btn btn-primary primary-cta" data-metric="download_click"{% if card.default %} href="{{ download_href(card.default.url) }}" data-vps-url="{{ card.default.url }}"{% else %} hidden{% endif %}>{{ _("Download for %(platform)s", platform=card.name) }} <span aria-hidden="true">↓</span></a>
 
-<p class="primary-requirements">{{ card.default.min_os if card.default and card.default.min_os else card.requirements }}</p>
-<button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>Different device type?</button>
-<noscript><p>Choose your download from the file list in advanced options below.</p></noscript>
-{% else %}<p class="download-status">No {{ channel or 'recommended' }} graphical app published for this platform yet. Check advanced options or previous releases.</p>{% endif %}
+<p class="primary-requirements">{{ site_text(card.default.min_os if card.default and card.default.min_os else card.requirements) }}</p>
+<button type="button" class="change-device"{% if not card.default %} hidden{% endif %}>{{ _("Different device type?") }}</button>
+<noscript><p>{{ _("Choose your download from the file list in advanced options below.") }}</p></noscript>
+{% else %}<p class="download-status">{{ _("No %(channel)s graphical app published for this platform yet. Check advanced options or previous releases.", channel=site_text(channel or 'recommended')) }}</p>{% endif %}
 </div>
 <details class="advanced-downloads"{% if card.key == 'cli' %} open{% endif %}>
-<summary>Other downloads &amp; advanced options</summary>
+<summary>{{ _("Other downloads & advanced options") }}</summary>
 <div class="advanced-content">
-<p class="primary-installation advanced-installation-note">{% if card.default %}{{ card.default.installation_note }}{% elif card.key not in ['android', 'ios'] %}The installer includes in-app updates. Portable downloads require manual updates.{% endif %}</p>
-{% if card.files %}<h3>Application packages</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
-<details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>Advanced / CLI downloads &amp; source</summary><p>Command-line packages require a terminal. Source packages require Python and the release’s dependencies. Standalone CLI builds support signed self-updates with <code>self-update</code>; source installations are updated manually.</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>No command-line package published for this selection.</p>{% endfor %}</div><a href="/download/cli">CLI installation guide &amp; all platforms →</a></details>
+<p class="primary-installation advanced-installation-note">{% if card.default %}{{ site_text(card.default.installation_note) }}{% elif card.key not in ['android', 'ios'] %}{{ _("The installer includes in-app updates. Portable downloads require manual updates.") }}{% endif %}</p>
+{% if card.files %}<h3>{{ _("Application packages") }}</h3><div class="package-list">{% for file in card.files if file.kind not in ['source', 'cli'] %}{% include 'partials/download_row.html' %}{% endfor %}</div>{% endif %}
+<details class="cli-downloads"{% if card.key in ['ios', 'cli'] %} open{% endif %}><summary>{{ _("Advanced / CLI downloads & source") }}</summary><p>{{ _("Command-line packages require a terminal. Source packages require Python and the release’s dependencies. Standalone CLI builds support signed self-updates with") }} <code>self-update</code>{{ _("; source installations are updated manually.") }}</p><div class="package-list">{% for file in card.cli_files %}{% include 'partials/download_row.html' %}{% else %}<p>{{ _("No command-line package published for this selection.") }}</p>{% endfor %}</div><a {{ site_link("/download/cli") }}>{{ _("CLI installation guide & all platforms →") }}</a></details>
 </div>
 </details>
-<details class="installation-guide compact-guide" id="guide-{{ card.key }}"><summary>Installation guide for {{ card.name }}</summary><ol>{% for step in card.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% if card.key == 'cli' %}{% include 'partials/ios_warning.html' %}<p><a href="/download/android">Android / Termux guide</a> · <a href="/download/ios">iOS guide</a></p>{% endif %}<p>Next: <a href="/guides">learn how to save your first video</a>. Need help? <a href="mailto:support@echteralsfake.me">Contact support</a> with your version, platform and exact error.</p></details>
-{% if card.key == "android" %}<details class="ux-disclosure"><summary>Preview the Android app</summary>{% include "partials/android_account_screenshot.html" %}</details>{% endif %}
+<details class="installation-guide compact-guide" id="guide-{{ card.key }}"><summary>{{ _("Installation guide for %(platform)s", platform=card.name) }}</summary><ol>{% for step in card.steps %}<li>{{ site_text(step) }}</li>{% endfor %}</ol>{% if card.key == 'cli' %}{% include 'partials/ios_warning.html' %}<p><a {{ site_link("/download/android") }}>{{ _("Android / Termux guide") }}</a> · <a {{ site_link("/download/ios") }}>{{ _("iOS guide") }}</a></p>{% endif %}<p>{{ _("Next:") }} <a {{ site_link("/guides") }}>{{ _("learn how to save your first video") }}</a>{{ _(". Need help?") }} <a href="mailto:support@echteralsfake.me">{{ _("Contact support") }}</a> {{ _("with your version, platform and exact error.") }}</p></details>
+{% if card.key == "android" %}<details class="ux-disclosure"><summary>{{ _("Preview the Android app") }}</summary>{% include "partials/android_account_screenshot.html" %}</details>{% endif %}
 </section>
 {% endfor %}
-<details class="ux-disclosure device-switcher"><summary>Choose another device</summary><nav class="platform-selector" aria-label="Choose your platform">
-{% for item in cards if item.key != 'cli' %}<a href="/download/{{ item.key }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
+<details class="ux-disclosure device-switcher"><summary>{{ _("Choose another device") }}</summary><nav class="platform-selector" aria-label="{{ _("Choose your platform") }}">
+{% for item in cards if item.key != 'cli' %}<a href="{{ site_path('/download/' ~ item.key) }}{% if channel %}?channel={{ channel }}{% endif %}" data-platform="{{ item.key }}"{% if item.key == (selected_platform or 'windows') %} aria-current="page"{% endif %}>{{ platform_icon(item.key) }}{{ item.name }}</a>{% endfor %}
 </nav>
 
 </details>
-<details class="ux-disclosure"><summary>Choose a release channel</summary>{% include "partials/download_channels.html" %}</details>
-<p><a data-download-retry hidden>Download interrupted? Retry via compatibility server</a></p>
-<nav class="download-bottom" aria-label="Download help"><a href="#guide-{{ selected_platform or 'windows' }}" class="installation-link">Installation guide</a><a href="/releases">Previous releases &amp; changelog</a><a href="/help">Troubleshooting / activation help</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="#verify-download">Verify download (SHA-256)</a></nav>
-<details id="verify-download" class="installation-guide compact-guide"><summary>How to verify your download</summary><p>Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>Linux: <code>sha256sum &lt;filename&gt;</code><br>macOS: <code>shasum -a 256 &lt;filename&gt;</code></p><p>A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.</p></details>
-<p class="download-disclosure">App downloads and updates are free. Desktop download history and statistics are also free. Premium is a <a href="/porn_fetch">€{{ premium_price }} one-time purchase</a> for lifetime access to higher quality, parallel downloads and full public collections on up to 10 active installations. Every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. Activation and periodic validation apply. Processing fees may apply.</p>
+<details class="ux-disclosure"><summary>{{ _("Choose a release channel") }}</summary>{% include "partials/download_channels.html" %}</details>
+<p><a data-download-retry hidden>{{ _("Download interrupted? Retry via compatibility server") }}</a></p>
+<nav class="download-bottom" aria-label="{{ _("Download help") }}"><a href="#guide-{{ selected_platform or 'windows' }}" class="installation-link">{{ _("Installation guide") }}</a><a {{ site_link("/guides") }}>{{ _("Video download guides") }}</a><a {{ site_link("/releases") }}>{{ _("Previous releases & changelog") }}</a><a {{ site_link("/help") }}>{{ _("Troubleshooting / activation help") }}</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">{{ _("GitHub ↗") }}</a><a href="#verify-download">{{ _("Verify download (SHA-256)") }}</a></nav>
+<details id="verify-download" class="installation-guide compact-guide"><summary>{{ _("How to verify your download") }}</summary><p>{{ _("Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.") }}</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>Linux: <code>sha256sum &lt;filename&gt;</code><br>macOS: <code>shasum -a 256 &lt;filename&gt;</code></p><p>{{ _("A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.") }}</p></details>
+<p class="download-disclosure">{{ _("App downloads and updates are free. Desktop download history and statistics are also free. Premium is a") }} <a {{ site_link("/porn_fetch") }}>{{ _("€%(premium_price)s one-time purchase", premium_price=premium_price) }}</a> {{ _("for lifetime access to higher quality, parallel downloads and full public collections on up to 10 active installations. Every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. Activation and periodic validation apply. Processing fees may apply.") }}</p>
 </div>
 {% endblock %}

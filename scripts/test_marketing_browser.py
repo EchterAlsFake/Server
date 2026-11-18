@@ -14,6 +14,7 @@ sys.path.insert(0, str(root))
 from playwright.sync_api import sync_playwright, expect
 from werkzeug.serving import make_server
 from _support import ServerTestCase, main
+from pf_server.product_catalog import WEBSITES
 
 
 def run(browser_name='chromium'):
@@ -74,7 +75,7 @@ def run(browser_name='chromium'):
             page.evaluate('window.scrollTo({top: 0, behavior: "instant"})')
             page.screenshot(path='/tmp/porn-fetch-home-desktop.png', full_page=True)
             page.screenshot(path='/tmp/porn-fetch-hero-desktop.png')
-            assert page.locator('.capability-table tbody tr').count() == 15
+            assert page.locator('.capability-table tbody tr').count() == len(WEBSITES)
             assert page.locator('.site-menu nav').is_visible()
             assert page.locator('.product-hero .product-actions a').count() == 4
             expect(page.locator('.product-hero .btn-source')).to_have_attribute('href', 'https://github.com/EchterAlsFake/Porn_Fetch')

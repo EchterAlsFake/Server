@@ -1,14 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Terms of Service — Porn Fetch{% endblock %}
 {% block content %}
-<article class="legal-document" lang="en">
-<h1>Terms of Service</h1>
-<div id="de">{% include "partials/terms_de.html" %}</div>
+{% if website_language == "de" %}
+<article class="legal-document">
+<h1>Vertragsbedingungen</h1>
+{% include "partials/terms_de.html" %}
+{% include "partials/refund_agreement_de.html" %}
+<p><a {{ site_link("/withdrawal") }}>Widerrufsbelehrung und Musterformular</a> · <a {{ site_link("/refund_policy") }}>Erstattungen</a> · <a {{ site_link("/privacy_policy") }}>Datenschutz</a></p>
+</article>
+{% else %}
+<article class="legal-document">
+<h1>{{ _("Terms of Service") }}</h1>
+{% if website_language == "en" %}
+<div id="de" lang="de">{% include "partials/terms_de.html" %}</div>
+{% else %}
+<p>{{ _("Contracts are concluded in English. Mandatory consumer protections continue to apply.") }} <a href="/terms#en" hreflang="en">{{ _("Read the governing English terms") }}</a>.</p>
+{% endif %}
 <section id="en">
 {% include "partials/contract_product.html" %}
 {% include "partials/terms_en.html" %}
 {% include "partials/refund_agreement_en.html" %}
 </section>
-<p><a href="/withdrawal">Withdrawal instructions and model form</a> · <a href="/refund_policy">Refund help</a> · <a href="/privacy_policy">Privacy</a></p>
+<p><a {{ site_link("/withdrawal") }}>{{ _("Withdrawal instructions and model form") }}</a> · <a {{ site_link("/refund_policy") }}>{{ _("Refund help") }}</a> · <a {{ site_link("/privacy_policy") }}>{{ _("Privacy") }}</a></p>
 </article>
+{% endif %}
 {% endblock %}

@@ -4,7 +4,38 @@ Research and source review: **25 October 2026**. Initial audience: English-speak
 adults looking for a supported video-downloading workflow. Canonical product
 origin: `https://pornfetch.to`.
 
-## Current guide presentation: 15 November 2026
+## Search Console review on 18 November 2026
+
+Google web search for 18 October–14 November recorded 8,792 clicks and 97,654
+impressions at 7.4 average position. In the latest complete week, average position
+moved from 7.5 to 7.2 and clicks rose from 3,103 to 3,926. The 28-day averages for
+the Eporner and XHamster guides were 8.28 and 8.70 on 22,052 and 21,081 impressions.
+For the post-publication comparison, track each guide's clicks, impressions, CTR
+and position for `eporner download`, `eporner downloader`, and
+`xhamster video download` over equivalent 28-day periods.
+
+The two guides now lead with their individual-video workflow and have
+provider-specific descriptions in all published languages. The live crawl found
+34 successful, indexable sitemap URLs with matching canonicals. Google still
+reported the old `/releases/3.8.1` URL from a previous sitemap crawl. The
+current sitemap and its linked pages no longer reference that URL.
+
+The site-wide follow-up uses each guide's localized compatibility summary in
+its search description and moves each existing provider introduction into the
+opening. The download hub and six platform pages have descriptive headings and
+distinct search metadata. Device links load the platform URL with its matching
+canonical, including when a beta or stable filter is selected. Project, support,
+policy, and release pages have descriptions tied to their own content. The
+localized sitemap tests check for unique titles and descriptions per language.
+
+## Porn Fetch 4.0.0 website coverage
+
+The compatibility table and guide hub cover all 21 providers in the app's shared
+catalog. Bellesa, Porn.com, Porndoe, Pornhat, RedGIFs and YouJizz have guides in
+all five website languages. The new pages specify 4.0.0 as the minimum app version
+and reuse the labeled 3.9.1 screenshots for the shared download walkthrough.
+
+## Guide presentation: 15 November 2026
 
 The guide hub and all 15 provider guides now lead with Android and the native
 iPhone app. The homepage and checkout are outside this presentation change.
@@ -166,7 +197,7 @@ uv run --with playwright python scripts/check_seo_browser.py
 
 Deploy accuracy/link fixes first, then guide improvements. Re-run the crawl and
 mobile lab measurements after deployment. Keep staging unindexed, private flows
-excluded, adult classification accurate, and canonical URLs unchanged. Record
+excluded, and existing canonical URLs unchanged. Record
 release dates alongside future comparisons without bulk sitemap resubmissions.
 
 ## Historical launch findings (25 October 2026)
@@ -219,16 +250,41 @@ Sources: [SEO starter guide](https://developers.google.com/search/docs/fundament
 
 ### Adult content and SafeSearch
 
-Google's explicit-content guidance covers accurate classification and access for
-crawlers. Public guides and marketing content are available without an age-confirmation
-session, and carry the existing `rating=adult` metadata. Purchase confirmation
-remains in place. The same public content is served to visitors and crawlers;
-there is no user-agent-only gate bypass. SafeSearch can limit visibility for the
-audiences that enable it. Removing accurate adult classification to chase traffic
-is not part of this work. The product tour is not a collection of hosted adult
-videos, so an adult-video sitemap is not added.
+The public website distributes the app and hosts its documentation and product
+demonstration. The shared SEO template omits the adult rating meta tag. Public
+pages are available to visitors and crawlers without an age-confirmation session.
+Purchase and donation entry pages use the existing confirmation flow.
 
 Source: [Guidelines for sites with explicit content](https://developers.google.com/search/docs/specialty/explicit/guidelines).
+
+### Website languages
+
+English uses the original URLs. German, Spanish, Hindi, and Simplified Chinese
+use `/de/`, `/es/`, `/hi/`, and `/zh-hans/`. Each language covers all
+provider guides, the guide hub, platform downloads, help, About, release history,
+and public legal documents. The URL selects the language. The language switcher
+links to equivalent pages, and links marked `EN` lead to an English page, such
+as checkout. Each indexable translation has its own canonical and reciprocal
+HTML `hreflang` links, with `zh-Hans` for Simplified Chinese and English as
+`x-default`. The sitemap lists the canonical URLs.
+
+Website copy uses Jinja's gettext interface and UTF-8 maps in `i18n/website/`.
+Keep provider names, URL fragments, filenames, and interpolation placeholders
+intact when updating translations. Guide prose comes from
+`pf_server/guide_content.py`. Public routes and language names are registered
+in `pf_server/website_locale.py`. Translations were drafted locally with
+[OPUS-MT for German](https://huggingface.co/cstr/opus-mt-en-de-ct2-int8),
+[Spanish](https://huggingface.co/michaelfeil/ct2fast-opus-mt-en-es), and
+[Chinese](https://huggingface.co/Zoowr/opus-mt-en-zh-ct2-int8), and
+[AI4Bharat IndicTrans2 for Hindi](https://huggingface.co/zaidwhys/indictrans2-en-indic-dist-200M-ct2-int8).
+The catalogs incorporate edited guide copy and labels from the app. Rendering
+reads repository files and needs no translation service.
+
+For a new release, put translations in the website release manifest alongside
+the English `notes` field. Use the URL locale codes as keys, for example
+`"notes_i18n": {"de": "…", "es": "…", "hi": "…", "zh-hans": "…"}`.
+Versions with English-only notes link to the original notes page. The website
+uses the same release files and checksums in all languages.
 
 ### Crawling, indexing, and canonicalization
 

@@ -40,6 +40,7 @@ from pf_server.guide_routes import guides_bp
 from pf_server.tax_service import country_transaction_summary
 from pf_server.update_routes import updates_bp
 from pf_server.website_releases import releases_bp
+from pf_server.website_locale import init_website_locale
 from pf_server.download_pages import downloads_bp
 from pf_server.onion import init_onion
 from pf_server.tor_checkout import init_tor_checkout
@@ -156,6 +157,7 @@ def create_app(
     ):
         application.register_blueprint(blueprint)
 
+    init_website_locale(application)
     application.before_request(track_request)
     application.before_request(handle_docs_subdomain)
     application.after_request(track_response)

@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 from flask import current_app, make_response, render_template, request
 
 from .http import normalized_hostname
+from .website_locale import source_path
 
 COOKIE_NAME = "__Host-vplan-block"
 COOKIE_AGE_SECONDS = 400 * 24 * 60 * 60
@@ -45,7 +46,7 @@ def block_vplan_referrals():
     if request.path == "/_metrics/event":
         return None
     # Statutory declarations and their privacy/provider notices remain accessible.
-    if request.path == "/withdrawal" or request.path.startswith("/withdrawal/") or request.path in {
+    if request.path == "/withdrawal" or request.path.startswith("/withdrawal/") or source_path() in {
         "/privacy_policy", "/impress", "/static/index.css", "/static/site.css",
         "/static/withdrawal.css", "/static/media/web/logo.webp",
     }:

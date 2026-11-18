@@ -1,4 +1,4 @@
 <div class="hero-actions product-actions">
-    <a href="/porn_fetch" class="btn btn-primary">Get lifetime Premium — €{{ premium_price }} <span aria-hidden="true">→</span></a>
-    <a href="/download" class="btn btn-secondary">Download Free <span aria-hidden="true">↓</span></a>
+    <a {{ site_link("/porn_fetch") }} class="btn btn-primary">{{ _("Get lifetime Premium — €%(premium_price)s", premium_price=premium_price) }} <span aria-hidden="true">→</span></a>
+    <a {{ site_link("/download") }} class="btn btn-secondary">{{ _("Download Free") }} <span aria-hidden="true">↓</span></a>
 </div>
