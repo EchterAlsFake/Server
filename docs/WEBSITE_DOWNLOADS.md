@@ -140,24 +140,24 @@ Verify both site origins in Search Console, submit the new sitemap, and inspect
 rendered product/platform pages after deployment. Indexing/rankings are not
 promised. Keep permanent redirects while older links are in use.
 
-## IPv6-first downloads
+## Offloaded / direct downloads
 
-Set `DIRECT_DOWNLOADS_ENABLED=true` after validating `DIRECT_DOWNLOAD_ORIGIN`
-(default `https://direct6.pornfetch.to`). This origin must have AAAA only and
-serve the same `/downloads/<version>/<filename>` bytes, with HEAD, Range,
-attachment headers and `Access-Control-Allow-Origin: https://pornfetch.to`.
-Website download buttons test the exact direct file with a three-second HEAD
-request before starting a normal browser transfer. An unavailable direct file
-falls back to its existing website URL. A visible compatibility link supports
-manual retry after an interrupted browser transfer, and works without JavaScript.
-Release history uses the same selector. Checksums and catalog URLs stay unchanged.
+Large binary releases and update repositories are served from the dedicated
+download origin (`https://downloads.pornfetch.to`) so the primary application
+origin only handles dynamic pages, licensing, and API traffic.
+
+When `DIRECT_DOWNLOADS_ENABLED=true`, website download buttons probe the
+configured `DIRECT_DOWNLOAD_ORIGIN` (with `HEAD`, `Range`, attachment headers,
+and `Access-Control-Allow-Origin: https://pornfetch.to`) using a short timeout
+before starting a normal browser transfer. An unavailable direct file falls back
+to its existing website URL. A visible compatibility link supports manual retry
+after an interrupted browser transfer, and works without JavaScript. Release
+history uses the same selector. Checksums and catalog URLs stay unchanged.
 Onion pages never probe or link to the direct origin.
 
 Set `DIRECT_DOWNLOADS_ENABLED=false` and redeploy to restore the original links.
 The origin remains allowed by CSP, but disabled pages do not contact it.
-No JSON publishing or catalog schema changes are needed. Infrastructure lives
-in `/srv/infra/msi/caddy/direct6.caddy`; operations are documented in
-`/srv/infra/docs/operations/DIRECT6.md`.
+No JSON publishing or catalog schema changes are needed.
 
 Check the browser selector offline with
 `python scripts/check_direct_downloads_browser.py` in an environment with
