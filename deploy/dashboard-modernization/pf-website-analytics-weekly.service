@@ -1,0 +1,8 @@
+[Unit]
+Description=Generate the private PornFetch weekly analytics bundle
+Requisite=pornfetch-web.service
+After=pornfetch-web.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 1000 python -m flask --app main analytics-weekly --output /data/weekly-analytics

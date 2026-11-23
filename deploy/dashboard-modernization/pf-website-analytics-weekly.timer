@@ -1,0 +1,9 @@
+[Unit]
+Description=Generate the private analytics bundle after Search Console data settles
+
+[Timer]
+OnCalendar=Thu *-*-* 09:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

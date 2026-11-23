@@ -1,0 +1,10 @@
+[Unit]
+Description=Reconcile storefront payment reports
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=30min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

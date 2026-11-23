@@ -1,0 +1,9 @@
+[Unit]
+Description=Export verified storefront transactions and Patreon Shop sales
+Requisite=pornfetch-web.service
+After=pornfetch-web.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec --user 0 pornfetch-web /entrypoint-wrapper.sh /drop-privileges 1000 1000 python -m pf_server.dashboard_revenue
+TimeoutStartSec=8min

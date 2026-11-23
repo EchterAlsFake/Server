@@ -61,15 +61,16 @@ pornfetch.to {
         max_size 2147483648
     }
 
-    @legacy_visit path /__eaf/visit /__eaf/visit.js
-    handle @legacy_visit {
+    @retired_analytics path /__eaf/visit /__eaf/visit.js /_metrics/event
+    handle @retired_analytics {
+        log_skip
         respond 410
     }
-    @aggregate_metrics path /_metrics/event
-    handle @aggregate_metrics {
+    @website_feedback path /_metrics/feedback
+    handle @website_feedback {
         log_skip
         request_body {
-            max_size 256B
+            max_size 128B
         }
         reverse_proxy 127.0.0.1:8000 {
             header_up -Cookie
@@ -80,11 +81,10 @@ pornfetch.to {
             header_up -True-Client-IP
             header_up -CF-Connecting-IP
             header_up -X-Original-Forwarded-For
+            header_up -X-Forwarded-For
             header_up -X-Forwarded-Host
             header_up -X-Forwarded-Port
             header_up -X-Forwarded-Prefix
-            # Replace, never append: country is resolved locally, then address discarded.
-            header_up X-Forwarded-For {client_ip}
             header_up X-Forwarded-Proto https
         }
     }

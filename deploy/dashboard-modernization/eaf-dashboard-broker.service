@@ -1,0 +1,29 @@
+[Unit]
+Description=Least-privileged EAF Dashboard data and service broker
+Before=eaf-dashboard.service
+
+[Service]
+Type=simple
+RuntimeDirectory=eaf-dashboard-broker
+RuntimeDirectoryMode=0755
+Environment="EAF_BROKER_ROUTER_NAME=FRITZ!Box"
+Environment=EAF_BROKER_SOCKET=%t/eaf-dashboard-broker/broker.sock
+Environment=EAF_BROKER_SERVER_DB=%h/.local/share/containers/storage/volumes/pornfetch-data/_data/server.db
+Environment=EAF_BROKER_DASHBOARD_DB=%h/.local/share/containers/storage/volumes/dashboard-data/_data/dashboard.db
+Environment=EAF_BROKER_POCKETBASE_DB=%h/.local/share/containers/storage/volumes/pocketbase-data/_data/data.db
+Environment=EAF_BROKER_BACKUP_DIR=%h/backups/eaf-dashboard
+Environment=EAF_BROKER_CADDY_METRICS_URL=http://127.0.0.1:2019/metrics
+ExecStart=/usr/bin/python3 %h/.local/lib/eaf-dashboard/broker_server.py
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=%h/.local/share/containers/storage/volumes %h/backups/eaf-dashboard
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+LockPersonality=true
+MemoryDenyWriteExecute=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

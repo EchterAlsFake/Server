@@ -167,7 +167,8 @@ def fetch_sales():
             raise ValueError()
     except (OSError, ValueError, http.cookiejar.LoadError):
         raise VerificationUnavailable('cookies', 900) from None
-    rows, seen = [], set()
+    rows, seen, accounting = [], set(), []
+    from .dashboard_revenue import parse_shop_accounting, publish_shop
     expected_total = None
     deadline = time.monotonic() + 120
     with requests.Session(cookies=jar, impersonate='chrome', trust_env=False,
@@ -209,7 +210,16 @@ def fetch_sales():
                 raise VerificationUnavailable('pagination')
             seen.update(ids)
             rows.extend(batch)
+            try:
+                accounting.extend(parse_shop_accounting(payload))
+            except (ValueError, KeyError, TypeError, OverflowError):
+                current_app.logger.warning('Patreon financial fields unavailable')
+
             if len(rows) == total:
+                try:
+                    publish_shop(accounting, total)
+                except OSError:
+                    current_app.logger.warning('Patreon financial snapshot unavailable')
                 return rows
             if len(batch) != 50 or len(rows) > total:
                 raise VerificationUnavailable('pagination')

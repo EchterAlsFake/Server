@@ -1,12 +1,11 @@
-<section id="premium-feedback" hidden aria-labelledby="premium-feedback-title">
-    <h2 id="premium-feedback-title">What would help you decide?</h2>
-    <p>Optional anonymous feedback. Only answer totals are stored; no visitor identifier is created.</p>
-    <div role="group" aria-labelledby="premium-feedback-title">
-        <button type="button" class="btn" data-feedback="price">Lower price</button>
-        <button type="button" class="btn" data-feedback="information">More information</button>
-        <button type="button" class="btn" data-feedback="payment">Easier payment</button>
-        <button type="button" class="btn" data-feedback="try_first">I need to try the app first</button>
-        <button type="button" class="btn" data-feedback="free_sufficient">Free meets my needs</button>
-    </div>
-    <p role="status" id="premium-feedback-status"></p>
-</section>
+{% set german = website_language == "de" %}
+<details class="ux-disclosure" id="website-feedback">
+    <summary>{{ "Was können wir verbessern?" if german else "What could we improve?" }}</summary>
+    <form action="{{ url_for('aggregate_analytics.feedback') }}" method="post" autocomplete="off">
+        <p>{{ "Die Antwort wird nur als Summe gezählt." if german else "Your answer contributes to an aggregate count." }}</p>
+        <input type="hidden" name="language" value="{{ 'de' if german else 'en' }}">
+        {% for key, labels in website_feedback_choices.items() %}
+        <button class="btn" type="submit" name="answer" value="{{ key }}">{{ labels[1] if german else labels[0] }}</button>
+        {% endfor %}
+    </form>
+</details>

@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh dashboard reports every minute
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=60s
+AccuracySec=10s
+Unit=pf-dashboard-reports.service
+
+[Install]
+WantedBy=timers.target

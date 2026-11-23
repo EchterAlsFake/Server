@@ -43,8 +43,6 @@ def _valid_marker(value: str | None, key: bytes) -> bool:
 
 def block_vplan_referrals():
     """Use an app-lifetime signing key and a host-only browser marker."""
-    if request.path == "/_metrics/event":
-        return None
     # Statutory declarations and their privacy/provider notices remain accessible.
     if request.path == "/withdrawal" or request.path.startswith("/withdrawal/") or source_path() in {
         "/privacy_policy", "/impress", "/static/index.css", "/static/site.css",

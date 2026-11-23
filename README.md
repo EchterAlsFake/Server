@@ -530,4 +530,4 @@ and install the hourly refresh timer before enabling payments. Missing/stale Tor
 blocks new crypto checkout. Patreon browser retrieval starts a background worker immediately
 and migration `e8b42f930d16`; email alone never reveals a key in the browser.
 
-Optional identifier-free page/button counters and daily reports are available with `AGGREGATE_ANALYTICS_ENABLED` (disabled by default). See [aggregate analytics](docs/ANALYTICS.md) for the minute dashboard integration, retention, limitations and deployment checks. Retiring the legacy visitor script does not purge historical counters or download-importer records.
+Optional server-side website request counts are available with `WEBSITE_REQUEST_ANALYTICS_ENABLED` (disabled by default). See [Website Analytics](docs/ANALYTICS.md) for reporting, privacy review and deployment checks.

@@ -1,0 +1,9 @@
+[Unit]
+Description=Expire dashboard visitor check values after midnight UTC
+
+[Timer]
+OnCalendar=*-*-* 00:05:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

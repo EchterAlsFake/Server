@@ -1,0 +1,49 @@
+(pf_dashboard_traffic) {
+	map "{host}|{orig_path}" {pf_route} {
+		~^[^|]+[|]/(ping|healthz|__infra_health|__download_health|dashboard/healthz)$ health
+		~^[^|]+[|]/(dashboard|dashbord)(/|$) dashboard
+		~^[^|]+[|]/(_metrics|__eaf)/ measurement
+		~^[^|]+[|]/(static/|assets/|favicon[.]ico$|robots[.]txt$) assets
+		~^[^|]+[|]/(downloads/|repo/|standalone/) download
+		~^downloads[.]pornfetch[.]to[|]/.*[.](apk|appimage|exe|msi|dmg|zip|7z|tar[.](gz|xz|zst)|deb|rpm)$ download
+		~^([a-z.]*[|]/(activate|license|v1/licenses)|licenses[.]pornfetch[.]to[|]) licensing
+		~^[^|]+[|]/(buy|payment|checkout|webhook) payments
+		~^(api[.]|[^|]+[|]/(api/|v1/)) api
+		~^[^|]+[|]/($|guides|download|help|about|releases|docs|porn_fetch) pages
+		default other
+	}
+	map {orig_path} {pf_product} {
+		~(/metadata/|/meta[.]7z$) none
+		~(?i)^/repo/android/.*[.](apk|zip|7z)$ android
+		~(?i)^/repo/cli/.*[.](zip|7z|tar[.](gz|xz|zst)|deb|rpm|exe)$ cli
+		~(?i)^/downloads/.*[.](apk|appimage|exe|msi|dmg|zip|7z|tar[.](gz|xz|zst)|deb|rpm)$ website
+		~(?i)^/repo/.*[.](zip|7z|tar[.](gz|xz|zst))$ qt
+		~(?i)[.](apk|appimage|exe|msi|dmg|zip|7z|tar[.](gz|xz|zst)|deb|rpm)$ standalone
+		default none
+	}
+	@pf_crawler header_regexp User-Agent (?i)bot|crawler|spider|preview|headless|uptime|curl|wget
+	log_append @pf_crawler pf_client bot
+	log_append pf_route {pf_route}
+	log_append pf_product {pf_product}
+	log {
+		output file /var/lib/caddy/dashboard-traffic-redacted.json {
+			mode 0600
+			roll_size 20MiB
+			roll_uncompressed
+			roll_keep 4
+			roll_keep_for 24h
+		}
+		format filter {
+			wrap json
+			fields {
+				request>client_ip delete
+				request>remote_ip delete
+				request>remote_port delete
+				request>tls delete
+				request>uri delete
+				request>headers delete
+				resp_headers delete
+			}
+		}
+	}
+}

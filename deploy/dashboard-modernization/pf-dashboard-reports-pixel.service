@@ -1,0 +1,10 @@
+[Unit]
+Description=Collect Pixel request totals and fleet telemetry
+
+[Service]
+Type=oneshot
+UMask=0027
+ExecStart=/usr/bin/python /usr/local/lib/pf-dashboard-reporting/traffic.py /var/lib/caddy/dashboard-traffic-redacted.json /var/lib/pornfetch/dashboard-reporting/http.sqlite3
+ExecStart=/usr/bin/chgrp pornfetch /var/lib/pornfetch/dashboard-reporting/http.sqlite3
+ExecStart=/usr/bin/python /usr/local/lib/pf-dashboard-reporting/telemetry.py
+NoNewPrivileges=true

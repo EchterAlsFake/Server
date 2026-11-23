@@ -1,0 +1,8 @@
+[Unit]
+Description=Expire old dashboard visitor check values
+Requisite=eaf-dashboard.service
+After=eaf-dashboard.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec --user 0 eaf-dashboard /drop-privileges 1000 1000 python -m dashboard.cli purge-visitors

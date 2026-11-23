@@ -1,17 +1,17 @@
-"""Identifier-free daily counters. No event log and no business database access."""
+"""Count allowlisted public requests without accepting browser telemetry."""
 
-import calendar
 import json
 import os
 import sqlite3
 import tempfile
+from collections import defaultdict
 from contextlib import closing
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
 import click
-from flask import Blueprint, abort, current_app, request
+from flask import Blueprint, abort, current_app, make_response, render_template, request
 
 from .download_pages import PLATFORMS
 from .extensions import csrf, limiter
@@ -20,39 +20,56 @@ from .onion import is_onion
 from .website_locale import source_path
 
 analytics_bp = Blueprint("aggregate_analytics", __name__)
+ENABLED = "WEBSITE_REQUEST_ANALYTICS_ENABLED"
+FEEDBACK_ENDPOINT = "/_metrics/feedback"
+REPORT_FILE = "website-request-analytics-report.json"
+MINIMUM = 20
+RETENTION_WEEKS = 26
 PAGES = {
-    "/": "home", "/guides": "guides", "/download": "download",
-    "/about": "about", "/help": "help", "/releases": "releases",
-    "/porn_fetch": "premium", "/buy_license": "checkout",
-    "/buy_card": "checkout", "/payment-preview/patreon": "checkout",
-    "/payment-preview/card": "checkout", "/payment-preview/banxa": "checkout",
-    **{f"/guides/download-{key}-videos": f"guide_{key}" for key in GUIDES},
-    **{f"/download/{key}": f"download_{key}" for key in PLATFORMS},
+    "/": ("home", "pages"),
+    "/guides": ("guides", "pages"),
+    "/about": ("about", "pages"),
+    "/releases": ("releases", "pages"),
+    "/porn_fetch": ("premium", "product"),
+    "/download": ("download", "product"),
+    "/help": ("help", "help"),
+    **{f"/guides/download-{key}-videos": (f"guide_{key}", "pages") for key in GUIDES},
+    **{f"/download/{key}": (f"download_{key}", "product") for key in PLATFORMS},
 }
-ACTIONS = frozenset({
-    "pageview", "open_download", "open_premium", "checkout_continue",
-    "download_click", "installation_guide", "open_help",
-    *{f"choose_{key}" for key in PLATFORMS},
-})
-PLACEMENTS = frozenset({"header", "guide_top", "guide_steps", "comparison", "content", "footer"})
-FEEDBACK = frozenset({"price", "information", "payment", "try_first", "free_sufficient"})
-DEVICES = frozenset({"mobile", "tablet", "desktop"})
-CLIENT_ACTIONS = ACTIONS | {f"{kind}_{placement}" for kind in ("visible_download", "visible_premium", "click_download", "click_premium") for placement in PLACEMENTS} | {f"feedback_{answer}" for answer in FEEDBACK} | {f"pageview_{device}" for device in DEVICES}
-SERVER_ACTIONS = frozenset(f"checkout_valid_{method}_{environment}" for method in ("patreon", "crypto", "card") for environment in ("production", "sandbox"))
-ACTIONS = CLIENT_ACTIONS | SERVER_ACTIONS
-PAGE_IDS = frozenset(PAGES.values())
-ENDPOINT = "/_metrics/event"
+FEEDBACK = {
+    "platform": ("I couldn’t find my platform", "Ich konnte meine Plattform nicht finden"),
+    "installation": ("Installation steps were unclear", "Die Installationsschritte waren unklar"),
+    "product": ("I needed more product information", "Mir fehlten Informationen zum Produkt"),
+    "pricing": ("The price or what’s included was unclear", "Preis oder Leistungsumfang waren unklar"),
+    "support": ("I couldn’t find the help I needed", "Ich konnte die passende Hilfe nicht finden"),
+}
+SERIES = {
+    **{key: dict(id=key, category=category, path=path) for path, (key, category) in PAGES.items()},
+    **{f"feedback_{key}": dict(id=f"feedback_{key}", category="help", label=labels[0])
+       for key, labels in FEEDBACK.items()},
+}
 
 
 def utc_today():
-    return datetime.now(timezone.utc).date()
+    return datetime.now(UTC).date()
 
 
-def retention_cutoff(today):
-    # Thirteen calendar months, including short months and leap years.
-    month = today.year * 12 + today.month - 1 - 13
-    year, zero_month = divmod(month, 12)
-    return date(year, zero_month + 1, min(today.day, calendar.monthrange(year, zero_month + 1)[1]))
+def week_start(day):
+    return day - timedelta(days=day.weekday())
+
+
+def atomic_write(path, content, mode=0o640):
+    path = Path(path)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as target:
+            target.write(content)
+            target.flush()
+            os.fsync(target.fileno())
+            os.fchmod(target.fileno(), mode)
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 class AggregateCounters:
@@ -61,152 +78,147 @@ class AggregateCounters:
 
     def connect(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        # Create privately even when launched outside the hardened systemd service.
         fd = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o600)
         os.close(fd)
-        os.chmod(self.path, 0o600)
-        connection = sqlite3.connect(self.path, timeout=1)
+        connection = sqlite3.connect(self.path, timeout=0.25)
         try:
-            connection.execute("CREATE TABLE IF NOT EXISTS country_counts (day TEXT NOT NULL, country TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY(day, country))")
-            connection.execute("CREATE TABLE IF NOT EXISTS daily_counts (day TEXT NOT NULL, page TEXT NOT NULL, action TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (day, page, action))")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS counts (day TEXT, series TEXT, count INTEGER NOT NULL,"
+                " PRIMARY KEY(day,series))"
+            )
+            connection.execute("CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         except sqlite3.Error:
             connection.close()
             raise
         return connection
 
-    def increment(self, page, action, country=None):
-        if page not in PAGE_IDS or action not in ACTIONS:
-            raise ValueError("Unknown aggregate counter")
-        today = utc_today()
-        with closing(self.connect()) as connection, connection:
-            connection.execute("DELETE FROM daily_counts WHERE day < ?", (retention_cutoff(today).isoformat(),))
-            if action == "pageview" and country:
-                from .countries import country_name
-                if country_name(country):
-                    connection.execute("INSERT INTO country_counts VALUES (?, ?, 1) ON CONFLICT(day,country) DO UPDATE SET count=count+1", (today.isoformat(), country))
-            connection.execute("INSERT INTO daily_counts VALUES (?, ?, ?, 1) ON CONFLICT(day, page, action) DO UPDATE SET count = count + 1", (today.isoformat(), page, action))
+    def increment(self, series):
+        if series not in SERIES:
+            raise ValueError("Unknown website counter")
+        day = utc_today().isoformat()
+        with closing(self.connect()) as db, db:
+            db.execute("INSERT OR IGNORE INTO metadata VALUES ('started',?)", (day,))
+            db.execute("INSERT INTO counts VALUES (?,?,1) ON CONFLICT DO UPDATE SET count=count+1", (day, series))
 
     def purge(self):
-        with closing(self.connect()) as connection, connection:
-            result = connection.execute("DELETE FROM daily_counts WHERE day < ?", (retention_cutoff(utc_today()).isoformat(),))
-            connection.execute("DELETE FROM country_counts WHERE day < ?", (retention_cutoff(utc_today()).isoformat(),))
-            return result.rowcount
+        cutoff = (week_start(utc_today()) - timedelta(weeks=RETENTION_WEEKS)).isoformat()
+        with closing(self.connect()) as db, db:
+            return db.execute("DELETE FROM counts WHERE day < ?", (cutoff,)).rowcount
 
-    def report(self, days=28):
-        if type(days) is not int or not 1 <= days <= 90:
-            raise ValueError("Reporting days must be between 1 and 90")
-        today = utc_today()
-        start = today - timedelta(days=days - 1)
+    def report(self, enabled):
+        now = datetime.now(UTC)
+        end = week_start(now.date())
+        start = end - timedelta(weeks=RETENTION_WEEKS)
         self.purge()
-        with closing(self.connect()) as connection:
-            rows = connection.execute("SELECT day,page,action,count FROM daily_counts WHERE day >= ? AND day <= ? AND count >= 20 ORDER BY day,page,action", (start.isoformat(), today.isoformat())).fetchall()
-            countries = connection.execute("SELECT day,country,count FROM country_counts WHERE day >= ? AND day <= ? AND count >= 20 ORDER BY day,country", (start.isoformat(), today.isoformat())).fetchall()
-        return dict(schema_version=2, grain="day", start=start.isoformat(),
-                    end_exclusive=(today + timedelta(days=1)).isoformat(),
-                    timezone="UTC", minimum_count=20, current_day_partial=True,
-                    note="Events, not people or connected funnels. Cells below 20 omitted. Today is incomplete.",
-                    rows=[dict(day=day,page=page,action=action,count=count) for day,page,action,count in rows],
-                    countries=[dict(day=day,country=country,count=count) for day,country,count in countries])
+        cells = defaultdict(list)
+        with closing(self.connect()) as db:
+            cutover = db.execute("SELECT value FROM metadata WHERE key='started'").fetchone()
+            cutover = cutover[0] if cutover else None
+            for raw_day, series, count in db.execute(
+                "SELECT day,series,count FROM counts WHERE day>=? AND day<? ORDER BY day,series",
+                (start.isoformat(), end.isoformat()),
+            ):
+                if series in SERIES:
+                    cells[(week_start(datetime.fromisoformat(raw_day).date()).isoformat(), series)].append((raw_day, count))
+        daily, weekly = [], []
+        for (week, series), days in sorted(cells.items()):
+            total = sum(count for _, count in days)
+            if total < MINIMUM:
+                continue
+            # Publish no daily breakdown for a series/week with a small positive day.
+            # Closed weeks are used everywhere so earlier exports cannot reveal that day.
+            daily_visible = all(count >= MINIMUM for _, count in days)
+            weekly.append(dict(week=week, series=series, count=total, daily_available=daily_visible))
+            if daily_visible:
+                daily.extend(dict(day=day, series=series, count=count) for day, count in days)
+        return dict(
+            schema_version=3, method="public_request_counts", timezone="UTC",
+            minimum_count=MINIMUM, start=start.isoformat(), end_exclusive=end.isoformat(),
+            generated_at=now.isoformat(), enabled=enabled, cutover=cutover,
+            series=list(SERIES.values()), daily=daily, weekly=weekly,
+        )
 
 
 def public_origin():
     return request.host.lower() == urlsplit(current_app.config["APP_DOMAIN"]).netloc.lower()
 
 
-@analytics_bp.post(ENDPOINT)
-@csrf.exempt
-@limiter.limit("6000 per minute", key_func=lambda: "aggregate-analytics-global")
-def collect():
-    if not current_app.config["AGGREGATE_ANALYTICS_ENABLED"] or not public_origin() or is_onion():
-        abort(404)
-    # Do not accept URL parameters, cross-origin submissions, or ambient identities.
-    if request.query_string or request.headers.get("Cookie") or request.headers.get("Authorization"):
-        return "", 400
-    if request.headers.get("Origin") != current_app.config["APP_DOMAIN"] or request.headers.get("Sec-Fetch-Site") not in {None, "same-origin"}:
-        return "", 403
-    if request.headers.get("DNT") == "1" or request.headers.get("Sec-GPC") == "1":
-        return "", 204
-    if request.mimetype != "application/json":
-        return "", 415
-    if request.content_length is None or request.content_length > 256:
-        return "", 413
-    request.max_content_length = 256
-    payload = request.get_json(silent=True)
-    if (not isinstance(payload, dict) or set(payload) != {"page", "action"}
-        or not isinstance(payload["page"], str) or payload["page"] not in PAGE_IDS
-        or not isinstance(payload["action"], str) or payload["action"] not in CLIENT_ACTIONS):
-        return "", 400
-    if payload["action"].startswith("feedback_") and payload["page"] != "premium":
-        return "", 400
+def collecting():
+    return (current_app.config[ENABLED] and public_origin() and not is_onion()
+            and request.headers.get("DNT") != "1" and request.headers.get("Sec-GPC") != "1")
+
+
+def increment(series):
     try:
-        current_app.extensions["aggregate_analytics"].increment(payload["page"], payload["action"], request.environ.get("PF_COUNTRY_CODE"))
+        current_app.extensions["aggregate_analytics"].increment(series)
+        return True
     except (OSError, sqlite3.Error):
-        # Fixed message only: no payload, headers, exceptions, or request details.
-        current_app.logger.warning("Aggregate analytics storage unavailable")
-        return "", 503
-    return "", 204
+        current_app.logger.warning("Website request counters unavailable")
+        return False
+
+
+@analytics_bp.post(FEEDBACK_ENDPOINT)
+@csrf.exempt
+@limiter.limit("60 per minute", key_func=lambda: "website-feedback-global")
+def feedback():
+    if not collecting():
+        abort(404)
+    if (request.headers.get("Origin") != current_app.config["APP_DOMAIN"]
+            or request.headers.get("Sec-Fetch-Site") not in {None, "same-origin"}):
+        abort(403)
+    if (request.query_string or request.mimetype != "application/x-www-form-urlencoded"
+            or request.content_length is None or request.content_length > 128):
+        abort(400)
+    request.max_content_length = 128
+    answer = request.form.get("answer")
+    locales = request.form.getlist("language")
+    if (set(request.form) != {"answer", "language"} or len(request.form.getlist("answer")) != 1
+            or answer not in FEEDBACK or locales not in (["de"], ["en"])):
+        abort(400)
+    saved = increment(f"feedback_{answer}")
+    response = make_response(render_template("website_feedback.html", saved=saved, german=locales == ["de"]), 200 if saved else 503)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex"
+    return response
 
 
 def init_aggregate_analytics(app):
-    app.extensions["aggregate_analytics"] = AggregateCounters(Path(app.config["DATA_DIR"]) / "aggregate-analytics.sqlite3")
+    store = AggregateCounters(Path(app.config["DATA_DIR"]) / "website-request-counts.sqlite3")
+    app.extensions["aggregate_analytics"] = store
     app.register_blueprint(analytics_bp)
 
     @app.context_processor
-    def analytics_context():
-        page = None
-        if app.config["AGGREGATE_ANALYTICS_ENABLED"] and public_origin() and not is_onion() and request.method == "GET":
-            page = PAGES.get(source_path())
-        return {"aggregate_analytics_page": page}
+    def feedback_context():
+        show = request.method == "GET" and source_path() in {"/porn_fetch", "/download", "/help"} and collecting()
+        return {"website_feedback_choices": FEEDBACK if show else {}}
 
     @app.after_request
-    def analytics_headers(response):
-        if request.path == ENDPOINT:
-            response.headers["Cache-Control"] = "no-store"
-            response.headers["Referrer-Policy"] = "no-referrer"
-            response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    def count_public_page(response):
+        if (request.method != "GET" or response.status_code != 200 or response.mimetype != "text/html"
+                or request.url_rule is None or not collecting()
+                or any("prefetch" in request.headers.get(header, "").lower()
+                       for header in ("Sec-Purpose", "Purpose", "X-Moz"))):
+            return response
+        page = PAGES.get(source_path())
+        if page:
+            increment(page[0])
         return response
 
     @app.cli.command("analytics-report")
-    @click.option("--days", type=click.IntRange(1, 90), default=28, show_default=True)
-    def report(days):
-        """Print daily UTC counters including today, suppressing counts below twenty."""
-        click.echo(json.dumps(app.extensions["aggregate_analytics"].report(days), indent=2))
+    def report():
+        """Read the privacy-filtered website report."""
+        click.echo(json.dumps(store.report(app.config[ENABLED]), indent=2))
 
     @app.cli.command("analytics-export")
     def export():
-        """Atomically export suppressed daily counts for the private dashboard."""
-        store = app.extensions["aggregate_analytics"]
-        report = store.report(90)
-        report.update(enabled=app.config["AGGREGATE_ANALYTICS_ENABLED"], updated_day=utc_today().isoformat(), generated_at=datetime.now(timezone.utc).isoformat())
-        descriptor, temporary = tempfile.mkstemp(prefix=".analytics-report-", dir=store.path.parent)
-        try:
-            with os.fdopen(descriptor, "w") as target:
-                json.dump(report, target)
-                target.flush()
-                os.fsync(target.fileno())
-                os.fchmod(target.fileno(), 0o640)
-            os.replace(temporary, store.path.parent / "aggregate-analytics-report.json")
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
-        click.echo("Exported suppressed daily analytics report")
+        """Publish the suppressed aggregate snapshot for the dashboard."""
+        atomic_write(store.path.parent / REPORT_FILE, json.dumps(store.report(app.config[ENABLED])))
+        click.echo("Exported website request counts")
 
     @app.cli.command("analytics-purge")
     def purge():
-        """Delete counters older than thirteen calendar months."""
-        click.echo(f"Removed {app.extensions['aggregate_analytics'].purge()} expired aggregate cells")
+        """Remove expired website request counts."""
+        click.echo(f"Removed {store.purge()} expired website counter cells")
 
-
-def record_checkout_start(method):
-    """Called after server-side validation; never accepts client event names."""
-    if (not current_app.config.get("AGGREGATE_ANALYTICS_ENABLED") or not public_origin()
-            or is_onion() or request.headers.get("DNT") == "1" or request.headers.get("Sec-GPC") == "1"):
-        return
-    environment = "sandbox" if current_app.config["NOWPAYMENTS_SANDBOX"] else "production"
-    action = f"checkout_valid_{method}_{environment}"
-    if action not in SERVER_ACTIONS:
-        return
-    try:
-        current_app.extensions["aggregate_analytics"].increment("checkout", action)
-    except (OSError, sqlite3.Error):
-        current_app.logger.warning("Aggregate analytics storage unavailable")
+    from .website_analytics_bundle import register_bundle
+    register_bundle(app, store)

@@ -1,0 +1,8 @@
+[Unit]
+Description=Export Acer HTTP traffic and release inventory
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=/usr/bin/python /usr/local/lib/pf-dashboard-reporting/acer_snapshot.py
+NoNewPrivileges=true

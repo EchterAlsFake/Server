@@ -99,7 +99,6 @@ def create_app(
         country_resolver,
         application.config["CHECKOUT_IP_HEADER"],
         application.extensions["tor_resolver"],
-        metrics_enabled=application.config["AGGREGATE_ANALYTICS_ENABLED"],
         rate_secret=application.config["SECRET_KEY"],
     )
 
@@ -283,7 +282,7 @@ app = create_app()
 
 class NoIPLoggingHandler(WSGIRequestHandler):
     def log_request(self, code="-", size="-"):
-        if self.path.partition("?")[0] == "/_metrics/event":
+        if self.path.partition("?")[0].startswith("/_metrics/"):
             return
         method = self.command
         path = self.path.partition("?")[0]
