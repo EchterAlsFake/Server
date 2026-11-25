@@ -23,15 +23,15 @@
     load.disabled = !allowed;
     if (!allowed) removeWidget();
     status.textContent = !allowed
-      ? 'Please confirm age and country above. / Bitte bestätigen Sie oben Alter und Land.'
+      ? websiteText("Please confirm age and country above.")
       : wrapper.childElementCount
-        ? 'Widget enabled. / Widget aktiviert.'
-        : 'Widget blocked. Loading is optional. / Widget gesperrt. Das Laden ist freiwillig.';
+        ? websiteText("Widget enabled.")
+        : websiteText("Widget blocked. Loading is optional.");
   }
   load.addEventListener('click', () => {
     if (!eligible() || wrapper.childElementCount) return;
     const frame = document.createElement('iframe');
-    frame.title = 'NOWPayments cryptocurrency donation';
+    frame.title = websiteText("NOWPayments cryptocurrency donation");
     frame.referrerPolicy = 'no-referrer';
     frame.width = '346';
     frame.height = '623';

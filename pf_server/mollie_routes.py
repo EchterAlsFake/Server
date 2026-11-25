@@ -16,6 +16,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash
 
+from .website_locale import site_path, translate
 from .extensions import csrf, db, limiter, browser_limit_key
 from .mollie_models import MollieCheckout, MollieGrant
 from . import mollie_service as mollie
@@ -71,7 +72,7 @@ def unlock():
         valid = False
     if not valid:
         return render_template(
-            "mollie_unlock.html", error="Incorrect tester password."
+            "mollie_unlock.html", error=translate("Incorrect tester password.")
         ), 403
     token = secrets.token_urlsafe(32)
     db.session.add(
@@ -110,18 +111,18 @@ def create_checkout():
 
         if checkout_network_status() != "clear":
             return jsonify(
-                error="Use a direct connection; network verification is required."
+                error=translate("Use a direct connection; network verification is required.")
             ), 403
         if request.form.get("offer_digest") != mollie.offer_digest():
             return jsonify(
-                error="The offer has changed. Reload and review the checkout again."
+                error=translate("The offer has changed. Reload and review the checkout again.")
             ), 409
         required = ["age_terms_accepted", "withdrawal_accepted"]
         if not mollie.live_enabled():
             required.append("test_acknowledged")
         if any(request.form.get(name) != "yes" for name in required):
             return jsonify(
-                error="Accept the required confirmations before continuing."
+                error=translate("Accept the required confirmations before continuing.")
             ), 400
         # The existing country validator accepts dictionaries, not Flask MultiDict.
         country, error = validate_checkout_country(dict(request.form))
@@ -129,7 +130,7 @@ def create_checkout():
             return error
         recipient = normalize_recipient_email(request.form.get("email"))
         if not recipient:
-            return jsonify(error="Enter a valid license delivery email."), 400
+            return jsonify(error=translate("Enter a valid license delivery email.")), 400
         try:
             identifier = mollie.reserve(
                 access, country, request.form["country"], recipient
@@ -137,13 +138,13 @@ def create_checkout():
         except ValueError, TypeError, AttributeError:
             db.session.rollback()
             return jsonify(
-                error="Email delivery is not configured. Please try again later."
+                error=translate("Email delivery is not configured. Please try again later.")
             ), 503
     mollie.process_order(identifier)
     # Show the private recovery page first so the link can be saved before leaving.
     target = url_for("payments.buy_success", session_id=identifier)
     if request.headers.get("Accept") == "application/json":
-        return jsonify(next=target)
+        return jsonify(next=site_path(target))
     return redirect(target, code=303)
 
 

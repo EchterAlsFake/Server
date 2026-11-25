@@ -1,0 +1,23 @@
+Traducción. Texto original en inglés: /static/notices/tux.txt
+
+Esta es la versión a todo color del logotipo no oficial de Linux
+("actualmente no oficial" significa que no ha habido ningún papeleo y
+Fue creado por Larry Ewing,
+y es libremente utilizable mientras reconozcas a Larry como el original
+artista.
+
+Tenga en cuenta que hay versiones en blanco y negro de este disponible que
+escala hasta tamaños más pequeños y son mejores para membretes o lo que sea
+desea utilizarlo para: para toda la gama de logotipos echar un vistazo a
+Página web de Larry:
+
+	https://www.isc.tamu.edu/~lewing/linux/
+
+La versión SVG fue re-ilustrada en vector por Garrett LeSage y
+refinada y limpiada por IGo Hancroft. También es libremente utilizable
+Siempre y cuando reconozcas a Larry, Garrett e IFo como los de arriba.
+
+También hay versiones vectoriales en blanco y negro e invertidos en
+El repositorio de Garrett:
+
+	https://github.com/garrett/Tux

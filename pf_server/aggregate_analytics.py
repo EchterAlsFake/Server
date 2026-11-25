@@ -17,7 +17,7 @@ from .download_pages import PLATFORMS
 from .extensions import csrf, limiter
 from .guide_content import GUIDES
 from .onion import is_onion
-from .website_locale import source_path
+from .website_locale import LANGUAGES, source_path, use_language
 
 analytics_bp = Blueprint("aggregate_analytics", __name__)
 ENABLED = "WEBSITE_REQUEST_ANALYTICS_ENABLED"
@@ -173,10 +173,11 @@ def feedback():
     answer = request.form.get("answer")
     locales = request.form.getlist("language")
     if (set(request.form) != {"answer", "language"} or len(request.form.getlist("answer")) != 1
-            or answer not in FEEDBACK or locales not in (["de"], ["en"])):
+            or answer not in FEEDBACK or len(locales) != 1 or locales[0] not in LANGUAGES):
         abort(400)
     saved = increment(f"feedback_{answer}")
-    response = make_response(render_template("website_feedback.html", saved=saved, german=locales == ["de"]), 200 if saved else 503)
+    with use_language(locales[0]):
+        response = make_response(render_template("website_feedback.html", saved=saved), 200 if saved else 503)
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Robots-Tag"] = "noindex"
     return response

@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import jsonify, render_template, request
+from .website_locale import translate
 
 MAX_AGE = 24 * 3600
 TOR_PATHS = frozenset({
@@ -101,8 +102,8 @@ def block_crypto_checkout():
         if status == "tor" else "Payment network verification is temporarily unavailable. Please try again later.")
     code = 403 if status == "tor" else 503
     if request.is_json or request.path.startswith("/create-") or request.method == "POST":
-        return jsonify(error=message), code
-    return render_template("crypto_unavailable.html", message=message), code
+        return jsonify(error=translate(message)), code
+    return render_template("crypto_unavailable.html", message=translate(message)), code
 
 
 def guard_crypto_request():

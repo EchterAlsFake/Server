@@ -16,6 +16,7 @@ from flask import (
     session,
 )
 
+from .website_locale import translate
 from .extensions import db, limiter
 from .models import Checklist
 
@@ -52,7 +53,7 @@ def checklist_login():
         if hmac.compare_digest(password.encode("utf-8"), auth_secret.encode("utf-8")):
             session["checklist_auth"] = _checklist_auth_marker(auth_secret)
             return redirect("/checklist")
-        return render_template("checklist_login.html", error="Invalid password"), 401
+        return render_template("checklist_login.html", error=translate("Invalid password")), 401
     return render_template("checklist_login.html")
 
 
@@ -87,10 +88,10 @@ def add_task():
     data = request.get_json(silent=True)
     task_text = data.get("task") if isinstance(data, dict) else None
     if not isinstance(task_text, str) or not task_text.strip():
-        return jsonify({"error": "Task required"}), 400
+        return jsonify({"error": translate("Task required")}), 400
     task_text = task_text.strip()
     if len(task_text) > 500:
-        return jsonify({"error": "Task must be at most 500 characters"}), 400
+        return jsonify({"error": translate("Task must be at most 500 characters")}), 400
 
     db.session.add(
         Checklist(
@@ -110,10 +111,10 @@ def toggle_task(task_id):
 
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or type(data.get("is_done")) is not bool:
-        return jsonify({"error": "is_done must be a boolean"}), 400
+        return jsonify({"error": translate("is_done must be a boolean")}), 400
     task = db.session.get(Checklist, task_id)
     if task is None:
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": translate("Task not found")}), 404
     task.is_done = int(data["is_done"])
     db.session.commit()
     return jsonify({"success": True})
@@ -127,7 +128,7 @@ def remove_task(task_id):
     deleted = Checklist.query.filter_by(id=task_id).delete()
     if not deleted:
         db.session.rollback()
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": translate("Task not found")}), 404
     db.session.commit()
     return jsonify({"success": True})
 

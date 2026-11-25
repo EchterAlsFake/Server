@@ -16,6 +16,7 @@ from flask import abort, current_app, request, session
 
 from .extensions import db
 from .models import CheckoutRecovery, Transaction
+from .website_locale import site_path, translate
 
 PENDING_LIFETIME = timedelta(days=7)
 READY_LIFETIME = timedelta(hours=6)
@@ -54,7 +55,7 @@ def issue(session_id):
         if (row.token_digest and hmac.compare_digest(_digest(token), row.token_digest)
             and now() < deadline(row, db.session.get(Transaction, session_id))):
             return token
-        abort(409, description="Use the recovery link you already saved for this order.")
+        abort(409, description=translate("Use the recovery link you already saved for this order."))
     token = secrets.token_urlsafe(16)  # 128 bits of entropy, 22 URL-safe characters.
     db.session.add(CheckoutRecovery(session_id=session_id,
         token_digest=_digest(token), created_at=now().isoformat()))
@@ -69,11 +70,11 @@ def resolve_session_id(session_id=None):
     token = request.values.get("token")
     if token is not None:
         if not re.fullmatch(r"[A-Za-z0-9_-]{22}", token):
-            abort(410, description=INVALID_LINK)
+            abort(410, description=translate(INVALID_LINK))
         row = CheckoutRecovery.query.filter_by(token_digest=_digest(token)).first()
         transaction = db.session.get(Transaction, row.session_id) if row else None
         if not row or not transaction or now() >= deadline(row, transaction):
-            abort(410, description=INVALID_LINK)
+            abort(410, description=translate(INVALID_LINK))
         return row.session_id
     session_id = session_id if session_id is not None else request.values.get("session_id", "")
     row = db.session.get(CheckoutRecovery, session_id) if session_id else None
@@ -83,7 +84,7 @@ def resolve_session_id(session_id=None):
         if (not row.token_digest or not token
             or not hmac.compare_digest(_digest(token), row.token_digest)
             or now() >= deadline(row, transaction)):
-            abort(410, description=INVALID_LINK)
+            abort(410, description=translate(INVALID_LINK))
     return session_id
 
 
@@ -92,7 +93,7 @@ def view_context(session_id):
     token = request.values.get("token") or session.get("checkout_recovery", {}).get(session_id)
     query = urlencode({"token": token}) if row and token else urlencode({"session_id": session_id or ""})
     return dict(access_query=query, recovery_token=token if row else None,
-        recovery_url=current_app.config["APP_DOMAIN"] + "/buy_success?" + query,
+        recovery_url=current_app.config["APP_DOMAIN"] + site_path("/buy_success?" + query),
         recovery_expires_at=deadline(row, db.session.get(Transaction, session_id)).isoformat() if row else None)
 
 

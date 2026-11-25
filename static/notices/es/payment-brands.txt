@@ -1,0 +1,85 @@
+Traducción. Texto original en inglés: /static/notices/payment-brands.txt
+
+PAGO MARCA OBRAS Y NOTAS DE USUARIO
+Revisado en contra de las directrices del propietario público el 24 de octubre de 2026.
+
+La obra de arte de abajo se sirve localmente, sin peticiones de imágenes de terceros.
+arte, colores y relaciones de aspecto se conservan. Marcas identifican la referencia
+proveedor de pagos o criptomoneda; no implican patrocinio, respaldo,
+afiliación, aceptación garantizada o una caja de producción de trabajo.
+Las rutas de Patreon y tarjeta son previsualizaciones de prueba. Los servicios externos todavía pueden tomar dinero.
+
+Estas notas son la atribución y procedencia, no una licencia de marca general.
+Los actuales requisitos de marca de cada propietario y el acuerdo de proveedor aplicable rigen.
+
+Google Pay
+Propietario: Google LLC. Google Pay es una marca comercial de Google LLC.
+Activo oficial: Marca de aceptación de pago de Google (no un botón de pago de API).
+https://developers.google.com/static/pay/api/download-assets/Google-Pay-Acceptance.zip
+Uso: https://developers.google.com/pay/api/web/guides/brand-guidelines
+Utilizado como una identidad estática para un posible método de pago de un proveedor tercero,
+no como un botón que pretende invocar la API de pago de Google.
+
+Pago de manzana
+Propietario: Apple Inc. Apple y Apple Pay son marcas comerciales de Apple Inc.
+Arte oficial: Apple Pay Mark, SVG suministrado por Apple.
+https://developer.apple.com/apple-pay/marketing/Apple-Pay-Mark.zip
+Uso: https://developer.apple.com/apple-pay/marketing/
+Mantenga la marca suministrada sin modificaciones y conserve el espacio despejado.
+Botón de pago Apple Pay. La disponibilidad real está determinada por el proveedor.
+
+Patreón
+Propietario: Patreon, Inc.
+Arte oficial: Símbolo Patreón.
+https://c14.patreon.com/thumbnail_Patreon_Symbol_6fff9723d3.png
+Uso: https://www.patreon.com/brand
+https://support.patreon.com/hc/en-gb/articles/216539323-Use-Patreon-s-logo-to-promote-my-Patreon
+Utilizado para identificar y enlazar con el Patreon Shop del proyecto.
+prueba de vista previa; no haga una compra o envíe dinero mientras prueba.
+
+NOWPayments
+Propietario: NOWPayments / titular de los derechos NOWPayments aplicables.
+Obras de arte oficiales: https://nowpayments.io/images/logo/logo.svg
+Servicio y monedas apoyadas: https://nowpayments.io/
+https://nowpayments.io/supported-coins
+Actualmente, el servicio anuncia soporte para más de 350 criptomonedas.
+catálogo general del proveedor, no una garantía de que cada moneda está disponible en cada
+La marca identifica al proveedor de pagos, no una aprobación de Porn Fetch .
+
+Bitcoin
+Obras de arte: https://bitcoin.design/assets/images/guide/getting-started/visual-language/bitcoin-symbol.svg
+El símbolo Bitcoin no tiene autoridad de marca central. Origen y fondo de reutilización:
+https://bitcoin.design/guide/getting-started/visual-language/
+La obra de arte de origen se utiliza sin cambios para identificar Bitcoin.
+
+Ethereum
+Obras de arte oficiales: https://ethereum.org/images/assets/svgs/eth-diamond-purple.svg
+Fuente y activos de la marca: https://ethereum.org/assets/
+Utilizado sin cambios para identificar Ethereum. Los derechos en marcas de terceros se conservan.
+
+Solana
+Propietario: Fundación Solana.
+Obras de arte oficiales: https://solana.com/src/img/branding/solanaLogoMark.svg
+Uso: https://solana.com/branding
+La marca no modificada identifica a Solana. No hay conexión o respaldo de la fundación
+se reclama; el logotipo no se combina con la identidad o la mercancía del sitio.
+
+Litecoin
+Obras de arte oficiales: https://download.litecoin.org/branding/v2/Litecoin-Logo-v2.svg
+Fuente: https://download.litecoin.org/branding/v2/.
+Recursos: https://litecoin.com/resources
+Utilizado sin cambios para identificar Litecoin. Los derechos en marcas de terceros se conservan.
+
+Visa y Mastercard
+Solo referencias de texto; sus logotipos no están incluidos en esta configuración de prueba.
+Las reglas del logotipo público limitan el uso a socios/mercantes aprobados y se aceptan
+marcas de pago. Una atribución no es evidencia de dicha aprobación. Confirme comerciante
+aceptación/permiso de marca y uso de obras de arte aprobadas antes de añadir marcas de aceptación.
+Visado: https://brand.visa.com/
+Mastercard: https://www.mastercard.com/brandcenter/us/en/faq.html
+Mastercard: https://www.mastercard.com/brandcenter/us/en/brand-requirements/mastercard.html
+
+Icono genérico de la tarjeta de crédito: Lucide, licencia ISC.
+Fuente: https://github.com/lucide-icons/lucide/blob/main/icons/credit-card.svg.
+Licencia: /static/notices/lucide.txt (derecho de autor y aviso de permiso incluido).
+Color y vista del corte adaptado a la ficha de aceptación. Este icono no identifica ninguna red de tarjetas.

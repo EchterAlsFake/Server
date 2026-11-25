@@ -1,77 +1,77 @@
 {% extends "base.html" %}
 
-{% block title %}Donate - Support Development{% endblock %}
+{% block title %}{{ _("Donate - Support Development") }}{% endblock %}
 
 {% block content %}
 <div class="hero" style="padding-bottom: 20px;">
-    <h1 style="font-size: clamp(2.5rem, 6vw, 3.5rem); background: linear-gradient(to right, var(--color-primary), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Support My Work</h1>
+    <h1 style="font-size: clamp(2.5rem, 6vw, 3.5rem); background: linear-gradient(to right, var(--color-primary), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ _("Support My Work") }}</h1>
     <p style="font-size: 1.2rem; max-width: 700px; margin: 0 auto; color: var(--color-text-muted);">
-        As a student, balancing software development and my studies is a huge challenge. Donations help me keep my projects ad-free and improving.
+        {{ _("As a student, balancing software development and my studies is a huge challenge. Donations help me keep my projects ad-free and improving.") }}
     </p>
 </div>
 
 <div class="card" style="border-left: 4px solid var(--color-primary); text-align: center; max-width: 1100px; margin: 0 auto 50px;">
-    <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">Choose Your Way to Donate</h2>
-    
+    <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">{{ _("Choose Your Way to Donate") }}</h2>
+
     <div style="text-align: left; max-width: 600px; margin: 0 auto 30px; background: var(--color-bg); padding: 20px; border-radius: var(--radius-md); border: 1px solid #1e293b;">
-        <h4 style="margin-top: 0; margin-bottom: 15px; color: #f8fafc;">Required Legal Agreements</h4>
+        <h4 style="margin-top: 0; margin-bottom: 15px; color: #f8fafc;">{{ _("Required Legal Agreements") }}</h4>
         <label class="checkbox-container">
             <input type="checkbox" id="chk-age-donation">
-            <span class="checkbox-text">I confirm that I am at least 18 years of age.</span>
+            <span class="checkbox-text">{{ _("I confirm that I am at least 18 years of age.") }}</span>
         </label>
         <label class="checkbox-container">
             <input type="checkbox" id="chk-country-donation">
-            <span class="checkbox-text">I confirm that I do not reside in or access this service from Iran, North Korea, Myanmar, Syria, Cuba, Russia, or Belarus.</span>
+            <span class="checkbox-text">{{ _("I confirm that I do not reside in or access this service from Iran, North Korea, Myanmar, Syria, Cuba, Russia, or Belarus.") }}</span>
         </label>
     </div>
 
     <div class="grid-3" style="align-items: stretch; opacity: 0.5; pointer-events: none; transition: opacity 0.3s ease;" id="donation-options" inert>
-        
+
         <!-- PayPal -->
         <div class="feature-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden;">
             <div class="donation-card-heading" style="background: #00457C;">
                 <h3 style="margin: 0; color: white; font-size: 1.6rem; letter-spacing: 1px;">PayPal</h3>
             </div>
             <div style="font-size: 3rem; margin-bottom: 15px;">💸</div>
-            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Quick and easy donation via PayPal. Support my student journey directly and securely with just a few clicks!</p>
-            <a href="https://paypal.me/EchterAlsFake" target="_blank" class="btn donation-btn" style="background: #0070BA; color: white; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 112, 186, 0.4); text-decoration: none;">Donate via PayPal</a>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">{{ _("Quick and easy donation via PayPal. Support my student journey directly and securely with just a few clicks!") }}</p>
+            <a href="https://paypal.me/EchterAlsFake" target="_blank" class="btn donation-btn" style="background: #0070BA; color: white; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 112, 186, 0.4); text-decoration: none;">{{ _("Donate via PayPal") }}</a>
         </div>
-        
+
         <!-- Ko-Fi -->
         <div class="feature-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden;">
             <div class="donation-card-heading" style="background: #FF5E5B;">
                 <h3 style="margin: 0; color: white; font-size: 1.6rem; letter-spacing: 1px;">Ko-Fi</h3>
             </div>
             <div style="font-size: 3rem; margin-bottom: 15px;">☕</div>
-            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Buy me a coffee on Ko-Fi! No account required, completely hassle-free way to show your appreciation.</p>
-            <a href="https://ko-fi.com/EchterAlsFake" target="_blank" class="btn donation-btn" style="background: #FF5E5B; color: white; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 94, 91, 0.4); text-decoration: none;">Buy me a Coffee</a>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">{{ _("Buy me a coffee on Ko-Fi! No account required, completely hassle-free way to show your appreciation.") }}</p>
+            <a href="https://ko-fi.com/EchterAlsFake" target="_blank" class="btn donation-btn" style="background: #FF5E5B; color: white; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 94, 91, 0.4); text-decoration: none;">{{ _("Buy me a Coffee") }}</a>
         </div>
 
         <!-- Crypto Info -->
         <div class="feature-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden;">
             <div class="donation-card-heading" style="background: var(--color-crypto);">
-                <h3 style="margin: 0; color: #090d16; font-size: 1.6rem; letter-spacing: 1px;">Crypto</h3>
+                <h3 style="margin: 0; color: #090d16; font-size: 1.6rem; letter-spacing: 1px;">{{ _("Crypto") }}</h3>
             </div>
             <div style="font-size: 3rem; margin-bottom: 15px;">🪙</div>
-            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">Donate in cryptocurrency using the optional NOWPayments widget below. Blockchain transactions are generally public; cryptocurrency payments are not necessarily anonymous.</p>
-            <a href="#crypto-widget" class="btn donation-btn" style="background: var(--color-crypto); color: #090d16; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-decoration: none;">Scroll to Crypto Widget</a>
+            <p style="margin-bottom: 30px; flex-grow: 1; font-size: 1.05rem; line-height: 1.6;">{{ _("Donate in cryptocurrency using the optional NOWPayments widget below. Blockchain transactions are generally public; cryptocurrency payments are not necessarily anonymous.") }}</p>
+            <a href="#crypto-widget" class="btn donation-btn" style="background: var(--color-crypto); color: #090d16; width: 100%; font-size: 1.1rem; padding: 16px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-decoration: none;">{{ _("Scroll to Crypto Widget") }}</a>
         </div>
     </div>
 </div>
 
 <div id="crypto-widget" class="card" style="border-left: 4px solid var(--color-crypto); text-align: center; max-width: 600px; margin: 0 auto 50px;">
-    <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">Pay with Crypto</h2>
-    <p style="color: var(--color-text-muted); margin-bottom: 30px;">Powered securely by NowPayments</p>
-    
+    <h2 style="font-size: 2rem; margin-bottom: 10px; color: #ffffff;">{{ _("Pay with Crypto") }}</h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 30px;">{{ _("Powered securely by NowPayments") }}</p>
+
     <div id="widget-consent" style="text-align: left;">
-        <p id="widget-privacy">The widget stays blocked until you choose “Agree and load”. Loading connects your browser to NOWPayments (FD Transfers LLC, Saint Vincent and the Grenadines), disclosing your IP address and browser information even if you do not donate. The provider may use cookies and other storage for its service, statistics and marketing, and process data outside the EU/EEA. <a href="/privacy_policy#nowpayments-donations-en">Privacy information</a> · <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">NOWPayments privacy policy</a>.</p>
-        <p lang="de">Das Widget bleibt bis zu Ihrer Auswahl „Zustimmen und laden“ gesperrt. Beim Laden verbindet sich Ihr Browser mit NOWPayments (FD Transfers LLC, St. Vincent und die Grenadinen); dabei erhält der Anbieter Ihre IP-Adresse und Browserinformationen, auch ohne Spende. Der Anbieter kann Cookies und andere Speicher für seinen Dienst, Statistik und Marketing verwenden und Daten außerhalb der EU/des EWR verarbeiten. <a href="/privacy_policy#nowpayments-donations-de">Meine Datenschutzhinweise</a>.</p>
-        <p>Loading is optional. Your choice applies only to this page view. You can withdraw it by unloading the widget; data already sent and provider cookies are not deleted by doing so.</p>
-        <p lang="de">Das Laden ist freiwillig. Ihre Auswahl gilt nur für diesen Seitenaufruf und kann durch Entladen des Widgets widerrufen werden. Bereits übermittelte Daten und Cookies des Anbieters werden dadurch nicht gelöscht.</p>
-        <button type="button" id="load-donation-widget" class="btn btn-primary" aria-describedby="widget-privacy widget-status" disabled>Agree and load NOWPayments / Zustimmen und laden</button>
-        <button type="button" id="unload-donation-widget" class="btn btn-secondary" hidden>Unload widget / Widget entladen</button>
-        <p id="widget-status" role="status">Please accept the age and country declarations above first. / Bitte bestätigen Sie zunächst Alter und Land.</p>
-        <noscript><p>JavaScript is required to load this optional widget. No connection to NOWPayments is made by this page without it.</p></noscript>
+        <p id="widget-privacy">{{ _("The widget stays blocked until you choose “Agree and load”. Loading connects your browser to NOWPayments (FD Transfers LLC, Saint Vincent and the Grenadines), disclosing your IP address and browser information even if you do not donate. The provider may use cookies and other storage for its service, statistics and marketing, and process data outside the EU/EEA.") }} <a href="/privacy_policy#nowpayments-donations-en">{{ _("Privacy information") }}</a> · <a href="https://nowpayments.io/privacy-policy" target="_blank" rel="noopener noreferrer">{{ _("NOWPayments privacy policy") }}</a>.</p>
+
+        <p>{{ _("Loading is optional. Your choice applies only to this page view. You can withdraw it by unloading the widget; data already sent and provider cookies are not deleted by doing so.") }}</p>
+
+        <button type="button" id="load-donation-widget" class="btn btn-primary" aria-describedby="widget-privacy widget-status" disabled>{{ _("Agree and load NOWPayments") }}</button>
+        <button type="button" id="unload-donation-widget" class="btn btn-secondary" hidden>{{ _("Unload widget") }}</button>
+        <p id="widget-status" role="status">{{ _("Please confirm age and country above.") }}</p>
+        <noscript><p>{{ _("JavaScript is required to load this optional widget. No connection to NOWPayments is made by this page without it.") }}</p></noscript>
     </div>
     <div id="iframe-wrapper" hidden data-widget-url="https://nowpayments.io/embeds/donation-widget?api_key=65b1acaf-735d-4d4b-b3d6-c2237c0b57e3" style="max-width: 346px; margin: 20px auto 0;"></div>
 </div>

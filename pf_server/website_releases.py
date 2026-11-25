@@ -13,6 +13,7 @@ import re
 import tempfile
 from contextlib import contextmanager
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 
 from flask import Blueprint, abort, current_app, jsonify, request, send_file
@@ -222,7 +223,20 @@ def read_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def catalog():
+@lru_cache(maxsize=1)
+def release_note_translations():
+    source = Path(__file__).resolve().parents[1] / "i18n" / "releases.json"
+    return json.loads(source.read_text(encoding="utf-8"))
+
+
+def localize_release_notes(release):
+    translation = release_note_translations().get(release["version"])
+    if translation and translation["sha256"] == hashlib.sha256(release["notes"].encode()).hexdigest():
+        return dict(release, notes_i18n=translation["notes_i18n"] | release.get("notes_i18n", {}))
+    return release
+
+
+def catalog(*, with_translations=False):
     path = no_symlinks(release_root() / "catalog.json")
     try:
         values = read_json(path)
@@ -230,9 +244,10 @@ def catalog():
         return []
     if not isinstance(values, list):
         raise ReleaseError("Invalid release catalog.")
-    return sorted(
-        (validate_manifest(value) for value in values), key=version_key, reverse=True
-    )
+    releases = [validate_manifest(value) for value in values]
+    if with_translations:
+        releases = [localize_release_notes(release) for release in releases]
+    return sorted(releases, key=version_key, reverse=True)
 
 
 def version_key(release):
@@ -425,7 +440,7 @@ def publish(version):
 
 @releases_bp.get("/download/catalog.json")
 def public_catalog():
-    releases = catalog()
+    releases = catalog(with_translations=True)
     if version := request.args.get("version"):
         safe_version(version)
         releases = [release for release in releases if release["version"] == version]

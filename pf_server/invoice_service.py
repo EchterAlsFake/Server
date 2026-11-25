@@ -10,6 +10,7 @@ from flask import current_app
 from fpdf import FPDF
 
 from .offer import PREMIUM_PRICE_AMOUNT
+from .website_locale import language, translate
 
 SESSION_REFERENCE_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,255}")
 
@@ -110,6 +111,9 @@ def _pdf_text(invoice: dict, field: str, default="") -> str:
 
 
 def render_invoice_pdf(invoice: dict) -> bytes:
+    if language() != "en":
+        return localized_invoice_pdf(invoice)
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Helvetica", size=12)
@@ -213,6 +217,41 @@ def render_invoice_pdf(invoice: dict) -> bytes:
         new_y="NEXT",
     )
     return bytes(pdf.output())
+
+
+def localized_invoice_pdf(invoice):
+    from .contracts import render_pdf
+
+    def entry(label, field=None, *, localize=False):
+        value = _pdf_text(invoice, field or label)
+        return f"{translate(label)}: {translate(value) if localize else value}"
+
+    lines = []
+    sandbox = invoice.get("Environment") == "sandbox"
+    if sandbox:
+        lines.append(translate("SANDBOX TEST - NO REAL PAYMENT"))
+    lines.extend((
+        translate("Invoice %(number)s", number=_pdf_text(invoice, "Invoice Number")), "",
+        translate("From:"), _pdf_text(invoice, "Full Name"), _pdf_text(invoice, "Address"),
+        entry("VAT ID" if invoice.get("VAT ID") else "Tax Number"), "",
+        entry("Invoice Date"), entry("Delivery Date"), "",
+        translate("Items:"), entry("Description", localize=True), entry("Quantity"),
+        translate(_pdf_text(invoice, "Tax Info")), "",
+        translate("Payment Details:"),
+    ))
+    if invoice.get("Provider") == "mollie":
+        lines.extend((entry("Simulated Amount" if sandbox else "Amount Paid", "Test Amount"),
+                      entry("Mollie Payment Reference", "Payment Reference")))
+    else:
+        for label, field in (
+            ("Base Price", "Base Price in EUR"), ("Payment Method", "Payment Method"),
+            ("Amount Paid", "Amount Paid"), ("Crypto Paid", "Crypto Paid"),
+            ("Exchange Rate", "Exchange Rate"), ("Transaction Hash / TxID", "Transaction Hash / TxID"),
+        ):
+            if field in invoice:
+                lines.append(entry(label, field, localize=field == "Payment Method"))
+    lines.extend(("", translate("Thank you for your purchase!")))
+    return render_pdf("\n".join(lines))
 
 
 def invoice_download_name(invoice: dict) -> str:

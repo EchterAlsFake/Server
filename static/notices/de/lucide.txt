@@ -1,0 +1,45 @@
+Übersetzung. Englischer Originaltext: /static/notices/lucide.txt
+
+ISC-Lizenz
+
+Copyright (c) 2026 Lucide Icons und Mitwirkende
+
+Erlaubnis zur Nutzung, zum Kopieren, Modifizieren und/oder zur Verbreitung dieser Software für alle
+Zweck mit oder ohne Gebühr gewährt wird, sofern die oben genannten
+Urheberrechtsvermerk und dieser Erlaubnisvermerk erscheinen in allen Kopien.
+
+DIE SOFTWARE IST PROVIDIERT "AS IS" UND DIE BEHÖRDE ERTÖNT ALLE WARRANTIEN
+IN BEZUG AUF DIESE SOFTWARE EINSCHLIESSLICH DER EINGESCHRIEBENEN WAREN
+DIE BEHÖRDE IST KEINE BEHINDERUNG FÜR
+SPEZIELLE, DIREKT, INDIRECT, ODER KONSEQUENTIALE DAMAGE ODER DAMAGE
+Was immer sich aus dem VERLUST DER VERWENDUNG, DATEN ODER PROFITEN ergibt, WENN IN EINEM
+AKTION DES VERTRAGS, DER VERNÄHRUNG ODER DER ANDEREN TORTIÖSISCHEN AKTION, DIE AUS DER
+oder im Einklang mit der Verwendung oder der Leistungsfähigkeit dieses Produkts.
+
+---
+
+Die folgenden Lucide-Ikonen stammen aus dem Feather-Projekt:
+
+airplay, alarm-octagon, arrow-down-circle, arrow-down-link, arrow-down-right, arrow-down-right, arrow-up-light, arrow-up-right, kalender, cast, chevron-down, chevron-link, chevron-up, chevron-down, chevron-link, chevron-link, chevron-down, chevron-link, chevron-link, chevron-down, chevrons-link, ecke-link-down, ecke-link-up, ecke-right-down, chevrons-right, ecke-right-down, ecke-right-down, ecke-right-down, ecke-right-down, block-right-up, ecke-right-up-link, down, block-down, block-down, block-down, down, block-link-link-link, block-down, down, code-up-link-link-link-link-link-link-link-link-link-link-link-link, rechts-link-link-link-link, code, rechts-link-link-link-link-link-link-link-link-link, , code, code-link-link-link-link-link-link-link-link-link-link-link-link-link-link, code, code, code, code-link-link-link-link-link, code, code, code, code-link-link-link-link-link-link-link-link, code, code-link-link-link-link-link, code, code-
+
+Die MIT-Lizenz (MIT) (für die oben aufgeführten Icons)
+
+Copyright (c) 2013-gegenwärtig Cole Bemis
+
+Jede Person, die eine Abschrift erhält, wird hiermit kostenlos ermächtigt.
+von dieser Software und zugehörige Dokumentationsdateien (die "Software"), um zu behandeln
+in der Software ohne Einschränkung, einschließlich ohne Einschränkung der Rechte
+zu verwenden, zu kopieren, zu ändern, zu verschmelzen, zu veröffentlichen, zu verteilen, Unterlizenz, und/oder zu verkaufen
+Kopien der Software, und Personen, denen die Software ist, zu gestatten
+sofern dies unter folgenden Bedingungen möglich ist:
+
+Die oben genannte Urheberrechtsvermerk und diese Genehmigungsvermerk ist in allen
+Kopien oder wesentliche Teile der Software.
+
+DIE SOFTWARE IST "AS IST", OHNE KIND, EXPRESS ODER
+BESCHÄFTIGT, EINSCHLIESSLICH, EINSCHLIESSLICH, DASS NICHT AN DIE WARRANTIEN DER MERCHANTABILITÄT VERBINDLICH IST,
+RECHTSGRUNDLAGE FÜR EINEN BETEILIGTEN ZWECK UND EINEN NULLVERZIEHUNG.
+UNTERNEHMER ODER KUPYRIGHTINHABER FÜR EINEN ANDEREN RECHTSTRÄGER, DAMAGE ODER ANDERE
+VERBRAUCH, WENN EINE AKTION VON VERTRAG, VERTRAG ODER ANDEREN WÄHREND, AUSWIRKEND,
+Aus- oder in Verbindung mit der SOFTWARE oder der Anwendung oder anderen Bestimmungen in der
+Du hast es geschafft.

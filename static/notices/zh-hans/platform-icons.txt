@@ -1,0 +1,54 @@
+译文。英文原文：/static/notices/platform-icons.txt
+
+平台艺术作品和商标参考资料
+审查的来源和使用准则:2026年10月24日
+
+Windows: Lucide AP-Window 插图(不是 Windows 标识)。
+MACOS: Lucide笔记本电脑插图(不是苹果标志或产品制作)。
+iOS: Lucide Smartphone 插图(不是苹果标志或产品制作)。
+Lucide终端插图。
+资料来源:https://github.com/lucide-icons/lucide。
+粉末订正本: 7faf87628a1ad6175975bc595344337ce14a7db4
+源文件: 图标/ 应用程序窗口. svg, 图标/ optop. svg, 图标/ 智能手机. svg,
+本地 SVG 的图标/终点点. svg. Stroke 从当前Color 改为 #f1efeb
+ISC 许可证; 羽毛图象也持有麻省理工学院许可证。
+通知全文:/静态/通知/解毒剂.txt
+
+特克斯,拉里·尤因的原艺术品,
+加勒特·勒塞奇,由IFO Hancroft精炼和清理,未经修改而使用。
+资料来源:https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/logo.svg。
+权限 : https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/COPYING-logo
+当地许可通知:/静态/通知/tux.txt
+艺术家存储库:https://github.com/garrett/Tux
+
+无人机:未经修改的绿色机器人头 符合安机器人品牌准则。
+资料来源:https://developer.android.com/static/images/brand/android-head_flat.svg。
+机器人机器人的复制或改造由
+谷歌,
+许可证:https://creativecommons.org/licenses/by/3.0/
+准则: https://developer.android.com/distribute/marketing-tools/brand-guidelines
+https://partnermarketinghub.withgoogle.com/brands/android/legal-and-trademarks/
+机器人的创用CC授权 不同于其他的许可
+Google的标识、字标记、商店徽章和品牌资产。
+
+商标参考书
+--------------------
+Windows是微软公司集团的商标。
+Apple、MacOS和iPhone是苹果公司的商标,在美国注册。
+IOS是商标或注册商标。
+美国和其他国家的思科公司;苹果公司根据许可证使用。
+Android是Google LLC的商标。
+Linux是美国和其他国家Linus Torvalds的注册商标。
+
+平台名称识别兼容性。这些插图未显示
+平台供应商认证、担保或认可Porn Fetch。
+苹果和微软品牌图形要求根据各自授权
+因此平台卡使用中立的 Lucide 插图代替。
+此平台图标集不提供苹果、 查找器、 iOS 或 Windows 徽标 。
+现有的验收付款艺术作品在付款品牌.txt中有单独的通知。
+
+正式指导:
+https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html
+https://www.apple.com/legal/intellectual-property/trademark/appletmlist.html
+https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks
+https://www.linuxfoundation.org/legal/the-linux-mark

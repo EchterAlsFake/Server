@@ -1,23 +1,23 @@
 {% extends "checkout_base.html" %}
 {% from "partials/checkout_fields.html" import email_field %}
-{% block title %}Credit card checkout — Porn Fetch{% endblock %}
+{% block title %}{{ _("Credit card checkout — Porn Fetch") }}{% endblock %}
 {% block checkout_notice %}{% endblock %}
 {% block checkout_product_details %}
-<p class="checkout-entitlement">One-time · Lifetime Premium · Up to 10 installations</p>
-<p class="checkout-caption">No VAT under § 19 UStG. Provider fees may apply.</p>
+<p class="checkout-entitlement">{{ _("One-time · Lifetime Premium · Up to 10 installations") }}</p>
+<p class="checkout-caption">{{ _("No VAT under § 19 UStG. Provider fees may apply.") }}</p>
 {% endblock %}
 {% block checkout_method %}
-<h2 id="method-heading">Pay by credit card</h2>
-<p class="checkout-caption">US/EU only. Email verification, phone and address required. <strong>EU: Tax ID required.</strong> ID usually not needed.</p>
+<h2 id="method-heading">{{ _("Pay by credit card") }}</h2>
+<p class="checkout-caption">{{ _("US/EU only. Email verification, phone and address required.") }} <strong>{{ _("EU: Tax ID required.") }}</strong> {{ _("ID usually not needed.") }}</p>
 {% endblock %}
 {% block checkout_form %}
-<form class="paywarp-payment-form" action="/create-paywarp-payment" method="post">
+<form class="paywarp-payment-form" action="{{ site_path("/create-paywarp-payment") }}" method="post">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {{ email_field(label="License delivery email", help_text="For your license and purchase enquiries; also shared with PayWarp.") }}
 <label class="paywarp-consent"><input type="checkbox" name="withdrawal_accepted" value="yes" required><span>{{ immediate_en }}</span></label>
 <p class="checkout-error" role="alert">{{ checkout_error or '' }}</p>
-<button class="btn btn-primary" type="submit"{% if not config.PAYWARP_ENABLED or not (checkout_selection or checkout_consent) %} disabled{% endif %}>Continue to payment · €{{ premium_price }}</button>
+<button class="btn btn-primary" type="submit"{% if not config.PAYWARP_ENABLED or not (checkout_selection or checkout_consent) %} disabled{% endif %}>{{ _("Continue to payment · €") }}{{ premium_price }}</button>
 </form>
-<p class="checkout-caption"><a href="/terms">Terms</a> · <a href="/refund_policy">Refunds and withdrawal</a></p>
+<p class="checkout-caption"><a href="/terms">{{ _("Terms") }}</a> · <a href="{{ site_path("/refund_policy") }}">{{ _("Refunds and withdrawal") }}</a></p>
 {% endblock %}
 {% block checkout_scripts %}{% endblock %}

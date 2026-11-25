@@ -1,3 +1,7 @@
+const docsMessages = JSON.parse(document.getElementById('docs-messages')?.textContent || '{}');
+const docsText = (message, values = {}) => (docsMessages[message] ?? message)
+    .replace(/%\((\w+)\)s/g, (token, name) => values[name] ?? token);
+
 (() => {
     "use strict";
 
@@ -12,7 +16,7 @@
         if (!sidebar || !mobileToggle || !mobileOverlay) return;
         sidebar.classList.toggle("open", open);
         mobileToggle.setAttribute("aria-expanded", String(open));
-        mobileToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+        mobileToggle.setAttribute("aria-label", docsText(open ? "Close navigation" : "Open navigation"));
         mobileOverlay.hidden = !open;
         document.body.classList.toggle("nav-open", open);
     };
@@ -72,7 +76,7 @@
 
     const showCopiedState = (element, idleText = "Copy") => {
         const previous = element.textContent;
-        element.textContent = "Copied";
+        element.textContent = docsText("Copied");
         element.setAttribute("aria-live", "polite");
         window.setTimeout(() => {
             element.textContent = previous || idleText;
@@ -87,7 +91,7 @@
             await writeClipboard(code.textContent);
             showCopiedState(button);
         } catch {
-            button.textContent = "Copy failed";
+            button.textContent = docsText("Copy failed");
         }
     };
 
@@ -99,7 +103,7 @@
             await writeClipboard(command);
             showCopiedState(status);
         } catch {
-            status.textContent = "Copy failed";
+            status.textContent = docsText("Copy failed");
         }
     };
 
@@ -138,7 +142,7 @@
             : null;
         if (heading.tagName === "H2" && sectionAnchor) return sectionAnchor.id;
 
-        heading.id = uniqueHeadingId(slugify(heading.textContent));
+        heading.id = uniqueHeadingId(slugify(heading.dataset.sourceHeading || heading.textContent));
         return heading.id;
     };
 
@@ -150,7 +154,7 @@
         const anchor = document.createElement("a");
         anchor.className = "heading-anchor";
         anchor.href = `#${target}`;
-        anchor.setAttribute("aria-label", `Link to ${headingLabel(heading)}`);
+        anchor.setAttribute("aria-label", docsText("Link to %(heading)s", {heading: headingLabel(heading)}));
         anchor.textContent = "#";
         heading.append(anchor);
     });

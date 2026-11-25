@@ -1,0 +1,27 @@
+Traducción. Texto original en inglés: /static/notices/github-octicons.txt
+
+Marca GitHub de Primer Octicons
+Fuente: https://raw.githubusercontent.com/primer/octicons/main/icons/mark-github-16.svg.
+Uso del logo de GitHub: https://brand.github.com/foundations/logo
+
+Licencia del MIT
+
+Copyright (c) 2026 GitHub Inc.
+
+Por la presente se concede la autorización, de forma gratuita, a toda persona que obtenga una copia
+de este software y archivos de documentación asociados (el "Software"), para tratar
+en el Software sin restricciones, incluyendo sin limitaciones los derechos
+para usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender
+copias del Software, y para permitir a las personas a las que el Software es
+con el fin de hacerlo, con sujeción a las siguientes condiciones:
+
+El aviso de copyright anterior y este aviso de permiso se incluirá en todos
+copias o porciones sustanciales del Software.
+
+El soporte está provisto "tal como es", sin garantía de ningún tipo,
+CONSECUENCIA, INCLUIDA LA GARANTÍA DE LA MERCANCIA,
+FIN DE UN PROPÓSITO Y NO INFRACCIÓN PARTICULAR.
+RESPONSABLES DE CUALQUIER RECLAMACIÓN, DAÑOS u OTRO
+RESPONSABILIDAD, SI EN UNA ACCIÓN DE CONTRATO, TARDE O DE OTRA SERIE, DERIVADA DE,
+O EN CONEXIÓN CON EL SOMBRERO O EL USO O OTROS TRATAMIENTOS EN EL
+SOFTWARE.

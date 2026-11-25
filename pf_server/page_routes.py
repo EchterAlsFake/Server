@@ -2,11 +2,12 @@
 
 import time
 from collections.abc import Mapping
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from flask import (
     Blueprint, abort, current_app, jsonify, make_response, redirect, render_template,
-    request, session, url_for,
+    request, send_from_directory, session, url_for,
 )
 
 from .extensions import limiter, browser_limit_key
@@ -16,6 +17,7 @@ from .http import normalized_hostname
 from .product_catalog import WEBSITES, WEBSITE_SUPPORT_VERSION
 from .guide_content import GUIDES, guide_path
 from .download_pages import render_download_page
+from .website_locale import language, site_path, split_language, translate
 
 pages_bp = Blueprint("pages", __name__)
 AGE_GATED_PATHS = {"/buy_paywarp", "/porn_fetch", "/donation", "/buy_license", "/buy_card", "/buy_success", "/buy_cancel", "/payment-preview/patreon", "/payment-preview/card", "/payment-preview/banxa"}
@@ -24,9 +26,16 @@ AGE_GATED_PATHS = {"/buy_paywarp", "/porn_fetch", "/donation", "/buy_license", "
 @pages_bp.app_context_processor
 def public_page_context():
     from .onion import is_onion
-    from .contracts import IMMEDIATE_EN, REFUND_EN, offer_digest
+    from .contracts import AGE_TERMS, IMMEDIATE_EN, REFUND_EN, TEST_NOTICE, offer_digest
     from .offer import PREMIUM_PRICE_TEXT
-    return {"premium_price": PREMIUM_PRICE_TEXT, "immediate_en": IMMEDIATE_EN, "refund_en": REFUND_EN, "offer_digest": offer_digest, "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"), "checkout_consent": current_consent(), "checkout_selection": current_selection()}
+    return {
+        "premium_price": PREMIUM_PRICE_TEXT,
+        "immediate_en": translate(IMMEDIATE_EN), "refund_en": translate(REFUND_EN),
+        "age_terms_message": AGE_TERMS, "checkout_test_message": TEST_NOTICE,
+        "offer_digest": offer_digest,
+        "age_required": not is_onion() and request.path in AGE_GATED_PATHS and not session.get("adult_confirmed"),
+        "checkout_consent": current_consent(), "checkout_selection": current_selection(),
+    }
 
 
 @pages_bp.after_app_request
@@ -39,6 +48,7 @@ def private_age_state(response):
     return response
 
 
+@pages_bp.post("/confirm-age")
 @pages_bp.route("/", methods=["GET", "POST"])
 def landing_page():
     error = None
@@ -53,10 +63,11 @@ def landing_page():
             except ValueError:
                 parsed = urlsplit("/")
                 target = "/"
-            if parsed.scheme or parsed.netloc or parsed.path not in AGE_GATED_PATHS | {"/", "/download", "/about", "/help", "/releases"} or target.startswith("//"):
+            _, next_path = split_language(parsed.path)
+            if parsed.scheme or parsed.netloc or next_path not in AGE_GATED_PATHS | {"/", "/download", "/about", "/help", "/releases"} or target.startswith("//"):
                 target = "/"
             return redirect(target, code=303)
-        error = "Confirm that you are at least 18 years old to continue."
+        error = translate("Confirm that you are at least 18 years old to continue.")
         if request.accept_mimetypes.best == "application/json":
             return jsonify({"error": error}), 400
     return make_response(render_template(
@@ -98,7 +109,8 @@ def impress():
 
 @pages_bp.route("/transparency", methods=["GET"])
 def transparency():
-    return redirect("https://docs.echteralsfake.me/transparency/", code=301)
+    prefix = "" if language() == "en" else "/" + language()
+    return redirect("https://docs.echteralsfake.me" + prefix + "/transparency/", code=301)
 
 
 @pages_bp.route("/refund_policy", methods=["GET"])
@@ -130,44 +142,45 @@ def checkout_start():
         if blocked is not None:
             return blocked
     if method == "patreon" and not current_app.config["NOWPAYMENTS_SANDBOX"] and not current_app.config["PATREON_SHOP_ENABLED"]:
-        return jsonify(error="Patreon purchases are not available yet."), 503
+        return jsonify(error=translate("Patreon purchases are not available yet.")), 503
     if method == "paywarp" and not current_app.config.get("PAYWARP_ENABLED"):
-        return jsonify(error="PayWarp is temporarily unavailable. Please use Patreon."), 503
+        return jsonify(error=translate("PayWarp is temporarily unavailable. Please use Patreon.")), 503
     country = data.get("country")
     def accepted(field):
         return data.get(field) == "yes" or data.get(field) is True
 
     shared_fields = tuple(field for field in required_fields(method) if field != "withdrawal_accepted")
     if not isinstance(method, str) or method not in {"crypto", "patreon", "card", "paywarp"} or not all(accepted(field) for field in shared_fields):
-        error = "Choose your payment method and accept all required confirmations."
+        error = translate("Choose your payment method and accept all required confirmations.")
         if request.is_json:
             return jsonify(error=error), 400
         return render_template("porn_fetch.html", countries=COUNTRY_OPTIONS, checkout_error=error), 400
     pending_crypto = method in {"crypto", "paywarp"} and country is None and not accepted("withdrawal_accepted")
     if method != "patreon" and not pending_crypto and (not isinstance(country, str) or country not in dict(COUNTRY_OPTIONS) or not accepted("withdrawal_accepted")):
-        return jsonify(error="Select your country and consent to immediate digital supply on the crypto checkout."), 400
+        return jsonify(error=translate("Select your country and consent to immediate digital supply on the crypto checkout.")), 400
     from .contracts import offer_digest, record_agreement
     from datetime import datetime, timezone
     if data.get("offer_digest") != offer_digest():
-        return jsonify(error="The offer has changed. Reload the checkout information and confirm it again."), 409
+        return jsonify(error=translate("The offer has changed. Reload the checkout information and confirm it again.")), 409
     session.pop("checkout_selection", None)
     session.pop("checkout_consent", None)
     if pending_crypto:
         if method == "paywarp":
             import secrets
             session.setdefault("paywarp_order", "PW-" + secrets.token_urlsafe(24))
-        session["checkout_selection"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), payment_method=method, offer_digest=data["offer_digest"], **{field: accepted(field) for field in shared_fields})
+        session["checkout_selection"] = dict(version=CONSENT_VERSION, accepted_at=time.time(), payment_method=method,
+            offer_digest=data["offer_digest"], language=language(), **{field: accepted(field) for field in shared_fields})
         target = url_for("paywarp.checkout") if method == "paywarp" else url_for("payments.buy_license")
         if request.is_json:
-            return jsonify(next=target, method=method)
+            return jsonify(next=site_path(target), method=method)
         return redirect(target, code=303)
     if method == "patreon":
         country = None  # No tax-country declaration collected for Patreon Shop.
     agreement_id = record_agreement(method, country, datetime.now(timezone.utc).isoformat())
-    session["checkout_consent"] = dict(agreement_id=agreement_id, offer_digest=data["offer_digest"], version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, **{field: accepted(field) for field in FIELDS})
+    session["checkout_consent"] = dict(agreement_id=agreement_id, offer_digest=data["offer_digest"], version=CONSENT_VERSION, accepted_at=time.time(), country=country, payment_method=method, language=language(), **{field: accepted(field) for field in FIELDS})
     target = url_for("paywarp.checkout") if method == "paywarp" else url_for("payments.buy_license") if method == "crypto" else url_for("pages.payment_preview", method=method)
     if request.is_json:
-        return jsonify(next=target, method=method, live=not current_app.config['NOWPAYMENTS_SANDBOX'])
+        return jsonify(next=site_path(target), method=method, live=not current_app.config['NOWPAYMENTS_SANDBOX'])
     return redirect(target, code=303)
 
 
@@ -176,16 +189,17 @@ def confirm_crypto_checkout():
     """Complete direct-purchase consent after the shared payment-method page."""
     selection = current_selection() or current_consent()
     if not selection or selection.get("payment_method") != "crypto":
-        return jsonify(error="Start with the payment methods and confirmations again."), 409
+        return jsonify(error=translate("Start with the payment methods and confirmations again.")), 409
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or not isinstance(data.get("country"), str) or data.get("country") not in dict(COUNTRY_OPTIONS) or data.get("withdrawal_accepted") is not True:
-        return jsonify(error="Select your country and consent to immediate digital supply."), 400
+        return jsonify(error=translate("Select your country and consent to immediate digital supply.")), 400
     from .contracts import offer_digest, record_agreement
     if selection.get("offer_digest") != offer_digest() or data.get("offer_digest") != selection.get("offer_digest"):
-        return jsonify(error="The offer has changed. Start checkout again and review the confirmations."), 409
+        return jsonify(error=translate("The offer has changed. Start checkout again and review the confirmations.")), 409
     from datetime import datetime, timezone
     country = data["country"]
-    agreement_id = record_agreement("crypto", country, datetime.now(timezone.utc).isoformat())
+    agreement_id = record_agreement("crypto", country, datetime.now(timezone.utc).isoformat(),
+                                    shared_locale=selection.get("language", "en"))
     session["checkout_consent"] = dict(selection, agreement_id=agreement_id, country=country, withdrawal_accepted=True)
     session.pop("checkout_selection", None)
     return jsonify(confirmed=True)
@@ -213,6 +227,16 @@ def download_checkout_agreement():
 @pages_bp.route("/donation", methods=["GET"])
 def donation():
     return render_template("donation.html")
+
+
+@pages_bp.get("/static/notices/<filename>")
+def artwork_notice(filename):
+    if filename not in {"github-octicons.txt", "lucide.txt", "payment-brands.txt", "platform-icons.txt", "tux.txt"}:
+        abort(404)
+    root = Path(current_app.static_folder) / "notices"
+    if language() != "en":
+        root = root / language()
+    return send_from_directory(root, filename, mimetype="text/plain; charset=utf-8")
 
 
 @pages_bp.route("/datenschutz", methods=["GET"])
@@ -289,7 +313,7 @@ def payment_preview(method):
             # 'self' in some browsers. Keep form submissions same-origin and
             # navigate from a local launch page without weakening the CSP.
             return render_template("payment_preview_launch.html", target=target, provider=provider)
-        error = "Confirm that you will not send money or make a purchase while testing."
+        error = translate("Confirm that you will not send money or make a purchase while testing.")
     response = make_response(render_template(
         "payment_preview.html", provider=provider, method=method,
         session_id=session_id, recovery_token=request.values.get("token"), error=error,
@@ -316,9 +340,9 @@ def activate():
         action = request.form.get('action', 'email')
         order_id = normalize_order_id(request.form.get('order_id'))
         if not email:
-            status, error = 400, 'Please enter a valid email address.'
+            status, error = 400, translate('Please enter a valid email address.')
         elif action not in {'email', 'lookup'} or (action == 'lookup' and order_id is None):
-            status, error = 400, 'Enter the order ID from your Patreon purchase receipt.'
+            status, error = 400, translate('Enter the order ID from your Patreon purchase receipt.')
         else:
             try:
                 if action == 'lookup':
@@ -334,7 +358,7 @@ def activate():
                     status = 202
             except SQLAlchemyError:
                 db.session.rollback()
-                status, error = 503, 'Your request could not be saved. Please try again shortly.'
+                status, error = 503, translate('Your request could not be saved. Please try again shortly.')
     delivery = patreon_delivery_result()
     response = make_response(render_template('activate.html', error=error, accepted=accepted or bool(delivery),
                                             lookup=patreon_lookup_result(include_progress=True), delivery=delivery), status)

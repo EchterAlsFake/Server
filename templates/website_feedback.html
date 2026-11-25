@@ -1,15 +1,15 @@
 <!doctype html>
-<html lang="{{ 'de' if german else 'en' }}">
+<html lang="{{ language_tag(website_language) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ "Rückmeldung" if german else "Website feedback" }} · Porn Fetch</title>
+    <title>{{ _("Website feedback") }} · Porn Fetch</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
 </head>
 <body>
 <main class="container">
-    <h1>{{ ("Danke für Ihre Rückmeldung" if german else "Thanks for your feedback") if saved else ("Rückmeldung vorübergehend nicht verfügbar" if german else "Feedback is temporarily unavailable") }}</h1>
-    <p><a href="{{ '/de/download' if german else '/download' }}">{{ "Download-Optionen öffnen" if german else "Open download options" }}</a></p>
+    <h1>{{ _("Thanks for your feedback") if saved else _("Feedback is temporarily unavailable") }}</h1>
+    <p><a href="{{ site_path('/download') }}">{{ _("Open download options") }}</a></p>
 </main>
 </body>
 </html>

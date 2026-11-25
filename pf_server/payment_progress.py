@@ -307,6 +307,8 @@ def record_fulfillment(transaction, stage):
 
 
 def public_progress(transaction, checkout=None, *, license_pending=False):
+    from .website_locale import translate
+
     if transaction.provider == 'mollie':
         from .mollie_service import progress
         return progress(transaction, license_pending=license_pending)
@@ -407,8 +409,8 @@ def public_progress(transaction, checkout=None, *, license_pending=False):
             "Payment verified. Save your license and invoice safely.",
         )
     return dict(
-        title=title,
-        message=message,
+        title=translate(title),
+        message=translate(message),
         activity="complete" if finished else "attention" if problem else "waiting" if fulfillment == "retry" else "active",
         stage="finished"
         if finished
@@ -416,7 +418,7 @@ def public_progress(transaction, checkout=None, *, license_pending=False):
         steps=[
             dict(
                 id=key,
-                label=label,
+                label=translate(label),
                 state="done" if i < index else "current" if i == index else "upcoming",
             )
             for i, (key, label) in enumerate(steps)

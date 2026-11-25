@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Test preview — {{ provider }} — Porn Fetch{% endblock %}
+{% block title %}{{ _("Test preview —") }} {{ provider }} {{ _("— Porn Fetch") }}{% endblock %}
 {% block content %}
 <section class="card payment-preview-page" aria-labelledby="preview-title">
-    <p class="eyebrow">Before you continue</p><h1 id="preview-title">Preview {{ provider }}.</h1>
+    <p class="eyebrow">{{ _("Before you continue") }}</p><h1 id="preview-title">{{ _("Preview") }} {{ provider }}.</h1>
     {% include "partials/payment_test_warning.html" %}
     {% if method == "patreon" %}
     {% include "partials/patreon_details.html" %}
@@ -11,9 +11,9 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="session_id" value="{{ session_id }}">
         {% if recovery_token %}<input type="hidden" name="token" value="{{ recovery_token }}">{% endif %}
-        <label class="checkbox-container"><input type="checkbox" name="confirm_no_payment" value="yes" required><span>I understand this is a test preview. I will not send money or make a purchase.</span></label>
+        <label class="checkbox-container"><input type="checkbox" name="confirm_no_payment" value="yes" required><span>{{ _("I understand this is a test preview. I will not send money or make a purchase.") }}</span></label>
         {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
-        <div class="checkout-actions"><a href="/porn_fetch" class="btn btn-secondary">Back to payment methods</a><button type="submit" class="btn btn-primary">I understand. Continue to preview</button></div>
+        <div class="checkout-actions"><a href="{{ site_path("/porn_fetch") }}" class="btn btn-secondary">{{ _("Back to payment methods") }}</a><button type="submit" class="btn btn-primary">{{ _("I understand. Continue to preview") }}</button></div>
     </form>
 </section>
 {% endblock %}

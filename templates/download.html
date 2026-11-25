@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "partials/platform_icon.html" import platform_icon %}
-{% block title %}Download Porn Fetch — Choose your device{% endblock %}
+{% block title %}{{ _("Download Porn Fetch — Choose your device") }}{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='direct-downloads.js') }}" defer></script><script src="{{ url_for('static', filename='downloads.js') }}" defer></script>{% endblock %}
 {% block content %}
 <div class="downloads-page download-picker" data-direct-origin="{{ direct_download_origin }}" data-download-path="{{ site_path('/download') }}" data-initial-platform="{{ selected_platform or '' }}">
@@ -59,7 +59,7 @@
 <details class="ux-disclosure"><summary>{{ _("Choose a release channel") }}</summary>{% include "partials/download_channels.html" %}</details>
 <p><a data-download-retry hidden>{{ _("Download interrupted? Retry via compatibility server") }}</a></p>
 <nav class="download-bottom" aria-label="{{ _("Download help") }}"><a href="#guide-{{ selected_platform or 'windows' }}" class="installation-link">{{ _("Installation guide") }}</a><a {{ site_link("/guides") }}>{{ _("Video download guides") }}</a><a {{ site_link("/releases") }}>{{ _("Previous releases & changelog") }}</a><a {{ site_link("/help") }}>{{ _("Troubleshooting / activation help") }}</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">{{ _("GitHub ↗") }}</a><a href="#verify-download">{{ _("Verify download (SHA-256)") }}</a></nav>
-<details id="verify-download" class="installation-guide compact-guide"><summary>{{ _("How to verify your download") }}</summary><p>{{ _("Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.") }}</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>Linux: <code>sha256sum &lt;filename&gt;</code><br>macOS: <code>shasum -a 256 &lt;filename&gt;</code></p><p>{{ _("A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.") }}</p></details>
+<details id="verify-download" class="installation-guide compact-guide"><summary>{{ _("How to verify your download") }}</summary><p>{{ _("Expand advanced options and use the SHA-256 link beside your exact file. Compare it with the digest calculated on your device.") }}</p><p>Windows PowerShell: <code>Get-FileHash -Algorithm SHA256 &lt;filename&gt;</code><br>{{ _("Linux:") }} <code>sha256sum &lt;filename&gt;</code><br>{{ _("macOS:") }} <code>shasum -a 256 &lt;filename&gt;</code></p><p>{{ _("A checksum detects a changed or incomplete file; it is not a substitute for a code-signing certificate.") }}</p></details>
 <p class="download-disclosure">{{ _("App downloads and updates are free. Desktop download history and statistics are also free. Premium is a") }} <a {{ site_link("/porn_fetch") }}>{{ _("€%(premium_price)s one-time purchase", premium_price=premium_price) }}</a> {{ _("for lifetime access to higher quality, parallel downloads and full public collections on up to 10 active installations. Every future Porn Fetch update and feature I release is included. Future development has no guaranteed duration. Activation and periodic validation apply. Processing fees may apply.") }}</p>
 </div>
 {% endblock %}

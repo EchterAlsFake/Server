@@ -1,24 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Withdraw from contract — Porn Fetch{% endblock %}
+{% block title %}{{ _("Withdraw from contract — Porn Fetch") }}{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='withdrawal.css') }}">{% endblock %}
 {% block content %}
 <article class="withdrawal-page">
-    <h1>Withdraw from contract</h1>
-    <p>Step 1 of 2. Enter your details, then review and confirm. No account or reason is required. Submission does not establish a refund entitlement.</p>
+    <h1>{{ _("Withdraw from contract") }}</h1>
+    <p>{{ _("Step 1 of 2. Enter your details, then review and confirm. No account or reason is required. Submission does not establish a refund entitlement.") }}</p>
     {% if error %}<p class="withdrawal-error" role="alert">{{ error }}</p>{% endif %}
-    <form action="{{ url_for('withdrawal.preview') }}" method="post" class="withdrawal-form">
+    <form action="{{ site_path(url_for('withdrawal.preview')) }}" method="post" class="withdrawal-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="withdrawal-name">Name</label>
+        <label for="withdrawal-name">{{ _("Name") }}</label>
         <input id="withdrawal-name" name="name" autocomplete="name" maxlength="200" required value="{{ values.get('name', '') }}">
-        <label for="withdrawal-contract">Contract or part to withdraw from</label>
+        <label for="withdrawal-contract">{{ _("Contract or part to withdraw from") }}</label>
         <textarea id="withdrawal-contract" name="contract" rows="3" maxlength="2000" required aria-describedby="withdrawal-contract-help">{{ values.get('contract', '') }}</textarea>
-        <p id="withdrawal-contract-help">An order/payment reference or purchase description and date. Identify the relevant part for a partial withdrawal.</p>
-        <label for="withdrawal-email">Email for your receipt</label>
+        <p id="withdrawal-contract-help">{{ _("An order/payment reference or purchase description and date. Identify the relevant part for a partial withdrawal.") }}</p>
+        <label for="withdrawal-email">{{ _("Email for your receipt") }}</label>
         <input id="withdrawal-email" name="email" type="email" autocomplete="email" maxlength="254" required value="{{ values.get('email', '') }}">
-        <p>Your declaration and its receipt date/time will be emailed here. <a href="/privacy_policy">Privacy</a>.</p>
-        <button type="submit" class="btn btn-primary">Review withdrawal</button>
+        <p>{{ _("Your declaration and its receipt date/time will be emailed here.") }} <a href="/privacy_policy">{{ _("Privacy") }}</a>.</p>
+        <button type="submit" class="btn btn-primary">{{ _("Review withdrawal") }}</button>
     </form>
-    <p>You may also withdraw by email to <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> or letter.</p>
-    <details class="withdrawal-instructions"><summary>Withdrawal instructions and optional model form</summary>{% include "partials/withdrawal_information.html" %}</details>
+    <p>{{ _("You may also withdraw by email to") }} <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a> {{ _("or letter.") }}</p>
+    <details class="withdrawal-instructions"><summary>{{ _("Withdrawal instructions and optional model form") }}</summary>{% include "partials/withdrawal_information.html" %}</details>
 </article>
 {% endblock %}

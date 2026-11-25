@@ -11,26 +11,26 @@
   let busy = false;
   const showError = (element, message) => { element.textContent = message; element.focus(); };
   async function post(url, body) {
-    const response = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content}, body: JSON.stringify(body)});
+    const response = await fetch(websitePath(url), {method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content}, body: JSON.stringify(body)});
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Could not continue. Please try again.');
+    if (!response.ok) throw new Error(data.error || websiteText("Could not continue. Please try again."));
     return data;
   }
   async function createPayment() {
     if (busy || root.dataset.confirmed !== 'true') return;
-    busy = true; pay.disabled = true; error.textContent = ''; pay.textContent = 'Creating transaction…';
+    busy = true; pay.disabled = true; error.textContent = ''; pay.textContent = websiteText("Creating transaction…");
     activity.hidden = false; form.setAttribute('aria-busy', 'true');
     let navigating = false;
     try {
       const country = document.querySelector('#crypto-country').value;
       const withdrawal = document.querySelector('#crypto-withdrawal').checked;
       if (root.dataset.needsConfirmation === 'true' || root.dataset.country !== country) {
-        step.textContent = 'Saving your checkout confirmations…';
+        step.textContent = websiteText("Saving your checkout confirmations…");
         await post('/checkout/crypto-confirm', {country, withdrawal_accepted: withdrawal, offer_digest: root.dataset.offerDigest});
         root.dataset.needsConfirmation = 'false';
         root.dataset.country = country;
       }
-      step.textContent = 'Creating your NOWPayments checkout…';
+      step.textContent = websiteText("Creating your NOWPayments checkout…");
       const data = await post('/create-crypto-payment', {country, age_confirmed: true, terms_accepted: true, withdrawal_accepted: withdrawal, test_acknowledged: true, delivery_email: email.value.trim()});
       sessionId = data.session_id;
       statusUrl = data.status_url;
@@ -41,7 +41,7 @@
         document.querySelector('#sim-session-id').textContent = sessionId;
         document.querySelector('#simulation-heading').focus();
       } else {
-        step.textContent = 'Opening your payment status…';
+        step.textContent = websiteText("Opening your payment status…");
         navigating = true;
         location.assign(data.status_url);
       }

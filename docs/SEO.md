@@ -261,10 +261,10 @@ Source: [Guidelines for sites with explicit content](https://developers.google.c
 
 English uses the original URLs. German, Spanish, Hindi, and Simplified Chinese
 use `/de/`, `/es/`, `/hi/`, and `/zh-hans/`. Each language covers all
-provider guides, the guide hub, platform downloads, help, About, release history,
-and public legal documents. The URL selects the language. The language switcher
-links to equivalent pages, and links marked `EN` lead to an English page, such
-as checkout. Each indexable translation has its own canonical and reciprocal
+provider guides, downloads, support, release history, and the purchase and
+withdrawal flows. The URL selects the language and the language switcher links
+to equivalent pages. Checkout URLs retain their locale across submissions,
+recovery links and status polling. Each indexable translation has its own canonical and reciprocal
 HTML `hreflang` links, with `zh-Hans` for Simplified Chinese and English as
 `x-default`. The sitemap lists the canonical URLs.
 
@@ -277,14 +277,17 @@ in `pf_server/website_locale.py`. Translations were drafted locally with
 [Spanish](https://huggingface.co/michaelfeil/ct2fast-opus-mt-en-es), and
 [Chinese](https://huggingface.co/Zoowr/opus-mt-en-zh-ct2-int8), and
 [AI4Bharat IndicTrans2 for Hindi](https://huggingface.co/zaidwhys/indictrans2-en-indic-dist-200M-ct2-int8).
-The catalogs incorporate edited guide copy and labels from the app. Rendering
-reads repository files and needs no translation service.
+The catalogs incorporate edited guide copy and labels from the app. The
+documentation uses its own catalogs in `i18n/docs/`. Checkout records the
+localized declarations alongside the English contract snapshot. Rendering uses
+repository files and needs no translation service.
 
 For a new release, put translations in the website release manifest alongside
 the English `notes` field. Use the URL locale codes as keys, for example
 `"notes_i18n": {"de": "…", "es": "…", "hi": "…", "zh-hans": "…"}`.
-Versions with English-only notes link to the original notes page. The website
-uses the same release files and checksums in all languages.
+The shipped translations in `i18n/releases.json` fill in older releases when
+their English note hash matches. Versions with English-only notes link to the
+original notes page. Release files and their checksums are shared across languages.
 
 ### Crawling, indexing, and canonicalization
 

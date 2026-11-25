@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="{% block html_lang %}{{ language_tag(website_language) }}{% endblock %}"{% if age_required %} class="age-pending"{% endif %}>
+<html lang="{% block html_lang %}{{ language_tag(website_language) }}{% endblock %}" data-website-language="{{ website_language }}"{% if age_required %} class="age-pending"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="dark">
-    <title>{% if page_meta %}{{ page_meta.title }}{% else %}{% block title %}Porn Fetch — Your videos, on your device{% endblock %}{% endif %}</title>
+    <title>{% if page_meta %}{{ page_meta.title }}{% else %}{% block title %}{{ _("Porn Fetch — Your videos, on your device") }}{% endblock %}{% endif %}</title>
     <meta name="robots" content="{{ robots_directive }}">
     {% block seo_head %}{% include "partials/seo_head.html" %}{% endblock %}
     <link rel="icon" type="image/webp" href="{{ url_for('static', filename='media/web/logo.webp') }}">
@@ -13,6 +13,7 @@
     {% if page_meta and website_source_path != '/' %}<link rel="stylesheet" href="{{ url_for('static', filename='downloads.css') }}">{% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='ux.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% if website_language != 'en' %}<script type="application/json" id="website-messages">{{ browser_messages()|tojson }}</script>{% endif %}
     <script src="{{ url_for('static', filename='site.js') }}" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
@@ -43,16 +44,17 @@
                 <a class="btn btn-primary header-premium-cta" {{ site_link("/porn_fetch") }}>{{ _("Buy Premium") }}<span class="header-premium-price"> · €{{ premium_price }}</span></a>
             </div>
         </header>
-        {% if page_meta and page_meta.language_urls and not is_onion %}
+        {% set language_urls = page_meta.language_urls if page_meta else browser_language_urls %}
+        {% if language_urls %}
         <nav class="site-languages" aria-label="{{ _("Website language") }}">
             {% set selected_channel = request.args.get('channel') if website_source_path == '/download' or website_source_path.startswith('/download/') else none %}
-            {% for locale, target in page_meta.language_urls.items() %}
+            {% for locale, target in language_urls.items() %}
             <a href="{{ target }}{% if selected_channel in ('stable', 'beta') %}?channel={{ selected_channel }}{% endif %}" lang="{{ language_tag(locale) }}" hreflang="{{ language_tag(locale) }}"{% if locale == website_language %} aria-current="page"{% endif %}>{{ website_language_names[locale] }}</a>
             {% endfor %}
         </nav>
         {% endif %}
         {% block legal_navigation %}<nav class="legal-utility" aria-label="{{ _("Legal information") }}">
-            <a class="legal-index" {{ site_link("/impress") }}>{{ _("Legal") }}</a><a {{ site_link("/impress") }}>{{ _("Impress / Impressum") }}</a><a {{ site_link("/privacy_policy") }}>{{ _("Privacy / Datenschutz") }}</a><a {{ site_link("/terms") }}>{{ _("Terms / AGB") }}</a><a class="withdrawal-link" {% if is_onion %}href="{{ config.APP_DOMAIN }}/withdrawal"{% else %}{{ site_link("/withdrawal") }}{% endif %}>{{ _("Withdraw from contract") }}</a>
+            <a class="legal-index" {{ site_link("/impress") }}>{{ _("Legal") }}</a><a {{ site_link("/impress") }}>{{ _("Impress / Impressum") }}</a><a {{ site_link("/privacy_policy") }}>{{ _("Privacy / Datenschutz") }}</a><a {{ site_link("/terms") }}>{{ _("Terms / AGB") }}</a><a class="withdrawal-link" {% if is_onion %}href="{{ config.APP_DOMAIN }}{{ site_path('/withdrawal') }}"{% else %}{{ site_link("/withdrawal") }}{% endif %}>{{ _("Withdraw from contract") }}</a>
         </nav>{% endblock %}
         <main class="container {% block main_class %}{% endblock %}" id="main-content" tabindex="-1">
             {% block content %}{% endblock %}
@@ -62,16 +64,16 @@
             <div class="footer-top">
                 <a class="brand footer-brand" {{ site_link("/") }}><span class="brand-name">Porn Fetch</span></a>
                 <p>{{ _("Independent software. Made in Germany.") }}</p>
-                <a href="{{ config.ONION_ORIGIN }}/" target="_blank" rel="noopener noreferrer" class="onion-link">{{ _("Onion service") if is_onion else _("Also on Tor") }} <span aria-hidden="true">↗</span></a>
+                <a href="{{ config.ONION_ORIGIN }}{{ site_path('/') }}" target="_blank" rel="noopener noreferrer" class="onion-link">{{ _("Onion service") if is_onion else _("Also on Tor") }} <span aria-hidden="true">↗</span></a>
             </div>
             <nav class="footer-links" aria-label="{{ _("Legal and project links") }}">
-                <a {{ site_link("/download") }}>{{ _("Download") }}</a><a {{ site_link("/guides") }}>{{ _("Guides") }}</a><a {{ site_link("/help") }}>{{ _("Help") }}</a><a {{ site_link("/releases") }}>{{ _("Release notes") }}</a><a {{ site_link("/about") }}>{{ _("About") }}</a><a {{ site_link("/impress") }}>{{ _("Impress / Impressum") }}</a><a {{ site_link("/privacy_policy") }}>{{ _("Privacy / Datenschutz") }}</a><a {{ site_link("/terms") }}>{{ _("ToS / AGB") }}</a><a {{ site_link("/refund_policy") }}>{{ _("Refund policy") }}</a><a class="withdrawal-link" {% if is_onion %}href="{{ config.APP_DOMAIN }}/withdrawal"{% else %}{{ site_link("/withdrawal") }}{% endif %}>{{ _("Withdraw from contract") }}</a><a {{ site_link("/legal-statement") }}>{{ _("Legal statement") }}</a><a href="https://docs.echteralsfake.me/transparency/">{{ _("AI Transparency") }}</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">{{ _("App source ↗") }}</a><a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">{{ _("Open-source server ↗") }}</a><a href="/static/notices/github-octicons.txt">{{ _("Icon attribution") }}</a>
+                <a {{ site_link("/download") }}>{{ _("Download") }}</a><a {{ site_link("/guides") }}>{{ _("Guides") }}</a><a {{ site_link("/help") }}>{{ _("Help") }}</a><a {{ site_link("/releases") }}>{{ _("Release notes") }}</a><a {{ site_link("/about") }}>{{ _("About") }}</a><a {{ site_link("/impress") }}>{{ _("Impress / Impressum") }}</a><a {{ site_link("/privacy_policy") }}>{{ _("Privacy / Datenschutz") }}</a><a {{ site_link("/terms") }}>{{ _("ToS / AGB") }}</a><a {{ site_link("/refund_policy") }}>{{ _("Refund policy") }}</a><a class="withdrawal-link" {% if is_onion %}href="{{ config.APP_DOMAIN }}{{ site_path('/withdrawal') }}"{% else %}{{ site_link("/withdrawal") }}{% endif %}>{{ _("Withdraw from contract") }}</a><a {{ site_link("/legal-statement") }}>{{ _("Legal statement") }}</a><a href="https://docs.echteralsfake.me{{ '' if website_language == 'en' else '/' ~ website_language }}/transparency/">{{ _("AI Transparency") }}</a><a href="https://github.com/EchterAlsFake/Porn_Fetch" target="_blank" rel="noopener noreferrer">{{ _("App source ↗") }}</a><a href="https://github.com/EchterAlsFake/Server" target="_blank" rel="noopener noreferrer">{{ _("Open-source server ↗") }}</a><a href="{{ site_path('/static/notices/github-octicons.txt') }}">{{ _("Icon attribution") }}</a>
             </nav>
             {% include "partials/platform_credits.html" %}
             <div class="footer-bottom"><span>© 2023–2026 Johannes Habel</span><span>{{ _("Source available under the published license. Earlier GPL copies retain their rights.") }}</span><span>{{ _("For adults 18+.") }}</span></div>
         </footer>
     </div>
-    {% if config.NOWPAYMENTS_SANDBOX and website_language == 'en' %}{% include "partials/payment_test_dialog.html" %}{% endif %}
+    {% if config.NOWPAYMENTS_SANDBOX %}{% include "partials/payment_test_dialog.html" %}{% endif %}
     {% if age_required %}{% include "age_gate.html" %}{% endif %}
     <script src="{{ url_for('static', filename='payment-preview.js') }}" defer></script>
     {% block scripts %}{% endblock %}

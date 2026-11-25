@@ -121,7 +121,7 @@
         <p>{{ _("Run the Porn Fetch CLI with %(video_flag)s followed by the full video URL, or use %(profile_flag)s for a profile.", video_flag="--url", profile_flag="--model") }}</p>
         {% if supports_collections %}<p>{{ _("Use %(flag)s for a supported collection URL.", flag="--collection") }}</p>{% endif %}
         {% else %}
-        <p>{{ _("Set up the") }} <a {{ site_link("/download/cli") }}>Porn Fetch CLI</a> {{ _("for your system and open its interactive menu. Choose") }} <strong>{{ _("Download Single URL") }}</strong> {{ _("for an individual video, paste its full address, and follow the prompts. Use") }} <strong>{{ _("Settings & Configuration") }}</strong> {{ _("to check your output folder and preferred quality.") }}</p>
+        <p>{{ _("Set up the") }} <a {{ site_link("/download/cli") }}>{{ _("Porn Fetch CLI") }}</a> {{ _("for your system and open its interactive menu. Choose") }} <strong>{{ _("Download Single URL") }}</strong> {{ _("for an individual video, paste its full address, and follow the prompts. Use") }} <strong>{{ _("Settings & Configuration") }}</strong> {{ _("to check your output folder and preferred quality.") }}</p>
         {% if supports_profiles %}<p>{{ _("For supported profiles or public playlists, choose") }} <strong>{{ _("Scrape Profile / Playlist") }}</strong> {{ _("instead. Provider-specific restrictions above still apply.") }}</p>{% endif %}<p>{{ _("Android CLI setup uses Termux. These command-line instructions are separate from the") }} <a href="#iphone">{{ _("native iPhone app walkthrough above") }}</a>.</p>
         {% endif %}
     </section>
@@ -138,7 +138,7 @@
 </article>
 <nav class="guide-bottom-actions" aria-label="{{ _("Get Porn Fetch") }}" hidden>
     <a class="btn guide-action" data-guide-free href="#mobile-downloads">{{ _("Download free") }}</a>
-    <a class="btn guide-action" {{ site_link("/porn_fetch") }}>Premium · €{{ premium_price }}</a>
+    <a class="btn guide-action" {{ site_link("/porn_fetch") }}>{{ _("Premium · €") }}{{ premium_price }}</a>
 </nav>
 {% endblock %}
 

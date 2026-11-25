@@ -1,0 +1,45 @@
+Traducción. Texto original en inglés: /static/notices/lucide.txt
+
+Licencia ISC
+
+Copyright (c) 2026 Lucide Iconos y colaboradores
+
+Permiso para usar, copiar, modificar y/o distribuir este software para cualquier
+se concede con o sin comisión, siempre que
+El aviso de copyright y este aviso de permiso aparecen en todas las copias.
+
+EL SOFTWARE ES PROVIDIDO "TAL COMO ES" Y EL AUTOR DISCLAMA TODAS LAS GARANTÍAS
+CON RESPECTO A ESTE SOMBRERO, INCLUIDA TODAS LAS GARANTÍAS DE
+El organismo competente no será responsable en ningún caso de la comercialización ni de la propiedad.
+CUALQUIER DAÑO O DAÑO ESPECIAL, DIRECTO, INDIRECTO O CONSECUENCIAL
+LO QUE RESULTA DE LA PÉRDIDA DE USO, DATOS O PROFITOS,
+ACCIÓN DE CONTRATO, NEGIGENCIA u OTRA ACCIÓN TORTICIAL, DERIVADA DE
+O en relación con el uso o el rendimiento de este soporte.
+
+---
+
+Los siguientes iconos de Lucide se derivan del proyecto Feather:
+
+airplay, arrow-down-right, arrow-down-surf, arrow-surf, arrow-surf-surf, arrow-surf-down-down, arrow-surf-surf, arrow-surf-surf, arrow-right-cirf, arrow-up-surf, arrow-surf-surf, arrow-up-surf, arrow-surf-up, arrow-surf, arrow-surf, arrow-surf, arrow-surf, arrow-surf, chevrons-surf, chevrons-surf, chevrons-up, circle, counter-up, arrow-up, arrow-surf, arrow-surf, arrow-surf, arrow-surf, arrow-surf, arrow-surf, arrow-surf, ar, air-surf, air-com, ar, air-direct, air-com, air-
+
+La licencia MIT (MIT) (para los iconos mencionados anteriormente)
+
+Copyright (c) 2013 hasta Cole Bemis
+
+Por la presente se concede la autorización, de forma gratuita, a toda persona que obtenga una copia
+de este software y archivos de documentación asociados (el "Software"), para tratar
+en el Software sin restricciones, incluyendo sin limitaciones los derechos
+para usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender
+copias del Software, y para permitir a las personas a las que el Software es
+con el fin de hacerlo, con sujeción a las siguientes condiciones:
+
+El aviso de copyright anterior y este aviso de permiso se incluirá en todos
+copias o porciones sustanciales del Software.
+
+El soporte está provisto "tal como es", sin garantía de ningún tipo,
+CONSECUENCIA, INCLUIDA LA GARANTÍA DE LA MERCANCIA,
+FIN DE UN PROPÓSITO Y NO INFRACCIÓN PARTICULAR.
+RESPONSABLES DE CUALQUIER RECLAMACIÓN, DAÑOS u OTRO
+RESPONSABILIDAD, SI EN UNA ACCIÓN DE CONTRATO, TARDE O DE OTRA SERIE, DERIVADA DE,
+O EN CONEXIÓN CON EL SOMBRERO O EL USO O OTROS TRATAMIENTOS EN EL
+SOFTWARE.

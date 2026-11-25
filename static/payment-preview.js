@@ -12,14 +12,15 @@
   function openPreview(href, method, source) {
     const url = new URL(href, location.href);
     if (!['patreon', 'card', 'banxa'].includes(method) || url.origin !== location.origin
-        || url.pathname !== `/payment-preview/${method}`) return;
+        || url.pathname !== websitePath(`/payment-preview/${method}`)) return;
     trigger = source;
     ack.checked = false;
     submit.disabled = true;
     form.action = url.href;
     form.target = method === 'card' ? '_self' : '_blank';
-    dialog.querySelector('#payment-test-title').firstChild.textContent = method === 'patreon' ? 'Before you buy on ' : 'Preview ';
-    dialog.querySelector('#payment-test-provider').textContent = method === 'patreon' ? 'Patreon' : 'Onramp Pay / Banxa';
+    dialog.querySelector('#payment-test-title').textContent = method === 'patreon'
+      ? websiteText('Before you buy on Patreon.')
+      : websiteText('Preview Onramp Pay / Banxa.');
     dialog.querySelector("#patreon-preview-details").hidden = method !== "patreon";
     dialog.showModal();
   }

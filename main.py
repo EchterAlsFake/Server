@@ -40,7 +40,7 @@ from pf_server.guide_routes import guides_bp
 from pf_server.tax_service import country_transaction_summary
 from pf_server.update_routes import updates_bp
 from pf_server.website_releases import releases_bp
-from pf_server.website_locale import init_website_locale
+from pf_server.website_locale import init_website_locale, translate
 from pf_server.download_pages import downloads_bp
 from pf_server.onion import init_onion
 from pf_server.tor_checkout import init_tor_checkout
@@ -59,11 +59,11 @@ del _paywarp_tokens
 
 
 def ratelimit_handler(_error):
-    return jsonify({"error": "Rate limit exceeded. Try again later."}), 429
+    return jsonify({"error": translate("Rate limit exceeded. Try again later.")}), 429
 
 
 def payload_too_large(_error):
-    return jsonify({"error": "Payload too large. Max 200KB allowed."}), 413
+    return jsonify({"error": translate("Payload too large. Max 200KB allowed.")}), 413
 
 
 def create_app(

@@ -7,6 +7,7 @@ from cryptography.fernet import InvalidToken
 from flask import Blueprint, abort, current_app, render_template, request, send_file
 from sqlalchemy.exc import SQLAlchemyError
 
+from .website_locale import translate
 from .extensions import db
 from .models import WithdrawalRequest, WithdrawalDelivery
 from . import withdrawal_service as service
@@ -44,20 +45,20 @@ def preview():
     try:
         details = service.validate_details(request.form)
     except ValueError as error:
-        return form_page(str(error), request.form, 400)
+        return form_page(translate(str(error)), request.form, 400)
     try:
         token = service.make_draft(details)
     except (ValueError, TypeError, AttributeError):
         current_app.logger.error("Withdrawal encryption is not configured")
-        return form_page("The form is unavailable; nothing has been submitted. Email your withdrawal to support@echteralsfake.me.", details, 503)
-    return render_template("withdrawal_review.html", values=details, draft=token, statement=service.STATEMENT)
+        return form_page(translate("The form is unavailable; nothing has been submitted. Email your withdrawal to support@echteralsfake.me."), details, 503)
+    return render_template("withdrawal_review.html", values=details, draft=token, statement=translate(service.STATEMENT))
 
 
 @withdrawal_bp.post("/withdrawal/edit")
 def edit():
     _, payload = decode_submission()
     if payload is None:
-        return form_page("Please enter your details again.", status=400)
+        return form_page(translate("Please enter your details again."), status=400)
     return form_page(values=payload["details"])
 
 
@@ -66,14 +67,14 @@ def confirm():
     received_at = service.now()
     token, payload = decode_submission()
     if payload is None or request.form.get("confirm") != "withdraw":
-        return form_page("Please review and confirm your details. No withdrawal was submitted.", status=400)
+        return form_page(translate("Please review and confirm your details. No withdrawal was submitted."), status=400)
     try:
         row = service.receive(token, payload, received_at)
     except (SQLAlchemyError, ValueError, TypeError, AttributeError):
         db.session.rollback()
         current_app.logger.error("Could not persist withdrawal declaration")
         return render_template("withdrawal_review.html", values=payload["details"], draft=token,
-            statement=payload["statement"], error="Receipt could not be confirmed. Retry or email support@echteralsfake.me."), 503
+            statement=payload["statement"], error=translate("Receipt could not be confirmed. Retry or email support@echteralsfake.me.")), 503
     reference = row.id
     service.deliver_received(reference)
     row = db.session.get(WithdrawalRequest, reference)

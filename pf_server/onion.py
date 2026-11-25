@@ -4,9 +4,10 @@ from urllib.parse import urlsplit
 
 from flask import abort, current_app, render_template, request
 from flask.sessions import SecureCookieSessionInterface
+from .website_locale import language, path_in_language, source_path
 
 DEFAULT_ONION_ORIGIN = "http://pornfetchc5ct7s7uiervf4ziymmus5gy33gyqc6vkdtqyr5pbxrxmid.onion"
-PURCHASE_PATHS = {"/porn_fetch", "/buy_license", "/buy_card", "/donation"}
+PURCHASE_PATHS = {"/porn_fetch", "/buy_license", "/buy_card", "/buy_paywarp", "/donation"}
 
 
 def is_onion():
@@ -22,20 +23,22 @@ def before_onion_request():
         return render_template("onion_checkout.html")
     allowed = {"/", "/about", "/help", "/impress", "/privacy_policy", "/terms", "/refund_policy",
                "/legal-statement", "/transparency", "/download", "/releases", "/guides", "/robots.txt", "/sitemap.xml"}
-    if request.path not in allowed and not request.path.startswith(("/static/", "/docs/", "/guides/", "/download/", "/downloads/", "/releases/", "/repo/android/")):
+    path = source_path()
+    if path not in allowed and not path.startswith(("/static/", "/docs/", "/guides/", "/download/", "/downloads/", "/releases/", "/repo/android/")):
         abort(404)
     return None
 
 
 def onion_headers(response):
+    path = source_path()
     if is_onion():
         response.headers["X-Robots-Tag"] = "noindex, follow"
         response.headers.pop("Strict-Transport-Security", None)
-    elif request.is_secure and request.method in {"GET", "HEAD"} and request.path not in PURCHASE_PATHS and (
-        request.path in {"/", "/about", "/help", "/download", "/releases", "/guides"}
-        or request.path.startswith(("/download/", "/releases/", "/guides/", "/docs/"))
+    elif request.is_secure and request.method in {"GET", "HEAD"} and path not in PURCHASE_PATHS and (
+        path in {"/", "/about", "/help", "/download", "/releases", "/guides"}
+        or path.startswith(("/download/", "/releases/", "/guides/", "/docs/"))
     ):
-        response.headers["Onion-Location"] = current_app.config["ONION_ORIGIN"] + request.path
+        response.headers["Onion-Location"] = current_app.config["ONION_ORIGIN"] + path_in_language(path, language())
     return response
 
 

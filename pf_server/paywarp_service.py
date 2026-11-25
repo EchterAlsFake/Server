@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 import httpx
 from flask import current_app
 
+from .website_locale import site_path
 from .extensions import db
 from .models import Transaction, PaymentProgress
 from .nowpayments_service import PaymentProviderError, CompletionState, _claim_payment
@@ -55,7 +56,7 @@ def api(method, path, **kwargs):
 def create_payment(transaction, token, email):
     payload = dict(amount_minor=int(Decimal(transaction.expected_price_amount) * 100),
         currency=transaction.expected_price_currency.upper(), reference=transaction.session_id,
-        return_url=current_app.config['APP_DOMAIN'] + '/buy_success?token=' + token,
+        return_url=current_app.config['APP_DOMAIN'] + site_path('/buy_success?token=' + token),
         customer_email=email, fee_mode='inherit')
     if current_app.config.get('PAYWARP_SITE_ID'):
         payload['site_id'] = current_app.config['PAYWARP_SITE_ID']

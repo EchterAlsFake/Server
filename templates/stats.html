@@ -1,42 +1,42 @@
 {% extends "base.html" %}
 
-{% block title %}Server Statistics - Porn Fetch{% endblock %}
+{% block title %}{{ _("Server Statistics - Porn Fetch") }}{% endblock %}
 
 {% block content %}
 <div class="card" style="margin-top: 40px;">
-    <h1>Server Status &amp; Telemetry Dashboard</h1>
-    <p style="color: var(--color-text-muted);">Real-time server data for monitoring usage and bandwidth.</p>
+    <h1>{{ _("Server Status & Telemetry Dashboard") }}</h1>
+    <p style="color: var(--color-text-muted);">{{ _("Real-time server data for monitoring usage and bandwidth.") }}</p>
     
     <div class="grid-3" style="margin-top: 30px;">
         <div class="feature-card" style="text-align: center;">
-            <h2>Uptime</h2>
+            <h2>{{ _("Uptime") }}</h2>
             <p style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary); margin: 10px 0;">
-                {{ (stats.uptime_seconds / 3600)|int }}h {{ ((stats.uptime_seconds % 3600) / 60)|int }}m
+                {{ (stats.uptime_seconds / 3600)|int }}{{ _("h") }} {{ ((stats.uptime_seconds % 3600) / 60)|int }}{{ _("m") }}
             </p>
-            <span style="font-size: 0.8rem; color: var(--color-text-muted);">Started: {{ stats.server_started_at }}</span>
+            <span style="font-size: 0.8rem; color: var(--color-text-muted);">{{ _("Started:") }} {{ stats.server_started_at }}</span>
         </div>
         
         <div class="feature-card" style="text-align: center;">
-            <h2>Requests</h2>
+            <h2>{{ _("Requests") }}</h2>
             <p style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary); margin: 10px 0;">
                 {{ stats.requests.total }}
             </p>
-            <span style="font-size: 0.8rem; color: var(--color-text-muted);">Total hits tracked since start</span>
+            <span style="font-size: 0.8rem; color: var(--color-text-muted);">{{ _("Total hits tracked since start") }}</span>
         </div>
         
         <div class="feature-card" style="text-align: center;">
-            <h2>Bandwidth Out</h2>
+            <h2>{{ _("Bandwidth Out") }}</h2>
             <p style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary); margin: 10px 0;">
                 {{ stats.traffic.mb_out }} MB
             </p>
-            <span style="font-size: 0.8rem; color: var(--color-text-muted);">Total outbound network payload</span>
+            <span style="font-size: 0.8rem; color: var(--color-text-muted);">{{ _("Total outbound network payload") }}</span>
         </div>
     </div>
 
     <!-- CI/CD Build Statuses -->
     <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 30px;">
-        <h2>Continuous Integration Status</h2>
-        <p style="color: var(--color-text-muted); margin-bottom: 25px;">Real-time build and test results for integrated repositories.</p>
+        <h2>{{ _("Continuous Integration Status") }}</h2>
+        <p style="color: var(--color-text-muted); margin-bottom: 25px;">{{ _("Real-time build and test results for integrated repositories.") }}</p>
         
         {% if stats.ci.tests %}
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 20px;">
@@ -100,8 +100,8 @@
         {% else %}
             <div style="text-align: center; padding: 50px 20px; background: #1e293b; border-radius: 12px; border: 2px dashed #475569;">
                 <svg style="width: 48px; height: 48px; margin: 0 auto 15px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                <p style="color: var(--color-text-muted, #64748b); margin: 0; font-size: 1.1rem; font-weight: 500;">No CI/CD status records found.</p>
-                <p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 8px;">Run a build to see telemetry appear here.</p>
+                <p style="color: var(--color-text-muted, #64748b); margin: 0; font-size: 1.1rem; font-weight: 500;">{{ _("No CI/CD status records found.") }}</p>
+                <p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 8px;">{{ _("Run a build to see telemetry appear here.") }}</p>
             </div>
         {% endif %}
     </div>

@@ -3,10 +3,10 @@
   if (!form) return;
   const button = form.querySelector('#checkout-continue');
   const error = form.querySelector('#choice-error');
-  const names = {paywarp: 'Continue to credit card checkout', crypto: 'Continue to crypto checkout', patreon: 'Proceed with selected payment method'};
+  const names = {paywarp: websiteText("Continue to credit card checkout"), crypto: websiteText("Continue to crypto checkout"), patreon: websiteText("Proceed with selected payment method")};
   function update() {
     const method = form.querySelector('input[name="payment_method"]:checked')?.value;
-    button.textContent = names[method] || 'Proceed with selected payment method →';
+    button.textContent = names[method] || websiteText("Proceed with selected payment method →");
 
   }
   form.addEventListener('change', update);
@@ -23,7 +23,7 @@
     try {
       const response = await fetch(form.action, {method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(form))), headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.elements.csrf_token.value}});
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not continue. Please try again.');
+      if (!response.ok) throw new Error(data.error || websiteText("Could not continue. Please try again."));
       if (['crypto', 'paywarp'].includes(data.method) || data.live) location.assign(data.next);
       else document.dispatchEvent(new CustomEvent('payment-preview', {detail: {url: data.next, method: data.method, trigger: button}}));
     } catch (e) { error.textContent = e.message; error.focus(); }

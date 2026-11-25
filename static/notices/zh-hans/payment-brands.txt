@@ -1,0 +1,85 @@
+译文。英文原文：/static/notices/payment-brands.txt
+
+付款、艺术和使用说明
+2026年10月24日根据《公共所有者准则》进行审查。
+
+下面的艺术作品是在当地服务,没有第三方图像请求。
+保留艺术作品、颜色和侧面比例。
+付款提供人或加密货币;它们并不意味着赞助、背书、背书、
+网站
+佩特雷翁和卡路是试金试金,对外服务仍需要资金。
+
+这些纸条是归属和来源,不是一揽子商标许可证。
+每个业主目前的品牌要求和适用的供应商协议都受管辖。
+
+谷歌付费
+Google LLC。 Google Pay是Google LLC的商标。
+官方资产: Google 工资接受标记(不是 API 支付按钮)。
+https://developers.google.com/static/pay/api/download-assets/Google-Pay-Acceptance.zip
+用法 : https://developers.google.com/pay/api/web/guides/brand-guidelines
+用作可能采用的第三方提供商付款方法的静态身份,
+而不是一个声称引用谷歌付费API的按钮。
+
+苹果支付
+所有者:苹果公司。 苹果和苹果报酬是苹果公司的商标。
+官方艺术品:苹果工资标记,由苹果提供的SVG。
+https://developer.apple.com/apple-pay/marketing/Apple-Pay-Mark.zip
+用法 : https://developer.apple.com/apple-pay/marketing/
+保持未修改且保持空间清晰的标记。 这不是本地的
+苹果支付按钮,实际可用性由提供者决定。
+
+帕特里翁
+所有人: 帕特里翁公司
+官方艺术品:帕特里昂符号。
+https://c14.patreon.com/thumbnail_Patreon_Symbol_6fff9723d3.png
+用法 : https://www.patreon.com/brand
+https://support.patreon.com/hc/en-gb/articles/216539323-Use-Patreon-s-logo-to-promote-my-Patreon
+用于确定项目项目并与之连接 Patreon Shop。网站的交换是一个
+测试预览; 测试时不要购买或发送货币 。
+
+NOWPayments
+所有者 : NOWPayments 适用 NOWPayments 权利持有人。
+官方艺术品: https://nowpayments.io/images/logo/logo.svg
+服务和辅助货币:https://nowpayments.io/
+https://nowpayments.io/supported-coins
+目前这项服务为350+加密提供广告支持。
+无法保证每个硬币都能在
+该标记识别了付款提供者,而不是Porn Fetch的背书。
+
+比特币
+美工: https://bitcoin.design/assets/images/guide/getting-started/visual-language/bitcoin-symbol.svg
+Bitcoin 符号没有中央品牌授权。 来源和再利用背景 :
+https://bitcoin.design/guide/getting-started/visual-language/
+来源艺术作品用于识别比特币,没有改变。
+
+Eeterum 以西
+官方艺术品: https://ethereum.org/images/assets/svgs/eth-diamond-purple.svg
+来源和品牌资产:https://ethereum.org/assets/
+保留第三方商标上的权利。
+
+索拉纳
+拥有者:索拉纳基金会。
+官方艺术品: https://solana.com/src/img/branding/solanaLogoMark.svg
+用法 : https://solana.com/branding
+未修改的标记识别了索拉纳,没有基金会的联系或认可
+被声称;徽标没有与网站的身份或商品合并。
+
+利提币
+官方艺术品: https://download.litecoin.org/branding/v2/Litecoin-Logo-v2.svg
+资料来源:https://download.litecoin.org/branding/v2/。
+资源: https://litecoin.com/resources
+用于识别Litecoin的原样未变,保留第三方商标的权利。
+
+签证和总卡
+仅引用文字; 测试配置中没有包含它们的标识 。
+公共标志规则限制经核准的伙伴/商人使用经核准的伙伴/商人,并允许适用
+付款品牌. 归属不是批准的证据。 确认商人
+在添加接受标记之前,接受/品牌许可和使用已核准的艺术品。
+签证: https://brand.visa.com/
+主卡 : https://www.mastercard.com/brandcenter/us/en/faq.html
+主卡 : https://www.mastercard.com/brandcenter/us/en/brand-requirements/mastercard.html
+
+通用信用卡图标: Lucide, ISC 许可证。
+资料来源:https://github.com/lucide-icons/lucide/blob/main/icons/credit-card.svg。
+许可证:/静态/通知/杀菌剂.txt(包括版权和许可通知)。
+切换颜色和视图窗口, 以适应接受牌。 此图标未识别任何卡片网络 。

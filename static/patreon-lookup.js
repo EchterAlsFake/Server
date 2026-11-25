@@ -39,14 +39,14 @@
       clearTimeout(timer);
       busy = true; refresh.disabled = true;
       try {
-        const response = await fetch(`/activate/status?progress=1&action=${action}`, {cache: 'no-store', signal: AbortSignal.timeout(20000)});
-        if (!response.ok) throw new Error('Status unavailable');
+        const response = await fetch(websitePath(`/activate/status?progress=1&action=${action}`), {cache: 'no-store', signal: AbortSignal.timeout(20000)});
+        if (!response.ok) throw new Error(websiteText("Status unavailable"));
         const data = await response.json();
         connection.textContent = '';
-        checked.textContent = `Connected · Checked at ${new Date().toLocaleTimeString()}. Updates continue automatically.`;
+        checked.textContent = websiteText("Connected · Checked at %(value1)s. Updates continue automatically.", { value1: new Date().toLocaleTimeString(document.documentElement.lang) });
         if (data.status === 'expired') {
-          window.PurchaseProgress.render(panel, {title: 'Browser status access expired', message: 'Status access lasts 15 minutes. Submit your purchase details again to check progress, or contact support if you are still waiting. Your license stays valid.', activity: 'attention', steps: []});
-          refresh.textContent = 'Enter purchase details again';
+          window.PurchaseProgress.render(panel, {title: websiteText("Browser status access expired"), message: websiteText("Status access lasts 15 minutes. Submit your purchase details again to check progress, or contact support if you are still waiting. Your license stays valid."), activity: 'attention', steps: []});
+          refresh.textContent = websiteText("Enter purchase details again");
           refresh.dataset.expired = 'true';
           stopped = true;
         } else if (action === 'lookup' && data.status === 'ready') {
@@ -55,18 +55,18 @@
           location.reload();
           return;
         } else {
-          if (!data.progress) throw new Error('Missing progress');
+          if (!data.progress) throw new Error(websiteText("Missing progress"));
           window.PurchaseProgress.render(panel, data.progress);
           delay = data.progress.poll_after_ms || 1000;
           stopped = data.status !== 'pending';
         }
         const nextTitle = panel.querySelector('[data-progress-title]').textContent;
         if (title !== nextTitle) { announcement.textContent = nextTitle; title = nextTitle; }
-        if (stopped) checked.textContent = `Last checked at ${new Date().toLocaleTimeString()}.`;
-        else if (Date.now() - started > 10 * 60 * 1000) connection.textContent = 'This is taking longer than usual. Your request is saved and checks continue. You can contact support if you need help.';
+        if (stopped) checked.textContent = websiteText("Last checked at %(value1)s.", { value1: new Date().toLocaleTimeString(document.documentElement.lang) });
+        else if (Date.now() - started > 10 * 60 * 1000) connection.textContent = websiteText("This is taking longer than usual. Your request is saved and checks continue. You can contact support if you need help.");
       } catch {
-        connection.textContent = 'Connection interrupted. Your saved request may still be processing. Retrying automatically; you do not need to submit it again.';
-        checked.textContent = `Last connection attempt: ${new Date().toLocaleTimeString()}.`;
+        connection.textContent = websiteText("Connection interrupted. Your saved request may still be processing. Retrying automatically; you do not need to submit it again.");
+        checked.textContent = websiteText("Last connection attempt: %(value1)s.", { value1: new Date().toLocaleTimeString(document.documentElement.lang) });
       } finally {
         busy = false; refresh.disabled = false;
         if (!stopped && !document.hidden) timer = setTimeout(poll, delay);

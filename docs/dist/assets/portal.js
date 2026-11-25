@@ -53,7 +53,7 @@
             "hidden",
             Boolean(scrapersSection?.hidden)
         );
-        if (searchCount) searchCount.textContent = `${totalVisible} of ${totalPackages} packages`;
+        if (searchCount) searchCount.textContent = docsText("%(visible)s of %(total)s packages", {visible: totalVisible, total: totalPackages});
         if (clearButton) clearButton.hidden = query.length === 0;
         window.dispatchEvent(new Event("scroll"));
     };

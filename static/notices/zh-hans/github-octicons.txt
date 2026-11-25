@@ -1,0 +1,27 @@
+译文。英文原文：/static/notices/github-octicons.txt
+
+由总理章章书写成的 GitHub 标记
+资料来源:https://raw.githubusercontent.com/primer/octicons/main/icons/mark-github-16.svg。
+GitHub标志使用:https://brand.github.com/foundations/logo
+
+MIT 许可证
+
+(c) 版权(2026年)
+
+特此免费准许任何人获取副本
+本软件和相关文件文档 (“软件”), 用于处理
+软件中无限制的软件,包括不受限制的权利
+使用、复制、修改、合并、出版、分发、分许可和/或出售
+软件副本,并允许软件所面向的人
+提供此种服务,但须符合下列条件:
+
+上述版权通知和这项许可通知应列入
+软件的复制件或大宗部分。
+
+软件是"AS是"提供的,没有 任何种类的, 出口或
+包括但不局限于战争的 现代,
+特定目的与非目的的借口。
+任何索赔、索赔或其他索赔、
+或其它方面的关系,
+或与其有关或与其有关或
+这么慢。

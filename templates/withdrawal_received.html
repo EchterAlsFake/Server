@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Withdrawal received — Porn Fetch{% endblock %}
+{% block title %}{{ _("Withdrawal received — Porn Fetch") }}{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='withdrawal.css') }}">{% endblock %}
 {% block content %}
 <article class="withdrawal-page">
-    <h1>Withdrawal received</h1>
-    <p>Reference: <strong>{{ reference }}</strong></p>
-    {% if email_sent %}<p>Your receipt was sent by email.</p>
-    {% else %}<p role="status">Your declaration has been received. Email delivery will be retried; do not resubmit. Save your receipt below.</p>{% endif %}
-    <form action="{{ url_for('withdrawal.download_receipt') }}" method="post">
+    <h1>{{ _("Withdrawal received") }}</h1>
+    <p>{{ _("Reference:") }} <strong>{{ reference }}</strong></p>
+    {% if email_sent %}<p>{{ _("Your receipt was sent by email.") }}</p>
+    {% else %}<p role="status">{{ _("Your declaration has been received. Email delivery will be retried; do not resubmit. Save your receipt below.") }}</p>{% endif %}
+    <form action="{{ site_path(url_for('withdrawal.download_receipt')) }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="draft" value="{{ draft }}">
-        <button type="submit" class="btn btn-primary">Save receipt</button>
+        <button type="submit" class="btn btn-primary">{{ _("Save receipt") }}</button>
     </form>
     <pre class="withdrawal-receipt">{{ receipt }}</pre>
-    <p>Questions: <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a>. Include your receipt reference.</p>
+    <p>{{ _("Questions:") }} <a href="mailto:support@echteralsfake.me">support@echteralsfake.me</a>{{ _(". Include your receipt reference.") }}</p>
 </article>
 {% endblock %}

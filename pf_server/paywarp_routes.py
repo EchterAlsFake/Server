@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, current_app, jsonify, render_template, request, session, redirect
 from sqlalchemy.exc import SQLAlchemyError
 
+from .website_locale import translate
 from .checkout_consent import CONSENT_VERSION, current_consent, current_selection
 from .countries import COUNTRY_OPTIONS
 from .extensions import csrf, db, limiter, browser_limit_key
@@ -32,7 +33,7 @@ def checkout():
 @limiter.limit('20 per hour', key_func=browser_limit_key)
 def create():
     if not current_app.config.get('PAYWARP_ENABLED'):
-        return jsonify(error='PayWarp is temporarily unavailable. Please use Patreon.'), 503
+        return jsonify(error=translate('PayWarp is temporarily unavailable. Please use Patreon.')), 503
     from .payment_routes import validate_checkout_country
     from .contracts import offer_digest, record_agreement, checkout_snapshot
     from .licensing import normalize_recipient_email
@@ -43,25 +44,26 @@ def create():
     data = request.form
     selection = current_selection() or current_consent()
     if not selection or selection.get('payment_method') != 'paywarp' or selection.get('offer_digest') != offer_digest():
-        return jsonify(error='Review the payment methods and confirmations again.'), 409
+        return jsonify(error=translate('Review the payment methods and confirmations again.')), 409
     if data.get('withdrawal_accepted') != 'yes':
-        return jsonify(error='Please consent to immediate license delivery.'), 400
+        return jsonify(error=translate('Please consent to immediate license delivery.')), 400
     # No country form field: middleware supplies transient local location evidence.
     country_code = request.environ.get('PF_COUNTRY_CODE')
     if request.environ.get('PF_COUNTRY_STATUS') != 'found' or not country_code:
-        return jsonify(error='Country verification is temporarily unavailable.'), 503
+        return jsonify(error=translate('Country verification is temporarily unavailable.')), 503
     if country_code not in SUPPORTED_COUNTRIES:
-        return jsonify(error='PayWarp supports US and EU residents only.'), 400
+        return jsonify(error=translate('PayWarp supports US and EU residents only.')), 400
     country, error = validate_checkout_country({'country': country_code})
     if error:
         return error
     email = normalize_recipient_email(data.get('delivery_email'))
     if not email:
-        return jsonify(error='Enter a valid license delivery email.'), 400
+        return jsonify(error=translate('Enter a valid license delivery email.')), 400
     try:
         encrypted = encrypt_recipient(email)
         verify_lifetime_policy()
-        agreement = record_agreement('paywarp', country_code, datetime.now(timezone.utc).isoformat())
+        agreement = record_agreement('paywarp', country_code, datetime.now(timezone.utc).isoformat(),
+                                     shared_locale=selection.get("language", "en"))
         session['checkout_consent'] = dict(selection, agreement_id=agreement, country=country_code,
             withdrawal_accepted=True, version=CONSENT_VERSION)
         session.pop('checkout_selection', None)
@@ -75,7 +77,7 @@ def create():
         if transaction:
             from .crypto_delivery import cipher
             if cipher().decrypt(transaction.customer_email_encrypted.encode()).decode() != email:
-                return jsonify(error='Use the original delivery email to resume this order.'), 409
+                return jsonify(error=translate('Use the original delivery email to resume this order.')), 409
         else:
             identifier = session.get('paywarp_order') or 'PW-' + secrets.token_urlsafe(24)
             session['paywarp_order'] = identifier
@@ -95,7 +97,7 @@ def create():
     except (PaymentProviderError, KeygenUnavailable, SQLAlchemyError, ValueError):
         db.session.rollback()
         return render_template('paywarp_checkout.html', countries=[c for c in COUNTRY_OPTIONS if c[0] in SUPPORTED_COUNTRIES],
-            checkout_error='PayWarp checkout is unavailable. Retry with the same details or choose Patreon.'), 503
+            checkout_error=translate('PayWarp checkout is unavailable. Retry with the same details or choose Patreon.')), 503
 
 
 @paywarp_bp.post('/paywarp-webhook')

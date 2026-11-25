@@ -1,0 +1,23 @@
+译文。英文原文：/static/notices/tux.txt
+
+这是目前非正式的Linux标志的全彩版
+(“目前非官方”只是指没有书面文件,
+我还没有真正宣布它。它是由拉里·尤因创造的,
+并且可以自由使用 只要你承认Larry是原始
+艺术家。
+
+请注意,有黑白两种版本的这种版本
+缩到较小大小,对信头或任何方面更好
+您想要使用它用于: 因为所有标识都查看
+Larry的网页:
+
+	https://www.isc.tamu.edu/~lewing/linux/
+
+Garrett LeSage 和
+由IFo Hancroft精炼和清理,也可免费使用
+只要你承认拉里,加勒特和伊波罗的上面。
+
+也有一些黑白和倒向矢量版本
+Garrett的仓库:
+
+	https://github.com/garrett/Tux

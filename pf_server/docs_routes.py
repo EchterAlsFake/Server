@@ -3,10 +3,12 @@
 import os
 from pathlib import Path
 
-from flask import Blueprint, redirect, request, send_file
+from flask import Blueprint, Response, redirect, request, send_file
 from werkzeug.utils import safe_join
 
+from .docs_locale import localized_docs
 from .http import normalized_hostname
+from .website_locale import language, path_in_language, translate
 
 docs_bp = Blueprint("docs", __name__)
 DOCS_DIST = Path(__file__).resolve().parents[1] / "docs" / "dist"
@@ -46,10 +48,16 @@ def handle_docs_subdomain():
     path = request.path.lstrip("/")
     target_file, status = serve_docs_file(path)
     if status == "redirect":
-        return redirect(f"/{path}/", code=301)
+        return redirect(path_in_language(f"/{path}/", language()), code=301)
     if status == "404":
-        return "Documentation File Not Found", 404
-    return send_file(target_file)
+        return translate("Documentation File Not Found"), 404
+    return docs_response(target_file)
+
+
+def docs_response(filename):
+    if not filename.endswith(".html"):
+        return send_file(filename)
+    return Response(localized_docs(filename, language(), request.path), mimetype="text/html")
 
 
 @docs_bp.route("/docs/", defaults={"path": ""}, methods=["GET"])
@@ -59,6 +67,6 @@ def serve_docs_subpath(path):
     if status == "redirect":
         return redirect(f"/docs/{path}/", code=301)
     if status == "404":
-        return "Documentation File Not Found", 404
-    return send_file(target_file)
+        return translate("Documentation File Not Found"), 404
+    return docs_response(target_file)
 

@@ -16,6 +16,7 @@ from flask import (
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 from sqlalchemy.exc import SQLAlchemyError
 
+from .website_locale import site_path, translate
 from .checkout_recovery import issue as issue_recovery
 from .countries import COUNTRY_OPTIONS
 from .extensions import csrf, db, limiter
@@ -50,7 +51,7 @@ def buy_card():
 def acknowledgment():
     if not service.available():
         return jsonify(
-            error="Card and wallet payments are currently unavailable. No payment has been created."
+            error=translate("Card and wallet payments are currently unavailable. No payment has been created.")
         ), 503
     browser = session.setdefault("onramp_browser", secrets.token_urlsafe(32))
     checkout = OnrampCheckout(
@@ -70,7 +71,7 @@ def acknowledgment():
 def create_payment():
     if not service.available():
         return jsonify(
-            error="Card and wallet payments are currently unavailable. No payment has been created."
+            error=translate("Card and wallet payments are currently unavailable. No payment has been created.")
         ), 503
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or any(
@@ -84,7 +85,7 @@ def create_payment():
         )
     ):
         return jsonify(
-            error="Please accept all purchase, lifetime-license and KYC confirmations."
+            error=translate("Please accept all purchase, lifetime-license and KYC confirmations.")
         ), 400
     recipient = (
         normalize_recipient_email(data.get("delivery_email"))
@@ -92,7 +93,7 @@ def create_payment():
         else None
     )
     if recipient is None:
-        return jsonify(error="Enter a valid license delivery email."), 400
+        return jsonify(error=translate("Enter a valid license delivery email.")), 400
     country, error = validate_checkout_country(data)
     if error:
         return error
@@ -108,14 +109,14 @@ def create_payment():
             raise BadSignature("Missing consent")
     except BadSignature, KeyError, TypeError, AttributeError:
         return jsonify(
-            error="Reopen the disclosure and read it before continuing."
+            error=translate("Reopen the disclosure and read it before continuing.")
         ), 400
     elapsed = (
         service.now() - datetime.fromisoformat(checkout.created_at)
     ).total_seconds()
     if elapsed < 5:
         return jsonify(
-            error="Read the disclosure for at least five seconds before continuing."
+            error=translate("Read the disclosure for at least five seconds before continuing.")
         ), 409
     from .contracts import checkout_snapshot
     snapshot = checkout_snapshot("card", data.get("country"))
@@ -131,26 +132,26 @@ def create_payment():
         db.session.commit()
         if claim.rowcount != 1:
             return jsonify(
-                error="This checkout is already being created or could not be completed. Reopen the disclosure to start a new checkout."
+                error=translate("This checkout is already being created or could not be completed. Reopen the disclosure to start a new checkout.")
             ), 409
         try:
             checkout = service.create_checkout(checkout, country, recipient, contract_snapshot=snapshot)
         except PaymentProviderError as error:
             db.session.rollback()
             current_app.logger.warning("Onramp checkout creation failed")
-            return jsonify(error=str(error)), 503
+            return jsonify(error=translate(str(error))), 503
         except SQLAlchemyError:
             db.session.rollback()
             current_app.logger.warning("Onramp checkout creation failed")
             return jsonify(
-                error="Could not create the Banxa checkout. No payment link has been issued. Reopen the disclosure to try again."
+                error=translate("Could not create the Banxa checkout. No payment link has been issued. Reopen the disclosure to try again.")
             ), 503
     recovery_token = issue_recovery(checkout.session_id)
     return jsonify(
         session_id=checkout.session_id,
         checkout_url=service.decrypt(checkout.checkout_encrypted),
-        status_url="/buy_success?token=" + recovery_token,
-        recovery_url=current_app.config["APP_DOMAIN"] + "/buy_success?token=" + recovery_token,
+        status_url=site_path("/buy_success?token=" + recovery_token),
+        recovery_url=current_app.config["APP_DOMAIN"] + site_path("/buy_success?token=" + recovery_token),
         charge_amount=checkout.charge_amount,
         charge_currency=checkout.charge_currency,
         beta=checkout.beta,

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Porn Fetch — Download Videos & Collections to Your Device{% endblock %}
+{% block title %}{{ _("Porn Fetch — Download Videos & Collections to Your Device") }}{% endblock %}
 {% block extra_head %}<meta name="msvalidate.01" content="E962CEF1365C4E03FBB96A85E5DB1C1D" />{% endblock %}
 {% block main_class %}marketing{% endblock %}
 {% block content %}
@@ -19,6 +19,7 @@
         <div class="stage-heading"><span><span class="stage-dot" aria-hidden="true"></span> {{ _("PORN FETCH / PRODUCT TOUR") }}</span><span>00:40 <span aria-hidden="true">↗</span></span></div>
         <video id="product-video" class="promo-video" width="1920" height="1080" muted playsinline loop controls preload="none" poster="{{ url_for('static', filename='media/web/promo-poster.webp') }}" aria-label="{{ _("Porn Fetch product tour: fetching downloads, configuring filters, connecting accounts and privacy settings") }}" aria-describedby="video-description">
             <source data-src="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}" type="video/mp4">
+            <track kind="captions" src="{{ url_for('static', filename='media/captions/product-tour-' ~ website_language ~ '.vtt') }}" srclang="{{ language_tag(website_language) }}" label="{{ website_language_names[website_language] }}" default>
             <a href="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}">{{ _("Download the product tour") }}</a>.
         </video>
         <noscript><p class="video-noscript"><a href="{{ url_for('static', filename='media/porn-fetch-promo.mp4') }}">{{ _("Watch the 40-second product tour") }}</a></p></noscript>

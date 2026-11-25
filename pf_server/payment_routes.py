@@ -16,6 +16,7 @@ from flask import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
+from .website_locale import site_path, translate
 from .checkout_recovery import issue as issue_recovery, resolve_session_id, view_context
 from .config import DEFAULT_RATE_LIMIT
 from .countries import COUNTRY_OPTIONS
@@ -74,13 +75,13 @@ def validate_checkout_country(
     if decision.status == "verified":
         return decision, None
     if decision.status == "invalid_declaration":
-        return None, (jsonify({"error": "Please select a valid country."}), 400)
+        return None, (jsonify({"error": translate("Please select a valid country.")}), 400)
     if decision.status == "mismatch":
         current_app.logger.warning("Checkout country evidence does not match")
         return None, (
             jsonify(
                 {
-                    "error": (
+                    "error": translate(
                         "Your selected country does not match the local location "
                         "check. Disable any VPN and try again."
                     )
@@ -93,7 +94,7 @@ def validate_checkout_country(
             "Checkout blocked by geographic policy (reason=%s)", decision.reason
         )
         return None, (
-            jsonify({"error": "Checkout is unavailable in this location."}),
+            jsonify({"error": translate("Checkout is unavailable in this location.")}),
             451,
         )
     current_app.logger.error(
@@ -101,7 +102,7 @@ def validate_checkout_country(
         decision.reason,
     )
     return None, (
-        jsonify({"error": "Country verification is temporarily unavailable."}),
+        jsonify({"error": translate("Country verification is temporarily unavailable.")}),
         503,
     )
 
@@ -155,13 +156,15 @@ def download_recovery():
     if not session_id or db.session.get(Transaction, session_id) is None:
         abort(404)
     context = view_context(session_id)
-    content = (
-        "Porn Fetch private payment recovery link\n\n" + context["recovery_url"]
-        + "\n\nAnyone with this link can access your license and invoice. Keep it private.\n"
-        + "For new orders: valid while payment is pending (up to seven days), then for six hours after your license is ready.\n"
-        + "Save the license and invoice before access expires. Your license itself does not expire with this link.\n"
-        + "Support: support@echteralsfake.me. Keep your payment transaction hash or invoice reference.\n"
-    )
+    content = "\n".join((
+        translate("Porn Fetch private payment recovery link"), "",
+        context["recovery_url"], "",
+        translate("Anyone with this link can access your license and invoice. Keep it private."),
+        translate("For new orders: valid while payment is pending (up to seven days), then for six hours after your license is ready."),
+        translate("Save the license and invoice before access expires. Your license itself does not expire with this link."),
+        translate("Support: support@echteralsfake.me. Keep your payment transaction hash or invoice reference."),
+        "",
+    ))
     return send_file(BytesIO(content.encode()), as_attachment=True,
         download_name="porn-fetch-recovery.txt", mimetype="text/plain")
 
@@ -176,17 +179,17 @@ def buy_cancel():
 def download_license():
     session_id = resolve_session_id()
     if not session_id:
-        return jsonify({"error": "Missing session_id"}), 400
+        return jsonify({"error": translate("Missing session_id")}), 400
 
     transaction = db.session.get(Transaction, session_id)
     if transaction is None or transaction.status != "finished":
-        return jsonify({"error": "Payment not approved or session not found"}), 402
+        return jsonify({"error": translate("Payment not approved or session not found")}), 402
 
     try:
         license_file = fulfill_transaction_license(transaction)
     except KeygenUnavailable:
         db.session.rollback()
-        return jsonify({"error": "License delivery is temporarily unavailable. Please retry."}), 503, {"Retry-After": "30"}
+        return jsonify({"error": translate("License delivery is temporarily unavailable. Please retry.")}), 503, {"Retry-After": "30"}
     return send_file(
         BytesIO(license_file),
         as_attachment=True,
@@ -206,7 +209,7 @@ def check_license():
 def check_payment_status():
     session_id = resolve_session_id()
     if not session_id:
-        return jsonify({"error": "Missing session_id"}), 400
+        return jsonify({"error": translate("Missing session_id")}), 400
 
     transaction = db.session.get(Transaction, session_id)
     if transaction is None:
@@ -263,11 +266,11 @@ def check_payment_status():
 def download_invoice():
     session_id = resolve_session_id()
     if not session_id:
-        return jsonify({"error": "Missing session_id"}), 400
+        return jsonify({"error": translate("Missing session_id")}), 400
 
     transaction = db.session.get(Transaction, session_id)
     if transaction is None or transaction.status != "finished":
-        return jsonify({"error": "Payment not approved or session not found"}), 402
+        return jsonify({"error": translate("Payment not approved or session not found")}), 402
     try:
         invoice = load_invoice(session_id)
     except ValueError:
@@ -276,9 +279,9 @@ def download_invoice():
             safe_log_reference(session_id),
             exc_info=True,
         )
-        return jsonify({"error": "Invoice data is unavailable"}), 503
+        return jsonify({"error": translate("Invoice data is unavailable")}), 503
     if invoice is None:
-        return jsonify({"error": "Invoice not found for this session"}), 404
+        return jsonify({"error": translate("Invoice not found for this session")}), 404
 
     return send_file(
         BytesIO(render_invoice_pdf(invoice)),
@@ -298,15 +301,15 @@ def simulate_payment_success():
     data = request.get_json(silent=True) or {}
     session_id = data.get("session_id") if isinstance(data, dict) else None
     if not isinstance(session_id, str) or not session_id:
-        return jsonify({"error": "Missing session_id"}), 400
+        return jsonify({"error": translate("Missing session_id")}), 400
     session_id = resolve_session_id(session_id)
     transaction = db.session.get(Transaction, session_id)
     if transaction is None:
-        return jsonify({"error": "Session not found"}), 404
+        return jsonify({"error": translate("Session not found")}), 404
     if transaction.provider != "nowpayments":
         abort(404)
     if db.session.get(OnrampCheckout, session_id) is not None:
-        return jsonify({"error": "Real-money beta purchases cannot be simulated."}), 400
+        return jsonify({"error": translate("Real-money beta purchases cannot be simulated.")}), 400
 
     try:
         save_invoice(session_id, build_simulated_invoice())
@@ -316,13 +319,13 @@ def simulate_payment_success():
     except (OSError, ValueError, SQLAlchemyError):
         db.session.rollback()
         current_app.logger.exception("Local payment simulation failed")
-        return jsonify({"error": "Payment simulation failed"}), 500
+        return jsonify({"error": translate("Payment simulation failed")}), 500
     try:
         deliver_crypto_license(session_id)
     except Exception:
         db.session.rollback()
         current_app.logger.warning("Crypto license email deferred for retry")
-    return jsonify({"status": "ok", "message": "Payment simulation successful."}), 200
+    return jsonify({"status": "ok", "message": translate("Payment simulation successful.")}), 200
 
 
 @payments_bp.route("/create-crypto-payment", methods=["POST"])
@@ -330,35 +333,35 @@ def simulate_payment_success():
 @limiter.limit("20 per hour", key_func=browser_limit_key)
 def create_crypto_payment():
     if not current_app.config.get("NOWPAYMENTS_API_KEY"):
-        return jsonify({"error": "NOWPayments API key not configured on server."}), 500
+        return jsonify({"error": translate("NOWPayments API key not configured on server.")}), 500
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or data.get("terms_accepted") is not True:
-        return jsonify({"error": "Please accept the Terms of Service."}), 400
+        return jsonify({"error": translate("Please accept the Terms of Service.")}), 400
     if (
         current_app.config.get("NOWPAYMENTS_SANDBOX")
         and data.get("test_acknowledged") is not True
     ):
         return jsonify({
-            "error": "Please acknowledge that this is a test site and no real purchase is made."
+            "error": translate("Please acknowledge that this is a test site and no real purchase is made.")
         }), 400
     if "renewal_license_key" in data or "renewal_license_id" in data:
-        return jsonify(error="Lifetime Premium does not require renewal. Start a new lifetime purchase."), 400
+        return jsonify(error=translate("Lifetime Premium does not require renewal. Start a new lifetime purchase.")), 400
     country, country_error = validate_checkout_country(data)
     if country_error:
         return country_error
     assert country is not None
     if any(data.get(field) is not True for field in ("age_confirmed", "withdrawal_accepted")):
-        return jsonify(error="Please confirm your age and consent to immediate digital delivery."), 400
+        return jsonify(error=translate("Please confirm your age and consent to immediate digital delivery.")), 400
     raw_email = data.get("delivery_email", "")
     if not isinstance(raw_email, str):
-        return jsonify(error="Enter a valid license delivery email."), 400
+        return jsonify(error=translate("Enter a valid license delivery email.")), 400
     recipient = normalize_recipient_email(raw_email.strip()) if raw_email.strip() else None
     if recipient is None:
-        return jsonify(error="Enter a valid email for license delivery and your purchase reference."), 400
+        return jsonify(error=translate("Enter a valid email for license delivery and your purchase reference.")), 400
     try:
         encrypted_recipient = encrypt_recipient(recipient)
     except (ValueError, TypeError, AttributeError):
-        return jsonify(error="Email delivery is not configured yet. Please try again later."), 503
+        return jsonify(error=translate("Email delivery is not configured yet. Please try again later.")), 503
     from .contracts import checkout_snapshot
     contract_snapshot = checkout_snapshot("crypto", data.get("country"))
     try:
@@ -370,12 +373,12 @@ def create_crypto_payment():
             contract_snapshot=contract_snapshot,
         )
     except KeygenUnavailable:
-        return jsonify({'error': 'Licensing is temporarily unavailable.'}), 503
+        return jsonify({'error': translate('Licensing is temporarily unavailable.')}), 503
     except (PaymentProviderError, SQLAlchemyError):
         current_app.logger.exception("NOWPayments invoice creation failed")
-        return jsonify({"error": "Failed to generate crypto payment"}), 500
+        return jsonify({"error": translate("Failed to generate crypto payment")}), 500
     token = issue_recovery(result["session_id"])
-    result["status_url"] = "/buy_success?token=" + token
+    result["status_url"] = site_path("/buy_success?token=" + token)
     result["recovery_url"] = current_app.config["APP_DOMAIN"] + result["status_url"]
     return jsonify(result), 200
 

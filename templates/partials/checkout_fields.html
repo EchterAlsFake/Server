@@ -1,14 +1,14 @@
 {% macro email_field(banxa=false, help_text=none, label="Email address") %}
 <div class="checkout-email delivery-email-block">
-    <label for="delivery-email">{{ label }} <span>Required</span></label>
+    <label for="delivery-email">{{ site_text(label) }} <span>{{ _("Required") }}</span></label>
     <input id="delivery-email" name="delivery_email" type="email" maxlength="254" autocomplete="email" autocapitalize="none" required placeholder="you@example.com" aria-describedby="delivery-email-help">
-    <p id="delivery-email-help">{% if help_text %}{{ help_text }}{% else %}For license delivery and future purchase enquiries. Your address is stored encrypted with your order and is not included in your license file.{% if banxa %} Enter your verification email separately at Banxa.{% endif %}{% endif %} <a href="/privacy_policy">Privacy policy</a>.</p>
+    <p id="delivery-email-help">{% if help_text %}{{ site_text(help_text) }}{% else %}{{ _("For license delivery and future purchase enquiries. Your address is stored encrypted with your order and is not included in your license file.") }}{% if banxa %} {{ _("Enter your verification email separately at Banxa.") }}{% endif %}{% endif %} <a href="/privacy_policy">{{ _("Privacy policy") }}</a>.</p>
 </div>
 {% endmacro %}
 
 {% macro question(id, title) %}
 <details class="checkout-question" id="{{ id }}">
-    <summary id="{{ id }}-heading">{{ title }}<span class="checkout-chevron" aria-hidden="true"></span></summary>
+    <summary id="{{ id }}-heading">{{ site_text(title) }}<span class="checkout-chevron" aria-hidden="true"></span></summary>
     <div class="checkout-answer" role="region" aria-labelledby="{{ id }}-heading">{{ caller() }}</div>
 </details>
 {% endmacro %}

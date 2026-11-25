@@ -1,0 +1,23 @@
+Übersetzung. Englischer Originaltext: /static/notices/tux.txt
+
+Dies ist die Vollfarben-Version des derzeit inoffiziellen Linux-Logos
+"derzeit inoffiziell" bedeutet nur, dass es keine Papiere und
+dass ich es noch nicht wirklich angekündigt habe. Es wurde von Larry Ewing,
+und ist frei nutzbar, solange Sie Larry als das Original anerkennen
+Künstler.
+
+Beachten Sie, dass es Schwarz-Weiß-Versionen von dieser zur Verfügung,
+Skalierung auf kleinere Größen und sind besser für Briefköpfe oder was auch immer
+Sie möchten es für: für die gesamte Palette von Logos einen Blick auf
+Larrys Web-Seite:
+
+	https://www.isc.tamu.edu/~lewing/linux/
+
+Die SVG-Version wurde im Vektor von Garrett LeSage und
+raffiniert und gereinigt von IFo Hancroft. Es ist auch frei verwendbar
+Solange Sie Larry, Garrett und IFo wie oben anerkennen.
+
+Es gibt auch schwarz-weiße und invertierte Vektorversionen bei
+Garretts Projektarchiv:
+
+	https://github.com/garrett/Tux

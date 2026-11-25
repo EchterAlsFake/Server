@@ -13,17 +13,17 @@
     let busy = false;
     const checked = id => document.getElementById(id)?.checked ?? (form.dataset.confirmed === 'true');
     async function post(path, body) {
-        const response = await fetch(path, {
+        const response = await fetch(websitePath(path), {
             method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content},
             body: JSON.stringify(body)
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Checkout is unavailable. Close this dialog and try again.');
+        if (!response.ok) throw new Error(data.error || websiteText("Checkout is unavailable. Close this dialog and try again."));
         return data;
     }
     function update() {
         const remaining = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
-        countdown.textContent = !token ? (error.textContent ? 'Close and reopen this disclosure to retry.' : 'Preparing the reading timer…') : remaining > 0 ? `Please read before continuing: ${remaining} seconds.` : 'You may continue after confirming you have read the disclosure.';
+        countdown.textContent = !token ? (error.textContent ? websiteText("Close and reopen this disclosure to retry.") : websiteText("Preparing the reading timer…")) : remaining > 0 ? websiteText("Please read before continuing: %(value1)s seconds.", { value1: remaining }) : websiteText("You may continue after confirming you have read the disclosure.");
         next.disabled = busy || !token || remaining > 0 || !accepted.checked;
         if (remaining === 0) clearInterval(interval);
     }

@@ -1,3 +1,9 @@
+const websiteLocale = document.documentElement.dataset.websiteLanguage || 'en';
+const websiteMessages = JSON.parse(document.getElementById('website-messages')?.textContent || '{}');
+const websiteText = (message, values = {}) => (websiteMessages[message] ?? message)
+  .replace(/%\((\w+)\)s/g, (token, name) => values[name] ?? token);
+const websitePath = path => websiteLocale === 'en' ? path : `/${websiteLocale}${path}`;
+
 /* Local interactions only: no third-party requests or browser storage tracking. */
 (() => {
   const root = document.documentElement;
@@ -101,9 +107,9 @@
           method: 'POST', body: new FormData(ageForm),
           credentials: 'same-origin', headers: {'Accept': 'application/json'}
         });
-        if (!response.ok) throw new Error('Confirmation could not be saved. Please reload and try again.');
+        if (!response.ok) throw new Error(websiteText("Confirmation could not be saved. Please reload and try again."));
         const result = await response.json();
-        if (!result.confirmed) throw new Error(result.error || 'Please confirm your age to continue.');
+        if (!result.confirmed) throw new Error(result.error || websiteText("Please confirm your age to continue."));
         root.classList.remove('age-pending');
         content.removeAttribute('inert');
         content.removeAttribute('aria-hidden');

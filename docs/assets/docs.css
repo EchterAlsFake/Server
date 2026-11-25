@@ -1402,3 +1402,6 @@ tbody tr:hover {
         transition-duration: 0.01ms !important;
     }
 }
+
+.docs-languages { display: flex; flex-wrap: wrap; gap: .75rem; padding: .5rem 1rem; justify-content: center; }
+.docs-languages [aria-current="page"] { font-weight: bold; text-decoration: underline; }

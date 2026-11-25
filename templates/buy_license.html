@@ -1,56 +1,56 @@
 {% extends "checkout_base.html" %}
 {% from "partials/checkout_fields.html" import email_field, question %}
-{% block title %}Crypto checkout — Porn Fetch{% endblock %}
+{% block title %}{{ _("Crypto checkout — Porn Fetch") }}{% endblock %}
 {% block extra_head %}{{ super() }}<link rel="stylesheet" href="{{ url_for('static', filename='purchase-progress.css') }}">{% endblock %}
 {% block checkout_attributes %}id="crypto-checkout" data-country="{{ checkout_consent.country if checkout_consent else '' }}" data-confirmed="{{ 'true' if (checkout_consent and checkout_consent.payment_method == 'crypto') or checkout_selection else 'false' }}" data-offer-digest="{{ offer_digest() }}" data-needs-confirmation="{{ 'true' if checkout_selection else 'false' }}" data-sandbox="{{ 'true' if config.NOWPAYMENTS_SANDBOX else 'false' }}"{% endblock %}
 {% block checkout_notice %}
 {% if config.NOWPAYMENTS_SANDBOX %}
-<aside class="sandbox-note checkout-notice" role="note"><strong>Test environment — do not send money.</strong><p>Provider sandbox or local simulation only. This is not a live purchase.</p></aside>
+<aside class="sandbox-note checkout-notice" role="note"><strong>{{ _("Test environment — do not send money.") }}</strong><p>{{ _("Provider sandbox or local simulation only. This is not a live purchase.") }}</p></aside>
 {% else %}
-<aside class="checkout-notice" role="note"><strong>Real cryptocurrency payment.</strong><p>Sending funds pays for your license. Review the currency, network, amount and provider fees before paying. Your license is issued after payment verification.</p></aside>
+<aside class="checkout-notice" role="note"><strong>{{ _("Real cryptocurrency payment.") }}</strong><p>{{ _("Sending funds pays for your license. Review the currency, network, amount and provider fees before paying. Your license is issued after payment verification.") }}</p></aside>
 {% endif %}
 {% endblock %}
 {% block checkout_method %}
-<h2 id="method-heading">Pay with cryptocurrency</h2>
+<h2 id="method-heading">{{ _("Pay with cryptocurrency") }}</h2>
 {% include "partials/crypto_coins.html" %}
-<a class="checkout-supported" href="https://nowpayments.io/supported-coins" target="_blank" rel="noopener noreferrer">350+ cryptocurrencies supported ↗</a>
+<a class="checkout-supported" href="https://nowpayments.io/supported-coins" target="_blank" rel="noopener noreferrer">{{ _("350+ cryptocurrencies supported ↗") }}</a>
 {% endblock %}
 {% block checkout_form %}
-<form id="crypto-payment-form" method="post" action="/buy_license">
+<form id="crypto-payment-form" method="post" action="{{ site_path("/buy_license") }}">
     <div class="crypto-country">
-        <label for="crypto-country">Country for tax purposes</label>
-        <select id="crypto-country" name="country" required aria-describedby="crypto-country-help"><option value="">Select your country</option>{% for code, name in countries %}<option value="{{ code }}"{% if checkout_consent and checkout_consent.payment_method == 'crypto' and checkout_consent.country == code %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
-        <p id="crypto-country-help" class="checkout-caption">Checked locally for tax purposes; this check does not store your IP. <a href="/privacy_policy">Privacy</a> · <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">DB-IP</a></p>
+        <label for="crypto-country">{{ _("Country for tax purposes") }}</label>
+        <select id="crypto-country" name="country" required aria-describedby="crypto-country-help"><option value="">{{ _("Select your country") }}</option>{% for code, name in countries %}<option value="{{ code }}"{% if checkout_consent and checkout_consent.payment_method == 'crypto' and checkout_consent.country == code %} selected{% endif %}>{{ country_label(code) }}</option>{% endfor %}</select>
+        <p id="crypto-country-help" class="checkout-caption">{{ _("Checked locally for tax purposes; this check does not store your IP.") }} <a href="/privacy_policy">{{ _("Privacy") }}</a> · <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">{{ _("DB-IP") }}</a></p>
     </div>
-    <label class="crypto-supply-consent"><input type="checkbox" id="crypto-withdrawal" name="withdrawal_accepted" required{% if checkout_consent and checkout_consent.payment_method == 'crypto' and checkout_consent.withdrawal_accepted %} checked{% endif %}><span>{{ immediate_en }} <a href="/withdrawal" target="_blank" rel="noopener noreferrer">Withdrawal rights</a></span></label>
+    <label class="crypto-supply-consent"><input type="checkbox" id="crypto-withdrawal" name="withdrawal_accepted" required{% if checkout_consent and checkout_consent.payment_method == 'crypto' and checkout_consent.withdrawal_accepted %} checked{% endif %}><span>{{ immediate_en }} <a href="{{ site_path("/withdrawal") }}" target="_blank" rel="noopener noreferrer">{{ _("Withdrawal rights") }}</a></span></label>
     {{ email_field() }}
-    <p class="checkout-disclosure">NOWPayments shows the amount to send before payment. Review it, including any provider, exchange and network fees.</p>
+    <p class="checkout-disclosure">{{ _("NOWPayments shows the amount to send before payment. Review it, including any provider, exchange and network fees.") }}</p>
     <p id="checkout-error" class="checkout-error" role="alert" tabindex="-1"></p>
-    <div id="crypto-request-progress" class="purchase-progress purchase-submit-progress" hidden role="status"><div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label" id="crypto-request-step">Saving checkout details…</span></div><p>Your request is being processed. The payment status screen will open automatically.</p></div>
-    <button type="submit" id="pay-btn" class="nowpayments-btn" disabled data-label="{{ 'Continue to NOWPayments' if config.NOWPAYMENTS_SANDBOX else 'Buy lifetime Premium for €' ~ premium_price }}">{{ 'Continue to NOWPayments' if config.NOWPAYMENTS_SANDBOX else 'Buy lifetime Premium for €' ~ premium_price }} <span aria-hidden="true">→</span></button>
-    <p id="checkout-js-help" class="checkout-caption">Enable JavaScript to create a cryptocurrency payment.</p>
+    <div id="crypto-request-progress" class="purchase-progress purchase-submit-progress" hidden role="status"><div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label" id="crypto-request-step">{{ _("Saving checkout details…") }}</span></div><p>{{ _("Your request is being processed. The payment status screen will open automatically.") }}</p></div>
+    <button type="submit" id="pay-btn" class="nowpayments-btn" disabled data-label="{{ _('Continue to NOWPayments') if config.NOWPAYMENTS_SANDBOX else _('Buy lifetime Premium for €%(price)s', price=premium_price) }}">{{ _('Continue to NOWPayments') if config.NOWPAYMENTS_SANDBOX else _('Buy lifetime Premium for €%(price)s', price=premium_price) }} <span aria-hidden="true">→</span></button>
+    <p id="checkout-js-help" class="checkout-caption">{{ _("Enable JavaScript to create a cryptocurrency payment.") }}</p>
 </form>
 {% endblock %}
 {% block checkout_faq %}
 {% call question('crypto-fees', 'What fees will I pay?') %}
-<p>The €{{ premium_price }} license price excludes additional fees. NOWPayments lists a 1% service fee without exchange, or 1.5% for multi-currency, fixed-rate or user-paid-fee payments. Exchange costs and blockchain network fees can also apply.</p>
-<p>Review the provider’s final amount before sending funds. <a href="https://nowpayments.io/help/about-nowpayments/about/what-are-your-fees" target="_blank" rel="noopener noreferrer">Fee details ↗</a></p>
+<p>{{ _("The €") }}{{ premium_price }} {{ _("license price excludes additional fees. NOWPayments lists a 1%% service fee without exchange, or 1.5%% for multi-currency, fixed-rate or user-paid-fee payments. Exchange costs and blockchain network fees can also apply.") }}</p>
+<p>{{ _("Review the provider’s final amount before sending funds.") }} <a href="https://nowpayments.io/help/about-nowpayments/about/what-are-your-fees" target="_blank" rel="noopener noreferrer">{{ _("Fee details ↗") }}</a></p>
 {% endcall %}
 {% call question('crypto-delivery', 'When will I receive my license?') %}
-<p>Your license and invoice become available on the payment status page after NOWPayments verifies receipt. Blockchain confirmations and settlement can take time; a sent transaction does not mean your license is ready.</p>
-<p>Your license and invoice are also sent to the required email address. Save these documents for your records.</p>
+<p>{{ _("Your license and invoice become available on the payment status page after NOWPayments verifies receipt. Blockchain confirmations and settlement can take time; a sent transaction does not mean your license is ready.") }}</p>
+<p>{{ _("Your license and invoice are also sent to the required email address. Save these documents for your records.") }}</p>
 {% include "partials/checkout_license_terms.html" %}
 {% endcall %}
 {% call question('crypto-privacy', 'How private is cryptocurrency checkout?') %}
-<p>No Porn Fetch account is required. Blockchain transactions are generally public. NOWPayments may process transaction information under its <a href="https://nowpayments.io/doc/fd-privacy-policy.pdf?v=1.2" target="_blank" rel="noopener noreferrer">privacy policy ↗</a>; cryptocurrency checkout is not fully anonymous.</p>
-<p>Your email is required for delivery and retained encrypted with your order for purchase enquiries and support, never for advertising. It is not sent to NOWPayments or included in your license file. Proton Mail processes it for email delivery. <a href="/privacy_policy">Privacy / Datenschutz</a>.</p>
+<p>{{ _("No Porn Fetch account is required. Blockchain transactions are generally public. NOWPayments may process transaction information under its") }} <a href="https://nowpayments.io/doc/fd-privacy-policy.pdf?v=1.2" target="_blank" rel="noopener noreferrer">{{ _("privacy policy ↗") }}</a>{{ _("; cryptocurrency checkout is not fully anonymous.") }}</p>
+<p>{{ _("Your email is required for delivery and retained encrypted with your order for purchase enquiries and support, never for advertising. It is not sent to NOWPayments or included in your license file. Proton Mail processes it for email delivery.") }} <a href="/privacy_policy">{{ _("Privacy / Datenschutz") }}</a>.</p>
 {% endcall %}
 {% endblock %}
 {% block checkout_simulation %}
 {% if config.NOWPAYMENTS_SANDBOX and config.NOWPAYMENTS_LOCAL_SIMULATION_ENABLED %}
 <div class="tx-screen" id="tx-screen-container" hidden>
-    <div id="simulation-progress" class="purchase-progress" hidden role="status"><div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label">Verifying simulated payment and preparing license…</span></div><p>The server is processing this test purchase. Your license screen will open automatically.</p></div>
-    <p class="eyebrow">No payment required</p><h2 tabindex="-1" id="simulation-heading">Local payment simulation</h2><p>The provider sandbox is unavailable. This local simulation does not send funds.</p><p class="nowpayments-label">Simulated session ID</p><code id="sim-session-id"></code><p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p><button type="button" id="simulate-success-btn" class="nowpayments-btn">Simulate successful payment</button>
+    <div id="simulation-progress" class="purchase-progress" hidden role="status"><div class="purchase-progress-header"><span class="purchase-spinner" aria-hidden="true"></span><span class="purchase-progress-label">{{ _("Verifying simulated payment and preparing license…") }}</span></div><p>{{ _("The server is processing this test purchase. Your license screen will open automatically.") }}</p></div>
+    <p class="eyebrow">{{ _("No payment required") }}</p><h2 tabindex="-1" id="simulation-heading">{{ _("Local payment simulation") }}</h2><p>{{ _("The provider sandbox is unavailable. This local simulation does not send funds.") }}</p><p class="nowpayments-label">{{ _("Simulated session ID") }}</p><code id="sim-session-id"></code><p id="simulation-error" class="checkout-error" role="alert" tabindex="-1"></p><button type="button" id="simulate-success-btn" class="nowpayments-btn">{{ _("Simulate successful payment") }}</button>
 </div>
 {% endif %}
 {% endblock %}

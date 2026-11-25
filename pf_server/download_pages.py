@@ -115,7 +115,7 @@ PLATFORM_ARCH_LABELS = {
 
 def load_catalog():
     try:
-        return {"releases": catalog(), "unavailable": False}
+        return {"releases": catalog(with_translations=True), "unavailable": False}
     except OSError, ValueError, ReleaseError:
         current_app.logger.warning("Website release catalog is unavailable")
         return {"releases": [], "unavailable": True}

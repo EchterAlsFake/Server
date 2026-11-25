@@ -1,0 +1,54 @@
+Traducción. Texto original en inglés: /static/notices/platform-icons.txt
+
+Arte de plataformas y referencias de marcas
+Fuentes y directrices de uso revisadas: 24 de octubre de 2026
+
+Ventanas: ilustración de la ventana de aplicación Lucide (no el logotipo de Windows).
+macOS: ilustración de la computadora portátil Lucide (no un logotipo de Apple o representación de productos).
+iOS: ilustración de teléfono inteligente Lucide (no un logotipo de Apple o la representación de productos).
+Ilustración terminal de Lucide.
+Fuente: https://github.com/lucide-icons/lucide.
+Revisión fijada: 7faf87628a1ad6175975bc595344337ce14a7db4
+Archivos de origen: iconos/app-window.svg, iconos/laptop.svg, iconos/smartphone.svg,
+iconos/terminal.svg. Stroke cambió de CurrentColor a #f1efeb para SVG local
+Renderización de imágenes. Licencia ISC; Los iconos derivados de plumas también llevan la licencia MIT.
+Avisos completos: /static/notices/lucide.txt
+
+Linux: Tux, obra original de Larry Ewing, re-ilustrada en vector por
+Garrett LeSage, refinado y limpio por IGo Hancroft. Usado sin modificaciones.
+Fuente: https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/logo.svg.
+Permiso: https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/COPYING-logo
+Aviso de permiso local: /static/notices/tux.txt
+Archivo de artistas: https://github.com/garrett/Tux
+
+Android: cabeza de robot verde sin modificar de las directrices de la marca Android.
+Fuente: https://developer.android.com/static/images/brand/android-head_flat.svg.
+El robot Android se reproduce o modifica a partir de un trabajo creado y compartido por
+Google y se utiliza de acuerdo con los términos descritos en el Creative Commons 3.0
+Licencia de Atribución: https://creativecommons.org/licenses/by/3.0/
+Directrices: https://developer.android.com/distribute/marketing-tools/brand-guidelines
+https://partnermarketinghub.withgoogle.com/brands/android/legal-and-trademarks/
+El permiso de Creative Commons del robot es distinto del permiso para otros
+Logotipos de Google, marcas de texto, insignias de tienda y activos de marca.
+
+Referencias de marcas comerciales
+--------------------
+Windows es una marca comercial del grupo de empresas Microsoft.
+Apple, macOS y iPhone son marcas comerciales de Apple Inc., registradas en los EE.UU.
+y otros países y regiones. IOS es una marca comercial o
+Cisco en Estados Unidos y otros países; Apple lo usa bajo licencia.
+Android es una marca registrada de Google LLC.
+Linux es la marca registrada de Linus Torvalds en los Estados Unidos y otros países.
+
+Los nombres de las plataformas identifican la compatibilidad.
+certificación, patrocinio o endoso de Porn Fetch por un proveedor de plataformas.
+Los gráficos de la marca Apple y Microsoft requieren autorización bajo sus respectivas
+directrices, por lo que las tarjetas de plataforma utilizan ilustraciones neutrales de Lucide en su lugar.
+No hay Apple, Finder, iOS o Windows logotipo es suministrado por este conjunto de iconos de la plataforma.
+Las obras de pago de aceptación existentes tienen avisos separados en payment-brands.txt.
+
+Orientación oficial:
+https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html
+https://www.apple.com/legal/intellectual-property/trademark/appletmlist.html
+https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks
+https://www.linuxfoundation.org/legal/the-linux-mark

@@ -1,0 +1,27 @@
+Übersetzung. Englischer Originaltext: /static/notices/github-octicons.txt
+
+GitHub Marke von Primer Octicons
+Quelle: https://raw.githubusercontent.com/primer/octicons/main/icons/mark-github-16.svg
+Verwendung des GitHub-Logos: https://brand.github.com/foundations/logo
+
+MIT-Lizenz
+
+Copyright (c) 2026 GitHub Inc.
+
+Jede Person, die eine Abschrift erhält, wird hiermit kostenlos ermächtigt.
+von dieser Software und zugehörige Dokumentationsdateien (die "Software"), um zu behandeln
+in der Software ohne Einschränkung, einschließlich ohne Einschränkung der Rechte
+zu verwenden, zu kopieren, zu ändern, zu verschmelzen, zu veröffentlichen, zu verteilen, Unterlizenz, und/oder zu verkaufen
+Kopien der Software, und Personen, denen die Software ist, zu gestatten
+sofern dies unter folgenden Bedingungen möglich ist:
+
+Die oben genannte Urheberrechtsvermerk und diese Genehmigungsvermerk ist in allen
+Kopien oder wesentliche Teile der Software.
+
+DIE SOFTWARE IST "AS IST", OHNE KIND, EXPRESS ODER
+BESCHÄFTIGT, EINSCHLIESSLICH, EINSCHLIESSLICH, DASS NICHT AN DIE WARRANTIEN DER MERCHANTABILITÄT VERBINDLICH IST,
+RECHTSGRUNDLAGE FÜR EINEN BETEILIGTEN ZWECK UND EINEN NULLVERZIEHUNG.
+UNTERNEHMER ODER KUPYRIGHTINHABER FÜR EINEN ANDEREN RECHTSTRÄGER, DAMAGE ODER ANDERE
+VERBRAUCH, WENN EINE AKTION VON VERTRAG, VERTRAG ODER ANDEREN WÄHREND, AUSWIRKEND,
+Aus- oder in Verbindung mit der SOFTWARE oder der Anwendung oder anderen Bestimmungen in der
+Du hast es geschafft.

@@ -11,6 +11,8 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 
 import httpx
+from .website_locale import site_path
+
 from flask import current_app
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -131,8 +133,8 @@ def create_crypto_invoice(
         "ipn_callback_url": f"{current_app.config['API_DOMAIN']}/nowpayments-ipn",
         "order_id": session_id,
         "order_description": "Porn Fetch lifetime Premium license",
-        "success_url": f"{current_app.config['APP_DOMAIN']}/buy_success?session_id={session_id}",
-        "cancel_url": f"{current_app.config['APP_DOMAIN']}/buy_cancel",
+        "success_url": current_app.config["APP_DOMAIN"] + site_path(f"/buy_success?session_id={session_id}"),
+        "cancel_url": current_app.config["APP_DOMAIN"] + site_path("/buy_cancel"),
     }
     try:
         response = httpx.post(

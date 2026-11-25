@@ -1,22 +1,29 @@
 <div class="age-overlay" id="age-overlay">
     <section class="age-dialog" role="dialog" aria-modal="true" aria-labelledby="age-title" aria-describedby="age-description" tabindex="-1">
         <span class="age-symbol" aria-hidden="true">18+</span>
-        <p class="eyebrow">Age confirmation / Altersbestätigung</p>
-        <h2 id="age-title">Confirm you are 18+.<br><span lang="de">Nur für Erwachsene.</span></h2>
-        <p id="age-description">Confirm your age to view Premium and payment options.</p>
-        <p class="age-translation" lang="de">Bestätige dein Alter, um Premium und Zahlungsoptionen anzusehen.</p>
-        <form action="/" method="post" id="age-form">
+        <p class="eyebrow">{{ _("Age confirmation") }}</p>
+        <h2 id="age-title">{{ _("Confirm you are 18+.") }}</h2>
+        <p id="age-description">{{ _("Confirm your age to view Premium and payment options.") }}</p>
+
+        <form action="{{ site_path('/confirm-age') if website_language != 'en' else '/' }}" method="post" id="age-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+            <input type="hidden" name="next" value="{{ site_path(request.full_path.rstrip('?')) }}">
             <label class="age-gate-agreement" for="adult-confirmed">
                 <input type="checkbox" id="adult-confirmed" name="adult_confirmed" value="yes" required>
-                <span>I am at least 18 years old.<br><span lang="de">Ich bin mindestens 18 Jahre alt.</span></span>
+                <span>{{ _("I am at least 18 years old.") }}</span>
             </label>
             <p class="form-error" id="age-error" role="alert"{% if not age_error %} hidden{% endif %}>{{ age_error or '' }}</p>
-            <button class="btn btn-primary" type="submit">Confirm age &amp; continue <span aria-hidden="true">→</span></button>
+            <button class="btn btn-primary" type="submit">{{ _("Confirm age & continue") }} <span aria-hidden="true">→</span></button>
         </form>
-        <a class="age-exit" href="/leave">Leave this website / Website verlassen</a>
-        <nav class="age-legal" aria-label="Legal documents before confirmation"><a href="/impress">Impressum</a><a href="/privacy_policy">Privacy / Datenschutz</a><a href="/terms">ToS / AGB</a><a class="withdrawal-link" href="/withdrawal">Vertrag widerrufen / Withdraw from contract</a></nav>
-        <p class="age-session-note">Remembered for this browser session. No tracking cookie.</p>
+        <a class="age-exit" href="{{ site_path("/leave") }}">{{ _("Leave this website") }}</a>
+        {% if browser_language_urls %}
+        <nav class="site-languages" aria-label="{{ _('Website language') }}">
+            {% for locale, target in browser_language_urls.items() %}
+            <a href="{{ target }}" lang="{{ language_tag(locale) }}"{% if locale == website_language %} aria-current="page"{% endif %}>{{ website_language_names[locale] }}</a>
+            {% endfor %}
+        </nav>
+        {% endif %}
+        <nav class="age-legal" aria-label="{{ _("Legal documents before confirmation") }}"><a href="/impress">{{ _("Impressum") }}</a><a href="/privacy_policy">{{ _("Privacy / Datenschutz") }}</a><a href="/terms">{{ _("ToS / AGB") }}</a><a class="withdrawal-link" href="{{ site_path("/withdrawal") }}">{{ _("Withdraw from contract") }}</a></nav>
+        <p class="age-session-note">{{ _("Remembered for this browser session. No tracking cookie.") }}</p>
     </section>
 </div>

@@ -13,6 +13,8 @@ def record_activity(rows, stage):
 
 
 def patreon_progress(row, *, email_only=False):
+    from .website_locale import translate
+
     stages = [
         ('queued', 'Start purchase verification'),
         ('fetching', 'Read Patreon purchase data'),
@@ -56,8 +58,8 @@ def patreon_progress(row, *, email_only=False):
         index = len(stages) if complete else {'queued': 0, 'fetching': 1, 'verifying': 2, 'license': 2, 'delivery': 3, 'retry': 1}.get(stage, 0)
     attention = not email_only and row.status == 'not_found'
     updated = row.progress_updated_at or (row.requested_at if email_only else row.created_at)
-    return dict(stage=stage, title=title, message=message,
+    return dict(stage=stage, title=translate(title), message=translate(message),
                 activity='attention' if attention else 'complete' if complete else 'waiting' if stage in {'retry', 'queued'} else 'active',
-                steps=[] if attention else [dict(id=key, label=label, state='done' if i < index else 'current' if i == index else 'upcoming') for i, (key, label) in enumerate(stages)],
+                steps=[] if attention else [dict(id=key, label=translate(label), state='done' if i < index else 'current' if i == index else 'upcoming') for i, (key, label) in enumerate(stages)],
                 updated_at=datetime.fromtimestamp(updated, timezone.utc).isoformat(),
                 poll_after_ms=15000 if stage == 'retry' else 1000)

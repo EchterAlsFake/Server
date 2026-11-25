@@ -7,7 +7,7 @@
     root.querySelector('[data-progress-title]').textContent = progress.title;
     root.querySelector('[data-progress-message]').textContent = progress.message;
     const label = root.querySelector('[data-progress-label]');
-    if (label) label.textContent = {complete: 'Complete', attention: 'Needs attention', waiting: 'Request saved · Automatic updates on', active: 'Working · Automatic updates on'}[root.dataset.activity];
+    if (label) label.textContent = {complete: websiteText("Complete"), attention: websiteText("Needs attention"), waiting: websiteText("Request saved · Automatic updates on"), active: websiteText("Working · Automatic updates on")}[root.dataset.activity];
     root.querySelector('[data-progress-steps]').replaceChildren(...progress.steps.map(step => {
       const li = document.createElement('li');
       li.className = `timeline-${step.state}`;
@@ -31,7 +31,7 @@
     const status = button.parentElement.querySelector('[data-copy-status]');
     try {
       await navigator.clipboard.writeText(key.value || key.textContent);
-      status.textContent = 'License key copied.';
+      status.textContent = websiteText("License key copied.");
     } catch {
       key.focus();
       if (key.select) key.select();
@@ -39,7 +39,7 @@
         const range = document.createRange(); range.selectNodeContents(key);
         const selection = getSelection(); selection.removeAllRanges(); selection.addRange(range);
       }
-      status.textContent = 'Key selected. Copy it manually.';
+      status.textContent = websiteText("Key selected. Copy it manually.");
     }
   }));
   window.PurchaseProgress = {render, reveal};

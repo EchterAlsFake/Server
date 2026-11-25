@@ -5,6 +5,7 @@ description = "Privacy-conscious Flask service for Porn Fetch releases, licenses
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "babel>=2.18.0",
     "cryptography",
     "curl-cffi>=0.14,<1",
     "flask",
@@ -21,6 +22,7 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "redis>=5.0.0",
     "tuf>=7,<8",
+    "uharfbuzz>=0.57.0",
     "werkzeug",
 ]
 

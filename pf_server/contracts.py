@@ -1,9 +1,11 @@
 """Versioned checkout evidence and immutable contract confirmations."""
 import hashlib
 import json
+import re
 import secrets
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from pathlib import Path
 
 from flask import abort, current_app, jsonify
 from fpdf import FPDF
@@ -11,10 +13,13 @@ from sqlalchemy import update
 
 from .extensions import db
 from .models import CheckoutAgreement, Transaction
+from .website_locale import language, translate, use_language
 
 VERSION = "contract-2026-11-17-v1"
 IMMEDIATE_EN = "I expressly consent to immediate digital supply before the 14-day withdrawal period ends. I understand that I lose my withdrawal right when supply starts, provided I receive the required contract confirmation."
 REFUND_EN = "I expressly agree to cryptocurrency refunds under the separate refund agreement, at no cost to me."
+AGE_TERMS = "I am 18+ and accept the %(terms)s."
+TEST_NOTICE = "I understand this is a test checkout. No real purchase."
 
 
 class PlainText(HTMLParser):
@@ -40,6 +45,11 @@ def text_template(name, **context):
 
 
 def terms_snapshot():
+    with use_language("en"):
+        return english_terms_snapshot()
+
+
+def english_terms_snapshot():
     return {
         "version": VERSION,
         "language": "en",
@@ -61,34 +71,55 @@ def offer_digest():
     return hashlib.sha256(dumps(terms_snapshot()).encode()).hexdigest()
 
 
-def record_agreement(method, country, accepted_at):
+def record_agreement(method, country, accepted_at, *, shared_locale=None):
     snapshot = terms_snapshot()
     snapshot.update(payment_method=method, country=country, accepted_at=accepted_at,
                     terms_accepted=True, age_confirmed=True,
                     refund_method_accepted=True,
                     immediate_supply_consent=method != "patreon",
                     withdrawal_acknowledged=method != "patreon")
+    shared_locale = shared_locale or language()
+    if shared_locale != "en" or (method != "patreon" and language() != "en"):
+        snapshot["presentation"] = presentation(method, shared_locale, language())
     row = CheckoutAgreement(id=secrets.token_urlsafe(24), snapshot=dumps(snapshot), created_at=accepted_at)
     db.session.add(row)
     db.session.commit()
     return row.id
 
 
+def presentation(method, shared_locale, supply_locale):
+    with use_language(shared_locale):
+        details = {
+            "language": shared_locale,
+            "age_terms": translate(AGE_TERMS, terms=translate("Terms of Service")),
+            "refund": translate(REFUND_EN),
+            "product": text_template("partials/contract_product.html"),
+            "refund_terms": text_template("partials/refund_agreement.html"),
+        }
+        if current_app.config["NOWPAYMENTS_SANDBOX"]:
+            details["test_notice"] = translate(TEST_NOTICE)
+    if method != "patreon":
+        with use_language(supply_locale):
+            details["supply_language"] = supply_locale
+            details["immediate"] = translate(IMMEDIATE_EN)
+            details["withdrawal"] = text_template("partials/withdrawal_information.html")
+    return details
+
 def checkout_snapshot(method, country):
     from .checkout_consent import current_consent
     consent = current_consent()
     if not consent or consent.get("payment_method") != method or consent.get("country") != country or consent.get("offer_digest") != offer_digest():
-        response = jsonify(error="Review and accept the checkout information again before paying.")
+        response = jsonify(error=translate("Review and accept the checkout information again before paying."))
         response.status_code = 409
         abort(response)
     row = db.session.get(CheckoutAgreement, consent.get("agreement_id"))
     if row is None:
-        response = jsonify(error="Checkout agreement is missing. Start checkout again.")
+        response = jsonify(error=translate("Checkout agreement is missing. Start checkout again."))
         response.status_code = 409
         abort(response)
     saved = json.loads(row.snapshot)
     if any(saved.get(key) != value for key, value in terms_snapshot().items()):
-        response = jsonify(error="The contract information has changed. Review and accept it again before paying.")
+        response = jsonify(error=translate("The contract information has changed. Review and accept it again before paying."))
         response.status_code = 409
         abort(response)
     return row.snapshot
@@ -97,6 +128,8 @@ def checkout_snapshot(method, country):
 def agreement_receipt(agreement):
     """Customer-held evidence; does not assert identity or a completed purchase."""
     data = json.loads(agreement.snapshot)
+    if data.get("presentation"):
+        return render_pdf(localized_agreement(data, agreement.id))
     if data.get("language") == "en":
         body = (
             "Checkout agreement receipt\n"
@@ -143,16 +176,64 @@ def english_contract_text(data):
     ) if data.get(field))
 
 
+def localized_agreement(data, reference, transaction=None):
+    presented = data["presentation"]
+    with use_language(presented["language"]):
+        if transaction:
+            lines = [
+                translate("Contract confirmation"),
+                translate("Order: %(order)s", order=reference),
+                translate("License price: %(amount)s %(currency)s",
+                          amount=transaction.expected_price_amount, currency=transaction.expected_price_currency.upper()),
+                translate("Existing license renewal" if transaction.renewal_license_id else "New Premium license"),
+            ]
+        else:
+            lines = [translate("Checkout agreement receipt"), translate("Reference: %(reference)s", reference=reference)]
+        lines.extend((
+            translate("Accepted (UTC): %(date)s", date=data["accepted_at"]),
+            translate("Terms version: %(version)s", version=data["version"]),
+            translate("Payment route: %(method)s", method=data["payment_method"]),
+        ))
+        if not transaction:
+            lines.append(translate("This receipt records your declarations and does not confirm payment."))
+        elif transaction.environment == "sandbox":
+            lines.append(translate("SANDBOX TEST - NO REAL PURCHASE"))
+        if data["payment_method"] == "patreon":
+            lines.append(translate("Not automatically linked to a Patreon Shop purchase. Keep this receipt as consent evidence."))
+        lines.append(presented["age_terms"])
+        if presented.get("test_notice"):
+            lines.append(presented["test_notice"])
+        if data.get("refund_method_accepted"):
+            lines.append(presented["refund"])
+        if data.get("immediate_supply_consent") and presented.get("immediate"):
+            lines.append(presented["immediate"])
+        sections = (presented["product"], data["terms_en"], presented["refund_terms"], presented.get("withdrawal"))
+        return "\n".join(lines) + "\n\n" + "\n\n".join(section for section in sections if section)
+
+
 def render_pdf(body):
-    # The document uses German/English Latin characters; preserve typographic quotes.
     pdf = FPDF()
-    pdf.core_fonts_encoding = "cp1252"
     pdf.set_auto_page_break(auto=True, margin=15)
+    fonts = Path(__file__).resolve().parents[1] / "i18n" / "fonts"
+    unicode_fonts = []
+    if re.search(r"[\u0900-\u097f]", body):
+        unicode_fonts.append(("Noto Devanagari", "NotoSansDevanagari.ttf"))
+    if re.search(r"[\u2e80-\u9fff\uff00-\uffef]", body):
+        unicode_fonts.append(("Noto SC", "NotoSansSC.ttf"))
+    for family, filename in unicode_fonts:
+        pdf.add_font(family, fname=fonts / filename)
     pdf.add_page()
-    pdf.set_font("Helvetica", size=10)
     body = body.replace("→", "->").replace("↗", "").replace("—", "-")
+    if unicode_fonts:
+        pdf.set_font(unicode_fonts[0][0], size=10)
+        pdf.set_fallback_fonts([family for family, _ in unicode_fonts[1:]])
+        pdf.set_text_shaping(True)
+    else:
+        pdf.core_fonts_encoding = "cp1252"
+        pdf.set_font("Helvetica", size=10)
+        body = body.encode("cp1252", errors="replace").decode("cp1252")
     for line in body.splitlines():
-        pdf.multi_cell(0, 5, line.encode("cp1252", errors="replace").decode("cp1252"), new_x="LMARGIN", new_y="NEXT")
+        pdf.multi_cell(0, 5, line, new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())
 
 
@@ -164,7 +245,9 @@ def confirmation(transaction):
     if transaction.confirmation_pdf:
         return transaction.confirmation_pdf
     data = json.loads(transaction.contract_snapshot)
-    if data.get("language") == "en":
+    if data.get("presentation"):
+        body = localized_agreement(data, transaction.session_id, transaction)
+    elif data.get("language") == "en":
         body = (
             "Contract confirmation\n"
             f"Order: {transaction.session_id}\n"

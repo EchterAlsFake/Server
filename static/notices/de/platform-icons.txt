@@ -1,0 +1,54 @@
+Übersetzung. Englischer Originaltext: /static/notices/platform-icons.txt
+
+Plattform Artwork und Markenreferenzen
+Quellen und Nutzungsrichtlinien überarbeitet: 24. Oktober 2026
+
+Windows: Lucide App-Fenster-Abbildung (nicht das Windows-Logo).
+macOS: Lucide-Laptop-Illustration (kein Apple-Logo oder Produkt-Rendering).
+iOS: Lucide-Smartphone-Abbildung (kein Apple-Logo oder Produkt-Rendering).
+- Lucide-endgültige Illustration.
+Quelle: https://github.com/lucide-icons/lucide
+Geheftete Überarbeitung: 7faf87628a1ad6175975bc595344337ce14a7db4
+Quelldateien: Icons/app-window.svg, Icons/laptop.svg, Icons/smartphone.svg,
+Icons/terminal.svg. Stroke für lokales SVG von currentColor auf #f1efeb geändert
+Bildwiedergabe. ISC-Lizenz; Feather-abgeleitete Symbole tragen auch die MIT-Lizenz.
+Vollständige Hinweise: /static/notices/lucide.txt
+
+Linux: Tux, Original-Artwork von Larry Ewing, re-illustriert in Vektor von
+Garrett LeSage, raffiniert und gereinigt von IFo Hancroft. Unbeändert verwendet.
+Quelle: https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/logo.svg
+Genehmigung: https://github.com/torvalds/linux/blob/5b0764a53235d3c77e1ed674e836e1b3fe1a4b1f/Documentation/images/COPYING-logo
+Örtliche Erlaubnishinweise: /static/notices/tux.txt
+Künstler-Repository: https://github.com/garrett/Tux
+
+Android: unveränderter grüner Roboterkopf aus den Richtlinien der Marke Android.
+Quelle: https://developer.android.com/static/images/brand/android-head_flat.svg
+Der Android-Roboter wird reproduziert oder aus der Arbeit erstellt und geteilt durch
+Google und verwendet nach den im Creative Commons 3.0 beschriebenen Begriffen
+Attributionslizenz: https://creativecommons.org/licenses/by/3.0/
+Leitlinien: https://developer.android.com/distribute/marketing-tools/brand-guidelines
+https://partnermarketinghub.withgoogle.com/brands/android/legal-and-trademarks/
+Die Creative Commons Erlaubnis des Roboters unterscheidet sich von der Erlaubnis für andere
+Google-Logos, Wortzeichen, Speicher-Abzeichen und Markenwerte.
+
+Angaben zur Marke
+--------------------
+Windows ist eine Marke der Microsoft-Unternehmensgruppe.
+Apple, macOS und iPhone sind Marken von Apple Inc., registriert in den USA.
+und anderen Ländern und Regionen. IOS ist eine Marke oder eingetragene Marke von
+Cisco in den USA und anderen Ländern; Apple verwendet es unter Lizenz.
+Android ist eine Marke der Google LLC.
+Linux ist die eingetragene Marke von Linus Torvalds in den USA und anderen Ländern.
+
+Plattformnamen identifizieren Kompatibilität. Diese Abbildungen zeigen nicht
+Zertifizierung, Sponsoring oder Unterstützung von Porn Fetch durch einen Plattformverkäufer.
+Apple und Microsoft Markengrafiken bedürfen der Autorisierung unter ihrer jeweiligen
+Richtlinien, so dass die Plattform Karten verwenden neutrale Lucide Illustrationen statt.
+Von diesem Plattform-Symbolsatz wird kein Apple, Finder, iOS oder Windows-Logo geliefert.
+Bestehende Zahlungsannahme Artwork hat separate Bekanntmachungen in payment-brands.txt.
+
+Offizielle Leitlinien:
+https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html
+https://www.apple.com/legal/intellectual-property/trademark/appletmlist.html
+https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks
+https://www.linuxfoundation.org/legal/the-linux-mark

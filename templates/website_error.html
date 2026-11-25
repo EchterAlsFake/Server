@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="{{ language_tag(website_language) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ _('Request unavailable') }} · Porn Fetch</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
+</head>
+<body class="neutral-page">
+    <main>
+        <h1>{{ code }} · {{ _('Request unavailable') }}</h1>
+        <p>{{ message }}</p>
+        <p><a href="{{ site_path('/') }}">{{ _('Home') }}</a> · <a href="{{ site_path('/help') }}">{{ _('Help') }}</a></p>
+    </main>
+</body>
+</html>

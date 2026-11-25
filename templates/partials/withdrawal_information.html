@@ -1,15 +1,15 @@
-<section lang="en">
-<h2>Withdrawal instructions</h2>
-<p>You may withdraw within 14 days of concluding the contract without giving a reason. Notify Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany; phone +49 1744646064; email support@echteralsfake.me, by an unequivocal statement, such as an email or letter. Sending it before the deadline is sufficient. The model form below is optional.</p>
-<p>You may also use <a href="{{ config.APP_DOMAIN }}/withdrawal">{{ config.APP_DOMAIN }}/withdrawal</a>. I will promptly email a receipt containing your declaration and its receipt date and time.</p>
-<h3>Effects</h3>
-<p>If you validly withdraw, all payments received from you will be refunded without undue delay and within 14 days of receiving your notice, using the original payment method unless you expressly agree otherwise, at no cost to you.</p>
-<p>For Mollie payments I use the original card or bank payment method through Mollie; the separate cryptocurrency refund agreement does not apply. Provider processing limitations do not change statutory rights or deadlines.</p>
-<h3>Immediate digital supply</h3>
-<p>For paid digital content supplied without a physical medium, the right expires when supply starts after your express consent to supply before the withdrawal period ends and acknowledgment of the resulting loss of that right, provided the confirmation required by § 312f BGB has been supplied (§ 356(6) BGB). Payment alone is insufficient. For a Patreon Shop purchase, the required declarations and confirmation must also be established. Statutory remedies for defects remain unaffected.</p>
-<h3>Model withdrawal form</h3>
-<p>Complete and return only if you wish to withdraw.</p>
-<p>To: Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany, support@echteralsfake.me.</p>
-<p>I/We (*) hereby give notice that I/We (*) withdraw from my/our (*) contract of sale of the following goods (*)/for the provision of the following service (*): ____________________<br>Ordered on (*)/received on (*): ____________________<br>Name of consumer(s): ____________________<br>Address of consumer(s): ____________________<br>Signature of consumer(s) (only if notified on paper): ____________________<br>Date: ____________________</p>
-<p>(*) Delete as appropriate.</p>
+<section lang="{{ language_tag(website_language|default('en')) }}">
+<h2>{{ _("Withdrawal instructions") }}</h2>
+<p>{{ _("You may withdraw within 14 days of concluding the contract without giving a reason. Notify Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany; phone +49 1744646064; email support@echteralsfake.me, by an unequivocal statement, such as an email or letter. Sending it before the deadline is sufficient. The model form below is optional.") }}</p>
+<p>{{ _("You may also use") }} <a href="{{ config.APP_DOMAIN }}/withdrawal">{{ config.APP_DOMAIN }}/withdrawal</a>{{ _(". I will promptly email a receipt containing your declaration and its receipt date and time.") }}</p>
+<h3>{{ _("Effects") }}</h3>
+<p>{{ _("If you validly withdraw, all payments received from you will be refunded without undue delay and within 14 days of receiving your notice, using the original payment method unless you expressly agree otherwise, at no cost to you.") }}</p>
+<p>{{ _("For Mollie payments I use the original card or bank payment method through Mollie; the separate cryptocurrency refund agreement does not apply. Provider processing limitations do not change statutory rights or deadlines.") }}</p>
+<h3>{{ _("Immediate digital supply") }}</h3>
+<p>{{ _("For paid digital content supplied without a physical medium, the right expires when supply starts after your express consent to supply before the withdrawal period ends and acknowledgment of the resulting loss of that right, provided the confirmation required by § 312f BGB has been supplied (§ 356(6) BGB). Payment alone is insufficient. For a Patreon Shop purchase, the required declarations and confirmation must also be established. Statutory remedies for defects remain unaffected.") }}</p>
+<h3>{{ _("Model withdrawal form") }}</h3>
+<p>{{ _("Complete and return only if you wish to withdraw.") }}</p>
+<p>{{ _("To: Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany, support@echteralsfake.me.") }}</p>
+<p>{{ _("I/We (*) hereby give notice that I/We (*) withdraw from my/our (*) contract of sale of the following goods (*)/for the provision of the following service (*): ____________________") }}<br>{{ _("Ordered on (*)/received on (*): ____________________") }}<br>{{ _("Name of consumer(s): ____________________") }}<br>{{ _("Address of consumer(s): ____________________") }}<br>{{ _("Signature of consumer(s) (only if notified on paper): ____________________") }}<br>{{ _("Date: ____________________") }}</p>
+<p>{{ _("(*) Delete as appropriate.") }}</p>
 </section>

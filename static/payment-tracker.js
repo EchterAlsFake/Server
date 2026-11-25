@@ -10,17 +10,17 @@
   function renderExpiry(value, ready = false) {
     if (!expiry || !value) return;
     const time = new Date(value);
-    if (!Number.isNaN(time.getTime())) expiry.textContent = ready ? `Recovery access expires: ${time.toLocaleString()}. Save your license and invoice before then.` : `Current recovery deadline: ${time.toLocaleString()}. Once your license is ready, you have six hours to save it.`;
+    if (!Number.isNaN(time.getTime())) expiry.textContent = ready ? websiteText("Recovery access expires: %(value1)s. Save your license and invoice before then.", { value1: time.toLocaleString(document.documentElement.lang) }) : websiteText("Current recovery deadline: %(value1)s. Once your license is ready, you have six hours to save it.", { value1: time.toLocaleString(document.documentElement.lang) });
   }
   renderExpiry(expiry?.dataset.expiresAt);
   document.querySelector('#copy-recovery-link')?.addEventListener('click', async () => {
     const status = document.querySelector('#recovery-copy-status');
     try {
       await navigator.clipboard.writeText(recoveryLink.value);
-      status.textContent = 'Recovery link copied. Keep it somewhere private.';
+      status.textContent = websiteText("Recovery link copied. Keep it somewhere private.");
     } catch (_) {
       recoveryLink.focus(); recoveryLink.select();
-      status.textContent = 'Link selected. Copy it manually, or save the recovery file.';
+      status.textContent = websiteText("Link selected. Copy it manually, or save the recovery file.");
     }
   });
   const refresh = document.querySelector('#refresh-progress');
@@ -35,9 +35,9 @@
   function renderProgress(progress) {
     if (!progress) return;
     window.PurchaseProgress.render(activity, progress);
-    note.textContent = progress.refresh_unavailable ? 'Live provider updates are temporarily unavailable. Last known progress is shown. Do not pay again; I’ll keep checking.' : '';
+    note.textContent = progress.refresh_unavailable ? websiteText("Live provider updates are temporarily unavailable. Last known progress is shown. Do not pay again; I’ll keep checking.") : '';
     const timestamp = progress.updated_at ? new Date(progress.updated_at) : null;
-    document.querySelector('#progress-updated').textContent = `Connected · Checked at ${new Date().toLocaleTimeString()}. ` + (timestamp && !Number.isNaN(timestamp.getTime()) ? `Latest backend update: ${timestamp.toLocaleTimeString()}.` : 'Waiting for the provider’s first update.');
+    document.querySelector('#progress-updated').textContent = websiteText("Connected · Checked at %(value1)s. ", { value1: new Date().toLocaleTimeString(document.documentElement.lang) }) + (timestamp && !Number.isNaN(timestamp.getTime()) ? websiteText("Latest backend update: %(value1)s.", { value1: timestamp.toLocaleTimeString(document.documentElement.lang) }) : websiteText("Waiting for the provider’s first update."));
     if (announced !== progress.title) {
       document.querySelector('#payment-status-announcement').textContent = progress.title;
       announced = progress.title;
@@ -54,11 +54,11 @@
     const key = document.querySelector(isCard ? '#card-license-key' : '#crypto-license-key');
     if (isCard) key.textContent = data.license_key || '';
     else key.value = data.license_key || '';
-    const delivery = data.delivery_status === 'sent' ? 'Your license was emailed.'
-      : data.delivery_status === 'expired' ? 'The email retry period has ended. Download your license here, or contact support.'
-      : data.delivery_status ? 'Your license is ready here. Email delivery is pending; failed deliveries are retried for up to seven days.'
-      : 'No email delivery requested. Please save your license and invoice.';
-    document.querySelector(isCard ? '#card-delivery-status' : '#crypto-delivery-status').textContent = delivery + (data.beta ? ' This historical beta license will be deleted at product release.' : '');
+    const delivery = data.delivery_status === 'sent' ? websiteText("Your license was emailed.")
+      : data.delivery_status === 'expired' ? websiteText("The email retry period has ended. Download your license here, or contact support.")
+      : data.delivery_status ? websiteText("Your license is ready here. Email delivery is pending; failed deliveries are retried for up to seven days.")
+      : websiteText("No email delivery requested. Please save your license and invoice.");
+    document.querySelector(isCard ? '#card-delivery-status' : '#crypto-delivery-status').textContent = delivery + (data.beta ? websiteText(" This historical beta license will be deleted at product release.") : '');
     if (firstFinished) { window.PurchaseProgress.reveal(document.querySelector('#success-container')); firstFinished = false; }
     if (!data.delivery_status || ['sent', 'expired'].includes(data.delivery_status)) stop = true;
     else delay = 15000;
@@ -68,14 +68,14 @@
     clearTimeout(timer);
     busy = true; refresh.disabled = true;
     try {
-      const response = await fetch(`/check-payment-status?${accessQuery}`, {cache: 'no-store', signal: AbortSignal.timeout(20000)});
+      const response = await fetch(websitePath(`/check-payment-status?${accessQuery}`), {cache: 'no-store', signal: AbortSignal.timeout(20000)});
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         if ([400, 404, 410].includes(response.status)) {
-          window.PurchaseProgress.render(activity, {title: response.status === 410 ? 'Recovery link expired or unavailable' : 'Payment session not found', message: 'If you paid, contact support with your payment transaction hash or invoice reference. Do not pay again.', activity: 'attention', steps: []});
+          window.PurchaseProgress.render(activity, {title: response.status === 410 ? websiteText("Recovery link expired or unavailable") : websiteText("Payment session not found"), message: websiteText("If you paid, contact support with your payment transaction hash or invoice reference. Do not pay again."), activity: 'attention', steps: []});
           stop = true;
         }
-        else throw new Error(data.error || 'Payment status is temporarily unavailable.');
+        else throw new Error(data.error || websiteText("Payment status is temporarily unavailable."));
       } else {
         renderProgress(data.progress);
         if (root.dataset.mollie === 'true') {
@@ -85,8 +85,8 @@
         if (data.status === 'finished') renderLicense(data);
       }
     } catch (e) {
-      note.textContent = 'I couldn’t refresh payment progress. Your payment may still be processing. Do not pay again; I’ll retry automatically.';
-      document.querySelector('#progress-updated').textContent = `Connection interrupted. Last attempt: ${new Date().toLocaleTimeString()}. Retrying automatically.`;
+      note.textContent = websiteText("I couldn’t refresh payment progress. Your payment may still be processing. Do not pay again; I’ll retry automatically.");
+      document.querySelector('#progress-updated').textContent = websiteText("Connection interrupted. Last attempt: %(value1)s. Retrying automatically.", { value1: new Date().toLocaleTimeString(document.documentElement.lang) });
     } finally {
       busy = false; refresh.disabled = false;
       if (!stop && !document.hidden) timer = setTimeout(check, delay);

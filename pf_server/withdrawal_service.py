@@ -16,6 +16,7 @@ from .crypto_delivery import cipher
 from .extensions import db
 from .licensing import normalize_recipient_email, send_email_message
 from .models import WithdrawalRequest, WithdrawalDelivery
+from .website_locale import language, translate, use_language
 
 PURPOSE = "withdrawal-declaration-v1"
 SUPPORT = "support@echteralsfake.me"
@@ -49,7 +50,8 @@ def validate_details(form):
 
 def make_draft(details):
     # PII stays out of signed-but-readable session cookies and URLs. No DB draft.
-    payload = dict(purpose=PURPOSE, nonce=secrets.token_urlsafe(24), details=details, statement=STATEMENT)
+    payload = dict(purpose=PURPOSE, nonce=secrets.token_urlsafe(24), details=details,
+                   language=language(), statement=translate(STATEMENT))
     return cipher().encrypt(json.dumps(payload, ensure_ascii=False).encode()).decode()
 
 
@@ -78,18 +80,21 @@ def find_received(token):
 def receipt_text(reference, payload, received_at):
     details = payload["details"]
     local = received_at.astimezone(ZoneInfo("Europe/Berlin")).isoformat()
-    return (
-        "Withdrawal receipt\n\n"
-        f"Recipient: Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany\n{SUPPORT}\n"
-        f"Reference: {reference}\n"
-        f"Received (Europe/Berlin): {local}\n"
-        f"Received (UTC): {received_at.isoformat()}\n\n"
-        f"Declaration:\n{payload['statement']}\n\n"
-        f"Name: {details['name']}\n"
-        f"Contract or part: {details['contract']}\n"
-        f"Receipt email: {details['email']}\n\n"
-        "This confirms receipt only. Withdrawal validity and any refund will be assessed separately.\n"
-    )
+    with use_language(payload.get("language", "en")):
+        lines = [
+            translate("Withdrawal receipt"), "",
+            translate("Recipient: %(recipient)s", recipient="Johannes Habel, Bahnstr. 21, 06886 Lutherstadt Wittenberg, Germany"),
+            SUPPORT,
+            translate("Reference: %(reference)s", reference=reference),
+            translate("Received (Europe/Berlin): %(date)s", date=local),
+            translate("Received (UTC): %(date)s", date=received_at.isoformat()), "",
+            translate("Declaration:"), payload["statement"], "",
+            translate("Name: %(name)s", name=details["name"]),
+            translate("Contract or part: %(contract)s", contract=details["contract"]),
+            translate("Receipt email: %(email)s", email=details["email"]), "",
+            translate("This confirms receipt only. Withdrawal validity and any refund will be assessed separately."),
+        ]
+        return "\n".join(lines) + "\n"
 
 
 def receive(token, payload, received_at):
@@ -152,8 +157,8 @@ def deliver(reference, audience):
         message["From"] = sender
         message["To"] = recipient
         message["Reply-To"] = SUPPORT
-        message["Subject"] = ("Withdrawal receipt" if audience == "consumer"
-                              else "New withdrawal for review")
+        with use_language(payload.get("language", "en")):
+            message["Subject"] = translate("Withdrawal receipt") if audience == "consumer" else "New withdrawal for review"
         message["Date"] = format_datetime(datetime.fromisoformat(row.received_at))
         message["Message-ID"] = f"<withdrawal-{reference}-{audience}@{sender.rpartition('@')[2]}>"
         message.set_content(content)

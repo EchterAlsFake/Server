@@ -133,7 +133,8 @@ def quote(country):
 
 
 def snapshot(country, accepted_at):
-    from .contracts import terms_snapshot, dumps
+    from .contracts import terms_snapshot, dumps, presentation
+    from .website_locale import language, translate
 
     data = terms_snapshot()
     data.update(
@@ -151,6 +152,15 @@ def snapshot(country, accepted_at):
         test_acknowledged=new_environment() == "sandbox",
         test_notice=TEST_NOTICE if new_environment() == "sandbox" else "",
     )
+    if accepted_at is not None and language() != "en":
+        copy = presentation("mollie", language(), language())
+        copy["refund_terms"] = ""
+        copy.pop("refund", None)
+        if data["test_acknowledged"]:
+            copy["test_notice"] = translate(TEST_NOTICE)
+        else:
+            copy.pop("test_notice", None)
+        data["presentation"] = copy
     return dumps(data)
 
 
@@ -566,6 +576,8 @@ def process_pending(limit=100):
 
 
 def progress(transaction, *, license_pending=False):
+    from .website_locale import translate
+
     row = db.session.get(MollieCheckout, transaction.session_id)
     state = row.state
     finished = transaction.status == "finished" and not license_pending
@@ -595,8 +607,8 @@ def progress(transaction, *, license_pending=False):
             + ". Return to payment methods to start again."
         )
     return dict(
-        title=title,
-        message=message,
+        title=translate(title),
+        message=translate(message),
         activity="attention" if problem else "complete" if finished else "active",
         stage="finished"
         if finished
@@ -612,7 +624,7 @@ def progress(transaction, *, license_pending=False):
         steps=[
             dict(
                 id=key,
-                label=label,
+                label=translate(label),
                 state="done"
                 if finished or (state == "paid" and i == 0)
                 else "current"
